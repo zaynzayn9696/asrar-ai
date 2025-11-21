@@ -5,6 +5,7 @@ import "./ChatPage.css";
 import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
 import VoiceMessageBubble from "./VoiceMessageBubble"; // tap-to-play audio bubble for voice replies
+import { API_BASE } from "./apiBase";
 
 import abuZainAvatar from "./assets/abu_zain.png";
 import hanaAvatar from "./assets/hana.png";
@@ -450,7 +451,7 @@ export default function ChatPage() {
         text: m.text,
       }));
 
-      const res = await fetch("http://localhost:4100/api/chat/message", {
+      const res = await fetch(`${API_BASE}/api/chat/message`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -708,7 +709,7 @@ export default function ChatPage() {
           form.append('messages', JSON.stringify(payloadMessages));
 
           console.log('Mic: sending audio to /api/chat/voice');
-          const res = await fetch('http://localhost:4100/api/chat/voice', {
+          const res = await fetch(`${API_BASE}/api/chat/voice`, {
             method: 'POST',
             credentials: 'include',
             body: form,

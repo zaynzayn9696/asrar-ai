@@ -4,8 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import asrarLogo from "./assets/asrar-logo.png";
 import "./AuthPage.css";
 import { useAuth } from "./hooks/useAuth";
-
-const API_BASE = "http://localhost:4100";
+import { API_BASE } from "./apiBase";
 
 const getInitialLang = () => {
   if (typeof window !== "undefined") {
@@ -154,7 +153,7 @@ const CreateAccountPage = () => {
   className="auth-primary-button"
   style={{ marginBottom: "12px" }}
   onClick={() => {
-  window.location.href = "http://localhost:4100/api/auth/google/start";
+  window.location.href = `${API_BASE}/api/auth/google/start`;
 }}
 >
   {isArabic ? "المتابعة باستخدام Google" : "Continue with Google"}

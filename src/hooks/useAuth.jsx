@@ -5,11 +5,9 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { API_BASE } from "../apiBase";
 
 const AuthContext = createContext(null);
-
-// Make sure this matches your backend host/port
-const API_BASE = "http://localhost:4100";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
