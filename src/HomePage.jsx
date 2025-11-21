@@ -830,7 +830,7 @@ export default function HomePage() {
           </p>
 
           <h1 className="asrar-hero-title">
-            {isAr ? "أسرارك في أمان." : "Your secrets, guarded."}
+            {isAr ? "أسرارك في أمان." : "Your secrets, ZEEEZTEEEEEEST."}
             <br />
             {isAr
               ? "ورفيقك يُختار بناءً على شعورك."
