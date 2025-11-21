@@ -58,14 +58,9 @@
   z-index: 30;
   padding-top: 0.4rem;
   padding-bottom: 0.4rem;
-  background: linear-gradient(
-    to bottom,
-    rgba(2, 4, 10, 0.98),
-    rgba(2, 4, 10, 0.94),
-    rgba(2, 4, 10, 0.85),
-    transparent
-  );
-  backdrop-filter: blur(16px);
+  background: rgba(5, 8, 11, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .asrar-dash-header-left {
@@ -462,7 +457,10 @@
 
 /* CHARACTERS ----------------------------------------------------- */
 .asrar-dash-characters {
-  margin-bottom: 1.8rem;
+  margin-bottom: 2.5rem;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .asrar-dash-char-grid {
@@ -473,47 +471,33 @@
 }
 
 .asrar-dash-char-card {
-  border-radius: 22px;
-  padding: 1rem 0.9rem 1.1rem;
-  background: radial-gradient(
-    circle at top,
-    #050f1f 0,
-    #050815 40%,
-    #02020b 100%
-  );
-  border: 1px solid rgba(90, 118, 148, 0.8);
+  border-radius: var(--asrar-radius-md);
+  padding: 22px 20px 24px;
+  background: radial-gradient(circle at top, #0f1925 0, #05070c 65%);
+  border: 1px solid var(--asrar-border-subtle);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.85);
   text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 320px;
+  min-height: 380px;
   cursor: pointer;
   flex: 0 1 180px;
   max-width: 220px;
-  transition:
-    border-color 0.16s ease,
-    box-shadow 0.16s ease,
-    transform 0.12s ease,
-    background 0.16s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    border-color 0.2s ease, background 0.2s ease;
 }
 
 .asrar-dash-char-card:hover:not(.asrar-dash-char-card--selected) {
-  border-color: rgba(0, 240, 255, 0.8);
-  box-shadow: 0 0 18px rgba(0, 240, 255, 0.32);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  border-color: var(--asrar-accent-soft);
+  box-shadow: 0 0 18px rgba(24, 209, 218, 0.25);
 }
 
 .asrar-dash-char-card--selected {
-  border-color: rgba(0, 240, 255, 0.95);
-  box-shadow:
-    0 0 0 1px rgba(0, 240, 255, 0.85),
-    0 0 24px rgba(0, 240, 255, 0.6);
-  background: radial-gradient(
-    circle at top,
-    #041f31 0,
-    #050816 40%,
-    #02020a 100%
-  );
+  border-color: var(--asrar-accent);
+  box-shadow: 0 0 26px rgba(24, 209, 218, 0.9);
+  background: radial-gradient(circle at top, #152234 0, #05070c 70%);
 }
 
 .asrar-dash-char-avatar-wrap {
@@ -608,21 +592,23 @@
 
    /* Make the character cards visually bigger on desktop */
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-card {
-    max-width: 220px;          /* slightly larger */
-    padding: 1.2rem 1.1rem 1.3rem;
+    min-height: 450px; /* Larger on desktop */
+    padding: 30px 25px 30px;
+    max-width: 240px;
   }
 
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-avatar {
-    width: 84px;               /* bigger avatar */
-    height: 128px;
+    width: 110px; /* Larger portrait */
+    height: 170px;
   }
 
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-name {
-    font-size: 1.02rem;
+    font-size: 18px; /* Larger text */
+    margin-top: 15px;
   }
 
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-role {
-    font-size: 0.82rem;
+    font-size: 14px;
   }
 }
 
@@ -760,6 +746,14 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
 .asrar-dash-page--ar .asrar-dash-title,
 .asrar-dash-page--ar .asrar-dash-subtitle {
   text-align: center;
+}
+
+/* SETTINGS & BILLING PAGES ------------------------------------------- */
+.asrar-settings-page .asrar-dash-content,
+.asrar-billing-page .asrar-dash-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 /* RESPONSIVE ----------------------------------------------------- */
