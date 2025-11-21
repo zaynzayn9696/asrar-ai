@@ -389,12 +389,18 @@ router.get("/google/callback", async (req, res) => {
 
     const token = createJwtForUser(safeUser);
 
-    // 5) Set JWT cookie using the same helper (cookie name: 'token')
+    // Keep cookie for browsers that allow it
     setTokenCookie(res, token);
 
-    // 6) Redirect back to frontend dashboard
     const frontendBase = process.env.FRONTEND_URL;
-    return res.redirect(`${frontendBase}/dashboard`);
+
+    // Redirect to an intermediate frontend route with the token in the query string
+    const redirectUrl = new URL("/google-auth-complete", frontendBase);
+    redirectUrl.searchParams.set("token", token);
+
+    console.log("[google-callback] redirecting to:", redirectUrl.toString());
+
+    return res.redirect(redirectUrl.toString());
   } catch (err) {
     console.error("Google callback error:", err);
     return res.status(500).send("Something went wrong with Google login.");
