@@ -54,6 +54,7 @@ body {
   background: radial-gradient(circle at top, #101b27 0, #040609 55%, #010205 100%);
   color: var(--asrar-text-main);
   overflow-x: hidden;
+  padding-top: 72px;
 }
 
 .asrar-page--ar {
@@ -71,8 +72,10 @@ body {
 /* HEADER -------------------------------------------------------------- */
 
 .asrar-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 30;
   display: flex;
   align-items: center;
@@ -115,8 +118,9 @@ body {
 }
 
 .asrar-header-inner {
-  max-width: 1180px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -143,6 +147,33 @@ body {
   width: 100%;
   justify-content: center;
   text-align: center;
+}
+
+.asrar-nav-lang-mobile {
+  display: none;
+  width: 100%;
+  margin-top: 4px;
+  justify-content: center;
+  gap: 8px;
+}
+
+.asrar-nav-lang-mobile button {
+  border: none;
+  background: transparent;
+  color: var(--asrar-text-muted);
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.asrar-nav-lang-mobile button.active {
+  background: var(--asrar-accent-soft);
+  color: var(--asrar-accent);
+}
+
+.asrar-lang-toggle-desktop {
+  display: inline-flex;
 }
 
 /* NAV ----------------------------------------------------------------- */
@@ -1271,11 +1302,23 @@ body {
   .asrar-nav-auth-mobile {
     display: flex;
   }
+
+  .asrar-lang-toggle-desktop {
+    display: none;
+  }
+
+  .asrar-nav-lang-mobile {
+    display: flex;
+  }
 }
 
 @media (min-width: 851px) {
   .asrar-nav {
     display: flex;
+  }
+
+  .asrar-nav-lang-mobile {
+    display: none;
   }
 }
 

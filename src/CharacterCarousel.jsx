@@ -150,7 +150,7 @@ export default function CharacterCarousel({
       >
         {"<"}
       </button>
-      <div className="asrar-character-slider-viewport">
+      <div className="asrar-character-slider-viewport" dir="ltr">
         <div
           className="asrar-character-track"
           style={{ transform: `translateX(-${index * 100}%)` }}

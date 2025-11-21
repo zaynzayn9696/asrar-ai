@@ -51,8 +51,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1120px;
-  margin: 0 auto 1.9rem;
+  width: 100%;
+  margin: 0 0 1.9rem;
   position: relative;
   z-index: 30;
 }
@@ -207,8 +207,9 @@
 
 
 .asrar-dash-main {
-  max-width: 1120px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   position: relative;
   z-index: 2;
 }
@@ -615,6 +616,10 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
     flex-direction: column;
     align-items: flex-start;
     gap: 0.6rem;
+  }
+
+  .asrar-dash-logo-frame {
+    display: none;
   }
 
   .asrar-dash-footer-row {

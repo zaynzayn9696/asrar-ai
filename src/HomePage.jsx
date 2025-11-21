@@ -783,6 +783,21 @@ export default function HomePage() {
                 </a>
               ))}
 
+              <div className="asrar-nav-lang-mobile">
+                <button
+                  className={language === "en" ? "active" : ""}
+                  onClick={() => handleLanguageSwitch("en")}
+                >
+                  EN
+                </button>
+                <button
+                  className={language === "ar" ? "active" : ""}
+                  onClick={() => handleLanguageSwitch("ar")}
+                >
+                  عربي
+                </button>
+              </div>
+
               <div className="asrar-nav-auth-mobile">
                 {!loading && !user && (
                   <>
@@ -817,7 +832,7 @@ export default function HomePage() {
           </nav>
 
           <div className="asrar-header-right">
-            <div className="asrar-lang-toggle">
+            <div className="asrar-lang-toggle asrar-lang-toggle-desktop">
               <button
                 className={language === "en" ? "active" : ""}
                 onClick={() => handleLanguageSwitch("en")}
