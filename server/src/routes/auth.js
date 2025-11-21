@@ -8,17 +8,26 @@ const { LIMITS, getPlanLimits } = require('../config/limits');
 
 const router = express.Router();
 
-function setTokenCookie(res, user) {
-  const token = jwt.sign(
-    { id: user.id, email: user.email },
+const isProd = process.env.NODE_ENV === 'production';
+
+function createJwtForUser(user) {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+    },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    { expiresIn: '7d' }
   );
+}
+
+function setTokenCookie(res, user) {
+  const token = createJwtForUser(user);
 
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
@@ -372,16 +381,7 @@ router.get("/google/callback", async (req, res) => {
     setTokenCookie(res, safeUser);
 
     // 6) Redirect back to frontend dashboard
-    const frontendBase =
-      process.env.FRONTEND_URL ||
-      (process.env.NODE_ENV !== 'production' ? 'http://localhost:5173' : undefined);
-
-    if (!frontendBase) {
-      console.error('FRONTEND_URL is not configured; cannot redirect after Google login.');
-      return res.status(500).send('FRONTEND_URL is not configured on the server.');
-    }
-
-    // Optionally append a short-lived usage summary via query if needed in future
+    const frontendBase = process.env.FRONTEND_URL;
     return res.redirect(`${frontendBase}/dashboard`);
   } catch (err) {
     console.error("Google callback error:", err);
