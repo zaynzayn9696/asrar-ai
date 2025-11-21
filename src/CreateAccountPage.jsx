@@ -56,15 +56,17 @@ const CreateAccountPage = () => {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
     if (!name || !email || !password || !confirm) {
-      alert(
+      setError(
         isArabic
           ? "الرجاء ملء جميع الحقول."
           : "Please fill in all fields."
@@ -73,7 +75,7 @@ const CreateAccountPage = () => {
     }
 
     if (password !== confirm) {
-      alert(
+      setError(
         isArabic
           ? "كلمتا المرور غير متطابقتين."
           : "Passwords do not match."
@@ -94,7 +96,7 @@ const CreateAccountPage = () => {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        alert(
+        setError(
           data.message ||
             (isArabic
               ? "فشل إنشاء الحساب. تأكد من البيانات."
@@ -125,7 +127,7 @@ const CreateAccountPage = () => {
       navigate(targetPath);
     } catch (err) {
       console.error("Signup error:", err);
-      alert(
+      setError(
         isArabic
           ? "حدث خطأ غير متوقع أثناء إنشاء الحساب."
           : "Unexpected error while creating your account."
@@ -152,20 +154,28 @@ const CreateAccountPage = () => {
         <h1 className="auth-title">{t.title}</h1>
         <p className="auth-subtitle">{t.subtitle}</p>
 
-      <button
-  type="button"
-  className="auth-primary-button"
-  style={{ marginBottom: "12px" }}
-  onClick={() => {
-  window.location.href = `${API_BASE}/api/auth/google/start`;
-}}
->
-  {isArabic ? "المتابعة باستخدام Google" : "Continue with Google"}
-</button>
+        {error && (
+          <div className="auth-error-banner">{error}</div>
+        )}
 
-<div className="auth-divider" style={{ margin: "16px 0", textAlign: "center" }}>
-  <span >{isArabic ? "أو" : "or"}</span>
-</div>
+        <button
+          type="button"
+          className="auth-primary-button"
+          style={{ marginBottom: "12px" }}
+          onClick={() => {
+            window.location.href = `${API_BASE}/api/auth/google/start`;
+          }}
+        >
+          {isArabic ? "المتابعة باستخدام Google" : "Continue with Google"}
+        </button>
+
+        <div
+          className="auth-divider"
+          style={{ margin: "16px 0", textAlign: "center" }}
+        >
+          <span>{isArabic ? "أو" : "or"}</span>
+        </div>
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field">
             <label className="auth-label">{t.nameLabel}</label>

@@ -48,14 +48,16 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     if (!email || !password) {
-      alert(
+      setError(
         isArabic
           ? "الرجاء إدخال البريد الإلكتروني وكلمة المرور."
           : "Please enter your email and password."
@@ -76,7 +78,7 @@ const LoginPage = () => {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        alert(
+        setError(
           data.message ||
             (isArabic
               ? "فشل تسجيل الدخول. تأكد من البيانات."
@@ -107,7 +109,7 @@ const LoginPage = () => {
       navigate(targetPath);
     } catch (err) {
       console.error("Login error:", err);
-      alert(
+      setError(
         isArabic
           ? "حدث خطأ غير متوقع أثناء تسجيل الدخول."
           : "Unexpected error while logging in."
@@ -134,20 +136,28 @@ const LoginPage = () => {
         <h1 className="auth-title">{t.title}</h1>
         <p className="auth-subtitle">{t.subtitle}</p>
 
-      <button
-  type="button"
-  className="auth-primary-button"
-  style={{ marginBottom: "12px" }}
- onClick={() => {
-  window.location.href = `${API_BASE}/api/auth/google/start`;
-}}
->
-  {isArabic ? "المتابعة باستخدام Google" : "Continue with Google"}
-</button>
+        {error && (
+          <div className="auth-error-banner">{error}</div>
+        )}
 
-<div className="auth-divider" style={{ margin: "16px 0", textAlign: "center" }}>
-  <span>{isArabic ? "أو" : "or"}</span>
-</div>
+        <button
+          type="button"
+          className="auth-primary-button"
+          style={{ marginBottom: "12px" }}
+          onClick={() => {
+            window.location.href = `${API_BASE}/api/auth/google/start`;
+          }}
+        >
+          {isArabic ? "المتابعة باستخدام Google" : "Continue with Google"}
+        </button>
+
+        <div
+          className="auth-divider"
+          style={{ margin: "16px 0", textAlign: "center" }}
+        >
+          <span>{isArabic ? "أو" : "or"}</span>
+        </div>
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field">
             <label className="auth-label">{t.emailLabel}</label>

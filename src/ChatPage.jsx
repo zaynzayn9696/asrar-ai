@@ -468,6 +468,10 @@ export default function ChatPage() {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        console.error("Chat send error", {
+          status: res.status,
+          body: data,
+        });
         if (data && data.code === "PRO_CHARACTER_LOCKED") {
           setModalText(
             isArabicConversation

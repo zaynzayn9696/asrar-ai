@@ -110,6 +110,19 @@
   margin: 0 auto 1.9rem;
 }
 
+/* Inline error banner for login / signup instead of window.alert */
+.auth-error-banner {
+  width: 100%;
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 91, 132, 0.12);
+  border: 1px solid rgba(255, 91, 132, 0.7);
+  color: #ffe6ee;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
 /* FORM */
 .auth-form {
   display: flex;
