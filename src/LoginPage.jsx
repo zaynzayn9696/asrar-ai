@@ -130,13 +130,14 @@ const LoginPage = () => {
         <h1 className="auth-title">{t.title}</h1>
         <p className="auth-subtitle">{t.subtitle}</p>
 
-      <button
+   <button
   type="button"
   className="auth-primary-button"
   style={{ marginBottom: "12px" }}
- onClick={() => {
-  window.location.href = `${API_BASE}/api/auth/google/start`;
-}}
+  onClick={() => {
+    alert(`API_BASE (login) = ${API_BASE}`);
+    // window.location.href = `${API_BASE}/api/auth/google/start`;
+  }}
 >
   {isArabic ? "المتابعة باستخدام Google" : "Continue with Google"}
 </button>
