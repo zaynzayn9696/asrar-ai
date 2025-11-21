@@ -748,73 +748,119 @@ export default function HomePage() {
     <div className={`asrar-page ${isAr ? "asrar-page--ar" : ""}`}>
       {/* HEADER */}
       <header className="asrar-header">
-        <div className="asrar-header-left">
-          <a href="#hero" className="asrar-brand-text">
-            {brandLabel}
-          </a>
-        </div>
+        <div className="asrar-header-inner">
+          <div className="asrar-header-left">
+            <a
+              href="#hero"
+              className="asrar-brand-text"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavClick("#hero");
+                setIsMobileNavOpen(false);
+              }}
+            >
+              {brandLabel}
+            </a>
+          </div>
 
-        <nav className="asrar-nav-wrapper">
-          <nav
-            className={`asrar-nav ${
-              isMobileNavOpen ? "asrar-nav--open" : ""
-            }`}
-          >
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(item.href);
-                  setIsMobileNavOpen(false);
-                }}
-              >
-                {item.label}
-              </a>
-            ))}
+          <nav className="asrar-nav-wrapper">
+            <nav
+              className={`asrar-nav ${
+                isMobileNavOpen ? "asrar-nav--open" : ""
+              }`}
+            >
+              {navItems.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(item.href);
+                    setIsMobileNavOpen(false);
+                  }}
+                >
+                  {item.label}
+                </a>
+              ))}
+
+              <div className="asrar-nav-auth-mobile">
+                {!loading && !user && (
+                  <>
+                    <Link
+                      to="/login"
+                      className="asrar-btn ghost asrar-nav-auth-btn"
+                      onClick={() => setIsMobileNavOpen(false)}
+                    >
+                      {authLabels.login}
+                    </Link>
+                    <Link
+                      to="/create-account"
+                      className="asrar-btn primary asrar-nav-auth-btn"
+                      onClick={() => setIsMobileNavOpen(false)}
+                    >
+                      {authLabels.signup}
+                    </Link>
+                  </>
+                )}
+
+                {!loading && user && (
+                  <Link
+                    to="/dashboard"
+                    className="asrar-btn primary asrar-nav-auth-btn"
+                    onClick={() => setIsMobileNavOpen(false)}
+                  >
+                    {isAr ? "لوحة التحكم" : "Dashboard"}
+                  </Link>
+                )}
+              </div>
+            </nav>
           </nav>
-        </nav>
 
-        <div className="asrar-header-right">
-          <div className="asrar-lang-toggle">
+          <div className="asrar-header-right">
+            <div className="asrar-lang-toggle">
+              <button
+                className={language === "en" ? "active" : ""}
+                onClick={() => handleLanguageSwitch("en")}
+              >
+                EN
+              </button>
+              <button
+                className={language === "ar" ? "active" : ""}
+                onClick={() => handleLanguageSwitch("ar")}
+              >
+                عربي
+              </button>
+            </div>
+
+            <div className="asrar-header-auth-desktop">
+              {!loading && !user && (
+                <>
+                  <Link to="/login" className="asrar-btn ghost">
+                    {authLabels.login}
+                  </Link>
+                  <Link to="/create-account" className="asrar-btn primary">
+                    {authLabels.signup}
+                  </Link>
+                </>
+              )}
+
+              {!loading && user && (
+                <Link to="/dashboard" className="asrar-btn primary">
+                  {isAr ? "لوحة التحكم" : "Dashboard"}
+                </Link>
+              )}
+            </div>
+
             <button
-              className={language === "en" ? "active" : ""}
-              onClick={() => handleLanguageSwitch("en")}
+              type="button"
+              className="asrar-header-menu"
+              aria-label="Toggle navigation"
+              onClick={() => setIsMobileNavOpen((prev) => !prev)}
             >
-              EN
-            </button>
-            <button
-              className={language === "ar" ? "active" : ""}
-              onClick={() => handleLanguageSwitch("ar")}
-            >
-              عربي
+              <span></span>
+              <span></span>
             </button>
           </div>
-          {!loading && !user && (
-            <>
-              <Link to="/login" className="asrar-btn ghost">
-                {authLabels.login}
-              </Link>
-              <Link to="/create-account" className="asrar-btn primary">
-                {authLabels.signup}
-              </Link>
-            </>
-          )}
-
-          {!loading && user && (
-            <Link to="/dashboard" className="asrar-btn primary">
-              {isAr ? "لوحة التحكم" : "Dashboard"}
-            </Link>
-          )}
-          <button
-            className="asrar-header-menu"
-            aria-label="Toggle navigation"
-            onClick={() => setIsMobileNavOpen((prev) => !prev)}
-          >
-            <span></span>
-            <span></span>
-          </button>
         </div>
       </header>
 

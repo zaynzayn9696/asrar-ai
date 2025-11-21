@@ -42,7 +42,6 @@ export default function CharacterCarousel({
 
   const renderHomeCard = (character, isActive, i) => (
     <div
-      key={character.id}
       className={
         "asrar-character-card" +
         (isActive ? " asrar-character-card--active" : "")
@@ -73,7 +72,6 @@ export default function CharacterCarousel({
 
     return (
       <button
-        key={character.id}
         type="button"
         className={cardClasses}
         onClick={() => onChange && onChange(character)}
@@ -121,8 +119,15 @@ export default function CharacterCarousel({
         
       </button>
       <div className="asrar-character-slider-viewport">
-        <div className="asrar-character-grid">
-          {characters.map((character, i) => renderCard(character, i))}
+        <div
+          className="asrar-character-track"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {characters.map((character, i) => (
+            <div className="asrar-character-slide" key={character.id}>
+              {renderCard(character, i)}
+            </div>
+          ))}
         </div>
       </div>
       <button
