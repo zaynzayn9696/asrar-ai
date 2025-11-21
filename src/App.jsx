@@ -15,6 +15,8 @@ import ChatPage from "./ChatPage";
 import Settings from "./Settings";
 import Billing from "./Billing";
 import ChatHistory from "./ChatHistory";
+import GoogleAuthComplete from "./GoogleAuthComplete";
+
 
 import { AuthProvider, useAuth } from "./hooks/useAuth"; // <-- make sure path is correct
 import "./Global.css";
@@ -46,6 +48,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/create-account" element={<CreateAccountPage />} />
+          <Route path="/google-auth-complete" element={<GoogleAuthComplete />} />
 
           {/* Protected pages */}
           <Route
