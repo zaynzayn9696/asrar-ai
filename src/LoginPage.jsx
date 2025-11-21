@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import asrarLogo from "./assets/asrar-logo.png";
 import "./AuthPage.css";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 
 const getInitialLang = () => {
@@ -83,6 +83,10 @@ const LoginPage = () => {
               : "Login failed. Please check your credentials.")
         );
         return;
+      }
+
+      if (data.token && typeof window !== "undefined") {
+        localStorage.setItem(TOKEN_KEY, data.token);
       }
 
       // 🔑 mark user as logged in in React

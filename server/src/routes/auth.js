@@ -8,7 +8,8 @@ const { LIMITS, getPlanLimits } = require('../config/limits');
 
 const router = express.Router();
 
-const isProd = process.env.NODE_ENV === 'production';
+const isRenderProd =
+  process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
 
 function createJwtForUser(user) {
   return jwt.sign(
@@ -21,16 +22,21 @@ function createJwtForUser(user) {
   );
 }
 
-function setTokenCookie(res, user) {
-  const token = createJwtForUser(user);
-
-  res.cookie('token', token, {
+function setTokenCookie(res, token) {
+  res.cookie("token", token, {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    secure: true,          // always true in your deployed app (Render is HTTPS)
+    sameSite: "none",      // required for cross-site (Vercel -> Render)
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
+
+router.get('/debug-cookie', (req, res) => {
+  res.json({
+    cookies: req.cookies || null,
+    hasToken: !!(req.cookies && req.cookies.token),
+  });
+});
 
 // Helpers for usage
 function startOfToday() {
@@ -132,10 +138,12 @@ router.post('/register', async (req, res) => {
       createdAt: newUser.createdAt,
     };
 
-    setTokenCookie(res, safeUser);
+    const token = createJwtForUser(safeUser);
+    setTokenCookie(res, token);
 
     return res.status(201).json({
       message: 'Account created successfully',
+      token,
       user: { ...safeUser, usage: buildUsageSummary(safeUser, usage) },
     });
   } catch (err) {
@@ -184,10 +192,12 @@ router.post('/login', async (req, res) => {
 
     const usage = await ensureUsage(user.id);
 
-    setTokenCookie(res, safeUser);
+    const token = createJwtForUser(safeUser);
+    setTokenCookie(res, token);
 
     return res.json({
       message: 'Logged in successfully',
+      token,
       user: { ...safeUser, usage: buildUsageSummary(safeUser, usage) },
     });
   } catch (err) {
@@ -377,8 +387,10 @@ router.get("/google/callback", async (req, res) => {
 
     const usage = await ensureUsage(user.id);
 
+    const token = createJwtForUser(safeUser);
+
     // 5) Set JWT cookie using the same helper (cookie name: 'token')
-    setTokenCookie(res, safeUser);
+    setTokenCookie(res, token);
 
     // 6) Redirect back to frontend dashboard
     const frontendBase = process.env.FRONTEND_URL;

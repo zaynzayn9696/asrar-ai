@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { API_BASE } from "../apiBase";
 
+export const TOKEN_KEY = "asrar_token";
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -17,12 +19,26 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const loadUser = async () => {
       try {
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem(TOKEN_KEY)
+            : null;
+
+        const headers = token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : undefined;
+
         const res = await fetch(`${API_BASE}/api/auth/me`, {
           method: "GET",
           credentials: "include", // 👈 send cookies
+          headers,
         });
 
         if (!res.ok) {
+          const errBody = await res.json().catch(() => null);
+          console.error("/api/auth/me failed", res.status, errBody);
           setUser(null);
         } else {
           const data = await res.json();
@@ -48,6 +64,9 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(TOKEN_KEY);
+      }
       setUser(null);
     }
   };
