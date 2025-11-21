@@ -14,9 +14,15 @@ const billingRoutes = require('./routes/billing');
 
 const app = express();
 
-const FRONTEND_ORIGIN =
-  process.env.FRONTEND_URL ||
-  (process.env.NODE_ENV !== 'production' ? 'http://localhost:5173' : undefined);
+console.log(
+  '[startup] ENV check:',
+  'FRONTEND_URL set?',
+  !!process.env.FRONTEND_URL,
+  'JWT_SECRET set?',
+  !!process.env.JWT_SECRET
+);
+
+const FRONTEND_ORIGIN = process.env.FRONTEND_URL;
 
 app.use(
   cors({
@@ -56,6 +62,9 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 4100;
+
+console.log("[startup] JWT_SECRET set?", !!process.env.JWT_SECRET);
+
 app.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
 });
