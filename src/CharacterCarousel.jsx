@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export default function CharacterCarousel({
   characters,
@@ -24,6 +24,10 @@ export default function CharacterCarousel({
 
   const length = characters.length;
 
+  // Touch swipe support for mobile (thumb slide)
+  const touchStartXRef = useRef(null);
+  const touchDeltaXRef = useRef(0);
+
   const goToIndex = (nextIndex) => {
     const wrapped = (nextIndex + length) % length;
     setIndex(wrapped);
@@ -38,6 +42,34 @@ export default function CharacterCarousel({
 
   const handlePrev = () => {
     goToIndex(index - 1);
+  };
+
+  const handleTouchStart = (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    touchStartXRef.current = touch.clientX;
+    touchDeltaXRef.current = 0;
+  };
+
+  const handleTouchMove = (event) => {
+    if (touchStartXRef.current == null || !event.touches) return;
+    const touch = event.touches[0];
+    touchDeltaXRef.current = touch.clientX - touchStartXRef.current;
+  };
+
+  const handleTouchEnd = () => {
+    const deltaX = touchDeltaXRef.current;
+    touchStartXRef.current = null;
+    touchDeltaXRef.current = 0;
+
+    const threshold = 40;
+    if (Math.abs(deltaX) < threshold) return;
+
+    if (deltaX < 0) {
+      handleNext();
+    } else {
+      handlePrev();
+    }
   };
 
   const renderHomeCard = (character, isActive, i) => (
@@ -116,12 +148,15 @@ export default function CharacterCarousel({
         aria-label={isAr ? "الشخصية السابقة" : "Previous character"}
         onClick={handlePrev}
       >
-        
+        {"<"}
       </button>
       <div className="asrar-character-slider-viewport">
         <div
           className="asrar-character-track"
           style={{ transform: `translateX(-${index * 100}%)` }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {characters.map((character, i) => (
             <div className="asrar-character-slide" key={character.id}>
@@ -136,7 +171,7 @@ export default function CharacterCarousel({
         aria-label={isAr ? "الشخصية التالية" : "Next character"}
         onClick={handleNext}
       >
-        
+        {">"}
       </button>
       <div className="asrar-character-dots">
         {characters.map((character, i) => {
