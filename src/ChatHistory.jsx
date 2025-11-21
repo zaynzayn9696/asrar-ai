@@ -95,19 +95,31 @@ export default function ChatHistory() {
 
   const [historyMap, setHistoryMap] = useState({});
 
+  // Load per-character history from the same keys ChatPage uses
   useEffect(() => {
     if (!user) return;
     if (typeof window === "undefined") return;
 
+    const userId = user.id;
+    if (!userId) return;
+
     try {
-      const raw = localStorage.getItem(CHAT_HISTORY_KEY);
-      if (!raw) return;
-      const all = JSON.parse(raw);
-      const userKey = String(user.id || user.email || "anon");
-      const userHist = all[userKey] || {};
-      setHistoryMap(userHist);
+      const map = {};
+      CHARACTERS.forEach((c) => {
+        const storageKey = `asrar-chat-history-${userId}-${c.id}`;
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed) || !parsed.length) return;
+        map[c.id] = { messages: parsed };
+      });
+      console.log("[ChatHistory] hydrated history", {
+        userId,
+        characters: Object.keys(map),
+      });
+      setHistoryMap(map);
     } catch (e) {
-      console.error("Failed to load chat history", e);
+      console.error("[ChatHistory] Failed to load chat history", e);
     }
   }, [user]);
 

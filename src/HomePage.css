@@ -61,6 +61,11 @@ body {
   direction: rtl;
 }
 
+/* Keep the shared top header layout LTR on Home, even when language is Arabic */
+.asrar-page--ar .asrar-dash-header {
+  direction: ltr;
+}
+
 /* HEADER -------------------------------------------------------------- */
 
 /* On Home, keep the shared AsrarHeader stuck to the top while scrolling */

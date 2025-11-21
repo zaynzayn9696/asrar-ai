@@ -252,26 +252,47 @@ export default function ChatPage() {
     setUsageInfo(user?.usage || null);
   }, [user]);
 
+  // Debug: track which companion is selected in chat
+  useEffect(() => {
+    console.log("[ChatPage] selectedCharacterId", selectedCharacterId);
+  }, [selectedCharacterId]);
+
   // Load any existing history for this user + character on mount
   useEffect(() => {
     if (!user) return;
     if (typeof window === "undefined") return;
 
+    const userId = user.id;
+    if (!userId) return;
+
+    const storageKey = `asrar-chat-history-${userId}-${selectedCharacterId}`;
+
     try {
-      const raw = localStorage.getItem(CHAT_HISTORY_KEY);
-      if (!raw) return;
-      const all = JSON.parse(raw);
-      const userKey = String(user.id || user.email || "anon");
-      const entry = all?.[userKey]?.[selectedCharacterId];
-      if (entry && Array.isArray(entry.messages) && entry.messages.length) {
-        const hydrated = entry.messages.map((m) => ({
-          ...m,
-          createdAt: m.createdAt || entry.updatedAt || new Date().toISOString(),
-        }));
-        setMessages(hydrated);
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) {
+          console.log("[ChatPage] loaded history", {
+            storageKey,
+            count: parsed.length,
+          });
+          setMessages(
+            parsed.map((m, idx) => ({
+              id: m.id ?? idx + 1,
+              from: m.from || "system",
+              text: m.text || "",
+              createdAt: m.createdAt || new Date().toISOString(),
+              audioBase64: m.audioBase64 || null,
+            }))
+          );
+        } else {
+          console.log("[ChatPage] no messages in stored history", { storageKey });
+        }
+      } else {
+        console.log("[ChatPage] no stored history", { storageKey });
       }
     } catch (e) {
-      console.error("Failed to load chat history", e);
+      console.error("[ChatPage] Failed to load chat history", e);
     } finally {
       // Mark that we attempted to hydrate from storage (even if nothing was there)
       setHasHydratedHistory(true);
@@ -317,21 +338,19 @@ export default function ChatPage() {
     if (!hasHydratedHistory) return; // avoid overwriting stored history before hydration
     if (typeof window === "undefined") return;
 
+    const userId = user.id;
+    if (!userId) return;
+
+    const storageKey = `asrar-chat-history-${userId}-${selectedCharacterId}`;
+
     try {
-      const raw = localStorage.getItem(CHAT_HISTORY_KEY);
-      const all = raw ? JSON.parse(raw) : {};
-      const userKey = String(user.id || user.email || "anon");
-      const userHist = all[userKey] || {};
-
-      userHist[selectedCharacterId] = {
-        updatedAt: new Date().toISOString(),
-        messages,
-      };
-
-      all[userKey] = userHist;
-      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(all));
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+      console.log("[ChatPage] saved history", {
+        storageKey,
+        count: messages.length,
+      });
     } catch (e) {
-      console.error("Failed to persist chat history", e);
+      console.error("[ChatPage] Failed to persist chat history", e);
     }
   }, [messages, selectedCharacterId, user, hasHydratedHistory]);
 

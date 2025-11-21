@@ -166,7 +166,9 @@ export default function Dashboard() {
   const isAr = lang === "ar";
   const t = DASHBOARD_TEXT[isAr ? "ar" : "en"];
 
-  const [selectedCharacterId, setSelectedCharacterId] = useState("rashid");
+  const [selectedCharacterId, setSelectedCharacterId] = useState(
+    CHARACTERS[0].id
+  );
   const [selectedDialect, setSelectedDialect] = useState("");
 
   // mini mood chat (you can use later if you want)

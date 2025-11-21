@@ -11,6 +11,13 @@ export default function CharacterCarousel({
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    console.log("CharacterCarousel render", {
+      variant,
+      count: Array.isArray(characters) ? characters.length : 0,
+    });
+  }, [characters, variant]);
+
+  useEffect(() => {
     if (!characters || characters.length === 0) return;
     const newIndex = characters.findIndex((c) => c.id === selectedCharacterId);
     if (newIndex >= 0) {
