@@ -12,7 +12,7 @@ import hanaAvatar from "./assets/hana.png";
 import rashidAvatar from "./assets/rashid.png";
 import nourAvatar from "./assets/nour.png";
 import farahAvatar from "./assets/farah.png";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 
 // same 5 characters
 const CHARACTERS = [
@@ -451,12 +451,24 @@ export default function ChatPage() {
         text: m.text,
       }));
 
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(TOKEN_KEY)
+          : null;
+
+      const headers = token
+        ? {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          }
+        : {
+            "Content-Type": "application/json",
+          };
+
       const res = await fetch(`${API_BASE}/api/chat/message`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           messages: payloadMessages,
           characterId: selectedCharacterId,
@@ -712,10 +724,20 @@ export default function ChatPage() {
           const payloadMessages = messages.map((m) => ({ from: m.from, text: m.text }));
           form.append('messages', JSON.stringify(payloadMessages));
 
+          const token =
+            typeof window !== 'undefined'
+              ? localStorage.getItem(TOKEN_KEY)
+              : null;
+
+          const headers = token
+            ? { Authorization: `Bearer ${token}` }
+            : undefined;
+
           console.log('Mic: sending audio to /api/chat/voice');
           const res = await fetch(`${API_BASE}/api/chat/voice`, {
             method: 'POST',
             credentials: 'include',
+            headers,
             body: form,
           });
           const data = await res.json().catch(() => ({}));

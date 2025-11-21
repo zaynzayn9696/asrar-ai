@@ -5,7 +5,7 @@ import "./HomePage.css";
 import "./Dashboard.css";
 import "./Settings.css";
 import AsrarHeader from "./AsrarHeader";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 import AsrarFooter from "./AsrarFooter";
 
@@ -361,11 +361,17 @@ export default function Settings() {
     }
   };
 
-  // DELETE-ALL FIXED
+  // DELETE-ALL FIXED (now also sends Bearer token like other protected calls)
   const deleteAllConversations = async () => {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
     const res = await fetch(`${API_BASE}/api/chat/delete-all`, {
       method: "DELETE",
       credentials: "include",
+      headers,
     });
     if (res.ok) {
       try {
