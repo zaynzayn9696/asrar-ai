@@ -673,6 +673,12 @@ body {
   background: radial-gradient(circle at top, #152234 0, #05070c 70%);
 }
 
+.asrar-character-card--active {
+  border-color: var(--asrar-accent);
+  box-shadow: 0 0 26px rgba(24, 209, 218, 1);
+  background: radial-gradient(circle at top, #152234 0, #05070c 70%);
+}
+
 .asrar-character-card:hover {
   transform: translateY(-4px);
   border-color: var(--asrar-accent-soft);

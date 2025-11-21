@@ -9,6 +9,7 @@ import rashidAvatar from "./assets/rashid.png";
 import nourAvatar from "./assets/nour.png";
 import farahAvatar from "./assets/farah.png";
 import { useAuth } from "./hooks/useAuth";
+import CharacterCarousel from "./CharacterCarousel";
 
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
@@ -560,7 +561,11 @@ export default function HomePage() {
   const [miniChatUserText, setMiniChatUserText] = useState("");
   const [miniChatReply, setMiniChatReply] = useState(null);
 
-  const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
+  const [selectedCharacterId, setSelectedCharacterId] = useState(
+    CHARACTERS[0].id
+  );
+  const selectedCharacter =
+    CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[0];
 
   const isAr = language === "ar";
   const miniChatInputRef = useRef(null);
@@ -654,7 +659,7 @@ export default function HomePage() {
 
     const recIndex = CHARACTERS.findIndex((c) => c.id === recId);
     if (recIndex >= 0) {
-      setCurrentCharacterIndex(recIndex);
+      setSelectedCharacterId(CHARACTERS[recIndex].id);
     }
   };
 
@@ -963,52 +968,13 @@ export default function HomePage() {
               : "Five companions, each covering a different side of what you need."}
           </p>
 
-          <div className="asrar-char-slider" ref={sliderRef}>
-            <div className="asrar-character-grid">
-              {CHARACTERS.map((c) => (
-                <div
-                  key={c.id}
-                  id={`character-${c.id}`}
-                  className={
-                    "asrar-character-card" +
-                    (recommendedId === c.id
-                      ? " asrar-character-card--recommended"
-                      : "")
-                  }
-                >
-                  <img
-                    className="asrar-character-portrait"
-                    src={c.avatar}
-                    alt={`${c.nameEn} avatar`}
-                  />
-                  <h3>{getName(c)}</h3>
-                  <p className="role">{getRole(c)}</p>
-                  <p className="desc">{getDesc(c)}</p>
-                  <button className="asrar-btn ghost small">
-                    {isAr
-                      ? `ابدأ الحديث مع ${getName(c)}`
-                      : `Talk to ${c.nameEn.split(" ")[0]}`}
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              className="asrar-char-arrow asrar-char-arrow--left"
-              aria-label={isAr ? "التمرير لليسار" : "Scroll left"}
-              onClick={scrollLeft}
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              className="asrar-char-arrow asrar-char-arrow--right"
-              aria-label={isAr ? "التمرير لليمين" : "Scroll right"}
-              onClick={scrollRight}
-            >
-              ›
-            </button>
-          </div>
+          <CharacterCarousel
+            characters={CHARACTERS}
+            selectedCharacterId={selectedCharacterId}
+            onChange={(char) => setSelectedCharacterId(char.id)}
+            isAr={isAr}
+            variant="home"
+          />
         </section>
 
         {/* SECURITY & PRIVACY / WHY */}

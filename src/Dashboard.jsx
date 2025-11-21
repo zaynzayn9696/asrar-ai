@@ -2,6 +2,7 @@
 import React, { useState, useRef } from "react";
 import "./Dashboard.css";
 import AsrarFooter from "./AsrarFooter";
+import CharacterCarousel from "./CharacterCarousel";
 
 import abuZainAvatar from "./assets/abu_zain.png";
 import hanaAvatar from "./assets/hana.png";
@@ -168,20 +169,6 @@ export default function Dashboard() {
   const [selectedCharacterId, setSelectedCharacterId] = useState("rashid");
   const [selectedDialect, setSelectedDialect] = useState("");
 
-  // slider controls
-  const sliderRef = useRef(null);
-  const scrollByAmount = 320;
-  const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -scrollByAmount, behavior: "smooth" });
-    }
-  };
-  const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: scrollByAmount, behavior: "smooth" });
-    }
-  };
-
   // mini mood chat (you can use later if you want)
   const [miniInput, setMiniInput] = useState("");
   const [miniUserText, setMiniUserText] = useState("");
@@ -234,6 +221,15 @@ export default function Dashboard() {
 
   const isFreePlan = !user || user.plan !== "pro";
 
+  const handleCharacterChange = (char) => {
+    const isLocked = isFreePlan && char.id !== "hana";
+    if (isLocked) {
+      navigate("/billing");
+      return;
+    }
+    setSelectedCharacterId(char.id);
+  };
+
   return (
     <div
       className={`asrar-dash-page asrar-dashboard-page ${
@@ -263,65 +259,14 @@ export default function Dashboard() {
 
           {/* CHARACTERS GRID */}
           <div className="asrar-dash-characters">
-            <div className="asrar-char-slider" ref={sliderRef}>
-              <div className="asrar-dash-char-grid">
-                {CHARACTERS.map((c) => {
-                  const selected = c.id === selectedCharacterId;
-                  const isLocked = isFreePlan && c.id !== "hana";
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      className={
-                        "asrar-dash-char-card" +
-                        (selected ? " asrar-dash-char-card--selected" : "") +
-                        (isLocked ? " asrar-dash-char-card--locked" : "")
-                      }
-                      onClick={() => {
-                        if (isLocked) {
-                          navigate("/billing");
-                          return;
-                        }
-                        setSelectedCharacterId(c.id);
-                      }}
-                    >
-                      <div className="asrar-dash-char-avatar-wrap">
-                        <img
-                          src={c.avatar}
-                          alt={getName(c)}
-                          className="asrar-dash-char-avatar"
-                        />
-                      </div>
-                      <div className="asrar-dash-char-text">
-                        <div className="asrar-dash-char-name">{getName(c)}</div>
-                        <div className="asrar-dash-char-role">{getRole(c)}</div>
-                      </div>
-                      {isLocked && (
-                        <div className="asrar-pro-badge" aria-hidden>
-                          Pro
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                className="asrar-char-arrow asrar-char-arrow--left"
-                aria-label={isAr ? "التمرير لليسار" : "Scroll left"}
-                onClick={scrollLeft}
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                className="asrar-char-arrow asrar-char-arrow--right"
-                aria-label={isAr ? "التمرير لليمين" : "Scroll right"}
-                onClick={scrollRight}
-              >
-                ›
-              </button>
-            </div>
+            <CharacterCarousel
+              characters={CHARACTERS}
+              selectedCharacterId={selectedCharacterId}
+              onChange={handleCharacterChange}
+              isAr={isAr}
+              isFreePlan={isFreePlan}
+              variant="dashboard"
+            />
           </div>
 
           {/* DIALECT + START BUTTON */}

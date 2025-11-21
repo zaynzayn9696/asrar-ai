@@ -13,6 +13,7 @@ const userRoutes = require('./routes/user');
 const billingRoutes = require('./routes/billing');
 
 const app = express();
+app.set("trust proxy", 1);
 
 console.log(
   '[startup] ENV check:',
