@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 export default function CharacterCarousel({
   characters,
@@ -85,7 +86,12 @@ export default function CharacterCarousel({
         "asrar-character-card" +
         (isActive ? " asrar-character-card--active" : "")
       }
-      onClick={() => goToIndex(i)}
+      onClick={() => {
+        goToIndex(i);
+        if (onChange) {
+          onChange(character);
+        }
+      }}
     >
       <img
         className="asrar-character-portrait"
@@ -99,6 +105,24 @@ export default function CharacterCarousel({
           {isAr ? character.descriptionAr : character.descriptionEn}
         </p>
       )}
+      <Link
+        to="/dashboard"
+        className="asrar-btn primary small asrar-character-cta"
+        onClick={() => {
+          if (typeof window !== "undefined") {
+            try {
+              window.localStorage.setItem(
+                "asrar-selected-character",
+                character.id
+              );
+            } catch (_) {}
+          }
+        }}
+      >
+        {isAr
+          ? `ابدأ المحادثة مع ${character.nameAr}`
+          : `Talk to ${character.nameEn}`}
+      </Link>
     </div>
   );
 
@@ -140,6 +164,7 @@ export default function CharacterCarousel({
   };
 
   const renderCard = (character, i) => {
+    // Ensure only the selected character gets the active class
     const isActive = character.id === selectedCharacterId;
     if (variant === "dashboard") {
       return renderDashboardCard(character, isActive);

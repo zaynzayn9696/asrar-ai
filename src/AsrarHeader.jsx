@@ -4,8 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 
-export default function AsrarHeader({ lang, isAr, onLangChange, onLogout }) {
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, externalMobileNavOpen, setExternalMobileNavOpen }) {
+  // Use external state if provided, otherwise use internal state
+  const [internalMobileNavOpen, setInternalMobileNavOpen] = useState(false);
+  const isMobileNavOpen = externalMobileNavOpen !== undefined ? externalMobileNavOpen : internalMobileNavOpen;
+  const setIsMobileNavOpen = setExternalMobileNavOpen || setInternalMobileNavOpen;
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -163,24 +166,24 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout }) {
                   </div>
                 )}
               </div>
-
-              {/* mobile menu toggle */}
-              <button
-                className="asrar-header-menu asrar-dash-header-menu-toggle"
-                aria-label="Toggle navigation"
-                onClick={() => setIsMobileNavOpen((prev) => !prev)}
-              >
-                <span className="asrar-header-menu-line"></span>
-                <span className="asrar-header-menu-line"></span>
-                <span className="asrar-header-menu-line"></span>
-              </button>
             </>
           )}
+          
+          {/* mobile menu toggle - always visible */}
+          <button
+            className="asrar-header-menu asrar-dash-header-menu-toggle"
+            aria-label="Toggle navigation"
+            onClick={() => setIsMobileNavOpen((prev) => !prev)}
+          >
+            <span className="asrar-header-menu-line"></span>
+            <span className="asrar-header-menu-line"></span>
+            <span className="asrar-header-menu-line"></span>
+          </button>
         </div>
       </header>
 
-      {/* MOBILE NAV DROPDOWN (only when logged in) */}
-      {isMobileNavOpen && user && (
+      {/* MOBILE NAV DROPDOWN */}
+      {isMobileNavOpen && (
         <nav className="asrar-dash-mobile-nav">
           {/* language toggle inside dropdown */}
           <div className="asrar-lang-toggle asrar-dash-mobile-lang">
@@ -198,44 +201,61 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout }) {
             </button>
           </div>
 
-          {/* main links */}
-          <Link to="/" onClick={() => setIsMobileNavOpen(false)}>
-            {nav.home}
-          </Link>
-          <Link to="/dashboard" onClick={() => setIsMobileNavOpen(false)}>
-            {nav.dashboard}
-          </Link>
-          <Link to="/history" onClick={() => setIsMobileNavOpen(false)}>
-            {nav.history}
-          </Link>
-          <Link to="/chat" onClick={() => setIsMobileNavOpen(false)}>
-            {nav.chat}
-          </Link>
+          {/* Logged-out: show auth buttons */}
+          {!user && (
+            <div className="asrar-header-auth-buttons asrar-dash-mobile-auth">
+              <Link to="/login" className="asrar-btn ghost" onClick={() => setIsMobileNavOpen(false)}>
+                {authLabels.login}
+              </Link>
+              <Link to="/create-account" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
+                {authLabels.signup}
+              </Link>
+            </div>
+          )}
 
-          {/* extra actions */}
-          <button
-            type="button"
-            className="asrar-dash-mobile-nav-btn"
-            onClick={() => goTo("/settings")}
-          >
-            {nav.settings}
-          </button>
+          {/* Logged-in: show dashboard links */}
+          {user && (
+            <>
+              {/* main links */}
+              <Link to="/" onClick={() => setIsMobileNavOpen(false)}>
+                {nav.home}
+              </Link>
+              <Link to="/dashboard" onClick={() => setIsMobileNavOpen(false)}>
+                {nav.dashboard}
+              </Link>
+              <Link to="/history" onClick={() => setIsMobileNavOpen(false)}>
+                {nav.history}
+              </Link>
+              <Link to="/chat" onClick={() => setIsMobileNavOpen(false)}>
+                {nav.chat}
+              </Link>
 
-          <button
-            type="button"
-            className="asrar-dash-mobile-nav-btn"
-            onClick={() => goTo("/billing")}
-          >
-            {nav.billing}
-          </button>
+              {/* extra actions */}
+              <button
+                type="button"
+                className="asrar-dash-mobile-nav-btn"
+                onClick={() => goTo("/settings")}
+              >
+                {nav.settings}
+              </button>
 
-          <button
-            type="button"
-            className="asrar-dash-mobile-nav-btn asrar-dash-mobile-nav-danger"
-            onClick={handleLogout}
-          >
-            {nav.logout}
-          </button>
+              <button
+                type="button"
+                className="asrar-dash-mobile-nav-btn"
+                onClick={() => goTo("/billing")}
+              >
+                {nav.billing}
+              </button>
+
+              <button
+                type="button"
+                className="asrar-dash-mobile-nav-btn asrar-dash-mobile-nav-danger"
+                onClick={handleLogout}
+              >
+                {nav.logout}
+              </button>
+            </>
+          )}
         </nav>
       )}
     </>
