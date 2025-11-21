@@ -556,6 +556,41 @@
   margin-bottom: 1.4rem;
 }
 
+/* Desktop layout for dashboard character strip (match homepage companions row) */
+@media (min-width: 1024px) {
+  /* Center the whole strip inside the panel */
+  .asrar-dashboard-page .asrar-dash-characters {
+    max-width: 1180px;
+    margin: 0 auto 1.8rem;
+  }
+
+  /* Use a 5-column grid like the homepage, no horizontal scroll */
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slider {
+    max-width: 1100px;
+    margin: 22px auto 8px;
+    padding: 0;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-track {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+    transform: none !important;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slide {
+    flex: 0 0 auto;
+    padding: 0;
+    display: block;
+  }
+
+  /* Hide arrows and dots on desktop; keep them for mobile */
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-arrow,
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-dots {
+    display: none;
+  }
+}
+
 /* FOOTER: DIALECT + BUTTON -------------------------------------- */
 .asrar-dash-footer-row {
   display: flex;
