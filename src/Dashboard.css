@@ -564,6 +564,8 @@
     margin: 0 auto 1.8rem;
   }
 
+  
+
   /* Use a 5-column grid like the homepage, no horizontal scroll */
   .asrar-dashboard-page .asrar-dash-characters .asrar-character-slider {
     max-width: 1100px;
@@ -588,6 +590,53 @@
   .asrar-dashboard-page .asrar-dash-characters .asrar-character-arrow,
   .asrar-dashboard-page .asrar-dash-characters .asrar-character-dots {
     display: none;
+  }
+
+   /* Make the character cards visually bigger on desktop */
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-card {
+    max-width: 220px;          /* slightly larger */
+    padding: 1.2rem 1.1rem 1.3rem;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-avatar {
+    width: 84px;               /* bigger avatar */
+    height: 128px;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-name {
+    font-size: 1.02rem;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-role {
+    font-size: 0.82rem;
+  }
+}
+
+/* Tablet layout: keep cards visible and nicely wrapped (768px–1024px) */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .asrar-dashboard-page .asrar-dash-characters {
+    max-width: 900px;
+    margin: 0 auto 1.6rem;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slider {
+    max-width: 100%;
+    margin: 18px auto 8px;
+    padding: 0;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-track {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 24px;       /* vertical, horizontal */
+    transform: none !important;   /* stop slider from shifting cards off-screen */
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slide {
+    flex: 0 1 170px;      /* allow 2 rows if needed */
+    padding: 0;
+    display: block;
   }
 }
 
