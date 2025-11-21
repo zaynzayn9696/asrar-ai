@@ -372,7 +372,15 @@ router.get("/google/callback", async (req, res) => {
     setTokenCookie(res, safeUser);
 
     // 6) Redirect back to frontend dashboard
-    const frontendBase = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendBase =
+      process.env.FRONTEND_URL ||
+      (process.env.NODE_ENV !== 'production' ? 'http://localhost:5173' : undefined);
+
+    if (!frontendBase) {
+      console.error('FRONTEND_URL is not configured; cannot redirect after Google login.');
+      return res.status(500).send('FRONTEND_URL is not configured on the server.');
+    }
+
     // Optionally append a short-lived usage summary via query if needed in future
     return res.redirect(`${frontendBase}/dashboard`);
   } catch (err) {

@@ -14,9 +14,13 @@ const billingRoutes = require('./routes/billing');
 
 const app = express();
 
+const FRONTEND_ORIGIN =
+  process.env.FRONTEND_URL ||
+  (process.env.NODE_ENV !== 'production' ? 'http://localhost:5173' : undefined);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: FRONTEND_ORIGIN,
     credentials: true,
   })
 );
