@@ -13,7 +13,7 @@
   color: #f5fbff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  padding: 1.8rem 1.4rem 2.4rem;
+ 
   position: relative;
   overflow: hidden;
 }
@@ -56,6 +56,8 @@
   position: sticky;
   top: 0;
   z-index: 30;
+      padding-left: 1.5rem;
+    padding-right: 1.5rem;
   padding-top: 0.4rem;
   padding-bottom: 0.4rem;
   background: rgba(5, 8, 11, 0.95);
@@ -182,6 +184,28 @@
 @media (max-width: 767px) {
   .asrar-character-track.asrar-character-grid {
     display: flex;
+  }
+  
+  /* Ensure images are centered on mobile */
+  .asrar-dash-char-avatar-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .asrar-dash-char-avatar {
+    width: 80px;
+    height: 120px;
+    margin: 10px auto;
+  }
+  
+  .asrar-dash-char-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 15px;
+    min-height: 340px;
   }
 }
 
@@ -472,14 +496,14 @@
 
 .asrar-dash-char-card {
   border-radius: var(--asrar-radius-md);
-  padding: 22px 20px 24px;
+  padding: 22px 20px;
   background: radial-gradient(circle at top, #0f1925 0, #05070c 65%);
   border: 1px solid var(--asrar-border-subtle);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.85);
   text-align: center;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   min-height: 380px;
   cursor: pointer;
   flex: 0 1 180px;
@@ -503,14 +527,17 @@
 .asrar-dash-char-avatar-wrap {
   display: flex;
   justify-content: center;
+  margin-bottom: 10px;
 }
 
 .asrar-dash-char-avatar {
-  width: 72px;
-  height: 112px;
+  width: 90px;
+  height: 140px;
   border-radius: 999px;
   object-fit: contain;
   filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.75));
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .asrar-dash-char-text {
@@ -518,19 +545,22 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-top: 5px;
 }
 
 .asrar-dash-char-name {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #f5fbff;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.25rem;
+  margin-top: 0;
 }
 
 .asrar-dash-char-role {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #8ea2ba;
+  margin-top: 0;
 }
 
 .asrar-history-snippet {
@@ -592,23 +622,27 @@
 
    /* Make the character cards visually bigger on desktop */
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-card {
-    min-height: 450px; /* Larger on desktop */
-    padding: 30px 25px 30px;
+    min-height: 420px; /* Larger on desktop but not too tall */
+    padding: 20px 20px;
     max-width: 240px;
   }
 
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-avatar {
-    width: 110px; /* Larger portrait */
-    height: 170px;
+    width: 120px; /* Larger portrait */
+    height: 180px;
+    margin-top: 15px;
+    margin-bottom: 15px;
   }
 
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-name {
     font-size: 18px; /* Larger text */
-    margin-top: 15px;
+    margin-top: 0;
+    margin-bottom: 8px;
   }
 
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-role {
     font-size: 14px;
+    margin-top: 0;
   }
 }
 
