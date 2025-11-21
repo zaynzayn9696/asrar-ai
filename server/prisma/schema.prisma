@@ -1,0 +1,56 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// REMOVED ENUM (SQLite does not support enums)
+// enum Plan {
+//   free
+//   pro
+// }
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  passwordHash       String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // CHANGED: was `plan Plan @default(free)`
+  plan               String    @default("free") // "free" or "pro"
+
+  saveHistoryEnabled Boolean   @default(true)
+  photoUrl           String?
+
+  usage              Usage?
+  messages           Message[]
+}
+
+model Usage {
+  userId        Int      @id
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyCount    Int      @default(0)
+  monthlyCount  Int      @default(0)
+  dailyResetAt  DateTime?
+  monthlyResetAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Message {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  characterId  String
+  content      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

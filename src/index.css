@@ -1,0 +1,23 @@
+/* index.css – global reset for Asrar */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  background: #05080b; /* full dark, no white anywhere */
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter",
+    "SF Pro Text", sans-serif;
+  color: #f5f7fb;
+}

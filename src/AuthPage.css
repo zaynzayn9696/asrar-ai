@@ -1,0 +1,398 @@
+/* src/AuthPage.css */
+
+/* PAGE BACKGROUND */
+.auth-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #02040a;
+  background-image: radial-gradient(
+    circle at 50% 0%,
+    #071827 0%,
+    #02040a 60%,
+    #01020a 100%
+  );
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  color: #f5fbff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* faint holographic glow behind the card */
+.auth-glow-ring {
+  position: absolute;
+  top: -160px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 480px;
+  height: 480px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #00f4ff33 0, transparent 65%);
+  opacity: 0.8;
+  pointer-events: none;
+  filter: blur(3px);
+  animation: authGlowPulse 9s ease-in-out infinite;
+}
+
+/* CARD */
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  padding: 2.6rem 2.1rem 2.3rem;
+  border-radius: 28px;
+  background: radial-gradient(
+    circle at top,
+    #07121d 0,
+    #040813 40%,
+    #03040c 100%
+  );
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.05),
+    0 24px 80px rgba(0, 0, 0, 0.85),
+    0 0 40px rgba(0, 240, 255, 0.16);
+}
+
+/* floating/entrance animation */
+.auth-card-anim {
+  animation: authCardFloat 15s ease-in-out infinite,
+    authCardIn 0.6s ease-out 1;
+}
+
+/* LOGO */
+.auth-logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo-link {
+  display: inline-flex;
+  border-radius: 999px;
+}
+
+.auth-logo {
+  width: 150px; /* bigger logo */
+  height: auto;
+  filter: drop-shadow(0 0 22px rgba(0, 240, 255, 0.8));
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+.auth-logo:hover {
+  transform: translateY(-2px) rotate(-2deg) scale(1.02);
+  filter: drop-shadow(0 0 28px rgba(0, 240, 255, 0.95));
+}
+
+/* HEADINGS */
+.auth-title {
+  text-align: center;
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.45rem;
+}
+
+.auth-subtitle {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #a6b7c7;
+  max-width: 22rem;
+  margin: 0 auto 1.9rem;
+}
+
+/* FORM */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.auth-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #7f96ac;
+}
+
+.auth-input {
+  border-radius: 999px;
+  border: 1px solid rgba(88, 115, 140, 0.7);
+  background: radial-gradient(
+    circle at top,
+    #06121f 0,
+    #050814 45%,
+    #040510 100%
+  );
+  padding: 0.8rem 1.15rem;
+  font-size: 0.9rem;
+  color: #f5fbff;
+  outline: none;
+  width: 100%;
+  box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.18);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    transform 0.12s ease;
+}
+
+.auth-input::placeholder {
+  color: #5f7085;
+}
+
+.auth-input:focus {
+  border-color: rgba(0, 240, 255, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.7),
+    0 0 20px rgba(0, 240, 255, 0.3);
+  background: radial-gradient(
+    circle at top,
+    #071b2b 0,
+    #050a16 45%,
+    #040610 100%
+  );
+  animation: authInputPulse 0.5s ease-out 1;
+  transform: translateY(-1px);
+}
+
+/* ROWS / META */
+.auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.auth-row-meta {
+  margin-top: -0.3rem;
+  margin-bottom: 0.1rem;
+}
+
+/* text-style link buttons */
+.auth-link-button {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #9adfff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-decoration: none;
+  transition: color 0.18s ease, opacity 0.18s ease;
+}
+
+.auth-link-button:hover {
+  color: #e3fbff;
+  opacity: 0.9;
+}
+
+.auth-link-button-small {
+  margin-left: auto;
+}
+
+/* PRIMARY CTA BUTTON */
+.auth-primary-button {
+  margin-top: 0.4rem;
+  width: 100%;
+  border-radius: 999px;
+  border: none;
+  padding: 0.9rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #021018;
+  cursor: pointer;
+  background: linear-gradient(
+    90deg,
+    #00f4ff 0%,
+    #00ffd0 50%,
+    #00f4ff 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.6),
+    0 12px 40px rgba(0, 240, 255, 0.35);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.auth-primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.85),
+    0 18px 55px rgba(0, 240, 255, 0.45);
+  filter: brightness(1.05);
+}
+
+.auth-primary-button:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.7),
+    0 8px 26px rgba(0, 240, 255, 0.35);
+}
+
+/* FOOTER TEXT */
+.auth-footer-text {
+  margin-top: 1.4rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #7f96ac;
+}
+
+.auth-footer-link {
+  color: #9adfff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-footer-link:hover {
+  color: #e3fbff;
+}
+
+/* RTL SUPPORT */
+.auth-page-rtl .auth-footer-text {
+  text-align: right; /* or center if you prefer everything centered */
+}
+
+.auth-page-rtl .auth-row-meta {
+  justify-content: flex-start;
+}
+
+.auth-page-rtl .auth-link-button-small {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 2.1rem 1.5rem 2.1rem;
+  }
+
+  .auth-title {
+    font-size: 1.5rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .auth-logo {
+    width: 110px;
+  }
+}
+
+/* ANIMATIONS */
+@keyframes authGlowPulse {
+  0% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes authCardFloat {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes authCardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes authInputPulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(0, 240, 255, 0.6),
+      0 0 0 0 rgba(0, 240, 255, 0.15);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(0, 240, 255, 0.6),
+      0 0 20px rgba(0, 240, 255, 0.3);
+  }
+}
+
+/* CENTER THE FORM CONTENT WITHOUT SHRINKING INPUTS */
+.auth-form {
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+/* Labels centered */
+.auth-form .auth-label {
+  text-align: center;
+  width: 100%;
+}
+
+/* Inputs: full width but text inside is centered */
+.auth-form .auth-input {
+  width: 100%;               /* full size again */
+  max-width: 100%;           /* prevent shrinking */
+  text-align: center;        /* center typed text */
+}
+
+/* Center the submit button */
+.auth-form .auth-primary-button {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;               /* full width button (looks better with your design) */
+}
+
+.auth-card .auth-form {
+  width: 100%;
+}
+
+.auth-card .auth-field {
+  width: 100%;
+}
+
+.auth-card .auth-input {
+  width: 100% !important;     /* full width */
+  box-sizing: border-box;     /* include padding inside width */
+}
+
+/* Make the button full width too */
+.auth-card .auth-primary-button {
+  width: 100% !important;
+}
