@@ -148,15 +148,13 @@ const CreateAccountPage = () => {
         <h1 className="auth-title">{t.title}</h1>
         <p className="auth-subtitle">{t.subtitle}</p>
 
-  <button
+      <button
   type="button"
   className="auth-primary-button"
   style={{ marginBottom: "12px" }}
   onClick={() => {
-    alert(`API_BASE (signup) = ${API_BASE}`);
-    // NOTE: no redirect here on purpose, this is just a test
-    // window.location.href = `${API_BASE}/api/auth/google/start`;
-  }}
+  window.location.href = `${API_BASE}/api/auth/google/start`;
+}}
 >
   {isArabic ? "المتابعة باستخدام Google" : "Continue with Google"}
 </button>
