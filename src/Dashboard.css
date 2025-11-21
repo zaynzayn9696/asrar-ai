@@ -205,7 +205,7 @@
     flex-direction: column;
     align-items: center;
     padding: 15px 15px;
-    min-height: 340px;
+    min-height: 260px;
   }
 }
 
@@ -504,7 +504,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  min-height: 380px;
+  min-height: 280px; /* Reduced height to remove extra space */
   cursor: pointer;
   flex: 0 1 180px;
   max-width: 220px;
@@ -542,11 +542,11 @@
 
 .asrar-dash-char-text {
   text-align: center;
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   margin-top: 5px;
+  /* Removed flex-grow to prevent extra space */
 }
 
 .asrar-dash-char-name {
@@ -622,7 +622,7 @@
 
    /* Make the character cards visually bigger on desktop */
   .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-card {
-    min-height: 420px; /* Larger on desktop but not too tall */
+    min-height: 320px; /* Larger on desktop but not too tall */
     padding: 20px 20px;
     max-width: 240px;
   }
