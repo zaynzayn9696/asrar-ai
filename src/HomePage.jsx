@@ -1,6 +1,7 @@
 import AsrarFooter from "./AsrarFooter";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useRef } from "react";
+import "./Dashboard.css";
 import "./HomePage.css";
 import asrarLogo from "./assets/asrar-logo.png";
 import abuZainAvatar from "./assets/abu_zain.png";
@@ -10,6 +11,7 @@ import nourAvatar from "./assets/nour.png";
 import farahAvatar from "./assets/farah.png";
 import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
+import AsrarHeader from "./AsrarHeader";
 
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
@@ -544,7 +546,7 @@ function getMiniChatReply(message, isAr) {
 
 export default function HomePage() {
   // language + mood gate
-  const { user, loading } = useAuth(); // 
+  const { user, loading, logout } = useAuth(); // 
   const [language, setLanguage] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("asrar-lang") || "en";
@@ -555,6 +557,7 @@ export default function HomePage() {
   const [submittedMood, setSubmittedMood] = useState("");
   const [recommendedId, setRecommendedId] = useState(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isHomeHeaderNavOpen, setIsHomeHeaderNavOpen] = useState(false);
 
   // MINI CHAT STATE
   const [miniChatInput, setMiniChatInput] = useState("");
@@ -568,6 +571,7 @@ export default function HomePage() {
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[0];
 
   const isAr = language === "ar";
+  const navigate = useNavigate();
   const miniChatInputRef = useRef(null);
   const sliderTouchStartXRef = useRef(null);
   const sliderTouchDeltaXRef = useRef(0);
@@ -607,6 +611,8 @@ export default function HomePage() {
   const authLabels = isAr
     ? { login: "تسجيل الدخول", signup: "أنشئ حسابًا" }
     : { login: "Login", signup: "Create Account" };
+
+  const homeDashboardLabel = isAr ? "لوحة التحكم" : "Dashboard";
 
   const chatInputTitle = isAr ? "اكتب رسالتك" : "Compose your message";
   const chatInputSubtitle = isAr
@@ -725,6 +731,11 @@ export default function HomePage() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
   const handleGoToCharacter = (id) => {
     const el = document.getElementById(`character-${id}`);
     if (el) {
@@ -746,138 +757,95 @@ export default function HomePage() {
 
   return (
     <div className={`asrar-page ${isAr ? "asrar-page--ar" : ""}`}>
-      {/* HEADER */}
-      <header className="asrar-header">
-        <div className="asrar-header-inner">
-          <div className="asrar-header-left">
-            <a
-              href="#hero"
-              className="asrar-brand-text"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavClick("#hero");
-                setIsMobileNavOpen(false);
-              }}
-            >
-              {brandLabel}
-            </a>
-          </div>
+      {/* HEADER – reuse shared dashboard header system */}
+      <AsrarHeader
+        lang={language}
+        isAr={isAr}
+        onLangChange={handleLanguageSwitch}
+        onLogout={handleLogout}
+      />
 
-          <nav className="asrar-nav-wrapper">
-            <nav
-              className={`asrar-nav ${
-                isMobileNavOpen ? "asrar-nav--open" : ""
-              }`}
-            >
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(item.href);
-                    setIsMobileNavOpen(false);
-                  }}
-                >
-                  {item.label}
-                </a>
-              ))}
+      {/* HOME-ONLY MOBILE HAMBURGER (all users on Home) */}
+      <button
+        type="button"
+        className="asrar-header-menu asrar-dash-header-menu-toggle asrar-home-header-menu-toggle"
+        onClick={() => setIsHomeHeaderNavOpen((prev) => !prev)}
+      >
+        <span className="asrar-header-menu-line"></span>
+        <span className="asrar-header-menu-line"></span>
+        <span className="asrar-header-menu-line"></span>
+      </button>
 
-              <div className="asrar-nav-lang-mobile">
-                <button
-                  className={language === "en" ? "active" : ""}
-                  onClick={() => handleLanguageSwitch("en")}
-                >
-                  EN
-                </button>
-                <button
-                  className={language === "ar" ? "active" : ""}
-                  onClick={() => handleLanguageSwitch("ar")}
-                >
-                  عربي
-                </button>
-              </div>
-
-              <div className="asrar-nav-auth-mobile">
-                {!loading && !user && (
-                  <>
-                    <Link
-                      to="/login"
-                      className="asrar-btn ghost asrar-nav-auth-btn"
-                      onClick={() => setIsMobileNavOpen(false)}
-                    >
-                      {authLabels.login}
-                    </Link>
-                    <Link
-                      to="/create-account"
-                      className="asrar-btn primary asrar-nav-auth-btn"
-                      onClick={() => setIsMobileNavOpen(false)}
-                    >
-                      {authLabels.signup}
-                    </Link>
-                  </>
-                )}
-
-                {!loading && user && (
-                  <Link
-                    to="/dashboard"
-                    className="asrar-btn primary asrar-nav-auth-btn"
-                    onClick={() => setIsMobileNavOpen(false)}
-                  >
-                    {isAr ? "لوحة التحكم" : "Dashboard"}
-                  </Link>
-                )}
-              </div>
-            </nav>
-          </nav>
-
-          <div className="asrar-header-right">
-            <div className="asrar-lang-toggle asrar-lang-toggle-desktop">
-              <button
-                className={language === "en" ? "active" : ""}
-                onClick={() => handleLanguageSwitch("en")}
-              >
-                EN
-              </button>
-              <button
-                className={language === "ar" ? "active" : ""}
-                onClick={() => handleLanguageSwitch("ar")}
-              >
-                عربي
-              </button>
-            </div>
-
-            <div className="asrar-header-auth-desktop">
-              {!loading && !user && (
-                <>
-                  <Link to="/login" className="asrar-btn ghost">
-                    {authLabels.login}
-                  </Link>
-                  <Link to="/create-account" className="asrar-btn primary">
-                    {authLabels.signup}
-                  </Link>
-                </>
-              )}
-
-              {!loading && user && (
-                <Link to="/dashboard" className="asrar-btn primary">
-                  {isAr ? "لوحة التحكم" : "Dashboard"}
-                </Link>
-              )}
-            </div>
-
+      {/* HOME-ONLY MOBILE DROPDOWN (sections + auth/dashboard) */}
+      {isHomeHeaderNavOpen && (
+        <nav className="asrar-dash-mobile-nav asrar-home-mobile-nav">
+          <div className="asrar-lang-toggle asrar-dash-mobile-lang">
             <button
-              type="button"
-              className="asrar-header-menu"
-              aria-label="Toggle navigation"
-              onClick={() => setIsMobileNavOpen((prev) => !prev)}
+              className={language === "en" ? "active" : ""}
+              onClick={() => handleLanguageSwitch("en")}
             >
-              <span></span>
-              <span></span>
+              EN
+            </button>
+            <button
+              className={language === "ar" ? "active" : ""}
+              onClick={() => handleLanguageSwitch("ar")}
+            >
+              عربي
             </button>
           </div>
-        </div>
-      </header>
+
+          {navItems.map((item) => (
+            <button
+              key={item.href}
+              type="button"
+              className="asrar-home-header-nav-link"
+              onClick={() => {
+                handleNavClick(item.href);
+                setIsHomeHeaderNavOpen(false);
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+
+          {!user && (
+            <div className="asrar-header-auth-buttons asrar-home-mobile-auth">
+              <Link to="/login" className="asrar-btn ghost">
+                {authLabels.login}
+              </Link>
+              <Link to="/create-account" className="asrar-btn primary">
+                {authLabels.signup}
+              </Link>
+            </div>
+          )}
+
+          {user && (
+            <div className="asrar-header-auth-buttons asrar-home-mobile-auth">
+              <Link to="/dashboard" className="asrar-btn primary">
+                {homeDashboardLabel}
+              </Link>
+            </div>
+          )}
+        </nav>
+      )}
+
+      {/* HOME-ONLY HEADER NAV LINKS (scroll to sections) */}
+      <nav
+        className={`asrar-home-header-nav ${
+          isAr ? "asrar-home-header-nav--ar" : ""
+        }`}
+      >
+        {navItems.map((item) => (
+          <button
+            key={item.href}
+            type="button"
+            className="asrar-home-header-nav-link"
+            onClick={() => handleNavClick(item.href)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
 
       {/* MAIN */}
       <main>
@@ -888,26 +856,27 @@ export default function HomePage() {
               <img src={asrarLogo} alt="Asrar logo" />
             </div>
           </div>
+          <div className="asrar-hero-copy">
+            <p className="asrar-hero-eyebrow">
+              {isAr
+                ? "رفاق ذكاء اصطناعي خاصّون • مخصصون للعالم العربي"
+                : "Private AI Companions • For the Arab World"}
+            </p>
 
-          <p className="asrar-hero-eyebrow">
-            {isAr
-              ? "رفاق ذكاء اصطناعي خاصّون • مخصصون للعالم العربي"
-              : "Private AI Companions • For the Arab World"}
-          </p>
+            <h1 className="asrar-hero-title">
+              {isAr ? "أسرارك في أمان." : "Your secrets, guarded."}
+              <br />
+              {isAr
+                ? "ورفيقك يُختار بناءً على شعورك."
+                : "Your AI companion, chosen for you."}
+            </h1>
 
-          <h1 className="asrar-hero-title">
-            {isAr ? "أسرارك في أمان." : "Your secrets, guarded."}
-            <br />
-            {isAr
-              ? "ورفيقك يُختار بناءً على شعورك."
-              : "Your companion, chosen for you."}
-          </h1>
-
-          <p className="asrar-hero-subtitle">
-            {isAr
-              ? "اكتب ما تشعر به الآن، ودع أسرار تختار لك أنسب شخصية لتفريغ قلبك."
-              : "Tell us how you feel, and let Asrar match you with the right companion."}
-          </p>
+            <p className="asrar-hero-subtitle">
+              {isAr
+                ? "اكتب ما تشعر به الآن، ودع أسرار تختار لك أنسب شخصية لتفريغ قلبك."
+                : "Share how you feel today and let Asrar match you with the right companion."}
+            </p>
+          </div>
 
           {/* HERO COLUMNS */}
           <div className="asrar-hero-columns">

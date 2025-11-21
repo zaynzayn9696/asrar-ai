@@ -141,18 +141,22 @@ export default function CharacterCarousel({
   };
 
   return (
-    <div className="asrar-character-slider">
+    <div className="asrar-character-slider" dir="ltr">
       <button
         type="button"
         className="asrar-character-arrow asrar-character-arrow--left"
         aria-label={isAr ? "الشخصية السابقة" : "Previous character"}
         onClick={handlePrev}
+        dir="ltr"
       >
         {"<"}
       </button>
       <div className="asrar-character-slider-viewport" dir="ltr">
         <div
-          className="asrar-character-track"
+          className={
+            "asrar-character-track" +
+            (variant === "home" ? " asrar-character-grid" : "")
+          }
           style={{ transform: `translateX(-${index * 100}%)` }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -164,35 +168,36 @@ export default function CharacterCarousel({
             </div>
           ))}
         </div>
-      </div>
-      <button
-        type="button"
-        className="asrar-character-arrow asrar-character-arrow--right"
-        aria-label={isAr ? "الشخصية التالية" : "Next character"}
-        onClick={handleNext}
-      >
-        {">"}
-      </button>
-      <div className="asrar-character-dots">
-        {characters.map((character, i) => {
-          const isActive = i === index;
-          return (
-            <button
-              key={character.id}
-              type="button"
-              className={
-                "asrar-character-dot" +
-                (isActive ? " asrar-character-dot--active" : "")
-              }
-              aria-label={
-                isAr
-                  ? `اختر ${character.nameAr}`
-                  : `Select ${character.nameEn}`
-              }
-              onClick={() => goToIndex(i)}
-            />
-          );
-        })}
+        <button
+          type="button"
+          className="asrar-character-arrow asrar-character-arrow--right"
+          aria-label={isAr ? "الشخصية التالية" : "Next character"}
+          onClick={handleNext}
+          dir="ltr"
+        >
+          {">"}
+        </button>
+        <div className="asrar-character-dots">
+          {characters.map((character, i) => {
+            const isActive = i === index;
+            return (
+              <button
+                key={character.id}
+                type="button"
+                className={
+                  "asrar-character-dot" +
+                  (isActive ? " asrar-character-dot--active" : "")
+                }
+                aria-label={
+                  isAr
+                    ? `اختر ${character.nameAr}`
+                    : `Select ${character.nameEn}`
+                }
+                onClick={() => goToIndex(i)}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -54,172 +54,139 @@ body {
   background: radial-gradient(circle at top, #101b27 0, #040609 55%, #010205 100%);
   color: var(--asrar-text-main);
   overflow-x: hidden;
-  padding-top: 72px;
+  padding-top: 0; /* remove top gap so header sits flush at top */
 }
 
 .asrar-page--ar {
   direction: rtl;
 }
 
-.asrar-page--ar .asrar-header,
-.asrar-page--ar .asrar-header-left,
-.asrar-page--ar .asrar-header-right,
-.asrar-page--ar .asrar-nav-wrapper,
-.asrar-page--ar .asrar-nav {
-  direction: ltr;
-}
-
 /* HEADER -------------------------------------------------------------- */
 
-.asrar-header {
+/* On Home, keep the shared AsrarHeader stuck to the top while scrolling */
+.asrar-page .asrar-dash-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 40px;
-  background: linear-gradient(
-    to bottom,
-    rgba(3, 6, 11, 0.98),
-    rgba(3, 6, 11, 0.92),
-    rgba(3, 6, 11, 0.75),
-    transparent
-  );
-  backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  z-index: 40;
+  padding-left: 24px;  /* add horizontal breathing room on Home */
+  padding-right: 24px;
 }
 
-.asrar-header-left,
-.asrar-header-right {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.asrar-header-left {
-  justify-content: flex-start;
-}
-
-.asrar-header-right {
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.asrar-brand-text {
-  font-size: 16px;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  color: #FFF;
-  font-family: "Cinzel", serif;
-  text-decoration: none;
-}
-
-.asrar-header-inner {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  position: relative;
-}
-
-.asrar-header-auth-desktop {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 10px;
-}
-
-.asrar-nav-auth-mobile {
-  display: none;
-  width: 100%;
-  margin-top: 8px;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.asrar-nav-auth-btn {
-  width: 100%;
-  justify-content: center;
-  text-align: center;
-}
-
-.asrar-nav-lang-mobile {
-  display: none;
-  width: 100%;
-  margin-top: 4px;
-  justify-content: center;
-  gap: 8px;
-}
-
-.asrar-nav-lang-mobile button {
-  border: none;
-  background: transparent;
-  color: var(--asrar-text-muted);
-  font-size: 11px;
-  padding: 4px 10px;
-  cursor: pointer;
-  border-radius: 999px;
-}
-
-.asrar-nav-lang-mobile button.active {
-  background: var(--asrar-accent-soft);
-  color: var(--asrar-accent);
-}
-
-.asrar-lang-toggle-desktop {
-  display: inline-flex;
-}
-
-/* NAV ----------------------------------------------------------------- */
-
-.asrar-nav-wrapper {
-  display: flex;
-  justify-content: center;
-  position: relative;
-}
-
-.asrar-nav {
-  display: flex;
-  gap: 24px;
-  font-size: 14px;
-  justify-content: center;
-}
-
-.asrar-nav a {
-  color: var(--asrar-text-muted);
-  text-decoration: none;
-  position: relative;
-  padding-bottom: 4px;
-  transition: color 0.17s ease;
-}
-
-.asrar-nav a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 0;
-  height: 1px;
-  background: var(--asrar-accent);
-  box-shadow: 0 0 8px var(--asrar-accent);
-  transition: width 0.18s ease;
-}
-
-.asrar-nav a:hover {
-  color: var(--asrar-text-main);
-}
-
-.asrar-nav a:hover::after {
-  width: 100%;
+/* Offset main content so it doesn't sit under the fixed header + nav */
+.asrar-page > main {
+  padding-top: 120px;
 }
 
 /* LANGUAGE + BUTTONS -------------------------------------------------- */
+
+/* Home-only header nav just under the shared AsrarHeader */
+.asrar-home-header-nav {
+  max-width: 1180px;
+  margin: 0 auto; /* centered under header */
+  padding: 0 40px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  font-size: 13px;
+  position: fixed;
+  top: 64px; /* just under the fixed header bar */
+  left: 0;
+  right: 0;
+  z-index: 39; /* below the header + hamburger */
+}
+
+.asrar-home-header-nav--ar {
+  direction: rtl;
+}
+
+.asrar-home-header-nav-link {
+  background: transparent;
+  border: none;
+  color: var(--asrar-text-muted);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font: inherit;
+  text-decoration: none;
+}
+
+.asrar-home-header-nav-link:hover {
+  color: var(--asrar-accent);
+  background: rgba(24, 209, 218, 0.12);
+}
+
+/* Home-only mobile hamburger button */
+.asrar-home-header-menu-toggle {
+  margin: 4px auto 4px;
+}
+
+/* Use existing .asrar-dash-mobile-nav styles; just ensure it’s used on home */
+.asrar-home-mobile-nav {
+  max-width: 360px;
+  width: 100%;
+  position: fixed;
+  top: 72px; /* just below the fixed header bar */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 39; /* below header + hamburger */
+}
+
+/* Hide the inline header nav on small screens, use the hamburger instead */
+@media (max-width: 768px) {
+  .asrar-home-header-nav {
+    display: none;
+  }
+
+  /* On Home page, center the shared header contents on mobile */
+  .asrar-page .asrar-dash-header {
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Remove extra left margin on Home mobile header */
+  .asrar-page .asrar-dash-header-left {
+    margin-left: 0.5rem;
+  }
+
+  /* Hide inline header-right (lang + auth) on Home mobile; use dropdown instead */
+  .asrar-page .asrar-dash-header-right {
+    display: none;
+  }
+
+  /* Keep home hamburger visually attached to the header on mobile */
+  .asrar-home-header-menu-toggle {
+    position: fixed;
+    top: 12px;
+    right: 16px;
+    left: auto;
+    transform: none;
+    z-index: 41;
+  }
+}
+
+/* Tidy layout inside the Home mobile dropdown */
+.asrar-home-mobile-nav .asrar-home-header-nav-link {
+  width: 100%;
+  text-align: center;
+  margin: 0.15rem 0;
+}
+
+.asrar-home-mobile-auth {
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.asrar-home-mobile-auth .asrar-btn {
+  flex: 1;
+  justify-content: center;
+}
 
 .asrar-lang-toggle {
   display: inline-flex;
@@ -284,30 +251,6 @@ body {
   font-size: 12px;
 }
 
-/* BURGER MENU --------------------------------------------------------- */
-
-.asrar-header-menu {
-  display: none;
-  margin-left: 8px;
-  width: 30px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-
-.asrar-header-menu span {
-  display: block;
-  height: 2px;
-  border-radius: 999px;
-  background: rgba(245, 247, 251, 0.9);
-  margin-bottom: 5px;
-}
-
-.asrar-header-menu span:last-child {
-  margin-bottom: 0;
-}
-
 /* HERO --------------------------------------------------------------- */
 
 .asrar-hero {
@@ -340,8 +283,8 @@ body {
 }
 
 .asrar-hero-eyebrow {
-  font-size: 13px;
-  letter-spacing: 0.2em;
+  font-size: 16px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--asrar-text-muted);
   margin-bottom: 6px;
@@ -349,7 +292,7 @@ body {
 
 .asrar-hero-title {
   margin: 0 0 10px;
-  font-size: 40px;
+  font-size: 46px;
   line-height: 1.2;
   letter-spacing: 0.01em;
   text-shadow: 0 0 26px rgba(0, 0, 0, 0.9);
@@ -357,7 +300,7 @@ body {
 
 .asrar-hero-subtitle {
   margin: 0 0 22px;
-  font-size: 15px;
+  font-size: 14px;
   color: var(--asrar-accent);
 }
 
@@ -652,12 +595,7 @@ body {
 /* CHARACTERS --------------------------------------------------------- */
 
 .asrar-character-grid {
-  
   margin: 18px auto 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 22px;
-  justify-content: center;
 }
 
 .asrar-character-card {
@@ -849,6 +787,67 @@ body {
     width: 30px;
     height: 30px;
     font-size: 14px;
+  }
+}
+
+/* Desktop layout: show all 5 characters in a row */
+@media (min-width: 1024px) {
+  .asrar-character-slider {
+    max-width: 1100px;
+    margin: 22px auto 8px;
+    padding: 0;
+  }
+
+  .asrar-character-track.asrar-character-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+    transform: none !important;
+  }
+
+  .asrar-character-slide {
+    flex: 0 0 auto;
+    padding: 0;
+    display: block;
+  }
+
+  .asrar-character-arrow,
+  .asrar-character-dots {
+    display: none;
+  }
+}
+
+/* Tablet layout: 3 columns to feel like 3 + 2 / 2 + 2 + 1 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .asrar-character-slider {
+    max-width: 900px;
+    margin: 22px auto 8px;
+    padding: 0;
+  }
+
+  .asrar-character-track.asrar-character-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    transform: none !important;
+  }
+
+  .asrar-character-slide {
+    flex: 0 0 auto;
+    padding: 0;
+    display: block;
+  }
+
+  .asrar-character-arrow,
+  .asrar-character-dots {
+    display: none;
+  }
+}
+
+/* Mobile: keep existing slider behavior */
+@media (max-width: 767px) {
+  .asrar-character-track.asrar-character-grid {
+    display: flex;
   }
 }
 
@@ -1259,66 +1258,17 @@ body {
 }
 
 @media (max-width: 780px) {
-  .asrar-header {
-    padding-inline: 18px;
-  }
-
   .asrar-hero,
   .asrar-section {
     padding-inline: 18px;
   }
-}
 
-/* Mobile nav behaviour */
-@media (max-width: 850px) {
-  .asrar-nav {
-    display: none;
-    position: absolute;
-    top: 52px;
-    left: 0;
-    right: 0;
-    padding: 12px 20px 16px;
-    background: rgba(3, 6, 11, 0.97);
-    backdrop-filter: blur(18px);
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
+  .asrar-hero-title {
+    font-size: 34px;
   }
 
-  .asrar-nav.asrar-nav--open {
-    display: flex;
-  }
-
-  .asrar-header-menu {
-    display: inline-flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .asrar-header-auth-desktop {
-    display: none;
-  }
-
-  .asrar-nav-auth-mobile {
-    display: flex;
-  }
-
-  .asrar-lang-toggle-desktop {
-    display: none;
-  }
-
-  .asrar-nav-lang-mobile {
-    display: flex;
-  }
-}
-
-@media (min-width: 851px) {
-  .asrar-nav {
-    display: flex;
-  }
-
-  .asrar-nav-lang-mobile {
-    display: none;
+  .asrar-hero-eyebrow {
+    font-size: 14px;
   }
 }
 

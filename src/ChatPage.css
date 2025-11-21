@@ -668,101 +668,15 @@
     padding: 1.6rem 1.1rem 1.5rem;
   }
 }
-/* hidden by default on desktop */
-.asrar-dash-mobile-nav {
-  display: none;
-}
-
-.asrar-dash-header-menu-toggle {
-  display: none; /* hide hamburger on desktop */
-}
-
 @media (max-width: 768px) {
-  /* hide avatar + dropdown and desktop Dashboard link on mobile */
-  .asrar-dash-header-user {
+  /* On chat page, hide the header language toggle and use the one in the dropdown */
+  .asrar-chat-page .asrar-lang-toggle {
     display: none;
   }
 
-  .asrar-dash-header-link {
-    display: none;
-  }
-
-  /* show hamburger on mobile */
-  .asrar-dash-header-menu-toggle {
-    display: flex;
-  }
-
-   .asrar-chat-page .asrar-lang-toggle {
-    display: none;
-  }
-
-  /* but we still show the one inside the dropdown (we added another class for it) */
   .asrar-chat-page .asrar-dash-mobile-lang {
     display: flex;
     justify-content: center;
     margin-bottom: 0.4rem;
   }
-  
-  /* mobile nav panel */
-  .asrar-dash-mobile-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    background: radial-gradient(circle at top, #061627, #02040d);
-    border-radius: 16px;
-    border: 1px solid rgba(0, 240, 255, 0.3);
-    padding: 0.6rem 0.9rem;
-    margin: 0.4rem auto 0.8rem;
-    max-width: 360px;
-  }
-
-  .asrar-dash-mobile-nav a {
-    color: #e8f8ff;
-    text-decoration: none;
-    font-size: 0.9rem;
-  }
-
-  .asrar-dash-mobile-nav a:hover {
-    text-decoration: underline;
-  }
-
-  .asrar-dash-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap; /* ⛔ no wrapping! */
-  }
-
-  .asrar-dash-header-left {
-    flex-shrink: 0;
-  }
-
-  .asrar-dash-header-right {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-left: auto; /* push everything to the right */
-  }
-
-  .asrar-dash-mobile-nav a {
-  text-align: center;   /* center links */
-  width: 100%;
-}
-.asrar-dash-mobile-nav-btn {
-  width: 100%;
-  text-align: center;
-  background: transparent;
-  border: none;
-  color: #e8f8ff;
-  padding: 0.5rem 0;
-  font-size: 0.9rem;
-}
-
-.asrar-dash-mobile-nav-btn:hover {
-  text-decoration: underline;
-}
-
-.asrar-dash-mobile-nav-danger {
-  color: #ff6b6b;
-}
 }

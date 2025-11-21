@@ -53,14 +53,26 @@
   justify-content: space-between;
   width: 100%;
   margin: 0 0 1.9rem;
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 30;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 4, 10, 0.98),
+    rgba(2, 4, 10, 0.94),
+    rgba(2, 4, 10, 0.85),
+    transparent
+  );
+  backdrop-filter: blur(16px);
 }
 
 .asrar-dash-header-left {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-left: 0.5rem;
 }
 
 .asrar-dash-logo-wrap {
@@ -106,6 +118,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.18rem;
+  font-size: 0.96rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #e9f8ff;
+  font-family: "Cinzel", serif;
 }
 
 .asrar-dash-brand-main {
@@ -125,6 +142,48 @@
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  margin-right: 0.5rem;
+}
+
+/* Auth buttons group in header (Login / Create Account, etc.) */
+.asrar-header-auth-buttons {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem; /* space between language toggle and auth buttons */
+}
+
+/* Shared hamburger button used in headers */
+.asrar-header-menu {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(3, 8, 16, 0.96);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.asrar-header-menu-line {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #e8f8ff;
+  margin: 2px 0;
+}
+
+/* Mobile dropdown nav used by AsrarHeader (hidden by default on desktop) */
+.asrar-dash-mobile-nav {
+  display: none;
+}
+
+/* Mobile hamburger toggle (hidden on desktop) */
+.asrar-dash-header-menu-toggle {
+  display: none;
 }
 
 .asrar-dash-header-hint {
@@ -675,6 +734,39 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
 }
 
 @media (max-width: 768px) {
+  /* Hide desktop-only pieces on small screens */
+  .asrar-dash-header-user {
+    display: none;
+  }
+
+  .asrar-dash-header-link {
+    display: none;
+  }
+
+  /* Show hamburger on mobile */
+  .asrar-dash-header-menu-toggle {
+    display: flex;
+  }
+
+  /* Compact mobile header layout */
+  .asrar-dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .asrar-dash-header-left {
+    flex-shrink: 0;
+  }
+
+  .asrar-dash-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-left: auto;
+  }
+
   /* 1) Hide the header language toggle on dashboard mobile */
   .asrar-dashboard-page .asrar-dash-header-right .asrar-lang-toggle {
     display: none;
@@ -682,45 +774,71 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
 
   /* 2) Show and style the language toggle INSIDE the mobile dropdown */
   .asrar-dashboard-page .asrar-dash-mobile-lang {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  margin-top: 0.3rem;
-}
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    margin-top: 0.3rem;
+  }
 
-.asrar-dashboard-page .asrar-dash-mobile-lang button {
-  padding: 0.35rem 0.9rem;
-  font-size: 0.85rem;
-  border-radius: 6px;
-}
+  .asrar-dashboard-page .asrar-dash-mobile-lang button {
+    padding: 0.35rem 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+  }
 
-  /* (Optional but nice) center all items in the dropdown */
-  .asrar-dashboard-page .asrar-dash-mobile-nav {
+  /* Shared mobile dropdown panel styling for all pages using AsrarHeader */
+  .asrar-dash-mobile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    background: radial-gradient(circle at top, #061627 0, #02040d 70%);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    padding: 0.6rem 0.9rem;
+    margin: 0.4rem auto 0.8rem;
+    max-width: 360px;
     align-items: center;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
   }
 
-  .asrar-dashboard-page .asrar-dash-mobile-nav a,
-  .asrar-dashboard-page .asrar-dash-mobile-nav-btn {
-      text-align: center;
-  width: 100%;
-  padding: 0.55rem 0.9rem;      /* NEW: same padding as buttons */
-  margin: 0.2rem 0;             /* NEW: same vertical spacing */
-  border-radius: 10px;          /* matches your style */
+  .asrar-dash-mobile-nav a {
+    color: #e8f8ff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-align: center;
+    width: 100%;
+    padding: 0.55rem 0.9rem;
+    margin: 0.2rem 0;
+    border-radius: 10px;
   }
+
   .asrar-dash-mobile-nav a:hover,
-.asrar-dash-mobile-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-}
-.asrar-dash-mobile-nav a {
-  text-decoration: none !important;
-}
+  .asrar-dash-mobile-nav a:focus,
+  .asrar-dash-mobile-nav a:active {
+    background: rgba(255, 255, 255, 0.06);
+    text-decoration: none;
+  }
 
-.asrar-dash-mobile-nav a:hover,
-.asrar-dash-mobile-nav a:focus,
-.asrar-dash-mobile-nav a:active {
-  text-decoration: none !important;
-}
+  .asrar-dash-mobile-nav-btn {
+    width: 100%;
+    text-align: center;
+    background: transparent;
+    border: none;
+    color: #e8f8ff;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .asrar-dash-mobile-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .asrar-dash-mobile-nav-danger {
+    color: #ff6b6b;
+  }
   .asrar-dashboard-page .asrar-dash-header-link,
   .asrar-settings-page .asrar-dash-header-link,
   .asrar-billing-page .asrar-dash-header-link {

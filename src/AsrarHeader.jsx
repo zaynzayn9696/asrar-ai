@@ -1,7 +1,6 @@
 // src/AsrarHeader.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import asrarLogo from "./assets/asrar-logo.png";
 import { useAuth } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 
@@ -74,17 +73,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout }) {
       <header className="asrar-dash-header">
         <div className="asrar-dash-header-left">
           <Link to="/" className="asrar-dash-logo-wrap">
-            <div className="asrar-dash-logo-frame">
-              <img src={asrarLogo} alt="Asrar AI" className="asrar-dash-logo" />
-            </div>
-            <div className="asrar-dash-brand">
-              <span className="asrar-dash-brand-main">ASRAR AI</span>
-              <span className="asrar-dash-brand-sub">
-                {isAr
-                  ? "رفاق ذكاء اصطناعي • للعالم العربي"
-                  : "Private AI Companions • For the Arab World"}
-              </span>
-            </div>
+            <span className="asrar-dash-brand">ASRAR AI</span>
           </Link>
         </div>
 
@@ -181,8 +170,9 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout }) {
                 aria-label="Toggle navigation"
                 onClick={() => setIsMobileNavOpen((prev) => !prev)}
               >
-                <span></span>
-                <span></span>
+                <span className="asrar-header-menu-line"></span>
+                <span className="asrar-header-menu-line"></span>
+                <span className="asrar-header-menu-line"></span>
               </button>
             </>
           )}
