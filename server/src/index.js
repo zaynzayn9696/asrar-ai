@@ -22,12 +22,22 @@ console.log(
   'JWT_SECRET set?',
   !!process.env.JWT_SECRET
 );
-
-const FRONTEND_ORIGIN = process.env.FRONTEND_URL;
+const allowedOrigins = [
+  "https://asrarai.com",
+  "https://www.asrarai.com",
+  "https://asrar-ai.vercel.app",
+];
 
 app.use(
   cors({
-    origin: FRONTEND_ORIGIN,
+    origin: (origin, callback) => {
+      // Allow no-origin requests (like curl/postman) and allowed browser origins
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      console.warn("[CORS] Blocked origin:", origin);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
