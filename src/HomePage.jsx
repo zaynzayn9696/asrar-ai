@@ -919,24 +919,15 @@ export default function HomePage() {
                 <div className="asrar-chat-phone">
                   <div className="asrar-chat-header">
                     <div className="asrar-chat-avatar"></div>
-                    <div className="asrar-chat-header-text">
-                      <span className="asrar-chat-name">
-                        {isAr ? "هَنا" : "Hana"}
-                      </span>
-                      <span className="asrar-chat-status">
-                        {isAr
-                          ? "متصلة • تستمع لك"
-                          : "Online • Listening"}
-                      </span>
-                    </div>
+                   
                   </div>
 
                   <div className="asrar-chat-body">
                     <div className="bubble bubble-ai">
                       <div className="bubble-ai-label">
                         {isAr
-                          ? "هَنا • دعم عميق"
-                          : "Hana • Deep Support"}
+                          ? " • دعم عميق"
+                          : " • Deep Support"}
                       </div>
                       <p className="bubble-ai-text">
                         {isAr
