@@ -604,7 +604,7 @@ export default function HomePage() {
         { href: "#about", label: "About" },
         { href: "#characters", label: "Characters" },
         { href: "#security-privacy", label: "Security & Privacy" },
-        { href: "#how-it-works", label: "How it works" },
+      
         { href: "#pricing", label: "Pricing" },
       ];
 
@@ -1177,41 +1177,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* HOW IT WORKS */}
-        <section id="how-it-works" className="asrar-section">
-          <h2 className="asrar-section-title">
-            {isAr ? "كيف يعمل أسرار؟" : "How Asrar Works"}
-          </h2>
-          <div className="asrar-steps">
-            <div className="step">
-              <div className="step-number">1</div>
-              <h3>{isAr ? "اكتب شعورك" : "Share your mood"}</h3>
-              <p>
-                {isAr
-                  ? "استخدم بوابة المزاج لكتابة ما تشعر به في رسالة واحدة، أو ابدأ مباشرة مع شخصيتك المفضلة."
-                  : "Use the Mood Gate to describe how you feel in one message, or jump straight into chat with your favorite companion."}
-              </p>
-            </div>
-            <div className="step">
-              <div className="step-number">2</div>
-              <h3>{isAr ? "تحدّث بلغتك" : "Chat in your language"}</h3>
-              <p>
-                {isAr
-                  ? "تحدث بالعربية أو الإنجليزية أو خلط بينهما. تبقى محادثاتك خاصة بينك وبين رفيقك."
-                  : "Talk in Arabic, English, or both. Your conversations stay private between you and your companion."}
-              </p>
-            </div>
-            <div className="step">
-              <div className="step-number">3</div>
-              <h3>{isAr ? "تتطوّر معك" : "Grow over time"}</h3>
-              <p>
-                {isAr
-                  ? "بدّل بين الشخصيات مع تغيّر احتياجك، واصنع لنفسك صندوق أدوات عاطفي."
-                  : "Switch companions when your needs change, and build your own emotional toolkit over time."}
-              </p>
-            </div>
-          </div>
-        </section>
+       
 
         {/* PRICING */}
         <section id="pricing" className="asrar-section asrar-section--pricing">
