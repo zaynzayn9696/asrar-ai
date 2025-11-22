@@ -61,81 +61,78 @@ const CreateAccountPage = () => {
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    if (!name || !email || !password || !confirm) {
+  if (!name || !email || !password || !confirm) {
+    setError(
+      isArabic
+        ? "الرجاء ملء جميع الحقول."
+        : "Please fill in all fields."
+    );
+    return;
+  }
+
+  if (password !== confirm) {
+    setError(
+      isArabic
+        ? "كلمتا المرور غير متطابقتين."
+        : "Passwords do not match."
+    );
+    return;
+  }
+
+  try {
+    setSubmitting(true);
+
+    const res = await fetch(`${API_BASE}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
       setError(
-        isArabic
-          ? "الرجاء ملء جميع الحقول."
-          : "Please fill in all fields."
+        data.message ||
+          (isArabic
+            ? "فشل إنشاء الحساب. تأكد من البيانات."
+            : "Failed to create account. Please check your details.")
       );
       return;
     }
 
-    if (password !== confirm) {
-      setError(
-        isArabic
-          ? "كلمتا المرور غير متطابقتين."
-          : "Passwords do not match."
-      );
-      return;
+    if (data.token && typeof window !== "undefined") {
+      localStorage.setItem(TOKEN_KEY, data.token);
     }
 
-    try {
-      setSubmitting(true);
-
-      const res = await fetch(`${API_BASE}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // 🔑 so cookie is set
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setError(
-          data.message ||
-            (isArabic
-              ? "فشل إنشاء الحساب. تأكد من البيانات."
-              : "Failed to create account. Please check your details.")
-        );
-        return;
-      }
-
-      if (data.token && typeof window !== "undefined") {
-        localStorage.setItem(TOKEN_KEY, data.token);
-      }
-
-      // 🔑 store user in auth context
-      if (data.user) {
-        setUser(data.user);
-      }
-
-      // Decide where to send them based on any preselected character
-      let targetPath = "/dashboard";
-      if (typeof window !== "undefined") {
-        const preselected = localStorage.getItem("asrar-selected-character");
-        if (preselected) {
-          targetPath = "/chat";
-        }
-      }
-
-      // 🔑 go to dashboard right away
-      navigate(targetPath);
-    } catch (err) {
-      console.error("Signup error:", err);
-      setError(
-        isArabic
-          ? "حدث خطأ غير متوقع أثناء إنشاء الحساب."
-          : "Unexpected error while creating your account."
-      );
-    } finally {
-      setSubmitting(false);
+    if (data.user) {
+      setUser(data.user);
     }
-  };
+
+    // ✅ Always redirect new user to dashboard after signup
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("asrar-selected-character");
+      } catch (_) {}
+    }
+
+    navigate("/dashboard");
+  } catch (err) {
+    console.error("Signup error:", err);
+    setError(
+      isArabic
+        ? "حدث خطأ غير متوقع أثناء إنشاء الحساب."
+        : "Unexpected error while creating your account."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   return (
     <div className={`auth-page ${isArabic ? "auth-page-rtl" : ""}`}>
