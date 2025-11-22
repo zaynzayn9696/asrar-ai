@@ -213,6 +213,11 @@ export default function Dashboard() {
       return;
     }
 
+    if (isFreePlan && selectedCharacterId !== "hana") {
+      alert(isAr ? "للمشتركين في الخطة المدفوعة فقط حالياً." : "For Pro users only for now.");
+      return;
+    }
+
     if (typeof window !== "undefined") {
       localStorage.setItem("asrar-selected-character", selectedCharacterId);
       localStorage.setItem("asrar-dialect", selectedDialect);
@@ -224,11 +229,6 @@ export default function Dashboard() {
   const isFreePlan = !user || user.plan !== "pro";
 
   const handleCharacterChange = (char) => {
-    const isLocked = isFreePlan && char.id !== "hana";
-    if (isLocked) {
-      navigate("/billing");
-      return;
-    }
     setSelectedCharacterId(char.id);
   };
 
