@@ -103,29 +103,31 @@ export default function CharacterCarousel({
       />
       <h3>{isAr ? character.nameAr : character.nameEn}</h3>
       <p className="role">{isAr ? character.roleAr : character.roleEn}</p>
-      {character.descriptionEn && character.descriptionAr && (
-        <p className="desc">
-          {isAr ? character.descriptionAr : character.descriptionEn}
-        </p>
-      )}
-      <Link
-        to="/dashboard"
-        className="asrar-btn primary small asrar-character-cta"
-        onClick={() => {
-          if (typeof window !== "undefined") {
-            try {
-              window.localStorage.setItem(
-                "asrar-selected-character",
-                character.id
-              );
-            } catch (_) {}
-          }
-        }}
-      >
-        {isAr
-          ? `ابدأ المحادثة مع ${character.nameAr}`
-          : `Talk to ${character.nameEn}`}
-      </Link>
+      <div className="asrar-character-content">
+        {character.descriptionEn && character.descriptionAr && (
+          <p className="desc">
+            {isAr ? character.descriptionAr : character.descriptionEn}
+          </p>
+        )}
+        <Link
+          to="/dashboard"
+          className="asrar-btn primary small asrar-character-cta"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              try {
+                window.localStorage.setItem(
+                  "asrar-selected-character",
+                  character.id
+                );
+              } catch (_) {}
+            }
+          }}
+        >
+          {isAr
+            ? `ابدأ المحادثة مع ${character.nameAr}`
+            : `Talk to ${character.nameEn}`}
+        </Link>
+      </div>
       
       {isLocked && (
         <div className="asrar-char-pro-tag" aria-hidden>

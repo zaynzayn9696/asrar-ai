@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useRef } from "react";
 import "./Dashboard.css";
 import "./HomePage.css";
+import "./CharacterCarousel.css";
 import asrarLogo from "./assets/asrar-logo.png";
 import abuZainAvatar from "./assets/abu_zain.png";
 import hanaAvatar from "./assets/hana.png";
@@ -59,7 +60,7 @@ const CHARACTERS = [
     roleEn: "Brutal Honesty",
     roleAr: "صراحة قاسية",
     descriptionEn:
-      "Unfiltered, sharp, sarcastic. Tells you the truth with good intentions, no sugar-coating.",
+      "Unfiltered, sarcastic. Tells you the truth with good intentions, no sugar-coating.",
     descriptionAr:
       "صريح بدون فلتر، حاد وساخر. يقول لك الحقيقة بنية طيبة بدون تلميع.",
   },
@@ -1021,23 +1022,89 @@ export default function HomePage() {
         </section>
 
         {/* CHARACTERS */}
-        <section id="characters" className="asrar-section">
-          <h2 className="asrar-section-title">
-            {isAr ? "قلب عائلة أسرار" : "The Asrar Core Family"}
-          </h2>
-          <p className="asrar-section-subtitle">
-            {isAr
-              ? "خمسة رفقاء فقط، لكن كل واحد منهم يمثل جانباً مختلفاً من احتياجك."
-              : "Five companions, each covering a different side of what you need."}
-          </p>
+        <section id="characters" className="asrar-section asrar-characters-section">
+          <div className="asrar-section-header">
+            <h2 className="asrar-section-title">
+              {isAr ? "قلب عائلة أسرار" : "The Asrar Core Family"}
+            </h2>
+            <p className="asrar-section-subtitle">
+              {isAr
+                ? "خمسة رفقاء، كل واحد منهم يمثل جانباً مختلفاً من احتياجك العاطفي."
+                : "Five companions, each reflecting a different side of your emotional needs."}
+            </p>
+          </div>
 
-          <CharacterCarousel
-            characters={CHARACTERS}
-            selectedCharacterId={selectedCharacterId}
-            onChange={(char) => setSelectedCharacterId(char.id)}
-            isAr={isAr}
-            variant="home"
-          />
+          <div className="asrar-character-grid-wrapper">
+            <div className="asrar-character-grid">
+              {CHARACTERS.map((character) => {
+                const isLocked = ((!user || user.plan !== "pro") && character.id !== "hana");
+                const cardClasses =
+                  "asrar-character-card" + (isLocked ? " asrar-character-card--locked" : "");
+                return (
+                  <div key={character.id} className={cardClasses} id={`character-${character.id}`}>
+                    {isLocked && (
+                      <span className="asrar-character-pro-pill">
+                        {isAr ? "خطة برو فقط" : "Pro only"}
+                      </span>
+                    )}
+
+                    <div className="asrar-character-card-inner">
+                      <div className="asrar-character-card-top asrar-character-card-top--stack">
+                        <img
+                          className="asrar-character-avatar"
+                          src={character.avatar}
+                          alt={`${character.nameEn} avatar`}
+                        />
+                        <h3 className="asrar-character-name">
+                          {isAr ? character.nameAr : character.nameEn}
+                        </h3>
+                        <p className="asrar-character-role">
+                          {isAr ? character.roleAr : character.roleEn}
+                        </p>
+                      </div>
+
+                      <p className="asrar-character-desc">
+                        {isAr ? character.descriptionAr : character.descriptionEn}
+                      </p>
+
+                      <div className="asrar-character-footer">
+                        <button
+                          type="button"
+                          className="asrar-btn primary asrar-character-cta"
+                          onClick={() => {
+                            if (typeof window !== "undefined") {
+                              try {
+                                window.localStorage.setItem(
+                                  "asrar-selected-character",
+                                  character.id
+                                );
+                              } catch (_) {}
+                            }
+                            navigate(user ? "/dashboard" : "/create-account");
+                          }}
+                        >
+                          {isAr
+                            ? `ابدأ المحادثة مع ${character.nameAr}`
+                            : `Talk to ${character.nameEn}`}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="asrar-character-carousel-wrapper">
+            <CharacterCarousel
+              characters={CHARACTERS}
+              selectedCharacterId={selectedCharacterId}
+              onChange={(char) => setSelectedCharacterId(char.id)}
+              isAr={isAr}
+              variant="home"
+              isFreePlan={!user || user.plan !== "pro"}
+            />
+          </div>
         </section>
 
         {/* SECURITY & PRIVACY / WHY */}
