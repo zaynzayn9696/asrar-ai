@@ -80,7 +80,10 @@ export default function CharacterCarousel({
     }
   };
 
-  const renderHomeCard = (character, isActive, i) => (
+  const renderHomeCard = (character, isActive, i) => {
+    const isLocked = isFreePlan && character.id !== "hana";
+    
+    return (
     <div
       className={
         "asrar-character-card" +
@@ -123,8 +126,15 @@ export default function CharacterCarousel({
           ? `ابدأ المحادثة مع ${character.nameAr}`
           : `Talk to ${character.nameEn}`}
       </Link>
+      
+      {isLocked && (
+        <div className="asrar-char-pro-tag" aria-hidden>
+          {isAr ? "محجوب للخطة المدفوعة" : "Pro companion"}
+        </div>
+      )}
     </div>
   );
+};
 
   const renderDashboardCard = (character, isActive) => {
     const isLocked = isFreePlan && character.id !== "hana";
@@ -155,8 +165,8 @@ export default function CharacterCarousel({
           </div>
         </div>
         {isLocked && (
-          <div className="asrar-pro-badge" aria-hidden>
-            Pro
+          <div className="asrar-char-pro-pill" aria-hidden>
+            {isAr ? "خطة برو فقط" : "Pro only"}
           </div>
         )}
       </button>

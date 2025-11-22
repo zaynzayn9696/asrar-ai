@@ -508,6 +508,7 @@
   cursor: pointer;
   flex: 0 1 180px;
   max-width: 220px;
+  position: relative; /* For absolute positioning of Pro pill */
   transition: transform 0.2s ease, box-shadow 0.2s ease,
     border-color 0.2s ease, background 0.2s ease;
 }
@@ -522,6 +523,35 @@
   border-color: var(--asrar-accent);
   box-shadow: 0 0 26px rgba(24, 209, 218, 0.9);
   background: radial-gradient(circle at top, #152234 0, #05070c 70%);
+}
+
+/* Styles for locked (Pro-only) cards */
+.asrar-dash-char-card--locked {
+  opacity: 0.6;
+  filter: saturate(0.7);
+  cursor: pointer;
+}
+
+.asrar-dash-char-card--locked.asrar-dash-char-card--selected {
+  opacity: 0.75;
+  filter: saturate(0.8);
+}
+
+/* Pro pill badge */
+.asrar-char-pro-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(0, 240, 255, 0.18);
+  border: 1px solid rgba(0, 240, 255, 0.85);
+  color: #e8f8ff;
+  backdrop-filter: blur(8px);
+  z-index: 2;
 }
 
 .asrar-dash-char-avatar-wrap {

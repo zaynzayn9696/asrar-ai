@@ -689,14 +689,13 @@ body {
 @media (max-width: 520px) {
   .asrar-character-card {
     flex: 0 1 100%;
-    max-width: none;
   }
 }
 
 .asrar-character-card {
-  text-align: center;
-  border-radius: var(--asrar-radius-md);
+  flex: 1;
   padding: 22px 20px 24px;
+  border-radius: var(--asrar-radius-md);
   background: radial-gradient(circle at top, #0f1925 0, #05070c 65%);
   border: 1px solid var(--asrar-border-subtle);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.85);
@@ -705,6 +704,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative; /* For absolute positioning of Pro tag */
   transition: transform 0.2s ease, box-shadow 0.2s ease,
     border-color 0.2s ease, background 0.2s ease;
 }
@@ -752,6 +752,24 @@ body {
   border-color: var(--asrar-accent);
   box-shadow: 0 0 26px rgba(24, 209, 218, 0.9);
   background: radial-gradient(circle at top, #152234 0, #05070c 70%);
+}
+
+/* Pro tag for homepage character cards */
+.asrar-char-pro-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(0, 240, 255, 0.15);
+  border: 1px solid rgba(0, 240, 255, 0.6);
+  color: #e8f8ff;
+  backdrop-filter: blur(5px);
+  z-index: 2;
+  opacity: 0.9;
 }
 
 .asrar-character-card:hover:not(.asrar-character-card--active) {
