@@ -926,8 +926,8 @@ export default function HomePage() {
                     <div className="bubble bubble-ai">
                       <div className="bubble-ai-label">
                         {isAr
-                          ? " • دعم عميق"
-                          : " • Deep Support"}
+                          ? " دعم عميق"
+                          : " Deep Support"}
                       </div>
                       <p className="bubble-ai-text">
                         {isAr
