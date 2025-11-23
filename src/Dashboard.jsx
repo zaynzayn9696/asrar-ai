@@ -207,7 +207,7 @@ export default function Dashboard() {
     setMiniInput("");
   };
 
-  const hasPremium = !!(user && (user.isPremium || user.plan === "pro"));
+  const hasPremium = !!(user && (user.isPremium || user.plan === "pro" || user.plan === "premium"));
 
   const handleStartChat = () => {
     if (!selectedDialect) {
@@ -306,12 +306,22 @@ export default function Dashboard() {
           <h1 className="asrar-dash-title">{t.title}</h1>
           <p className="asrar-dash-subtitle">{t.subtitle}</p>
 
-          {!hasPremium && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-              <button type="button" className="asrar-dash-start-button" onClick={handleUpgrade}>
-                {isAr ? "الترقية إلى بريميوم" : "Upgrade to Premium"}
-              </button>
+          {user?.isPremium ? (
+            <div style={{ textAlign: 'center', marginBottom: '12px', color: '#9be7c4' }}>
+              ✨ {isAr ? (
+                <>أنت على <strong>أسرار بريميوم</strong></>
+              ) : (
+                <>You’re on <strong>Asrar AI Premium</strong></>
+              )}
             </div>
+          ) : (
+            !hasPremium && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                <button type="button" className="asrar-dash-start-button" onClick={handleUpgrade}>
+                  {isAr ? "الترقية إلى بريميوم" : "Upgrade to Premium"}
+                </button>
+              </div>
+            )
           )}
 
           {billingSuccess && (

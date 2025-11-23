@@ -77,17 +77,18 @@ export default function Billing() {
 
   const plan = user?.plan || "free";
   const usage = user?.usage || null;
-  const planName = isAr ? (plan === "pro" ? "برو" : "مجانية") : plan === "pro" ? "Pro" : "Free";
-  const planPrice = plan === "pro" ? "$4.99" : "$0";
+  const isPremium = !!(user && (user.isPremium || plan === "premium" || plan === "pro"));
+  const planName = isAr ? (isPremium ? "بريميوم" : "مجانية") : (isPremium ? "Premium" : "Free");
+  const planPrice = isPremium ? "$4.99" : "$0";
   const planTagline = isAr
-    ? plan === "pro"
+    ? isPremium
       ? "كل شيء في أسرار بحدود سخية."
       : "جرّب أسرار بإمكانيات أساسية."
-    : plan === "pro"
+    : isPremium
     ? "Everything in Asrar with generous limits."
     : "Try Asrar with core features.";
   const planFeatures = isAr
-    ? plan === "pro"
+    ? isPremium
       ? [
           "كل رفاق أسرار الخمسة",
           "حتى ١٠٠ رسالة يومياً و٣٠٠٠ شهرياً",
@@ -95,7 +96,7 @@ export default function Billing() {
           "بدون إعلانات ووصول مبكر",
         ]
       : ["شخصية أساسية واحدة", "٥ رسائل يومياً", "دعم أساسي"]
-    : plan === "pro"
+    : isPremium
     ? [
         "All 5 Asrar characters",
         "Up to 100 messages/day & 3,000/month",
@@ -103,9 +104,9 @@ export default function Billing() {
         "Ad‑free, priority access",
       ]
     : ["1 core character", "5 messages/day", "Basic support"];
-  const upgradeCtaText = plan === "pro"
-    ? (isAr ? "أنت على خطة برو" : "You’re on Pro")
-    : (isAr ? "الترقية إلى برو — $4.99 شهرياً" : "Upgrade to Pro — $4.99/month");
+  const upgradeCtaText = isPremium
+    ? (isAr ? "أنت على بريميوم" : "You’re on Premium")
+    : (isAr ? "الترقية إلى بريميوم — $4.99 شهرياً" : "Upgrade to Premium — $4.99/month");
 
   const handleLangSwitch = (newLang) => {
     setLang(newLang);
@@ -197,7 +198,7 @@ export default function Billing() {
                 type="button"
                 className="asrar-billing-upgrade-btn"
                 onClick={handleUpgradeClick}
-                disabled={plan === "pro"}
+                disabled={isPremium}
               >
                 {upgradeCtaText}
               </button>

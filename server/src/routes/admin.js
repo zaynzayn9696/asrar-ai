@@ -22,7 +22,7 @@ router.get('/stats', async (req, res) => {
     const fourteenDaysAgo = new Date(now);
     fourteenDaysAgo.setDate(now.getDate() - 13); // include today => 14 entries
 
-    const [totalUsers, usersLast7DaysRaw, last14Created, premiumUsersCount] = await Promise.all([
+    const [totalUsers, usersLast7DaysRaw, last14Created, premiumUsersCount, recentUsers] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
       prisma.user.findMany({
@@ -31,6 +31,11 @@ router.get('/stats', async (req, res) => {
         orderBy: { createdAt: 'asc' },
       }),
       prisma.user.count({ where: { isPremium: true } }),
+      prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+        include: { usage: true },
+      }),
     ]);
 
     // Build a date -> count map for the last 14 days
@@ -50,11 +55,31 @@ router.get('/stats', async (req, res) => {
       usersByDayLast14Days.push({ date: key, count: counts.get(key) || 0 });
     }
 
+    // Map recent users to a compact shape with usage
+    const users = recentUsers.map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      plan: u.plan,
+      isPremium: !!u.isPremium,
+      createdAt: u.createdAt,
+      lastLoginAt: null,
+      dailyUsed: u.usage ? u.usage.dailyCount : 0,
+      monthlyUsed: u.usage ? u.usage.monthlyCount : 0,
+    }));
+
     return res.json({
+      // existing fields (kept for backward compatibility)
       totalUsers,
       usersLast7Days: usersLast7DaysRaw,
       usersByDayLast14Days,
       premiumUsersCount,
+      // new fields
+      totalPremiumUsers: premiumUsersCount,
+      totalFreeUsers: totalUsers - premiumUsersCount,
+      last7DaysUsers: usersLast7DaysRaw,
+      signupsByDay: usersByDayLast14Days,
+      users,
     });
   } catch (err) {
     console.error('[admin/stats] error', err && err.message ? err.message : err);

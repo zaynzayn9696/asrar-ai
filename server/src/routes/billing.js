@@ -32,60 +32,95 @@ router.post('/webhook', async (req, res) => {
     const data = payload.data || {};
     const attrs = (data && data.attributes) || {};
 
-    console.log('[lemon-webhook] event:', eventName, 'subId:', data?.id, 'status:', attrs?.status);
+    // Clear log for incoming webhook
+    try {
+      console.log("[Billing] Webhook received:", {
+        eventName: attrs?.event_name,
+        eventType: data?.type,
+        objectType: attrs?.billable_type,
+        billableId: attrs?.billable_id,
+      });
+    } catch (_) {}
 
-    // Handle subscription lifecycle
-    if (data?.type === 'subscriptions' || String(eventName).startsWith('subscription_')) {
-      const subId = data?.id ? String(data.id) : null;
-      const customerId = attrs?.customer_id != null ? String(attrs.customer_id) : null;
-      const status = attrs?.status || '';
+    // Determine subscription event + status
+    const eventNameBody = attrs?.event_name || '';
+    const subscriptionStatus = attrs?.status || '';
+    const isSubscriptionEvent = !!eventNameBody && eventNameBody.startsWith('subscription_');
+    const isActiveStatus = ['active', 'on_trial'].includes(String(subscriptionStatus));
+    const isInactiveStatus = ['canceled', 'expired', 'past_due', 'unpaid'].includes(String(subscriptionStatus));
 
-      const custom = meta?.custom_data || {};
-      const appUserIdRaw = custom.app_user_id ?? custom.user_id;
-      const userEmail = (attrs?.user_email || '').toLowerCase();
+    // Only proceed for subscription-related events
+    if (isSubscriptionEvent || data?.type === 'subscriptions') {
+      // Try to locate app_user_id from several possible locations
+      const checkoutData = attrs?.checkout_data || {};
+      const customA = checkoutData?.custom || {};
+      const customB = checkoutData?.custom_data || {};
+      const customMeta = meta?.custom_data || meta?.custom || {};
+      const appUserIdRaw =
+        customA.app_user_id ?? customB.app_user_id ?? customMeta.app_user_id ?? customMeta.user_id ?? null;
+
+      const customerEmail = (attrs?.user_email || attrs?.customer_email || '').toLowerCase();
 
       let user = null;
       if (appUserIdRaw != null && appUserIdRaw !== '') {
-        const parsed = Number(appUserIdRaw);
-        if (Number.isFinite(parsed)) {
+        const parsed = parseInt(String(appUserIdRaw), 10);
+        if (!Number.isNaN(parsed)) {
           user = await prisma.user.findUnique({ where: { id: parsed } });
         }
       }
-      if (!user && userEmail) {
-        user = await prisma.user.findUnique({ where: { email: userEmail } });
+      if (!user && customerEmail) {
+        user = await prisma.user.findUnique({ where: { email: customerEmail } });
       }
 
       if (!user) {
-        console.warn('[lemon-webhook] user not found for event', {
-          eventName,
-          appUserIdRaw,
-          userEmail,
+        console.warn('[Billing] No matching user for webhook', {
+          appUserId: appUserIdRaw,
+          customerEmail,
+          eventName: eventNameBody,
+          status: subscriptionStatus,
         });
-        return res.status(200).send('ok');
+        return res.status(200).json({ received: true });
       }
 
-      const eventActive = ['subscription_created', 'subscription_resumed', 'subscription_updated'].includes(eventName);
-      const eventCancelled = ['subscription_cancelled', 'subscription_expired', 'subscription_paused', 'subscription_unpaid', 'subscription_past_due'].includes(eventName);
-      let isPremium = user.isPremium;
-      if (eventActive) {
-        isPremium = true;
-      } else if (eventCancelled) {
-        isPremium = false;
-      } else if (status) {
-        isPremium = ['active', 'on_trial'].includes(status);
+      // Extract Lemon IDs
+      const lemonCustomerId = attrs?.customer_id != null ? String(attrs.customer_id) : '';
+      const lemonSubscriptionId = data?.id ? String(data.id) : (attrs?.subscription_id != null ? String(attrs.subscription_id) : '');
+
+      if (isActiveStatus) {
+        console.log('[Billing] Marking user as PREMIUM', {
+          userId: user.id,
+          lemonCustomerId,
+          lemonSubscriptionId,
+          subscriptionStatus,
+        });
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            isPremium: true,
+            plan: 'premium',
+            lemonCustomerId: lemonCustomerId || user.lemonCustomerId,
+            lemonSubscriptionId: lemonSubscriptionId || user.lemonSubscriptionId,
+          },
+        });
+      } else if (isInactiveStatus) {
+        console.log('[Billing] Marking user as FREE', {
+          userId: user.id,
+          subscriptionStatus,
+        });
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            isPremium: false,
+            plan: 'free',
+          },
+        });
       }
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          isPremium,
-          lemonCustomerId: customerId,
-          lemonSubscriptionId: subId,
-        },
-      });
+      return res.status(200).json({ received: true });
     }
 
-    return res.status(200).send('ok');
+    // Not a subscription event: acknowledge
+    return res.status(200).json({ received: true });
   } catch (err) {
     console.error('[lemon-webhook] error:', err && err.message ? err.message : err);
     return res.status(500).send('error');
