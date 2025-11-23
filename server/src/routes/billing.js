@@ -148,7 +148,7 @@ router.post('/create-checkout', async (req, res) => {
 
     if (!user || !user.email) {
       console.error('[Billing] No authenticated user');
-      return res.status(401).json({ error: 'Not authenticated' });
+      return res.status(401).json({ error: 'Not authenticated (no token cookie or bearer)' });
     }
 
     console.log('[Billing] Lemon config', {

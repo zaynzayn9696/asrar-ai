@@ -244,12 +244,22 @@ export default function Dashboard() {
   };
 
   const handleUpgrade = async () => {
+    if (!user) {
+      navigate("/login?next=/dashboard");
+      return;
+    }
     try {
       const { url } = await createCheckoutSession();
       if (url) window.location.href = url;
+      else alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Something went wrong starting checkout.");
     } catch (err) {
-      console.error("Failed to start checkout", err);
-      alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Failed to create checkout.");
+      console.error("[Billing] Upgrade error", err);
+      const status = err?.status || err?.response?.status;
+      if (status === 401) {
+        navigate("/login?next=/dashboard");
+      } else {
+        alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");
+      }
     }
   };
 

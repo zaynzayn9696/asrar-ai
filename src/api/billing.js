@@ -8,8 +8,12 @@ export async function createCheckoutSession() {
     headers: { "Content-Type": "application/json" },
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.message || "Failed to create checkout");
+    const body = await res.json().catch(() => null);
+    const error = new Error(body?.error || body?.message || "Failed to create checkout");
+    error.status = res.status;
+    error.response = res;
+    error.body = body;
+    throw error;
   }
   return res.json(); // { url }
 }
