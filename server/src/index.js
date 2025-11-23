@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
 const userRoutes = require('./routes/user');
 const billingRoutes = require('./routes/billing');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 app.set("trust proxy", 1);
@@ -67,6 +68,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not Found' });

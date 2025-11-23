@@ -16,6 +16,7 @@ import Settings from "./Settings";
 import Billing from "./Billing";
 import ChatHistory from "./ChatHistory";
 import GoogleAuthComplete from "./GoogleAuthComplete";
+import AdminDashboard from "./AdminDashboard";
 
 
 import { AuthProvider, useAuth } from "./hooks/useAuth"; // <-- make sure path is correct
@@ -88,6 +89,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Billing />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />

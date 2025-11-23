@@ -26,6 +26,7 @@ model User {
 
   // CHANGED: was `plan Plan @default(free)`
   plan               String    @default("free") // "free" or "pro"
+  isPremium          Boolean   @default(false)
 
   saveHistoryEnabled Boolean   @default(true)
   photoUrl           String?

@@ -118,6 +118,11 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               <Link to="/history" className="asrar-dash-header-link">
                 {nav.history}
               </Link>
+              {user?.email && user.email.toLowerCase() === 'zaynzayn9696@gmail.com' && (
+                <Link to="/admin" className="asrar-dash-header-link">
+                  {isAr ? 'الإدارة' : 'Admin'}
+                </Link>
+              )}
 
               {/* user avatar + dropdown */}
               <div className="asrar-dash-header-user">
