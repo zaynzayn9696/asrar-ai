@@ -333,10 +333,26 @@ export default function Settings() {
           });
           file = new File([jpegBlob], (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
         } catch (convErr) {
-          console.error('HEIC convert failed', convErr);
-          alert(isAr ? "تعذر تحويل صورة HEIC، يرجى اختيار JPG/PNG/WEBP." : "Could not convert HEIC image. Please choose JPG/PNG/WEBP.");
-          setIsUploadingPhoto(false);
-          return;
+          console.warn('Canvas conversion failed, attempting heic2any...', convErr);
+          try {
+            if (typeof window !== "undefined" && !window.heic2any) {
+              await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('heic2any load failed'));
+                document.head.appendChild(s);
+              });
+            }
+            const converted = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.82 });
+            const blob = Array.isArray(converted) ? converted[0] : converted;
+            file = new File([blob], (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+          } catch (libErr) {
+            console.error('HEIC convert failed', libErr);
+            alert(isAr ? "تعذر تحويل صورة HEIC، يرجى اختيار JPG/PNG/WEBP." : "Could not convert HEIC image. Please choose JPG/PNG/WEBP.");
+            setIsUploadingPhoto(false);
+            return;
+          }
         }
       }
 
