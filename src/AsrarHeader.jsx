@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
+import defaultAvatar from "./assets/favicon.png";
 
 export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, externalMobileNavOpen, setExternalMobileNavOpen }) {
   // Use external state if provided, otherwise use internal state
@@ -139,7 +140,16 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
                       }}
                     />
                   ) : (
-                    <span>{(user?.name || user?.email || 'A').charAt(0).toUpperCase()}</span>
+                    <img
+                      src={defaultAvatar}
+                      alt="avatar"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        borderRadius: "999px",
+                      }}
+                    />
                   )}
                 </button>
 

@@ -8,6 +8,7 @@ import AsrarHeader from "./AsrarHeader";
 import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 import AsrarFooter from "./AsrarFooter";
+import defaultAvatar from "./assets/favicon.png";
 
 // --- LANGUAGE ----------------------------------------------------
 const getInitialLang = () => {
@@ -393,7 +394,7 @@ export default function Settings() {
                       alt="avatar"
                     />
                   ) : (
-                    <span>{(user?.name || user?.email || 'A').charAt(0).toUpperCase()}</span>
+                    <img src={defaultAvatar} alt="avatar" />
                   )}
                 </div>
               </div>
