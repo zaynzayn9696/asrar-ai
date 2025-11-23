@@ -142,6 +142,7 @@ router.post('/create-checkout', async (req, res) => {
           },
         },
         relationships: {
+          store: { data: { type: 'stores', id: String(STORE_ID) } },
           variant: { data: { type: 'variants', id: String(VARIANT_ID) } },
         },
       },
