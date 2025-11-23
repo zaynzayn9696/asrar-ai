@@ -60,8 +60,14 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '');
+    const original = file.originalname || 'upload.jpg';
+    let ext = path.extname(original).toLowerCase();
+    const validExts = new Set(['.jpg', '.jpeg', '.png', '.webp']);
+    if (!validExts.has(ext)) {
+      ext = '.jpg';
+    }
+    const baseSource = file.originalname || 'upload';
+    const base = (path.basename(baseSource, path.extname(baseSource)) || 'upload').replace(/[^a-z0-9_-]/gi, '') || 'upload';
     const name = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${base}${ext}`;
     cb(null, name);
   },
@@ -69,16 +75,42 @@ const storage = multer.diskStorage({
 
 const allowed = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 function fileFilter(req, file, cb) {
-  if (!allowed.has(file.mimetype)) {
-    return cb(new Error('Only JPG, PNG, and WEBP images are allowed'));
+  try {
+    const rawMime = (file.mimetype || '').toLowerCase();
+    const name = file.originalname || '';
+    const hasImagePrefix = rawMime.startsWith('image/');
+    const looksLikeHeic = /\.(heic|heif)$/i.test(name);
+
+    // Normalize unknown or generic mimetypes coming from iOS
+    if (!rawMime || rawMime === 'application/octet-stream' || rawMime === 'image/blob') {
+      file.mimetype = 'image/jpeg';
+    }
+
+    if ((file.mimetype || '').toLowerCase().startsWith('image/')) {
+      return cb(null, true);
+    }
+
+    if (looksLikeHeic) {
+      file.mimetype = 'image/jpeg';
+      return cb(null, true);
+    }
+
+    return cb(new Error('Only image uploads are allowed'));
+  } catch (e) {
+    // As a last resort, allow and normalize
+    file.mimetype = 'image/jpeg';
+    return cb(null, true);
   }
-  cb(null, true);
 }
 
 const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.post('/upload-photo', upload.single('photo'), async (req, res) => {
   try {
+    console.log('[upload-photo] received', {
+      mimetype: req.file?.mimetype,
+      originalname: req.file?.originalname,
+    });
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }

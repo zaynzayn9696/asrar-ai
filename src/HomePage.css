@@ -319,6 +319,7 @@ body {
   background: transparent;
   color: var(--asrar-text-muted);
   border-color: rgba(255, 255, 255, 0.15);
+  text-align:center;
 }
 
 .asrar-btn.ghost:hover {

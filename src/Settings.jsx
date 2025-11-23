@@ -340,7 +340,7 @@ export default function Settings() {
       setPhotoPreviewUrl(url);
 
       const form = new FormData();
-      form.append("photo", file);
+      form.append("photo", file, file.name || "upload.jpg");
 
       const res = await fetch(`${API_BASE}/api/user/upload-photo`, {
         method: "POST",
