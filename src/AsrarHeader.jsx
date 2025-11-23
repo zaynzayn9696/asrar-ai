@@ -15,9 +15,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
-  const avatarSrc = user?.photoUrl
-    ? (user.photoUrl.startsWith("http") ? user.photoUrl : `${API_BASE}${user.photoUrl}`)
-    : null;
+  const avatarSrc = defaultAvatar;
 
   const handleLangSwitch = (newLang) => {
     if (newLang === lang) return;
@@ -128,29 +126,16 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
                   className="asrar-dash-header-avatar"
                   onClick={() => setIsUserMenuOpen((prev) => !prev)}
                 >
-                  {avatarSrc ? (
-                    <img
-                      src={avatarSrc}
-                      alt="avatar"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "999px",
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={defaultAvatar}
-                      alt="avatar"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        borderRadius: "999px",
-                      }}
-                    />
-                  )}
+                  <img
+                    src={avatarSrc}
+                    alt="avatar"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "999px",
+                    }}
+                  />
                 </button>
 
                 {isUserMenuOpen && (

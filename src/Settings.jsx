@@ -388,14 +388,7 @@ export default function Settings() {
 
               <div className="asrar-settings-avatar-section">
                 <div className="asrar-settings-avatar-circle">
-                  {user?.photoUrl ? (
-                    <img
-                      src={user.photoUrl.startsWith("http") ? user.photoUrl : `${API_BASE}${user.photoUrl}`}
-                      alt="avatar"
-                    />
-                  ) : (
-                    <img src={defaultAvatar} alt="avatar" />
-                  )}
+                  <img src={defaultAvatar} alt="avatar" />
                 </div>
               </div>
 
