@@ -292,11 +292,50 @@ export default function Settings() {
   };
 
   const onPhotoSelected = async (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
+    const picked = e.target.files && e.target.files[0];
+    if (!picked) return;
     try {
       setIsUploadingPhoto(true);
-      // Preview
+      let file = picked;
+      const lowerType = (file.type || "").toLowerCase();
+      const isHeic =
+        lowerType === "image/heic" ||
+        lowerType === "image/heif" ||
+        /\.(heic|heif)$/i.test(file.name || "");
+      if (isHeic) {
+        try {
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          const img = await new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = dataUrl;
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const jpegBlob = await new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => {
+              if (!blob) return reject(new Error('Canvas toBlob failed'));
+              resolve(blob);
+            }, 'image/jpeg', 0.9);
+          });
+          file = new File([jpegBlob], (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+        } catch (convErr) {
+          console.error('HEIC convert failed', convErr);
+          alert(isAr ? "تعذر تحويل صورة HEIC، يرجى اختيار JPG/PNG/WEBP." : "Could not convert HEIC image. Please choose JPG/PNG/WEBP.");
+          setIsUploadingPhoto(false);
+          return;
+        }
+      }
+
       const url = URL.createObjectURL(file);
       setPhotoPreviewUrl(url);
 
@@ -442,7 +481,7 @@ export default function Settings() {
                 <input
                   id="asrar-photo-input"
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
                   style={{ display: "none" }}
                   onChange={onPhotoSelected}
                 />
