@@ -1,5 +1,5 @@
 // src/Dashboard.jsx
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./Dashboard.css";
 import AsrarFooter from "./AsrarFooter";
 import CharacterCarousel from "./CharacterCarousel";
@@ -13,6 +13,8 @@ import farahAvatar from "./assets/farah.png";
 import { useNavigate } from "react-router-dom";
 import AsrarHeader from "./AsrarHeader";
 import { useAuth } from "./hooks/useAuth";
+import { API_BASE } from "./apiBase";
+import { createCheckoutSession } from "./api/billing";
 
 // --- CHARACTERS (same 5 core) -----------------------------
 const CHARACTERS = [
@@ -160,7 +162,7 @@ function getMiniReply(message, isAr) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, setUser, logout } = useAuth();
 
   const [lang, setLang] = useState(getInitialLang);
   const isAr = lang === "ar";
@@ -170,6 +172,8 @@ export default function Dashboard() {
     CHARACTERS[0].id
   );
   const [selectedDialect, setSelectedDialect] = useState("");
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [billingSuccess, setBillingSuccess] = useState(false);
 
   // mini mood chat (you can use later if you want)
   const [miniInput, setMiniInput] = useState("");
@@ -203,6 +207,8 @@ export default function Dashboard() {
     setMiniInput("");
   };
 
+  const hasPremium = !!(user && (user.isPremium || user.plan === "pro"));
+
   const handleStartChat = () => {
     if (!selectedDialect) {
       alert(
@@ -213,7 +219,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (isFreePlan && selectedCharacterId !== "hana") {
+    if (!hasPremium && selectedCharacterId !== "hana") {
       alert(isAr ? "للمشتركين في الخطة المدفوعة فقط حالياً." : "For Pro users only for now.");
       return;
     }
@@ -226,11 +232,52 @@ export default function Dashboard() {
     navigate("/chat");
   };
 
-  const isFreePlan = !user || user.plan !== "pro";
+  const isFreePlan = !hasPremium;
 
   const handleCharacterChange = (char) => {
+    const locked = !hasPremium && char.id !== "hana";
+    if (locked) {
+      setShowPremiumModal(true);
+      return;
+    }
     setSelectedCharacterId(char.id);
   };
+
+  const handleUpgrade = async () => {
+    try {
+      const { url } = await createCheckoutSession();
+      if (url) window.location.href = url;
+    } catch (err) {
+      console.error("Failed to start checkout", err);
+      alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Failed to create checkout.");
+    }
+  };
+
+  useEffect(() => {
+    // Refresh user on billing=success
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("billing") === "success") {
+      (async () => {
+        try {
+          const res = await fetch(`${API_BASE}/api/auth/me`, {
+            method: "GET",
+            credentials: "include",
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.user) setUser(data.user);
+            if (data?.user?.isPremium) setBillingSuccess(true);
+          }
+        } catch (e) {
+          console.error("/api/auth/me refresh failed", e);
+        } finally {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("billing");
+          window.history.replaceState({}, "", url.toString());
+        }
+      })();
+    }
+  }, [setUser]);
 
   return (
     <div
@@ -258,6 +305,20 @@ export default function Dashboard() {
           <p className="asrar-dash-eyebrow">{t.eyebrow}</p>
           <h1 className="asrar-dash-title">{t.title}</h1>
           <p className="asrar-dash-subtitle">{t.subtitle}</p>
+
+          {!hasPremium && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+              <button type="button" className="asrar-dash-start-button" onClick={handleUpgrade}>
+                {isAr ? "الترقية إلى بريميوم" : "Upgrade to Premium"}
+              </button>
+            </div>
+          )}
+
+          {billingSuccess && (
+            <div style={{ textAlign: 'center', color: '#9be7c4', marginBottom: '10px' }}>
+              {isAr ? "✨ تم تفعيل اشتراكك المميز! تم فتح جميع الشخصيات." : "✨ Your premium subscription is active! All characters unlocked."}
+            </div>
+          )}
 
           {/* CHARACTERS GRID */}
           <div className="asrar-dash-characters">
@@ -309,6 +370,34 @@ export default function Dashboard() {
         </section>
       </main>
       <AsrarFooter />
+
+      {showPremiumModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{
+            width: 'min(92vw, 420px)', borderRadius: 16, padding: '16px 16px 12px',
+            background: 'radial-gradient(circle at top, #061627, #02040d)',
+            border: '1px solid rgba(0,240,255,0.35)', color: '#e8f8ff', textAlign: 'center'
+          }} role="dialog" aria-modal>
+            <h3 style={{ marginTop: 0, marginBottom: 8 }}>
+              {isAr ? "شخصية مميزة" : "Premium Character"}
+            </h3>
+            <p style={{ marginTop: 0, marginBottom: 14, color: '#9bb0c6' }}>
+              {isAr ? "قم بالترقية إلى بريميوم لفتح هذه الشخصية وتجربة كاملة." : "Upgrade to Premium to unlock this character and the full experience."}
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button className="asrar-dash-start-button" onClick={handleUpgrade}>
+                {isAr ? "الترقية إلى بريميوم" : "Upgrade to Premium"}
+              </button>
+              <button className="asrar-dash-header-link" onClick={() => setShowPremiumModal(false)}>
+                {isAr ? "إغلاق" : "Close"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

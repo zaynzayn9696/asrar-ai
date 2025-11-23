@@ -239,6 +239,9 @@ router.get('/me', requireAuth, async (req, res) => {
       photoUrl: effectiveUser.photoUrl,
       createdAt: effectiveUser.createdAt,
       saveHistoryEnabled: effectiveUser.saveHistoryEnabled,
+      isPremium: !!effectiveUser.isPremium,
+      lemonCustomerId: effectiveUser.lemonCustomerId || null,
+      lemonSubscriptionId: effectiveUser.lemonSubscriptionId || null,
     };
 
     res.json({ user: { ...safeUser, usage: buildUsageSummary(safeUser, usage) } });

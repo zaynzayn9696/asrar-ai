@@ -42,7 +42,17 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+
+app.use(express.json({
+  verify: (req, res, buf) => {
+    try {
+      if (req.originalUrl === '/api/billing/webhook') {
+        req.rawBody = buf.toString('utf8');
+      }
+    } catch (_) {}
+  },
+}));
+
 app.use(cookieParser());
 app.use(morgan('dev'));
 

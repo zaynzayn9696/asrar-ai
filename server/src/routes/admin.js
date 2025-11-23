@@ -22,7 +22,7 @@ router.get('/stats', async (req, res) => {
     const fourteenDaysAgo = new Date(now);
     fourteenDaysAgo.setDate(now.getDate() - 13); // include today => 14 entries
 
-    const [totalUsers, usersLast7DaysRaw, last14Created] = await Promise.all([
+    const [totalUsers, usersLast7DaysRaw, last14Created, premiumUsersCount] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
       prisma.user.findMany({
@@ -30,6 +30,7 @@ router.get('/stats', async (req, res) => {
         select: { createdAt: true },
         orderBy: { createdAt: 'asc' },
       }),
+      prisma.user.count({ where: { isPremium: true } }),
     ]);
 
     // Build a date -> count map for the last 14 days
@@ -53,6 +54,7 @@ router.get('/stats', async (req, res) => {
       totalUsers,
       usersLast7Days: usersLast7DaysRaw,
       usersByDayLast14Days,
+      premiumUsersCount,
     });
   } catch (err) {
     console.error('[admin/stats] error', err && err.message ? err.message : err);
