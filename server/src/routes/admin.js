@@ -60,6 +60,77 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// GET /api/admin/users?q=search
+router.get('/users', async (req, res) => {
+  try {
+    const email = (req.user?.email || '').toLowerCase();
+    if (email !== 'zaynzayn9696@gmail.com') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const q = (req.query.q || '').toString().trim();
+    const where = q
+      ? {
+          OR: [
+            { email: { contains: q, mode: 'insensitive' } },
+            { name: { contains: q, mode: 'insensitive' } },
+          ],
+        }
+      : undefined;
+
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        plan: true,
+        isPremium: true,
+        createdAt: true,
+        saveHistoryEnabled: true,
+        photoUrl: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+
+    return res.json({ users });
+  } catch (err) {
+    console.error('[admin/users] error', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/admin/user/:id
+router.get('/user/:id', async (req, res) => {
+  try {
+    const email = (req.user?.email || '').toLowerCase();
+    if (email !== 'zaynzayn9696@gmail.com') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid id' });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        plan: true,
+        isPremium: true,
+        createdAt: true,
+        saveHistoryEnabled: true,
+        photoUrl: true,
+      },
+    });
+    if (!user) return res.status(404).json({ error: 'Not found' });
+    return res.json({ user });
+  } catch (err) {
+    console.error('[admin/user/:id] error', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Manual retention endpoint
 router.post('/run-retention', async (req, res) => {
   try {
