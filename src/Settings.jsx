@@ -96,8 +96,7 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState("");
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  
 
   // HISTORY STATES
   const [saveHistory, setSaveHistory] = useState(!!user?.saveHistoryEnabled);
@@ -285,102 +284,7 @@ export default function Settings() {
     navigate("/");
   };
 
-  // PHOTO UPLOAD
-  const onChangePhotoClick = () => {
-    const input = document.getElementById("asrar-photo-input");
-    if (input) input.click();
-  };
-
-  const onPhotoSelected = async (e) => {
-    const picked = e.target.files && e.target.files[0];
-    if (!picked) return;
-    try {
-      setIsUploadingPhoto(true);
-      let file = picked;
-      const lowerType = (file.type || "").toLowerCase();
-      const isHeic =
-        lowerType === "image/heic" ||
-        lowerType === "image/heif" ||
-        /\.(heic|heif)$/i.test(file.name || "");
-      if (isHeic) {
-        try {
-          const dataUrl = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          const img = await new Promise((resolve, reject) => {
-            const image = new Image();
-            image.onload = () => resolve(image);
-            image.onerror = reject;
-            image.src = dataUrl;
-          });
-          const canvas = document.createElement('canvas');
-          const srcW = img.naturalWidth || img.width;
-          const srcH = img.naturalHeight || img.height;
-          const MAX_DIM = 2000; // bound large iPhone images to reduce file size
-          const scale = Math.min(1, MAX_DIM / Math.max(srcW, srcH));
-          canvas.width = Math.round(srcW * scale);
-          canvas.height = Math.round(srcH * scale);
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          const jpegBlob = await new Promise((resolve, reject) => {
-            canvas.toBlob((blob) => {
-              if (!blob) return reject(new Error('Canvas toBlob failed'));
-              resolve(blob);
-            }, 'image/jpeg', 0.82);
-          });
-          file = new File([jpegBlob], (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
-        } catch (convErr) {
-          console.warn('Canvas conversion failed, attempting heic2any...', convErr);
-          try {
-            if (typeof window !== "undefined" && !window.heic2any) {
-              await new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
-                s.onload = resolve;
-                s.onerror = () => reject(new Error('heic2any load failed'));
-                document.head.appendChild(s);
-              });
-            }
-            const converted = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.82 });
-            const blob = Array.isArray(converted) ? converted[0] : converted;
-            file = new File([blob], (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
-          } catch (libErr) {
-            console.error('HEIC convert failed', libErr);
-            alert(isAr ? "تعذر تحويل صورة HEIC، يرجى اختيار JPG/PNG/WEBP." : "Could not convert HEIC image. Please choose JPG/PNG/WEBP.");
-            setIsUploadingPhoto(false);
-            return;
-          }
-        }
-      }
-
-      const url = URL.createObjectURL(file);
-      setPhotoPreviewUrl(url);
-
-      const form = new FormData();
-      form.append("photo", file, file.name || "upload.jpg");
-
-      const res = await fetch(`${API_BASE}/api/user/upload-photo`, {
-        method: "POST",
-        credentials: "include",
-        body: form,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.user) {
-        setUser(data.user);
-      } else {
-        console.error("Upload failed", data);
-        alert(isAr ? "فشل رفع الصورة." : "Failed to upload photo.");
-      }
-    } catch (err) {
-      console.error("Upload error", err);
-      alert(isAr ? "حدث خطأ أثناء رفع الصورة." : "An error occurred while uploading the photo.");
-    } finally {
-      setIsUploadingPhoto(false);
-    }
-  };
+  // Photo upload removed
 
   // SAVE HISTORY TOGGLE (FIXED + preserves avatar photoUrl)
   const toggleSaveHistory = async () => {
@@ -483,28 +387,15 @@ export default function Settings() {
 
               <div className="asrar-settings-avatar-section">
                 <div className="asrar-settings-avatar-circle">
-                  {photoPreviewUrl ? (
-                    <img src={photoPreviewUrl} alt="preview" />
-                  ) : user?.photoUrl ? (
-                    <img src={(user.photoUrl.startsWith("http") ? user.photoUrl : `${API_BASE}${user.photoUrl}`)} alt="avatar" />
+                  {user?.photoUrl ? (
+                    <img
+                      src={user.photoUrl.startsWith("http") ? user.photoUrl : `${API_BASE}${user.photoUrl}`}
+                      alt="avatar"
+                    />
                   ) : (
-                    <span>🙂</span>
+                    <span>{(user?.name || user?.email || 'A').charAt(0).toUpperCase()}</span>
                   )}
                 </div>
-                <button
-                  type="button"
-                  className="asrar-settings-change-photo-btn"
-                  onClick={onChangePhotoClick}
-                >
-                  {isUploadingPhoto ? (isAr ? "جاري الرفع..." : "Uploading...") : t.changePhoto}
-                </button>
-                <input
-                  id="asrar-photo-input"
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  style={{ display: "none" }}
-                  onChange={onPhotoSelected}
-                />
               </div>
 
               <div className="asrar-settings-field">

@@ -139,7 +139,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
                       }}
                     />
                   ) : (
-                    <span>🙂</span>
+                    <span>{(user?.name || user?.email || 'A').charAt(0).toUpperCase()}</span>
                   )}
                 </button>
 
