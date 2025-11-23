@@ -135,7 +135,7 @@ router.post('/create-checkout', async (req, res) => {
         attributes: {
           checkout_data: {
             email: user.email,
-            custom: { app_user_id: user.id },
+            custom: { app_user_id: String(user.id) },
           },
           product_options: {
             redirect_url: `${process.env.FRONTEND_URL}/dashboard?billing=success`,
