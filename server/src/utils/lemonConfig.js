@@ -15,7 +15,13 @@ const STORE_ID = process.env.LEMON_STORE_ID;
 const VARIANT_ID = process.env.LEMON_VARIANT_ID;
 
 if (!API_KEY || !WEBHOOK_SECRET || !STORE_ID || !VARIANT_ID) {
-  console.warn("[LemonConfig] Missing LemonSqueezy env vars");
+  console.warn("[LemonConfig] Missing LemonSqueezy env vars", {
+    mode: isLive ? "live" : "test",
+    hasApiKey: !!API_KEY,
+    hasWebhookSecret: !!WEBHOOK_SECRET,
+    storeId: STORE_ID,
+    variantId: VARIANT_ID,
+  });
 }
 
 module.exports = {

@@ -95,24 +95,47 @@ router.post('/webhook', async (req, res) => {
 // Protect routes below
 router.use(requireAuth);
 
+// Ensure fetch exists (Render should be Node 18+, but guard anyway)
+if (typeof fetch === 'undefined') {
+  global.fetch = require('node-fetch');
+}
+
 // ---------- CREATE CHECKOUT ----------
 router.post('/create-checkout', async (req, res) => {
   try {
-    if (!API_KEY || !STORE_ID || !VARIANT_ID) {
-      console.warn('[billing/create-checkout] Missing Lemon env vars');
-      return res.status(500).json({ message: 'Billing not configured' });
+    console.log('[Billing] /create-checkout hit');
+
+    const user = req.user;
+    console.log('[Billing] user from auth', {
+      id: user?.id,
+      email: user?.email,
+    });
+
+    if (!user || !user.email) {
+      console.error('[Billing] No authenticated user');
+      return res.status(401).json({ error: 'Not authenticated' });
     }
 
-    const email = req.user?.email;
-    const appUserId = req.user?.id;
+    console.log('[Billing] Lemon config', {
+      hasApiKey: !!API_KEY,
+      hasStoreId: !!STORE_ID,
+      hasVariantId: !!VARIANT_ID,
+      storeId: STORE_ID,
+      variantId: VARIANT_ID,
+    });
 
-    const body = {
+    if (!API_KEY || !STORE_ID || !VARIANT_ID) {
+      console.error('[Billing] Missing LemonSqueezy env vars');
+      return res.status(500).json({ error: 'LemonSqueezy not configured' });
+    }
+
+    const payload = {
       data: {
         type: 'checkouts',
         attributes: {
           checkout_data: {
-            email: email || '',
-            custom: { app_user_id: appUserId },
+            email: user.email,
+            custom: { app_user_id: user.id },
           },
           product_options: {
             redirect_url: `${process.env.FRONTEND_URL}/dashboard?billing=success`,
@@ -125,32 +148,57 @@ router.post('/create-checkout', async (req, res) => {
       },
     };
 
-    const r = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/vnd.api+json',
-        'Content-Type': 'application/vnd.api+json',
-        Authorization: `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify(body),
+    console.log('[Billing] Sending request to LemonSqueezy', {
+      url: 'https://api.lemonsqueezy.com/v1/checkouts',
+      body: payload,
     });
 
-    const json = await r.json().catch(() => null);
-    if (!r.ok) {
-      console.error('[billing/create-checkout] Lemon error', r.status, json);
-      return res.status(500).json({ message: 'Failed to create checkout' });
+    const lsRes = await fetch('https://api.lemonsqueezy.com/v1/checkouts', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        'Content-Type': 'application/vnd.api+json',
+        Accept: 'application/vnd.api+json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const text = await lsRes.text();
+    console.log('[Billing] LemonSqueezy response', lsRes.status, text);
+
+    if (!lsRes.ok) {
+      return res.status(500).json({
+        error: 'LemonSqueezy error',
+        status: lsRes.status,
+        detail: text,
+      });
+    }
+
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      console.error('[Billing] Failed to parse LemonSqueezy JSON', e);
+      return res.status(500).json({
+        error: 'Invalid response from LemonSqueezy',
+        raw: text,
+      });
     }
 
     const url = json?.data?.attributes?.url;
     if (!url) {
-      console.error('[billing/create-checkout] No URL in Lemon response', json);
-      return res.status(500).json({ message: 'Invalid Lemon response' });
+      console.error('[Billing] No checkout URL in response', json);
+      return res.status(500).json({
+        error: 'No checkout URL returned',
+        raw: json,
+      });
     }
 
+    console.log('[Billing] Checkout URL created', url);
     return res.json({ url });
   } catch (err) {
-    console.error('[billing/create-checkout] error', err && err.message ? err.message : err);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error('[Billing] create-checkout error', err);
+    return res.status(500).json({ error: 'Failed to create checkout' });
   }
 });
 
