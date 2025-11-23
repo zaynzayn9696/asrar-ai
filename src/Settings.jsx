@@ -442,7 +442,7 @@ export default function Settings() {
                 <input
                   id="asrar-photo-input"
                   type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  accept="image/*"
                   style={{ display: "none" }}
                   onChange={onPhotoSelected}
                 />

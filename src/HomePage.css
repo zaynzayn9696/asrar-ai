@@ -307,6 +307,7 @@ body {
   color: #020408;
   border-color: #16d2e0;
   box-shadow: 0 0 14px rgba(17, 198, 208, 0.9);
+  text-align:center;
 }
 
 .asrar-btn.primary:hover {
