@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('node:crypto');
 const prisma = require('../prisma');
 const requireAuth = require('../middleware/requireAuth');
-const { API_KEY, WEBHOOK_SECRET, STORE_ID, VARIANT_ID } = require('../utils/lemonConfig');
+const { API_KEY, WEBHOOK_SECRET, STORE_ID, VARIANT_ID, isLive } = require('../utils/lemonConfig');
 
 const router = express.Router();
 
@@ -142,7 +142,6 @@ router.post('/create-checkout', async (req, res) => {
           },
         },
         relationships: {
-          store: { data: { type: 'stores', id: String(STORE_ID) } },
           variant: { data: { type: 'variants', id: String(VARIANT_ID) } },
         },
       },
@@ -150,6 +149,7 @@ router.post('/create-checkout', async (req, res) => {
 
     console.log('[Billing] Sending request to LemonSqueezy', {
       url: 'https://api.lemonsqueezy.com/v1/checkouts',
+      mode: isLive ? 'live' : 'test',
       body: payload,
     });
 
