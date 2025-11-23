@@ -317,15 +317,19 @@ export default function Settings() {
             image.src = dataUrl;
           });
           const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
+          const srcW = img.naturalWidth || img.width;
+          const srcH = img.naturalHeight || img.height;
+          const MAX_DIM = 2000; // bound large iPhone images to reduce file size
+          const scale = Math.min(1, MAX_DIM / Math.max(srcW, srcH));
+          canvas.width = Math.round(srcW * scale);
+          canvas.height = Math.round(srcH * scale);
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0);
           const jpegBlob = await new Promise((resolve, reject) => {
             canvas.toBlob((blob) => {
               if (!blob) return reject(new Error('Canvas toBlob failed'));
               resolve(blob);
-            }, 'image/jpeg', 0.9);
+            }, 'image/jpeg', 0.82);
           });
           file = new File([jpegBlob], (file.name || 'photo').replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
         } catch (convErr) {
