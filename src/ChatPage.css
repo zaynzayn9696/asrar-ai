@@ -438,7 +438,7 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
 }
 
@@ -447,8 +447,8 @@
   justify-content: center;
 }
 
-.asrar-chat-row--assistant { margin-right: auto; }
-.asrar-chat-row--user { margin-left: auto; }
+.asrar-chat-row--assistant { justify-content: flex-start; }
+.asrar-chat-row--user { justify-content: flex-end; }
 
 .asrar-chat-avatar {
   width: 40px;
@@ -475,11 +475,18 @@
   padding: 0.7rem 0.9rem;
   font-size: 0.9rem;
   line-height: 1.6;
-  max-width: 85%;
-  word-break: break-word;
-  white-space: pre-wrap;
+  max-width: 90%;
+  display: block;
+  width: fit-content;
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: pre-line;
+  unicode-bidi: plaintext;
+  text-align: start;
   margin: 8px 0;
 }
+
+.asrar-chat-row--user .asrar-chat-bubble { white-space: normal; }
 
 .asrar-chat-row--assistant .asrar-chat-bubble {
   background: radial-gradient(circle at top left, #051b30, #02040d);
@@ -549,6 +556,7 @@
     padding-right: 1rem;
   }
   .asrar-chat-messages { padding-top: 1rem; padding-bottom: 1rem; }
+  .asrar-chat-bubble { max-width: 95%; }
 }
 
 /* cross-character recommendation card */
