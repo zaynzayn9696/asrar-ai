@@ -13,7 +13,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, isAuthLoading } = useAuth();
 
   const avatarSrc = defaultAvatar;
 

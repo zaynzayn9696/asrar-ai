@@ -10,7 +10,7 @@ import rashidAvatar from "./assets/rashid.png";
 import nourAvatar from "./assets/nour.png";
 import farahAvatar from "./assets/farah.png";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import AsrarHeader from "./AsrarHeader";
 import { useAuth } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
@@ -162,11 +162,30 @@ function getMiniReply(message, isAr) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, setUser, logout } = useAuth();
+  const { user, setUser, isAuthLoading, logout } = useAuth();
 
   const [lang, setLang] = useState(getInitialLang);
   const isAr = lang === "ar";
   const t = DASHBOARD_TEXT[isAr ? "ar" : "en"];
+
+  // Show loading state while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className={`asrar-dash-page ${isAr ? "asrar-dash-page--ar" : ""}`}>
+        <div className="asrar-dash-orbit asrar-dash-orbit--top" />
+        <div className="asrar-dash-orbit asrar-dash-orbit--bottom" />
+        <div className="asrar-dash-loading">
+          <div className="asrar-loading-spinner"></div>
+          <p>{isAr ? "جاري تحميل لوحة التحكم..." : "Loading your dashboard..."}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, redirect to login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   const [selectedCharacterId, setSelectedCharacterId] = useState(
     CHARACTERS[0].id

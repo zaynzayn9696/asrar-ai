@@ -13,7 +13,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   // Load current user from /api/auth/me using the cookie
   useEffect(() => {
@@ -24,11 +24,16 @@ export function AuthProvider({ children }) {
             ? localStorage.getItem(TOKEN_KEY)
             : null;
 
-        const headers = token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : undefined;
+        // If no token exists, skip the API call
+        if (!token) {
+          setUser(null);
+          setIsAuthLoading(false);
+          return;
+        }
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
 
         const res = await fetch(`${API_BASE}/api/auth/me`, {
           method: "GET",
@@ -48,7 +53,7 @@ export function AuthProvider({ children }) {
         console.error("Error loading /auth/me:", err);
         setUser(null);
       } finally {
-        setLoading(false);
+        setIsAuthLoading(false);
       }
     };
 
@@ -72,7 +77,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, logout }}>
+    <AuthContext.Provider value={{ user, setUser, isAuthLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );

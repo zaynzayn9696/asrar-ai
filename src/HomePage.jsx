@@ -1,5 +1,5 @@
 import AsrarFooter from "./AsrarFooter";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import React, { useState, useRef } from "react";
 import "./Dashboard.css";
 import "./HomePage.css";
@@ -547,7 +547,7 @@ function getMiniChatReply(message, isAr) {
 
 export default function HomePage() {
   // language + mood gate
-  const { user, loading, logout } = useAuth(); // 
+  const { user, isAuthLoading, logout } = useAuth();
   const [language, setLanguage] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("asrar-lang") || "en";
@@ -559,21 +559,34 @@ export default function HomePage() {
   const [recommendedId, setRecommendedId] = useState(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isHomeHeaderNavOpen, setIsHomeHeaderNavOpen] = useState(false);
-  // Use the isMobileNavOpen from AsrarHeader instead of a separate state
-
-  // MINI CHAT STATE
   const [miniChatInput, setMiniChatInput] = useState("");
   const [miniChatUserText, setMiniChatUserText] = useState("");
   const [miniChatReply, setMiniChatReply] = useState(null);
-
   const [selectedCharacterId, setSelectedCharacterId] = useState(
     CHARACTERS[2].id // Start with Rashid (index 2) selected by default
   );
-  const selectedCharacter =
-    CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[0];
 
   const isAr = language === "ar";
   const navigate = useNavigate();
+  const selectedCharacter =
+    CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[0];
+
+  // Show loading state while checking auth
+  if (isAuthLoading) {
+    return (
+      <div className="asrar-fullpage-loading">
+        <div className="asrar-loading-spinner"></div>
+        <p>{isAr ? "جاري التحميل..." : "Loading your experience..."}</p>
+      </div>
+    );
+  }
+
+  // If user is logged in, redirect to dashboard immediately
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Only show public homepage if not loading and not logged in
   const miniChatInputRef = useRef(null);
   const sliderTouchStartXRef = useRef(null);
   const sliderTouchDeltaXRef = useRef(0);

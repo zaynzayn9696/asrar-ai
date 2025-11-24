@@ -25,11 +25,16 @@ import "./App.css";
 
 // Wrapper that protects routes
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, isAuthLoading } = useAuth();
 
-  if (loading) {
-    // You can replace this with a nice spinner
-    return <div style={{ padding: 24 }}>Loading...</div>;
+  if (isAuthLoading) {
+    // Show loading spinner while checking auth
+    return (
+      <div className="asrar-fullpage-loading">
+        <div className="asrar-loading-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   if (!user) {
