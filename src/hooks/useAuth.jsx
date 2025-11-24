@@ -19,35 +19,43 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem(TOKEN_KEY)
-            : null;
+        const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
 
-        // If no token exists, skip the API call
-        if (!token) {
-          setUser(null);
-          setIsAuthLoading(false);
-          return;
-        }
-
+        // Always call /api/auth/me to allow cookie-based auth to work even if localStorage token is missing
         const headers = {
-          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
         };
 
         const res = await fetch(`${API_BASE}/api/auth/me`, {
           method: "GET",
-          credentials: "include", // 👈 send cookies
+          credentials: "include", // send cookies
           headers,
+          cache: "no-store",
         });
 
-        if (!res.ok) {
-          const errBody = await res.json().catch(() => null);
-          console.error("/api/auth/me failed", res.status, errBody);
+        // Safely parse JSON (handle empty body like 304)
+        let data = null;
+        try {
+          const text = await res.text();
+          data = text ? JSON.parse(text) : null;
+        } catch (_) {
+          data = null;
+        }
+
+        if (res.ok) {
+          const u = data?.user ?? data ?? null;
+          setUser(u);
+        } else if (res.status === 304) {
+          // Keep existing user if any; do not crash on empty body
+          setUser((prev) => prev ?? null);
+        } else if (res.status === 401) {
           setUser(null);
         } else {
-          const data = await res.json();
-          setUser(data.user);
+          console.error("/api/auth/me failed", res.status, data);
+          setUser(null);
         }
       } catch (err) {
         console.error("Error loading /auth/me:", err);
