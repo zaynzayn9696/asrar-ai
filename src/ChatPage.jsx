@@ -193,6 +193,7 @@ export default function ChatPage() {
   const [hasHydratedHistory, setHasHydratedHistory] = useState(false);
 
   const messagesContainerRef = useRef(null);
+  const inputRef = useRef(null);
 
   // helper: pick any available mic deviceId
   const getAnyMicDeviceId = async () => {
@@ -306,6 +307,17 @@ export default function ChatPage() {
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [messages, selectedCharacterId]);
+
+  // Auto-expand textarea up to ~3 lines, then scroll internally
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = '0px';
+    const maxPx = 72; // ~3 lines depending on line-height
+    const next = Math.min(el.scrollHeight, maxPx);
+    el.style.height = next + 'px';
+    el.style.overflowY = el.scrollHeight > maxPx ? 'auto' : 'hidden';
+  }, [inputValue]);
 
   const handleLangSwitch = (newLang) => {
     setLang(newLang);
@@ -878,6 +890,8 @@ export default function ChatPage() {
         onLogout={handleLogout}
       />
 
+      {/* derive usage counter for header pill */}
+      {(() => null)()}
       {/* MAIN */}
       <main className="asrar-chat-layout">
         <div className="asrar-chat-center" dir={isAr ? "rtl" : "ltr"}>
@@ -886,11 +900,20 @@ export default function ChatPage() {
               <h1 className="asrar-chat-header-title">{getName(character)} — {getRole(character)}</h1>
               <span className="asrar-chat-header-sub">{isArabicConversation ? t.systemIntro : t.systemIntro}</span>
             </div>
-            <div className="asrar-chat-header-pill">
-              {isArabicConversation
-                ? "خطة ٣٠٠٠ رسالة / Powered by gpt-4o-mini"
-                : "3,000 msgs plan / Powered by gpt-4o-mini"}
-            </div>
+            {(() => {
+              const isPrem = !!(user?.isPremium || user?.plan === 'premium' || user?.plan === 'pro');
+              const limit = isPrem ? (usageInfo?.monthlyLimit ?? 3000) : (usageInfo?.dailyLimit ?? 5);
+              const usedFromUsage = isPrem ? (usageInfo?.monthlyUsed ?? null) : (usageInfo?.dailyUsed ?? null);
+              const userMsgs = messages.filter((m) => m.from === 'user').length;
+              const used = (usedFromUsage ?? userMsgs);
+              const counterText = `${used} / ${limit}`;
+              const modelText = 'gpt-4o-mini';
+              return (
+                <div className="asrar-chat-header-pill">
+                  {isAr ? `الخطة: ${counterText} رسائل` : `Plan: ${counterText} messages`} | {modelText}
+                </div>
+              );
+            })()}
           </header>
 
           <div className="asrar-chat-body" ref={messagesContainerRef}>
@@ -980,8 +1003,9 @@ export default function ChatPage() {
                 </span>
               </button>
               <textarea
+                ref={inputRef}
                 className="asrar-chat-input asrar-room-input-field"
-                rows={2}
+                rows={1}
                 value={inputValue}
                 disabled={isSending || isBlocked}
                 onChange={(e) => setInputValue(e.target.value)}
