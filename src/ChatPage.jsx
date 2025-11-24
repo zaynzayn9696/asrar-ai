@@ -962,7 +962,7 @@ export default function ChatPage() {
               </Link>
             </aside>
 
-            {/* CHAT AREA */
+            {/* CHAT AREA */}
             <section className="asrar-room-chat">
               <div className="asrar-chat-shell">
                 <div className="asrar-chat-header">
