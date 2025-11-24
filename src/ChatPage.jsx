@@ -923,15 +923,6 @@ export default function ChatPage() {
                   key={msg.id}
                   className={`asrar-chat-row asrar-chat-row--${msg.from === 'ai' ? 'assistant' : msg.from === 'user' ? 'user' : 'system'}`}
                 >
-                  {msg.from !== 'system' && (
-                    <div className="asrar-chat-avatar">
-                      {msg.from === 'user' ? (
-                        <div className="asrar-chat-avatar-fallback">{isAr ? 'أ' : 'Y'}</div>
-                      ) : (
-                        <img src={character.avatar} alt={getName(character)} />
-                      )}
-                    </div>
-                  )}
                   <div className="asrar-chat-bubble">
                     {msg.audioBase64 ? (
                       <VoiceMessageBubble
@@ -953,9 +944,6 @@ export default function ChatPage() {
 
               {isSending && (
                 <div className="asrar-chat-row asrar-chat-row--assistant">
-                  <div className="asrar-chat-avatar">
-                    <img src={character.avatar} alt={getName(character)} />
-                  </div>
                   <div className="asrar-chat-bubble">
                     <span className="asrar-typing-dots"><span></span><span></span><span></span></span>
                   </div>

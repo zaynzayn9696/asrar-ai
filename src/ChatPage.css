@@ -447,10 +447,8 @@
   justify-content: center;
 }
 
-.asrar-chat-row--assistant { flex-direction: row; margin-inline-end: auto; }
-.asrar-chat-row--user { flex-direction: row-reverse; margin-inline-start: auto; }
-[dir="rtl"] .asrar-chat-row--assistant { flex-direction: row-reverse; }
-[dir="rtl"] .asrar-chat-row--user { flex-direction: row; }
+.asrar-chat-row--assistant { margin-right: auto; }
+.asrar-chat-row--user { margin-left: auto; }
 
 .asrar-chat-avatar {
   width: 40px;
