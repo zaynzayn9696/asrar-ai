@@ -127,37 +127,58 @@ export default function Billing() {
       return;
     }
 
-    // Pre-open tab synchronously so mobile browsers treat it as user-initiated
-    const newTab = window.open("", "_blank", "noopener,noreferrer");
+    // Detect if mobile device
+    const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    if (!newTab) {
-      // Popup was blocked, do NOT redirect current tab
-      alert(
-        isAr
-          ? "يرجى السماح بالنوافذ المنبثقة لموقع Asrar AI لفتح صفحة الدفع."
-          : "Please allow pop-ups for Asrar AI to open the payment page."
-      );
-      return;
-    }
-
-    try {
-      const { url } = await createCheckoutSession();
-      if (url) {
-        newTab.location = url;
-      } else {
-        newTab.close();
-        alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Could not start checkout. Please try again.");
+    if (isMobile) {
+      // Mobile: redirect in same tab to avoid popup blockers
+      try {
+        const { url } = await createCheckoutSession();
+        if (url) {
+          window.location.href = url;
+        } else {
+          alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Could not start checkout. Please try again.");
+        }
+      } catch (err) {
+        console.error("[Billing] Upgrade error", err);
+        const status = err?.status || err?.response?.status;
+        if (status === 401) {
+          navigate("/login?next=/billing");
+        } else {
+          alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");
+        }
       }
-    } catch (err) {
-      console.error("[Billing] Upgrade error", err);
-      newTab.close();
+    } else {
+      // Desktop: open in new tab
+      const newTab = window.open("", "_blank", "noopener,noreferrer");
 
-      const status = err?.status || err?.response?.status;
-      if (status === 401) {
-        // Token fully invalid → redirect to login
-        navigate("/login?next=/billing");
-      } else {
-        alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");
+      if (!newTab) {
+        alert(
+          isAr
+            ? "يرجى السماح بالنوافذ المنبثقة لموقع Asrar AI لفتح صفحة الدفع."
+            : "Please allow pop-ups for Asrar AI to open the payment page."
+        );
+        return;
+      }
+
+      try {
+        const { url } = await createCheckoutSession();
+        if (url) {
+          newTab.location = url;
+        } else {
+          newTab.close();
+          alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Could not start checkout. Please try again.");
+        }
+      } catch (err) {
+        console.error("[Billing] Upgrade error", err);
+        newTab.close();
+
+        const status = err?.status || err?.response?.status;
+        if (status === 401) {
+          navigate("/login?next=/billing");
+        } else {
+          alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");
+        }
       }
     }
   };
