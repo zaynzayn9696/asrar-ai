@@ -586,10 +586,8 @@ export default function HomePage() {
     );
   }
 
-  // If user is logged in, redirect to dashboard immediately
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  // If user is logged in, we now allow access to the public Home page as well.
+  // No redirect to /dashboard here.
 
   // Only show public homepage if not loading and not logged in
   const scrollByAmount = 320;
