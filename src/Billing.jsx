@@ -130,22 +130,27 @@ export default function Billing() {
     // Pre-open tab synchronously so mobile browsers treat it as user-initiated
     const newTab = window.open("", "_blank", "noopener,noreferrer");
 
+    if (!newTab) {
+      // Popup was blocked, do NOT redirect current tab
+      alert(
+        isAr
+          ? "يرجى السماح بالنوافذ المنبثقة لموقع Asrar AI لفتح صفحة الدفع."
+          : "Please allow pop-ups for Asrar AI to open the payment page."
+      );
+      return;
+    }
+
     try {
       const { url } = await createCheckoutSession();
       if (url) {
-        if (newTab) {
-          newTab.location = url;
-        } else {
-          // Fallback if popup was blocked anyway
-          window.location.href = url;
-        }
+        newTab.location = url;
       } else {
-        if (newTab) newTab.close();
-        alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Something went wrong starting checkout.");
+        newTab.close();
+        alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Could not start checkout. Please try again.");
       }
     } catch (err) {
       console.error("[Billing] Upgrade error", err);
-      if (newTab) newTab.close();
+      newTab.close();
 
       const status = err?.status || err?.response?.status;
       if (status === 401) {
