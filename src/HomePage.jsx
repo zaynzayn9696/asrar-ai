@@ -566,6 +566,11 @@ export default function HomePage() {
     CHARACTERS[2].id // Start with Rashid (index 2) selected by default
   );
 
+  const miniChatInputRef = useRef(null);
+  const sliderTouchStartXRef = useRef(null);
+  const sliderTouchDeltaXRef = useRef(0);
+  const sliderRef = useRef(null);
+
   const isAr = language === "ar";
   const navigate = useNavigate();
   const selectedCharacter =
@@ -587,10 +592,6 @@ export default function HomePage() {
   }
 
   // Only show public homepage if not loading and not logged in
-  const miniChatInputRef = useRef(null);
-  const sliderTouchStartXRef = useRef(null);
-  const sliderTouchDeltaXRef = useRef(0);
-  const sliderRef = useRef(null);
   const scrollByAmount = 320;
   const scrollLeft = () => {
     if (sliderRef.current) {

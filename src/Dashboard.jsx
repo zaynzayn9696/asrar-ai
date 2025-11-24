@@ -165,6 +165,16 @@ export default function Dashboard() {
   const { user, setUser, isAuthLoading, logout } = useAuth();
 
   const [lang, setLang] = useState(getInitialLang);
+  const [selectedCharacterId, setSelectedCharacterId] = useState(
+    CHARACTERS[0].id
+  );
+  const [selectedDialect, setSelectedDialect] = useState("");
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [billingSuccess, setBillingSuccess] = useState(false);
+  const [miniInput, setMiniInput] = useState("");
+  const [miniUserText, setMiniUserText] = useState("");
+  const [miniReply, setMiniReplyState] = useState("");
+
   const isAr = lang === "ar";
   const t = DASHBOARD_TEXT[isAr ? "ar" : "en"];
 
@@ -186,18 +196,6 @@ export default function Dashboard() {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-
-  const [selectedCharacterId, setSelectedCharacterId] = useState(
-    CHARACTERS[0].id
-  );
-  const [selectedDialect, setSelectedDialect] = useState("");
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [billingSuccess, setBillingSuccess] = useState(false);
-
-  // mini mood chat (you can use later if you want)
-  const [miniInput, setMiniInput] = useState("");
-  const [miniUserText, setMiniUserText] = useState("");
-  const [miniReply, setMiniReplyState] = useState("");
 
   const handleLangSwitch = (newLang) => {
     setLang(newLang);
