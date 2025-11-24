@@ -20,6 +20,8 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState(null);
   const detailLabelStyle = { color: '#9bb0c6', fontWeight: 600, letterSpacing: 0.2 };
   const detailValueStyle = { color: '#eaf6ff', fontWeight: 500 };
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   useEffect(() => {
     let aborted = false;
@@ -54,6 +56,12 @@ export default function AdminDashboard() {
       planFilter === 'all' ? true : planFilter === 'premium' ? isPrem : !isPrem;
     return matchesQuery && matchesPlan;
   });
+  const total = filteredUsers.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const start = (page - 1) * pageSize;
+  const currentUsers = filteredUsers.slice(start, start + pageSize);
+
+  useEffect(() => { setPage(1); }, [userQuery, planFilter]);
 
   const handleLangSwitch = (newLang) => {
     if (newLang === lang) return;
@@ -90,12 +98,12 @@ export default function AdminDashboard() {
                   { labelEn: 'Estimated MRR ($/mo)', labelAr: 'إيراد شهري تقديري ($)', value: stats.estimatedMrr ?? ((stats.totalPremiumUsers ?? stats.premiumUsersCount) * 4.99) },
                 ].map((card, idx) => (
                   <div key={idx} className="asrar-character-card">
-                    <div className="asrar-character-card-inner" style={{ padding: 12, minHeight: 110 }}>
+                    <div className="asrar-character-card-inner" style={{ padding: 10, minHeight: 80, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
                       <div className="asrar-character-card-top asrar-character-card-top--stack">
-                        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{isAr ? card.labelAr : card.labelEn}</h3>
+                        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{isAr ? card.labelAr : card.labelEn}</h3>
                       </div>
-                      <div className="asrar-character-text" style={{ fontSize: 22, fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>{card.value}</div>
-                      <div style={{ color: '#9bb0c6', fontSize: 11, textAlign: 'center' }}>{isAr ? 'تم التحديث الآن' : 'Updated just now'}</div>
+                      <div className="asrar-character-text" style={{ fontSize: 20, fontWeight: 700, textAlign: 'center', lineHeight: 1.1 }}>{card.value}</div>
+                      <div style={{ color: '#9bb0c6', fontSize: 10, textAlign: 'center' }}>{isAr ? 'تم التحديث الآن' : 'Updated just now'}</div>
                     </div>
                   </div>
                 ))}
@@ -105,7 +113,7 @@ export default function AdminDashboard() {
 
           {/* Users table and details */}
           <div style={{ height: 16 }} />
-          <div className="asrar-dash-characters" style={{ display: 'grid', gridTemplateColumns: '3fr 1.3fr', gap: 20, maxWidth: 1360 }}>
+          <div className="asrar-dash-characters" style={{ maxWidth: 1360 }}>
             {/* Users card */}
             <div className="asrar-character-card">
               <div className="asrar-character-card-inner">
@@ -116,7 +124,7 @@ export default function AdminDashboard() {
                 <div className="asrar-character-text" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <input
                     className="asrar-settings-input"
-                    placeholder={isAr ? 'بحث بالبريد' : 'Search by email'}
+                    placeholder={isAr ? 'بحث بالاسم أو البريد' : 'Search name or email'}
                     value={userQuery}
                     onChange={(e) => setUserQuery(e.target.value)}
                     style={{ flex: 1 }}
@@ -141,7 +149,7 @@ export default function AdminDashboard() {
                     <div>{isAr ? 'تاريخ الإنشاء' : 'Created At'}</div>
                     <div>{isAr ? 'الاستخدام الشهري' : 'Monthly Usage'}</div>
                   </div>
-                  {filteredUsers.map((u) => {
+                  {currentUsers.map((u) => {
                     const isSelected = selectedUser && selectedUser.id === u.id;
                     const planLabel = u.plan || (u.isPremium ? 'premium' : 'free');
                     return (
@@ -174,12 +182,34 @@ export default function AdminDashboard() {
                   {filteredUsers.length === 0 && (
                     <div style={{ padding: 10, color: '#9bb0c6' }}>{isAr ? 'لا توجد نتائج.' : 'No results.'}</div>
                   )}
+                  {filteredUsers.length > 0 && totalPages > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 8px' }}>
+                      <div style={{ color: '#9bb0c6', fontSize: 12 }}>
+                        {(start + 1)}–{Math.min(start + pageSize, total)} {isAr ? 'من' : 'of'} {total}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          type="button"
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={page === 1}
+                          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(155,176,198,0.25)', background: 'rgba(5,9,16,0.9)', color: '#eaf6ff', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.5 : 1 }}
+                        >{isAr ? 'السابق' : 'Prev'}</button>
+                        <div style={{ color: '#9bb0c6', alignSelf: 'center', fontSize: 12 }}>{page} / {totalPages}</div>
+                        <button
+                          type="button"
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          disabled={page === totalPages}
+                          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(155,176,198,0.25)', background: 'rgba(5,9,16,0.9)', color: '#eaf6ff', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.5 : 1 }}
+                        >{isAr ? 'التالي' : 'Next'}</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Details card */}
-            <div className="asrar-character-card">
+            <div style={{ height: 16 }} />
+            <div className="asrar-character-card" style={{ maxWidth: 560 }}>
               <div className="asrar-character-card-inner">
                 <div className="asrar-character-card-top asrar-character-card-top--stack">
                   <h3 style={{ margin: 0 }}>{isAr ? 'تفاصيل المستخدم' : 'User Details'}</h3>
