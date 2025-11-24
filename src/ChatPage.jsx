@@ -79,9 +79,9 @@ const DIALECTS = [
 // language helpers
 const getInitialLang = () => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("asrar-lang") || "en";
+    return localStorage.getItem("asrar-lang") || "ar";
   }
-  return "en";
+  return "ar";
 };
 
 const getInitialDial = () => {

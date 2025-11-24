@@ -45,6 +45,26 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// Wrapper that keeps guests only; redirects logged-in users to dashboard
+function GuestOnlyRoute({ children }) {
+  const { user, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return (
+      <div className="asrar-fullpage-loading">
+        <div className="asrar-loading-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -52,8 +72,22 @@ function App() {
         <Routes>
           {/* Public pages */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/create-account" element={<CreateAccountPage />} />
+          <Route
+            path="/login"
+            element={
+              <GuestOnlyRoute>
+                <LoginPage />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/create-account"
+            element={
+              <GuestOnlyRoute>
+                <CreateAccountPage />
+              </GuestOnlyRoute>
+            }
+          />
           <Route path="/google-auth-complete" element={<GoogleAuthComplete />} />
 
           {/* Protected pages */}

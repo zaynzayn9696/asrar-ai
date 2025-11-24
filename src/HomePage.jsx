@@ -550,9 +550,9 @@ export default function HomePage() {
   const { user, isAuthLoading, logout } = useAuth();
   const [language, setLanguage] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("asrar-lang") || "en";
+      return localStorage.getItem("asrar-lang") || "ar";
     }
-    return "en";
+    return "ar";
   });
   const [moodInput, setMoodInput] = useState("");
   const [submittedMood, setSubmittedMood] = useState("");
@@ -1212,7 +1212,13 @@ export default function HomePage() {
                 <li>{isAr ? "ذاكرة محادثة ودعم ذو أولوية" : "Chat memory & priority support"}</li>
                 <li>{isAr ? "بدون إعلانات ووصول مبكر" : "Ad‑free, priority access"}</li>
               </ul>
-              <button className="asrar-btn primary" onClick={() => (window.location.href = "/create-account") }>
+              <button className="asrar-btn primary" onClick={() => {
+                if (user) {
+                  window.location.href = "/dashboard";
+                } else {
+                  window.location.href = "/create-account";
+                }
+              }}>
                 {isAr ? "جرّب برو" : "Try Pro"}
               </button>
             </div>

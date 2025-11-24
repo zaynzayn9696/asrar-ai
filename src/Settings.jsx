@@ -13,9 +13,9 @@ import defaultAvatar from "./assets/favicon.png";
 // --- LANGUAGE ----------------------------------------------------
 const getInitialLang = () => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("asrar-lang") || "en";
+    return localStorage.getItem("asrar-lang") || "ar";
   }
-  return "en";
+  return "ar";
 };
 
 const SETTINGS_TEXT = {

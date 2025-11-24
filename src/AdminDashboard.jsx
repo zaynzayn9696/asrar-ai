@@ -120,7 +120,7 @@ function UserDetailsPanel({ user, isAr }) {
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
-  const [lang, setLang] = useState(() => (typeof window !== "undefined" ? (localStorage.getItem("asrar-lang") || "en") : "en"));
+  const [lang, setLang] = useState(() => (typeof window !== "undefined" ? (localStorage.getItem("asrar-lang") || "ar") : "ar"));
   const isAr = lang === "ar";
 
   const [loading, setLoading] = useState(true);

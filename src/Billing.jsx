@@ -10,9 +10,9 @@ import { createCheckoutSession } from "./api/billing";
 // --- LANGUAGE ----------------------------------------------------
 const getInitialLang = () => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("asrar-lang") || "en";
+    return localStorage.getItem("asrar-lang") || "ar";
   }
-  return "en";
+  return "ar";
 };
 
 const BILLING_TEXT = {
