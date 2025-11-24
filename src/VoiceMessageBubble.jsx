@@ -3,9 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 
 const SPEED_OPTIONS = [
-  { value: 1, label: "1x" },
+  { value: 1.25, label: "1.25x" },
   { value: 1.5, label: "1.5x" },
-  { value: 2, label: "2x" },
 ];
 
 const VOICE_SPEED_STORAGE_KEY = "asrar-voice-speed";
@@ -15,7 +14,7 @@ export default function VoiceMessageBubble({ audioBase64, from, isArabic }) {
   const trackRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1);
+  const [playbackRate, setPlaybackRate] = useState(1.25);
   const [isScrubbing, setIsScrubbing] = useState(false);
 
   // hydrate playback speed from localStorage once

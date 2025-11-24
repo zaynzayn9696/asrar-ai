@@ -437,7 +437,7 @@
 .asrar-chat-row {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   width: fit-content;
   max-width: 100%;
 }
@@ -447,15 +447,18 @@
   justify-content: center;
 }
 
-.asrar-chat-row--assistant { flex-direction: row; margin-inline-start: auto; }
-.asrar-chat-row--user { flex-direction: row-reverse; margin-inline-end: auto; }
+.asrar-chat-row--assistant { flex-direction: row; margin-inline-end: auto; }
+.asrar-chat-row--user { flex-direction: row-reverse; margin-inline-start: auto; }
+[dir="rtl"] .asrar-chat-row--assistant { flex-direction: row-reverse; }
+[dir="rtl"] .asrar-chat-row--user { flex-direction: row; }
 
 .asrar-chat-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   overflow: hidden;
   flex: 0 0 auto;
+  flex-shrink: 0;
   background: radial-gradient(circle at 30% 0%, #061a2d, #02040c);
   border: 1px solid rgba(0, 240, 255, 0.6);
   box-shadow:
@@ -474,9 +477,10 @@
   padding: 0.7rem 0.9rem;
   font-size: 0.9rem;
   line-height: 1.6;
-  max-width: 100%;
+  max-width: 85%;
   word-break: break-word;
   white-space: pre-wrap;
+  margin: 8px 0;
 }
 
 .asrar-chat-row--assistant .asrar-chat-bubble {
