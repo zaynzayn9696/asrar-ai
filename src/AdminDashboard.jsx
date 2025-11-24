@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   const allUsers = Array.isArray(stats?.users) ? stats.users : [];
   const filteredUsers = allUsers.filter((u) => {
     const q = userQuery.trim().toLowerCase();
-    const matchesQuery = !q || u.email.toLowerCase().includes(q);
+    const matchesQuery = !q || u.email.toLowerCase().includes(q) || (u.name || '').toLowerCase().includes(q);
     const isPrem = !!(u.isPremium || u.plan === 'premium' || u.plan === 'pro');
     const matchesPlan =
       planFilter === 'all' ? true : planFilter === 'premium' ? isPrem : !isPrem;
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
                   { labelEn: 'Total Users', labelAr: 'إجمالي المستخدمين', value: stats.totalUsers },
                   { labelEn: 'Premium Users', labelAr: 'مستخدمون بريميوم', value: stats.totalPremiumUsers ?? stats.premiumUsersCount },
                   { labelEn: 'Free Users', labelAr: 'مستخدمون مجاناً', value: (stats.totalFreeUsers ?? (stats.totalUsers - ((stats.totalPremiumUsers ?? stats.premiumUsersCount) ?? 0))) },
-                  { labelEn: 'New (Last 7 Days)', labelAr: 'جدد (آخر 7 أيام)', value: stats.last7DaysUsers ?? stats.usersLast7Days },
+                  { labelEn: 'Estimated MRR ($/mo)', labelAr: 'إيراد شهري تقديري ($)', value: stats.estimatedMrr ?? ((stats.totalPremiumUsers ?? stats.premiumUsersCount) * 4.99) },
                 ].map((card, idx) => (
                   <div key={idx} className="asrar-character-card">
                     <div className="asrar-character-card-inner">
@@ -97,27 +97,6 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              {/* Signups by day */}
-              <div className="asrar-dash-characters" style={{ marginTop: 16 }}>
-                <div className="asrar-character-card" style={{ width: '100%' }}>
-                  <div className="asrar-character-card-inner">
-                    <div className="asrar-character-card-top asrar-character-card-top--stack">
-                      <h3 style={{ margin: 0 }}>{isAr ? 'التسجيلات (آخر 14 يوماً)' : 'Signups (Last 14 Days)'}</h3>
-                    </div>
-                    <div className="asrar-character-text" style={{ width: '100%', maxHeight: 240, overflow: 'auto' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, marginTop: 8 }}>
-                        {(stats.signupsByDay || stats.usersByDayLast14Days || []).map((row) => (
-                          <React.Fragment key={row.date}>
-                            <div style={{ color: '#9bb0c6' }}>{row.date}</div>
-                            <div style={{ fontWeight: 600 }}>{row.count}</div>
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </>
           )}
@@ -153,13 +132,12 @@ export default function AdminDashboard() {
                 </div>
                 {/* Table */}
                 <div style={{ marginTop: 10, maxHeight: 420, overflow: 'auto' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.2fr 1.2fr 0.8fr 0.8fr', padding: '8px 6px', color: '#9bb0c6', borderBottom: '1px solid rgba(155,176,198,0.2)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 0.8fr 1.2fr 1.2fr', padding: '8px 6px', color: '#9bb0c6', borderBottom: '1px solid rgba(155,176,198,0.2)' }}>
                     <div>{isAr ? 'البريد' : 'Email'}</div>
+                    <div>{isAr ? 'الاسم' : 'Name'}</div>
                     <div>{isAr ? 'الخطة' : 'Plan'}</div>
                     <div>{isAr ? 'تاريخ الإنشاء' : 'Created At'}</div>
-                    <div>{isAr ? 'آخر دخول' : 'Last Login'}</div>
-                    <div>{isAr ? 'اليومي' : 'Daily'}</div>
-                    <div>{isAr ? 'الشهري' : 'Monthly'}</div>
+                    <div>{isAr ? 'الاستخدام الشهري' : 'Monthly Usage'}</div>
                   </div>
                   {filteredUsers.map((u) => {
                     const isSelected = selectedUser && selectedUser.id === u.id;
@@ -178,13 +156,12 @@ export default function AdminDashboard() {
                         }}
                         aria-label={`Select ${u.email}`}
                       >
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.2fr 1.2fr 0.8fr 0.8fr', padding: '10px 6px', borderBottom: '1px solid rgba(155,176,198,0.12)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 0.8fr 1.2fr 1.2fr', padding: '10px 6px', borderBottom: '1px solid rgba(155,176,198,0.12)' }}>
                           <div style={{ color: '#eaf6ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</div>
+                          <div style={{ color: '#eaf6ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name || '—'}</div>
                           <div style={{ color: u.isPremium ? '#9be7c4' : '#9bb0c6' }}>{planLabel}</div>
                           <div style={{ color: '#9bb0c6' }}>{new Date(u.createdAt).toISOString().slice(0, 10)}</div>
-                          <div style={{ color: '#9bb0c6' }}>{u.lastLoginAt ? new Date(u.lastLoginAt).toISOString().slice(0, 10) : '—'}</div>
-                          <div style={{ color: '#eaf6ff' }}>{u.dailyUsed ?? 0}</div>
-                          <div style={{ color: '#eaf6ff' }}>{u.monthlyUsed ?? 0}</div>
+                          <div style={{ color: '#eaf6ff' }}>{(u.monthlyUsed ?? 0)} / {(u.monthlyLimit ?? 0)}</div>
                         </div>
                       </button>
                     );

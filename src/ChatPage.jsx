@@ -188,6 +188,7 @@ export default function ChatPage() {
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [modalText, setModalText] = useState("");
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const [hasHydratedHistory, setHasHydratedHistory] = useState(false);
 
@@ -512,18 +513,24 @@ export default function ChatPage() {
           setShowLockedModal(true);
           return;
         }
-        if (data && data.code === "LIMIT_EXCEEDED") {
+        if (data && (data.error === "usage_limit_reached" || data.code === "LIMIT_EXCEEDED")) {
           setUsageInfo(data.usage || usageInfo);
-          setModalText(
-            isArabicConversation
-              ? data.limitType === "monthly"
-                ? "وصلت للحد الشهري للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
-                : "وصلت للحد اليومي للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
-              : data.limitType === "monthly"
-              ? "You have reached your monthly message limit. Upgrade to Pro for higher limits."
-              : "You have reached your daily message limit. Upgrade to Pro for higher limits."
-          );
+          const isPrem = !!(user?.isPremium || user?.plan === 'premium' || user?.plan === 'pro');
+          if (isArabicConversation) {
+            setModalText(
+              data.limitType === "monthly"
+                ? "وصلت إلى حد ٣٠٠٠ رسالة هذا الشهر. يرجى الانتظار حتى الشهر القادم أو التواصل مع الدعم."
+                : "وصلت إلى حدك اليومي في الخطة المجانية. قم بالترقية إلى بريميوم للحصول على ٣٠٠٠ رسالة شهريًا."
+            );
+          } else {
+            setModalText(
+              data.limitType === "monthly"
+                ? "You reached your 3,000 messages limit for this month. Please wait until next month or contact support."
+                : "You reached your free daily limit. Upgrade to Premium to unlock 3,000 messages per month."
+            );
+          }
           setShowLimitModal(true);
+          setIsBlocked(true);
           return;
         }
         const errorMessage = {
@@ -969,13 +976,19 @@ export default function ChatPage() {
                 {user && (
                   <div className="asrar-room-plan-usage">
                     <span className="asrar-room-plan-chip">
-                      {user.plan === "pro" ? (isAr ? "برو" : "Pro") : (isAr ? "مجانية" : "Free")}
+                      {user.isPremium || user.plan === 'premium' || user.plan === 'pro'
+                        ? (isAr ? 'بريميوم' : 'Premium')
+                        : (isAr ? 'مجانية' : 'Free')}
                     </span>
                     {usageInfo && (
                       <span className="asrar-room-usage-text">
-                        {isAr
-                          ? `اليوم: ${Math.max(0, (usageInfo.dailyLimit || 0) - (usageInfo.dailyUsed || 0))} / ${usageInfo.dailyLimit || 0}`
-                          : `Today: ${Math.max(0, (usageInfo.dailyLimit || 0) - (usageInfo.dailyUsed || 0))} / ${usageInfo.dailyLimit || 0}`}
+                        {user.isPremium || user.plan === 'premium' || user.plan === 'pro'
+                          ? (isAr
+                              ? `هذا الشهر: ${usageInfo.monthlyUsed || 0} / ${(usageInfo.monthlyLimit || 3000)}`
+                              : `This month: ${usageInfo.monthlyUsed || 0} / ${(usageInfo.monthlyLimit || 3000)}`)
+                          : (isAr
+                              ? `اليوم: ${usageInfo.dailyUsed || 0} / ${(usageInfo.dailyLimit || 5)}`
+                              : `Today: ${usageInfo.dailyUsed || 0} / ${(usageInfo.dailyLimit || 5)}`)}
                       </span>
                     )}
                   </div>
@@ -1077,6 +1090,7 @@ export default function ChatPage() {
                   className="asrar-room-input-field"
                   rows={2}
                   value={inputValue}
+                  disabled={isSending || isBlocked}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -1091,7 +1105,7 @@ export default function ChatPage() {
                   type="button"
                   className={isRecording ? 'asrar-mic-btn asrar-mic-btn--recording' : 'asrar-mic-btn'}
                   onClick={handleToggleRecording}
-                  disabled={isSending || isSendingVoice}
+                  disabled={isSending || isSendingVoice || isBlocked}
                   title={isRecording ? (isAr ? 'إيقاف التسجيل' : 'Stop recording') : (isAr ? 'ابدأ التسجيل' : 'Start recording')}
                 >
                   <span className="icon" aria-hidden="true">
@@ -1103,12 +1117,10 @@ export default function ChatPage() {
                 <button
                   type="submit"
                   className="asrar-send-btn"
-                  disabled={isSending}
+                  disabled={isSending || isBlocked}
                 >
-                  <span className="icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 17L17 7M7 7h10v10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                  <span className="asrar-send-btn-label">
+                    {isArabicConversation ? "إرسال" : "Send"}
                   </span>
                 </button>
               </form>

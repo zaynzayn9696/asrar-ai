@@ -23,7 +23,7 @@ function getPlanLimits(email, plan) {
       isTester: true,
     };
   }
-  if (plan === 'pro') {
+  if (plan === 'pro' || plan === 'premium') {
     return {
       dailyLimit: LIMITS.PRO_DAILY,
       monthlyLimit: LIMITS.PRO_MONTHLY,

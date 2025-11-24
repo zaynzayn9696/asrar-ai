@@ -102,6 +102,17 @@ router.post('/webhook', async (req, res) => {
             lemonSubscriptionId: lemonSubscriptionId || user.lemonSubscriptionId,
           },
         });
+        try {
+          await prisma.usage.upsert({
+            where: { userId: user.id },
+            update: { monthlyCount: 0 },
+            create: {
+              userId: user.id,
+              dailyCount: 0,
+              monthlyCount: 0,
+            },
+          });
+        } catch (_) {}
       } else if (isInactiveStatus) {
         console.log('[Billing] Marking user as FREE', {
           userId: user.id,
@@ -114,6 +125,7 @@ router.post('/webhook', async (req, res) => {
             plan: 'free',
           },
         });
+        // No DB write needed for limits; limits are derived per plan.
       }
 
       return res.status(200).json({ received: true });

@@ -2,6 +2,7 @@
 
 const express = require('express');
 const prisma = require('../prisma');
+const { getPlanLimits } = require('../config/limits');
 const requireAuth = require('../middleware/requireAuth');
 const router = express.Router();
 
@@ -56,30 +57,41 @@ router.get('/stats', async (req, res) => {
     }
 
     // Map recent users to a compact shape with usage
-    const users = recentUsers.map((u) => ({
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      plan: u.plan,
-      isPremium: !!u.isPremium,
-      createdAt: u.createdAt,
-      lastLoginAt: null,
-      dailyUsed: u.usage ? u.usage.dailyCount : 0,
-      monthlyUsed: u.usage ? u.usage.monthlyCount : 0,
-    }));
+    const users = recentUsers.map((u) => {
+      const { monthlyLimit } = getPlanLimits(u.email, u.plan);
+      return {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        plan: u.plan,
+        isPremium: !!u.isPremium,
+        createdAt: u.createdAt,
+        lastLoginAt: null,
+        dailyUsed: u.usage ? u.usage.dailyCount : 0,
+        monthlyUsed: u.usage ? u.usage.monthlyCount : 0,
+        monthlyLimit: monthlyLimit || 0,
+      };
+    });
+
+    const premiumUsers = premiumUsersCount;
+    const freeUsers = totalUsers - premiumUsersCount;
+    const estimatedMrr = Number((premiumUsers * 4.99).toFixed(2));
 
     return res.json({
-      // existing fields (kept for backward compatibility)
+      // new simplified fields
       totalUsers,
+      premiumUsers,
+      freeUsers,
+      estimatedMrr,
+      users,
+      // legacy fields preserved (for backward compatibility if any other UI reads them)
       usersLast7Days: usersLast7DaysRaw,
       usersByDayLast14Days,
       premiumUsersCount,
-      // new fields
       totalPremiumUsers: premiumUsersCount,
-      totalFreeUsers: totalUsers - premiumUsersCount,
+      totalFreeUsers: freeUsers,
       last7DaysUsers: usersLast7DaysRaw,
       signupsByDay: usersByDayLast14Days,
-      users,
     });
   } catch (err) {
     console.error('[admin/stats] error', err && err.message ? err.message : err);

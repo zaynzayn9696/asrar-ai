@@ -341,7 +341,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       dbUser.email,
       dbUser.plan
     );
-    if (dbUser.plan !== 'pro' && !isTester) {
+    const isPremiumUser = !!(dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro');
+    if (!isPremiumUser && !isTester) {
       return res.status(403).json({
         code: 'VOICE_PRO_ONLY',
         message: 'Voice chat is available for Pro members.',
@@ -351,24 +352,39 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     let usage = await ensureUsage(dbUser.id);
 
     if (!isTester) {
-      if (usage.dailyCount >= dailyLimit) {
-        return res.status(429).json({
-          code: 'LIMIT_EXCEEDED',
-          message: 'You have reached your daily message limit. Upgrade to Pro for higher limits.',
-          limitType: 'daily',
-          plan: dbUser.plan,
-          usage: buildUsageSummary(dbUser, usage),
-        });
-      }
-      if (dbUser.plan === 'pro' && monthlyLimit && usage.monthlyCount >= monthlyLimit) {
-        return res.status(429).json({
-          code: 'LIMIT_EXCEEDED',
-          message:
-            'You have reached your monthly message limit. Upgrade your plan or wait for the next month.',
-          limitType: 'monthly',
-          plan: dbUser.plan,
-          usage: buildUsageSummary(dbUser, usage),
-        });
+      if (isPremiumUser) {
+        const used = usage.monthlyCount || 0;
+        const limit = monthlyLimit || 3000;
+        if (limit > 0 && used >= limit) {
+          return res.status(429).json({
+            error: 'usage_limit_reached',
+            code: 'LIMIT_EXCEEDED',
+            message: 'Monthly message limit reached.',
+            scope: 'monthly',
+            plan: 'premium',
+            used,
+            limit,
+            remaining: 0,
+            usage: buildUsageSummary(dbUser, usage),
+          });
+        }
+      } else {
+        const used = usage.dailyCount || 0;
+        const limit = dailyLimit || 5;
+        if (limit > 0 && used >= limit) {
+          return res.status(429).json({
+            error: 'usage_limit_reached',
+            code: 'LIMIT_EXCEEDED',
+            message: 'Daily message limit reached.',
+            scope: 'daily',
+            limitType: 'daily',
+            plan: 'free',
+            used,
+            limit,
+            remaining: 0,
+            usage: buildUsageSummary(dbUser, usage),
+          });
+        }
       }
     }
 
@@ -411,12 +427,19 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       });
     }
 
-    // Increment usage immediately
+    // Increment usage immediately (premium: monthly only, free: daily only)
     if (!isTester) {
-      usage = await prisma.usage.update({
-        where: { userId: dbUser.id },
-        data: { dailyCount: { increment: 1 }, monthlyCount: { increment: 1 } },
-      });
+      if (isPremiumUser) {
+        usage = await prisma.usage.update({
+          where: { userId: dbUser.id },
+          data: { monthlyCount: { increment: 1 } },
+        });
+      } else {
+        usage = await prisma.usage.update({
+          where: { userId: dbUser.id },
+          data: { dailyCount: { increment: 1 } },
+        });
+      }
     }
 
     const persona = CHARACTER_PERSONAS[characterId];
@@ -586,6 +609,7 @@ router.post('/message', async (req, res) => {
       dbUser.email,
       dbUser.plan
     );
+    const isPremiumUser = !!(dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro');
 
     // Character gating for free plan
     if (dbUser.plan === 'free' && characterId !== freeCharacterId) {
@@ -600,37 +624,55 @@ router.post('/message', async (req, res) => {
 
     // Server-side limits
     if (!isTester) {
-      if (usage.dailyCount >= dailyLimit) {
-        return res.status(429).json({
-          code: 'LIMIT_EXCEEDED',
-          message:
-            'You have reached your daily message limit. Upgrade to Pro for higher limits.',
-          limitType: 'daily',
-          plan: dbUser.plan,
-          usage: buildUsageSummary(dbUser, usage),
-        });
-      }
-      if (dbUser.plan === 'pro' && monthlyLimit && usage.monthlyCount >= monthlyLimit) {
-        return res.status(429).json({
-          code: 'LIMIT_EXCEEDED',
-          message:
-            'You have reached your monthly message limit. Upgrade your plan or wait for the next month.',
-          limitType: 'monthly',
-          plan: dbUser.plan,
-          usage: buildUsageSummary(dbUser, usage),
-        });
+      if (isPremiumUser) {
+        const used = usage.monthlyCount || 0;
+        const limit = monthlyLimit || 3000;
+        if (limit > 0 && used >= limit) {
+          return res.status(429).json({
+            error: 'usage_limit_reached',
+            code: 'LIMIT_EXCEEDED',
+            message: 'Monthly message limit reached.',
+            scope: 'monthly',
+            limitType: 'monthly',
+            plan: isPremiumUser ? 'premium' : 'free',
+            used,
+            limit,
+            remaining: 0,
+            usage: buildUsageSummary(dbUser, usage),
+          });
+        }
+      } else {
+        const used = usage.dailyCount || 0;
+        const limit = dailyLimit || 5;
+        if (limit > 0 && used >= limit) {
+          return res.status(429).json({
+            error: 'usage_limit_reached',
+            code: 'LIMIT_EXCEEDED',
+            message: 'Daily message limit reached.',
+            scope: 'daily',
+            plan: 'free',
+            used,
+            limit,
+            remaining: 0,
+            usage: buildUsageSummary(dbUser, usage),
+          });
+        }
       }
     }
 
     // Accept request: increment usage immediately
     if (!isTester) {
-      usage = await prisma.usage.update({
-        where: { userId: dbUser.id },
-        data: {
-          dailyCount: { increment: 1 },
-          monthlyCount: { increment: 1 },
-        },
-      });
+      if (isPremiumUser) {
+        usage = await prisma.usage.update({
+          where: { userId: dbUser.id },
+          data: { monthlyCount: { increment: 1 } },
+        });
+      } else {
+        usage = await prisma.usage.update({
+          where: { userId: dbUser.id },
+          data: { dailyCount: { increment: 1 } },
+        });
+      }
     }
 
     const persona = CHARACTER_PERSONAS[characterId];
