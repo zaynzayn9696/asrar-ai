@@ -309,6 +309,15 @@
   align-items: center;
   padding: 16px;
   border-top: 1px solid rgba(155, 176, 198, 0.08);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.admin-pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .admin-pagination-info {
@@ -316,10 +325,48 @@
   color: #9bb0c6;
 }
 
+.admin-pagination-rows {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-pagination-label {
+  font-size: 12px;
+  color: #9bb0c6;
+  white-space: nowrap;
+}
+
+.admin-pagination-select {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: rgba(5, 9, 16, 0.9);
+  border: 1px solid rgba(155, 176, 198, 0.25);
+  border-radius: 8px;
+  color: #eaf6ff;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-pagination-select:hover {
+  background: rgba(24, 209, 218, 0.08);
+  border-color: rgba(24, 209, 218, 0.4);
+}
+
+.admin-pagination-select:focus {
+  border-color: rgba(24, 209, 218, 0.5);
+}
+
+.admin-pagination-select option {
+  background: #050810;
+}
+
 .admin-pagination-controls {
   display: flex;
   gap: 8px;
   align-items: center;
+  margin-left: auto;
 }
 
 .admin-pagination-button {
@@ -331,6 +378,7 @@
   color: #eaf6ff;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
 }
 
 .admin-pagination-button:hover:not(:disabled) {
@@ -346,6 +394,7 @@
 .admin-pagination-page {
   font-size: 12px;
   color: #9bb0c6;
+  white-space: nowrap;
 }
 
 /* USER DETAILS PANEL */
@@ -456,6 +505,27 @@
   
   .admin-title {
     font-size: 24px;
+  }
+  
+  .admin-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .admin-pagination-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .admin-pagination-rows {
+    justify-content: space-between;
+  }
+  
+  .admin-pagination-controls {
+    margin-left: 0;
+    justify-content: center;
   }
 }
 

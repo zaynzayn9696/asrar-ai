@@ -130,7 +130,7 @@ export default function AdminDashboard() {
   const [planFilter, setPlanFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
   const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     let aborted = false;
@@ -170,7 +170,7 @@ export default function AdminDashboard() {
   const start = (page - 1) * pageSize;
   const currentUsers = filteredUsers.slice(start, start + pageSize);
 
-  useEffect(() => { setPage(1); }, [userQuery, planFilter]);
+  useEffect(() => { setPage(1); }, [userQuery, planFilter, pageSize]);
 
   const handleLangSwitch = (newLang) => {
     if (newLang === lang) return;
@@ -277,10 +277,29 @@ export default function AdminDashboard() {
                   />
 
                   {/* Pagination */}
-                  {filteredUsers.length > 0 && totalPages > 1 && (
+                  {filteredUsers.length > 0 && (
                     <div className="admin-pagination">
-                      <div className="admin-pagination-info">
-                        {start + 1}–{Math.min(start + pageSize, total)} {isAr ? "من" : "of"} {total}
+                      <div className="admin-pagination-left">
+                        <div className="admin-pagination-info">
+                          {start + 1}–{Math.min(start + pageSize, total)} {isAr ? "من" : "of"} {total}
+                        </div>
+                        <div className="admin-pagination-rows">
+                          <label htmlFor="rows-per-page" className="admin-pagination-label">
+                            {isAr ? "صفوف لكل صفحة:" : "Rows per page:"}
+                          </label>
+                          <select
+                            id="rows-per-page"
+                            className="admin-pagination-select"
+                            value={pageSize}
+                            onChange={(e) => setPageSize(Number(e.target.value))}
+                          >
+                            <option value={5}>5</option>
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                          </select>
+                        </div>
                       </div>
                       <div className="admin-pagination-controls">
                         <button
@@ -289,10 +308,10 @@ export default function AdminDashboard() {
                           onClick={() => setPage((p) => Math.max(1, p - 1))}
                           disabled={page === 1}
                         >
-                          {isAr ? "السابق" : "Prev"}
+                          {isAr ? "السابق" : "Previous"}
                         </button>
                         <div className="admin-pagination-page">
-                          {page} / {totalPages}
+                          {isAr ? `صفحة ${page} من ${totalPages}` : `Page ${page} of ${totalPages}`}
                         </div>
                         <button
                           type="button"
