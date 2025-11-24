@@ -1,11 +1,122 @@
 // src/AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
 import "./HomePage.css";
-import "./Dashboard.css";
+import "./AdminDashboard.css";
 import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
 import { useAuth } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
+
+// Stat Card Component
+function StatCard({ label, value, subtext, isAr }) {
+  return (
+    <div className="admin-stat-card">
+      <div className="admin-stat-card-inner">
+        <div className="admin-stat-label">{label}</div>
+        <div className="admin-stat-value">{value}</div>
+        <div className="admin-stat-subtext">{subtext}</div>
+      </div>
+    </div>
+  );
+}
+
+// Users Table Component
+function UsersTable({ users, selectedUser, onSelectUser, isAr }) {
+  if (users.length === 0) {
+    return (
+      <div className="admin-table-empty">
+        {isAr ? "لا توجد نتائج." : "No results."}
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-table-wrapper">
+      <div className="admin-table-header">
+        <div className="admin-table-header-cell">{isAr ? "البريد" : "Email"}</div>
+        <div className="admin-table-header-cell">{isAr ? "الاسم" : "Name"}</div>
+        <div className="admin-table-header-cell">{isAr ? "الخطة" : "Plan"}</div>
+        <div className="admin-table-header-cell">{isAr ? "تاريخ الإنشاء" : "Created"}</div>
+        <div className="admin-table-header-cell">{isAr ? "الاستخدام" : "Usage"}</div>
+      </div>
+      {users.map((u) => {
+        const isSelected = selectedUser && selectedUser.id === u.id;
+        const planLabel = u.plan || (u.isPremium ? "premium" : "free");
+        const isPremium = !!(u.isPremium || u.plan === "premium" || u.plan === "pro");
+
+        return (
+          <button
+            key={u.id}
+            type="button"
+            onClick={() => onSelectUser(u)}
+            className={`admin-table-row ${isSelected ? "selected" : ""}`}
+            aria-label={`Select ${u.email}`}
+          >
+            <div className="admin-table-cell" data-label={isAr ? "البريد" : "Email"}>
+              {u.email}
+            </div>
+            <div className="admin-table-cell" data-label={isAr ? "الاسم" : "Name"}>
+              {u.name || "—"}
+            </div>
+            <div className={`admin-table-cell ${isPremium ? "premium" : "muted"}`} data-label={isAr ? "الخطة" : "Plan"}>
+              {planLabel}
+            </div>
+            <div className="admin-table-cell muted" data-label={isAr ? "تاريخ الإنشاء" : "Created"}>
+              {new Date(u.createdAt).toISOString().slice(0, 10)}
+            </div>
+            <div className="admin-table-cell" data-label={isAr ? "الاستخدام" : "Usage"}>
+              {u.monthlyUsed ?? 0} / {u.monthlyLimit ?? 0}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// User Details Panel Component
+function UserDetailsPanel({ user, isAr }) {
+  if (!user) {
+    return (
+      <div className="admin-details-placeholder">
+        {isAr ? "اختر مستخدمًا من الجدول" : "Select a user from the table"}
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-details-grid">
+      <div className="admin-details-label">ID</div>
+      <div className="admin-details-value">{user.id}</div>
+
+      <div className="admin-details-label">{isAr ? "الاسم" : "Name"}</div>
+      <div className="admin-details-value">{user.name || "—"}</div>
+
+      <div className="admin-details-label">{isAr ? "البريد" : "Email"}</div>
+      <div className="admin-details-value">{user.email}</div>
+
+      <div className="admin-details-label">{isAr ? "الخطة" : "Plan"}</div>
+      <div className="admin-details-value">{user.plan || (user.isPremium ? "premium" : "free")}</div>
+
+      <div className="admin-details-label">{isAr ? "مميز؟" : "Premium?"}</div>
+      <div className="admin-details-value">{user.isPremium ? "Yes" : "No"}</div>
+
+      <div className="admin-details-label">{isAr ? "تاريخ الإنشاء" : "Created at"}</div>
+      <div className="admin-details-value">{new Date(user.createdAt).toISOString().slice(0, 10)}</div>
+
+      <div className="admin-details-label">{isAr ? "آخر دخول" : "Last login"}</div>
+      <div className="admin-details-value">
+        {user.lastLoginAt ? new Date(user.lastLoginAt).toISOString().slice(0, 10) : "—"}
+      </div>
+
+      <div className="admin-details-label">{isAr ? "الاستخدام اليومي" : "Daily usage"}</div>
+      <div className="admin-details-value">{user.dailyUsed ?? 0}</div>
+
+      <div className="admin-details-label">{isAr ? "الاستخدام الشهري" : "Monthly usage"}</div>
+      <div className="admin-details-value">{user.monthlyUsed ?? 0}</div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -16,10 +127,8 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   const [stats, setStats] = useState(null);
   const [userQuery, setUserQuery] = useState("");
-  const [planFilter, setPlanFilter] = useState("all"); // all | premium | free
+  const [planFilter, setPlanFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
-  const detailLabelStyle = { color: '#9bb0c6', fontWeight: 600, letterSpacing: 0.2 };
-  const detailValueStyle = { color: '#eaf6ff', fontWeight: 500 };
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
@@ -70,182 +179,149 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className={`asrar-dash-page asrar-dashboard-page ${isAr ? "asrar-dash-page--ar" : ""}`}> 
-      <div className="asrar-dash-orbit asrar-dash-orbit--top" />
-      <div className="asrar-dash-orbit asrar-dash-orbit--bottom" />
-
+    <div className={`asrar-page admin-page ${isAr ? "asrar-page--ar" : ""}`} dir={isAr ? "rtl" : "ltr"}>
       <AsrarHeader lang={lang} isAr={isAr} onLangChange={handleLangSwitch} onLogout={logout} />
 
-      <main className="asrar-dash-main">
-        <section className="asrar-dash-panel" dir={isAr ? "rtl" : "ltr"}>
-          <p className="asrar-dash-eyebrow">{isAr ? "لوحة المدير" : "Admin Panel"}</p>
-          <h1 className="asrar-dash-title">{isAr ? "إحصائيات المستخدمين" : "User Stats"}</h1>
-          <p className="asrar-dash-subtitle">{isAr ? "نظرة عامة سريعة على المستخدمين" : "A quick overview of users"}</p>
+      <main className="admin-content">
+        {/* Header */}
+        <div className="admin-header">
+          <p className="admin-eyebrow">{isAr ? "لوحة المدير" : "Admin Panel"}</p>
+          <h1 className="admin-title">{isAr ? "إحصائيات المستخدمين" : "User Statistics"}</h1>
+          <p className="admin-subtitle">
+            {isAr ? "نظرة عامة سريعة على المستخدمين والإيرادات" : "Quick overview of users and revenue"}
+          </p>
+        </div>
 
-          {loading && <div style={{ padding: 16 }}>{isAr ? "جاري التحميل..." : "Loading..."}</div>}
-          {error && !loading && (
-            <div style={{ padding: 16, color: "#ff9cae" }}>{isAr ? `خطأ: ${error}` : `Error: ${error}`}</div>
-          )}
+        {/* Loading State */}
+        {loading && (
+          <div className="admin-loading">{isAr ? "جاري التحميل..." : "Loading..."}</div>
+        )}
 
-          {!loading && !error && stats && (
-            <>
-              {/* Summary grid */}
-              <div className="asrar-dash-characters" style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(120px, 1fr))", gap: 12 }}>
-                {[
-                  { labelEn: 'Total Users', labelAr: 'إجمالي المستخدمين', value: stats.totalUsers },
-                  { labelEn: 'Premium Users', labelAr: 'مستخدمون بريميوم', value: stats.totalPremiumUsers ?? stats.premiumUsersCount },
-                  { labelEn: 'Free Users', labelAr: 'مستخدمون مجاناً', value: (stats.totalFreeUsers ?? (stats.totalUsers - ((stats.totalPremiumUsers ?? stats.premiumUsersCount) ?? 0))) },
-                  { labelEn: 'Estimated MRR ($/mo)', labelAr: 'إيراد شهري تقديري ($)', value: stats.estimatedMrr ?? ((stats.totalPremiumUsers ?? stats.premiumUsersCount) * 4.99) },
-                ].map((card, idx) => (
-                  <div key={idx} className="asrar-character-card">
-                    <div className="asrar-character-card-inner" style={{ padding: '30px 25px', minHeight: 120, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
-                      <div className="asrar-character-card-top asrar-character-card-top--stack">
-                        <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{isAr ? card.labelAr : card.labelEn}</h3>
-                      </div>
-                      <div className="asrar-character-text" style={{ fontSize: 20, fontWeight: 700, textAlign: 'center', lineHeight: 1.1 }}>{card.value}</div>
-                      <div style={{ color: '#9bb0c6', fontSize: 10, textAlign: 'center' }}>{isAr ? 'تم التحديث الآن' : 'Updated just now'}</div>
-                    </div>
+        {/* Error State */}
+        {error && !loading && (
+          <div className="admin-error">{isAr ? `خطأ: ${error}` : `Error: ${error}`}</div>
+        )}
+
+        {/* Main Content */}
+        {!loading && !error && stats && (
+          <>
+            {/* Stats Grid */}
+            <div className="admin-stats-grid">
+              <StatCard
+                label={isAr ? "إجمالي المستخدمين" : "Total Users"}
+                value={stats.totalUsers || 0}
+                subtext={isAr ? "تم التحديث الآن" : "Updated just now"}
+                isAr={isAr}
+              />
+              <StatCard
+                label={isAr ? "مستخدمون بريميوم" : "Premium Users"}
+                value={stats.totalPremiumUsers ?? stats.premiumUsersCount ?? 0}
+                subtext={isAr ? "تم التحديث الآن" : "Updated just now"}
+                isAr={isAr}
+              />
+              <StatCard
+                label={isAr ? "مستخدمون مجاناً" : "Free Users"}
+                value={
+                  stats.totalFreeUsers ??
+                  (stats.totalUsers - (stats.totalPremiumUsers ?? stats.premiumUsersCount ?? 0))
+                }
+                subtext={isAr ? "تم التحديث الآن" : "Updated just now"}
+                isAr={isAr}
+              />
+              <StatCard
+                label={isAr ? "إيراد شهري تقديري ($)" : "Estimated MRR ($)"}
+                value={
+                  stats.estimatedMrr?.toFixed(2) ??
+                  ((stats.totalPremiumUsers ?? stats.premiumUsersCount ?? 0) * 4.99).toFixed(2)
+                }
+                subtext={isAr ? "تم التحديث الآن" : "Updated just now"}
+                isAr={isAr}
+              />
+            </div>
+
+            {/* Main Grid: Table + Details */}
+            <div className="admin-main-grid">
+              {/* Users Table Card */}
+              <div className="admin-card">
+                <div className="admin-card-inner">
+                  <div className="admin-card-header">
+                    <h2 className="admin-card-title">{isAr ? "المستخدمون" : "Users"}</h2>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
 
-          {/* Users table and details */}
-          <div style={{ height: 16 }} />
-          <div className="asrar-dash-characters" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1000px) 420px', gap: 16, alignItems: 'start', maxWidth: 1440 }}>
-            {/* Users card */}
-            <div className="asrar-character-card" style={{ width: '100%', maxWidth: 1000 }}>
-              <div className="asrar-character-card-inner">
-                <div className="asrar-character-card-top asrar-character-card-top--stack">
-                  <h3 style={{ margin: 0 }}>{isAr ? 'المستخدمون' : 'Users'}</h3>
-                </div>
-                {/* Filters */}
-                <div className="asrar-character-text" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <input
-                    className="asrar-settings-input"
-                    placeholder={isAr ? 'بحث بالاسم أو البريد' : 'Search name or email'}
-                    value={userQuery}
-                    onChange={(e) => setUserQuery(e.target.value)}
-                    style={{ flex: 1 }}
+                  {/* Filters */}
+                  <div className="admin-filters">
+                    <input
+                      type="text"
+                      className="admin-search-input"
+                      placeholder={isAr ? "بحث بالاسم أو البريد..." : "Search by email or name..."}
+                      value={userQuery}
+                      onChange={(e) => setUserQuery(e.target.value)}
+                    />
+                    <select
+                      className="admin-filter-select"
+                      value={planFilter}
+                      onChange={(e) => setPlanFilter(e.target.value)}
+                    >
+                      <option value="all">{isAr ? "الكل" : "All"}</option>
+                      <option value="premium">{isAr ? "بريميوم فقط" : "Premium"}</option>
+                      <option value="free">{isAr ? "مجاني فقط" : "Free"}</option>
+                    </select>
+                  </div>
+
+                  {/* Table */}
+                  <UsersTable
+                    users={currentUsers}
+                    selectedUser={selectedUser}
+                    onSelectUser={setSelectedUser}
+                    isAr={isAr}
                   />
-                  <select
-                    className="asrar-dash-dialect-select"
-                    value={planFilter}
-                    onChange={(e) => setPlanFilter(e.target.value)}
-                    style={{ minWidth: 140 }}
-                  >
-                    <option value="all">{isAr ? 'الكل' : 'All'}</option>
-                    <option value="premium">{isAr ? 'بريميوم فقط' : 'Premium only'}</option>
-                    <option value="free">{isAr ? 'مجاني فقط' : 'Free only'}</option>
-                  </select>
-                </div>
-                {/* Table */}
-                <div style={{ marginTop: 12, minHeight: 420, maxHeight: 640, overflow: 'auto' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1.1fr 0.9fr 1.2fr 1.1fr', padding: '10px 10px', color: '#9bb0c6', fontSize: 13, borderBottom: '1px solid rgba(155,176,198,0.2)' }}>
-                    <div>{isAr ? 'البريد' : 'Email'}</div>
-                    <div>{isAr ? 'الاسم' : 'Name'}</div>
-                    <div>{isAr ? 'الخطة' : 'Plan'}</div>
-                    <div>{isAr ? 'تاريخ الإنشاء' : 'Created At'}</div>
-                    <div>{isAr ? 'الاستخدام الشهري' : 'Monthly Usage'}</div>
-                  </div>
-                  {currentUsers.map((u) => {
-                    const isSelected = selectedUser && selectedUser.id === u.id;
-                    const planLabel = u.plan || (u.isPremium ? 'premium' : 'free');
-                    return (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => setSelectedUser(u)}
-                        className=""
-                        style={{
-                          textAlign: 'left',
-                          width: '100%',
-                          padding: 0,
-                          background: isSelected ? 'rgba(0,240,255,0.08)' : 'transparent',
-                          border: 'none',
-                          borderRadius: 0,
-                          cursor: 'pointer',
-                        }}
-                        aria-label={`Select ${u.email}`}
-                      >
-                        <div style={{ display: 'grid', gridTemplateColumns: '2.2fr 1.1fr 0.9fr 1.2fr 1.1fr', padding: '14px 10px', borderBottom: '1px solid rgba(155,176,198,0.12)', fontSize: 14 }}>
-                          <div style={{ color: '#eaf6ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}</div>
-                          <div style={{ color: '#eaf6ff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name || '—'}</div>
-                          <div style={{ color: u.isPremium ? '#9be7c4' : '#9bb0c6' }}>{planLabel}</div>
-                          <div style={{ color: '#9bb0c6' }}>{new Date(u.createdAt).toISOString().slice(0, 10)}</div>
-                          <div style={{ color: '#eaf6ff' }}>{(u.monthlyUsed ?? 0)} / {(u.monthlyLimit ?? 0)}</div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                  {filteredUsers.length === 0 && (
-                    <div style={{ padding: 10, color: '#9bb0c6' }}>{isAr ? 'لا توجد نتائج.' : 'No results.'}</div>
-                  )}
+
+                  {/* Pagination */}
                   {filteredUsers.length > 0 && totalPages > 1 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 8px' }}>
-                      <div style={{ color: '#9bb0c6', fontSize: 12 }}>
-                        {(start + 1)}–{Math.min(start + pageSize, total)} {isAr ? 'من' : 'of'} {total}
+                    <div className="admin-pagination">
+                      <div className="admin-pagination-info">
+                        {start + 1}–{Math.min(start + pageSize, total)} {isAr ? "من" : "of"} {total}
                       </div>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div className="admin-pagination-controls">
                         <button
                           type="button"
+                          className="admin-pagination-button"
                           onClick={() => setPage((p) => Math.max(1, p - 1))}
                           disabled={page === 1}
-                          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(155,176,198,0.25)', background: 'rgba(5,9,16,0.9)', color: '#eaf6ff', cursor: page === 1 ? 'default' : 'pointer', opacity: page === 1 ? 0.5 : 1 }}
-                        >{isAr ? 'السابق' : 'Prev'}</button>
-                        <div style={{ color: '#9bb0c6', alignSelf: 'center', fontSize: 12 }}>{page} / {totalPages}</div>
+                        >
+                          {isAr ? "السابق" : "Prev"}
+                        </button>
+                        <div className="admin-pagination-page">
+                          {page} / {totalPages}
+                        </div>
                         <button
                           type="button"
+                          className="admin-pagination-button"
                           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                           disabled={page === totalPages}
-                          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(155,176,198,0.25)', background: 'rgba(5,9,16,0.9)', color: '#eaf6ff', cursor: page === totalPages ? 'default' : 'pointer', opacity: page === totalPages ? 0.5 : 1 }}
-                        >{isAr ? 'التالي' : 'Next'}</button>
+                        >
+                          {isAr ? "التالي" : "Next"}
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
 
-            <div style={{ height: 16 }} />
-            <div className="asrar-character-card" style={{ width: '100%', maxWidth: 420 }}>
-              <div className="asrar-character-card-inner">
-                <div className="asrar-character-card-top asrar-character-card-top--stack">
-                  <h3 style={{ margin: 0 }}>{isAr ? 'تفاصيل المستخدم' : 'User Details'}</h3>
-                </div>
-                <div className="asrar-character-text">
-                  {!selectedUser && (
-                    <div style={{ color: '#9bb0c6' }}>{isAr ? 'اختر مستخدمًا من الجدول' : 'Select a user from the table'}</div>
-                  )}
-                  {selectedUser && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', rowGap: 10, columnGap: 14, fontSize: 14, lineHeight: 1.5 }}>
-                      <div style={detailLabelStyle}>ID</div>
-                      <div style={detailValueStyle}>{selectedUser.id}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'الاسم' : 'Name'}</div>
-                      <div style={detailValueStyle}>{selectedUser.name || '—'}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'البريد' : 'Email'}</div>
-                      <div style={detailValueStyle}>{selectedUser.email}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'الخطة' : 'Plan'}</div>
-                      <div style={detailValueStyle}>{selectedUser.plan || (selectedUser.isPremium ? 'premium' : 'free')}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'مميز؟' : 'Premium?'}</div>
-                      <div style={detailValueStyle}>{selectedUser.isPremium ? 'Yes' : 'No'}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'تاريخ الإنشاء' : 'Created at'}</div>
-                      <div style={detailValueStyle}>{new Date(selectedUser.createdAt).toISOString().slice(0, 10)}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'آخر دخول' : 'Last login'}</div>
-                      <div style={detailValueStyle}>{selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toISOString().slice(0, 10) : '—'}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'الاستخدام اليومي' : 'Daily usage'}</div>
-                      <div style={detailValueStyle}>{selectedUser.dailyUsed ?? 0}</div>
-                      <div style={detailLabelStyle}>{isAr ? 'الاستخدام الشهري' : 'Monthly usage'}</div>
-                      <div style={detailValueStyle}>{selectedUser.monthlyUsed ?? 0}</div>
-                    </div>
-                  )}
+              {/* User Details Card */}
+              <div className="admin-card">
+                <div className="admin-card-inner">
+                  <div className="admin-card-header">
+                    <h2 className="admin-card-title">{isAr ? "تفاصيل المستخدم" : "User Details"}</h2>
+                  </div>
+                  <UserDetailsPanel user={selectedUser} isAr={isAr} />
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </>
+        )}
       </main>
+
       <AsrarFooter />
     </div>
   );
