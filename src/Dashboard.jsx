@@ -250,12 +250,17 @@ export default function Dashboard() {
     }
     try {
       const { url } = await createCheckoutSession();
-      if (url) window.location.href = url;
-      else alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Something went wrong starting checkout.");
+      if (url) {
+        // Open checkout in new tab (better for mobile and keeps dashboard open)
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Something went wrong starting checkout.");
+      }
     } catch (err) {
       console.error("[Billing] Upgrade error", err);
       const status = err?.status || err?.response?.status;
       if (status === 401) {
+        // Token fully invalid → redirect to login
         navigate("/login?next=/dashboard");
       } else {
         alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");

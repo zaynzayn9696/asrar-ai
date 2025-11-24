@@ -5,6 +5,7 @@ import "./Billing.css";
 import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
 import { useAuth } from "./hooks/useAuth";
+import { createCheckoutSession } from "./api/billing";
 
 // --- LANGUAGE ----------------------------------------------------
 const getInitialLang = () => {
@@ -120,12 +121,29 @@ export default function Billing() {
     navigate("/");
   };
 
-  const handleUpgradeClick = () => {
-    alert(
-      isAr
-        ? "الترقية إلى الخطة المدفوعة سيتم تفعيلها لاحقاً."
-        : "Upgrading to a paid plan will be enabled later."
-    );
+  const handleUpgradeClick = async () => {
+    if (!user) {
+      navigate("/login?next=/billing");
+      return;
+    }
+    try {
+      const { url } = await createCheckoutSession();
+      if (url) {
+        // Open checkout in new tab (better for mobile and keeps billing page open)
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Something went wrong starting checkout.");
+      }
+    } catch (err) {
+      console.error("[Billing] Upgrade error", err);
+      const status = err?.status || err?.response?.status;
+      if (status === 401) {
+        // Token fully invalid → redirect to login
+        navigate("/login?next=/billing");
+      } else {
+        alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");
+      }
+    }
   };
 
   const handleAddPaymentMethod = () => {
