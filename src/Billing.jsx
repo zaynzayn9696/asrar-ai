@@ -126,16 +126,27 @@ export default function Billing() {
       navigate("/login?next=/billing");
       return;
     }
+
+    // Pre-open tab synchronously so mobile browsers treat it as user-initiated
+    const newTab = window.open("", "_blank", "noopener,noreferrer");
+
     try {
       const { url } = await createCheckoutSession();
       if (url) {
-        // Open checkout in new tab (better for mobile and keeps billing page open)
-        window.open(url, "_blank", "noopener,noreferrer");
+        if (newTab) {
+          newTab.location = url;
+        } else {
+          // Fallback if popup was blocked anyway
+          window.location.href = url;
+        }
       } else {
+        if (newTab) newTab.close();
         alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Something went wrong starting checkout.");
       }
     } catch (err) {
       console.error("[Billing] Upgrade error", err);
+      if (newTab) newTab.close();
+
       const status = err?.status || err?.response?.status;
       if (status === 401) {
         // Token fully invalid → redirect to login
