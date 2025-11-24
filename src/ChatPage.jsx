@@ -962,176 +962,170 @@ export default function ChatPage() {
               </Link>
             </aside>
 
-            {/* CHAT AREA */}
+            {/* CHAT AREA */
             <section className="asrar-room-chat">
-              <header className="asrar-room-chat-header">
-                <div className="asrar-room-chat-title">
-                  {getName(character)}
-                </div>
-                <div className="asrar-room-chat-subtitle">
-                  {isArabicConversation
-                    ? "كل ما تكتبه هنا يبقى بينك وبين رفيقك."
-                    : "Everything you share here stays between you and your companion."}
-                </div>
-                {user && (
-                  <div className="asrar-room-plan-usage">
-                    <span className="asrar-room-plan-chip">
-                      {user.isPremium || user.plan === 'premium' || user.plan === 'pro'
-                        ? (isAr ? 'بريميوم' : 'Premium')
-                        : (isAr ? 'مجانية' : 'Free')}
-                    </span>
-                    {usageInfo && (
-                      <span className="asrar-room-usage-text">
-                        {user.isPremium || user.plan === 'premium' || user.plan === 'pro'
-                          ? (isAr
-                              ? `هذا الشهر: ${usageInfo.monthlyUsed || 0} / ${(usageInfo.monthlyLimit || 3000)}`
-                              : `This month: ${usageInfo.monthlyUsed || 0} / ${(usageInfo.monthlyLimit || 3000)}`)
-                          : (isAr
-                              ? `اليوم: ${usageInfo.dailyUsed || 0} / ${(usageInfo.dailyLimit || 5)}`
-                              : `Today: ${usageInfo.dailyUsed || 0} / ${(usageInfo.dailyLimit || 5)}`)}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </header>
-
-              <div
-                className="asrar-room-messages"
-                ref={messagesContainerRef}
-              >
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={
-                      "asrar-room-message " +
-                      (msg.from === "user"
-                        ? "asrar-room-message--user"
-                        : msg.from === "ai"
-                        ? "asrar-room-message--ai"
-                        : "asrar-room-message--system")
-                    }
-                  >
-                    {msg.from !== "system" && (
-                      <div className="asrar-room-message-label">
-                        {msg.from === "user" ? t.you : getName(character)}
-                      </div>
-                    )}
-                    <div className="asrar-room-message-bubble">
-                      {msg.audioBase64 ? (
-                        <VoiceMessageBubble
-                          audioBase64={msg.audioBase64}
-                          from={msg.from}
-                          isArabic={isArabicConversation}
-                        />
-                      ) : (
-                        msg.text
-                      )}
+              <div className="asrar-chat-shell">
+                <div className="asrar-chat-header">
+                  <div className="asrar-chat-header-inner">
+                    <div className="asrar-chat-header-title">
+                      {getName(character)} — {getRole(character)}
                     </div>
-                    {msg.createdAt && (
-                      <div className="asrar-room-message-meta">
-                        <span className="asrar-room-message-time">
-                          {new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {isSending && (
-                  <div className="asrar-room-message asrar-room-message--ai asrar-room-message--typing">
-                    <div className="asrar-room-message-bubble">
-                      <span className="asrar-typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                      </span>
+                    <div className="asrar-chat-header-pill">
+                      {isArabicConversation
+                        ? "خطة ٣٠٠٠ رسالة / Powered by gpt-4o-mini"
+                        : "3,000 msgs plan / Powered by gpt-4o-mini"}
                     </div>
                   </div>
+                </div>
+
+                <div
+                  className="asrar-chat-messages-scroll"
+                  ref={messagesContainerRef}
+                >
+                  <div className="asrar-chat-messages-inner">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={
+                          `asrar-chat-row asrar-chat-row--${
+                            msg.from === 'ai' ? 'assistant' : msg.from === 'user' ? 'user' : 'system'
+                          }`
+                        }
+                      >
+                        {msg.from !== 'system' && (
+                          <div className="asrar-chat-avatar">
+                            {msg.from === 'user' ? (
+                              <div className="asrar-chat-avatar-fallback">{isAr ? 'أ' : 'Y'}</div>
+                            ) : (
+                              <img src={character.avatar} alt={getName(character)} />
+                            )}
+                          </div>
+                        )}
+                        <div className="asrar-chat-bubble">
+                          {msg.audioBase64 ? (
+                            <VoiceMessageBubble
+                              audioBase64={msg.audioBase64}
+                              from={msg.from}
+                              isArabic={isArabicConversation}
+                            />
+                          ) : (
+                            msg.text
+                          )}
+                          {msg.createdAt && (
+                            <div className="asrar-chat-meta">
+                              {new Date(msg.createdAt).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {isSending && (
+                      <div className="asrar-chat-row asrar-chat-row--assistant">
+                        <div className="asrar-chat-avatar">
+                          <img src={character.avatar} alt={getName(character)} />
+                        </div>
+                        <div className="asrar-chat-bubble">
+                          <span className="asrar-typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {crossSuggestion && (
+                  <div className="asrar-room-suggestion">
+                    <div className="asrar-room-suggestion-text">
+                      {isAr
+                        ? `أقدر أكمل معك هنا، لكن ${
+                            crossSuggestion.nameAr
+                          } مركّز أكثر على هذا النوع من المواضيع. تقدر تنتقل له بضغطة زر.`
+                        : `I can keep talking with you here, but ${
+                            crossSuggestion.nameEn
+                          } is more focused on this kind of topic. You can switch to them with one tap.`}
+                    </div>
+                    <button
+                      type="button"
+                      className="asrar-room-suggestion-btn"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem(
+                            "asrar-selected-character",
+                            crossSuggestion.id
+                          );
+                        }
+                        setSelectedCharacterId(crossSuggestion.id);
+                        setCrossSuggestion(null);
+                      }}
+                    >
+                      {isAr
+                        ? `الانتقال إلى ${crossSuggestion.nameAr}`
+                        : `Switch to ${crossSuggestion.nameEn.split(" ")[0]}`}
+                    </button>
+                  </div>
                 )}
+
+                <div className="asrar-chat-composer">
+                  <form className="asrar-chat-composer-inner" onSubmit={handleSend}>
+                    <button
+                      type="button"
+                      className={isRecording ? 'asrar-chat-voice-btn asrar-mic-btn asrar-mic-btn--recording' : 'asrar-chat-voice-btn asrar-mic-btn'}
+                      onClick={handleToggleRecording}
+                      disabled={isSending || isSendingVoice || isBlocked}
+                      title={isRecording ? (isAr ? 'إيقاف التسجيل' : 'Stop recording') : (isAr ? 'ابدأ التسجيل' : 'Start recording')}
+                    >
+                      <span className="icon" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/>
+                        </svg>
+                      </span>
+                    </button>
+                    <textarea
+                      className="asrar-room-input-field"
+                      rows={2}
+                      value={inputValue}
+                      disabled={isSending || isBlocked}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                      placeholder={t.typingPlaceholder}
+                    />
+                    <button
+                      type="submit"
+                      className="asrar-chat-send-btn asrar-send-btn"
+                      disabled={isSending || isBlocked}
+                    >
+                      <span className="asrar-send-btn-label">
+                        {isArabicConversation ? 'إرسال' : 'Send'}
+                      </span>
+                    </button>
+                  </form>
+                  <p className="asrar-chat-hint">
+                    {isArabicConversation
+                      ? 'قد يخطئ الذكاء الاصطناعي أحياناً، فلا تعتمد عليه وحده في القرارات الحساسة.'
+                      : 'AI may make mistakes sometimes. Do not rely on it alone for sensitive decisions.'}
+                  </p>
+                  {(isRecording || isSendingVoice) && (
+                    <div className="asrar-recording-indicator">
+                      <span className="dot" />
+                      {isRecording
+                        ? (isAr ? 'جارٍ التسجيل…' : 'Recording…')
+                        : (isAr ? 'جارٍ معالجة الصوت…' : 'Processing voice…')}
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {crossSuggestion && (
-                <div className="asrar-room-suggestion">
-                  <div className="asrar-room-suggestion-text">
-                    {isAr
-                      ? `أقدر أكمل معك هنا، لكن ${
-                          crossSuggestion.nameAr
-                        } مركّز أكثر على هذا النوع من المواضيع. تقدر تنتقل له بضغطة زر.`
-                      : `I can keep talking with you here, but ${
-                          crossSuggestion.nameEn
-                        } is more focused on this kind of topic. You can switch to them with one tap.`}
-                  </div>
-                  <button
-                    type="button"
-                    className="asrar-room-suggestion-btn"
-                    onClick={() => {
-                      if (typeof window !== "undefined") {
-                        localStorage.setItem(
-                          "asrar-selected-character",
-                          crossSuggestion.id
-                        );
-                      }
-                      setSelectedCharacterId(crossSuggestion.id);
-                      setCrossSuggestion(null);
-                    }}
-                  >
-                    {isAr
-                      ? `الانتقال إلى ${crossSuggestion.nameAr}`
-                      : `Switch to ${crossSuggestion.nameEn.split(" ")[0]}`}
-                  </button>
-                </div>
-              )}
-
-              <form className="asrar-room-input asrar-chat-input-row" onSubmit={handleSend}>
-                <textarea
-                  className="asrar-room-input-field"
-                  rows={2}
-                  value={inputValue}
-                  disabled={isSending || isBlocked}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder={t.typingPlaceholder}
-                />
-
-                <button
-                  type="button"
-                  className={isRecording ? 'asrar-mic-btn asrar-mic-btn--recording' : 'asrar-mic-btn'}
-                  onClick={handleToggleRecording}
-                  disabled={isSending || isSendingVoice || isBlocked}
-                  title={isRecording ? (isAr ? 'إيقاف التسجيل' : 'Stop recording') : (isAr ? 'ابدأ التسجيل' : 'Start recording')}
-                >
-                  <span className="icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z"/>
-                    </svg>
-                  </span>
-                </button>
-                <button
-                  type="submit"
-                  className="asrar-send-btn"
-                  disabled={isSending || isBlocked}
-                >
-                  <span className="asrar-send-btn-label">
-                    {isArabicConversation ? "إرسال" : "Send"}
-                  </span>
-                </button>
-              </form>
-              {(isRecording || isSendingVoice) && (
-                <div className="asrar-recording-indicator">
-                  <span className="dot" />
-                  {isRecording
-                    ? (isAr ? 'جارٍ التسجيل…' : 'Recording…')
-                    : (isAr ? 'جارٍ معالجة الصوت…' : 'Processing voice…')}
-                </div>
-              )}
             </section>
           </div>
         </section>
