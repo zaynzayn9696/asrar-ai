@@ -98,7 +98,7 @@ export default function AdminDashboard() {
                   { labelEn: 'Estimated MRR ($/mo)', labelAr: 'إيراد شهري تقديري ($)', value: stats.estimatedMrr ?? ((stats.totalPremiumUsers ?? stats.premiumUsersCount) * 4.99) },
                 ].map((card, idx) => (
                   <div key={idx} className="asrar-character-card">
-                    <div className="asrar-character-card-inner" style={{ padding: 10, minHeight: 80, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
+                    <div className="asrar-character-card-inner" style={{ padding: '30px 25px', minHeight: 120, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
                       <div className="asrar-character-card-top asrar-character-card-top--stack">
                         <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, textAlign: 'center' }}>{isAr ? card.labelAr : card.labelEn}</h3>
                       </div>
@@ -113,9 +113,9 @@ export default function AdminDashboard() {
 
           {/* Users table and details */}
           <div style={{ height: 16 }} />
-          <div className="asrar-dash-characters" style={{ maxWidth: 1360 }}>
+          <div className="asrar-dash-characters" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1000px) 420px', gap: 16, alignItems: 'start', maxWidth: 1440 }}>
             {/* Users card */}
-            <div className="asrar-character-card">
+            <div className="asrar-character-card" style={{ width: '100%', maxWidth: 1000 }}>
               <div className="asrar-character-card-inner">
                 <div className="asrar-character-card-top asrar-character-card-top--stack">
                   <h3 style={{ margin: 0 }}>{isAr ? 'المستخدمون' : 'Users'}</h3>
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
             </div>
 
             <div style={{ height: 16 }} />
-            <div className="asrar-character-card" style={{ maxWidth: 560 }}>
+            <div className="asrar-character-card" style={{ width: '100%', maxWidth: 420 }}>
               <div className="asrar-character-card-inner">
                 <div className="asrar-character-card-top asrar-character-card-top--stack">
                   <h3 style={{ margin: 0 }}>{isAr ? 'تفاصيل المستخدم' : 'User Details'}</h3>
