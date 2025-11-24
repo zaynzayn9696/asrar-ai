@@ -149,37 +149,30 @@ export default function Billing() {
         }
       }
     } else {
-      // Desktop: open in new tab with loading message
-      const newTab = window.open("about:blank", "_blank", "noopener,noreferrer");
+      // Desktop: open in new tab
+      const newTab = window.open("about:blank", "_blank");
 
       if (!newTab) {
-        // Popup was blocked, fallback to same tab
-        try {
-          const { url } = await createCheckoutSession();
-          if (url) {
-            window.location.href = url;
-          } else {
-            alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Could not start checkout. Please try again.");
-          }
-        } catch (err) {
-          console.error("[Billing] Upgrade error", err);
-          const status = err?.status || err?.response?.status;
-          if (status === 401) {
-            navigate("/login?next=/billing");
-          } else {
-            alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");
-          }
-        }
+        // Popup was blocked - show message, do NOT redirect
+        alert(
+          isAr
+            ? "يرجى السماح بالنوافذ المنبثقة لموقع Asrar AI لفتح صفحة الدفع."
+            : "Please allow pop-ups for Asrar AI to open the payment page."
+        );
         return;
       }
 
       // Show loading message in new tab
-      newTab.document.write('<html><body style="margin:0;padding:40px;font-family:system-ui,-apple-system,sans-serif;background:#0a0f1a;color:#eaf6ff;text-align:center;"><h2>Loading checkout...</h2><p>Please wait while we prepare your payment page.</p></body></html>');
+      try {
+        newTab.document.write('<html><body style="margin:0;padding:40px;font-family:system-ui,-apple-system,sans-serif;background:#0a0f1a;color:#eaf6ff;text-align:center;"><h2>Loading checkout...</h2><p>Please wait while we prepare your payment page.</p></body></html>');
+      } catch (e) {
+        // Ignore if we can't write to the tab
+      }
 
       try {
         const { url } = await createCheckoutSession();
         if (url) {
-          newTab.location = url;
+          newTab.location.href = url;
         } else {
           newTab.close();
           alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Could not start checkout. Please try again.");
