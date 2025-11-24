@@ -271,17 +271,32 @@ export default function Dashboard() {
         }
       }
     } else {
-      // Desktop: open in new tab
-      const newTab = window.open("", "_blank", "noopener,noreferrer");
+      // Desktop: open in new tab with loading message
+      const newTab = window.open("about:blank", "_blank", "noopener,noreferrer");
 
       if (!newTab) {
-        alert(
-          isAr
-            ? "يرجى السماح بالنوافذ المنبثقة لموقع Asrar AI لفتح صفحة الدفع."
-            : "Please allow pop-ups for Asrar AI to open the payment page."
-        );
+        // Popup was blocked, fallback to same tab
+        try {
+          const { url } = await createCheckoutSession();
+          if (url) {
+            window.location.href = url;
+          } else {
+            alert(isAr ? "حدث خطأ عند بدء عملية الدفع." : "Could not start checkout. Please try again.");
+          }
+        } catch (err) {
+          console.error("[Billing] Upgrade error", err);
+          const status = err?.status || err?.response?.status;
+          if (status === 401) {
+            navigate("/login?next=/dashboard");
+          } else {
+            alert(isAr ? "تعذر إنشاء عملية الدفع حالياً." : "Payment could not be started. Please try again.");
+          }
+        }
         return;
       }
+
+      // Show loading message in new tab
+      newTab.document.write('<html><body style="margin:0;padding:40px;font-family:system-ui,-apple-system,sans-serif;background:#0a0f1a;color:#eaf6ff;text-align:center;"><h2>Loading checkout...</h2><p>Please wait while we prepare your payment page.</p></body></html>');
 
       try {
         const { url } = await createCheckoutSession();
