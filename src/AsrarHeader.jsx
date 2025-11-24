@@ -97,7 +97,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
           </div>
 
           {/* Logged-out: show auth buttons */}
-          {!loading && !user && (
+          {!isAuthLoading && !user && (
             <div className="asrar-header-auth-buttons">
               <Link to="/login" className="asrar-btn ghost">
                 {authLabels.login}
@@ -109,7 +109,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
           )}
 
           {/* Logged-in: dashboard links + avatar menu */}
-          {!loading && user && (
+          {!isAuthLoading && user && (
             <>
               {/* Dashboard + history links (desktop only) */}
               <Link to="/dashboard" className="asrar-dash-header-link">

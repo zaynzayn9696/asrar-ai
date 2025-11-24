@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
           Pragma: "no-cache",
         };
 
-        const res = await fetch(`${API_BASE}/api/auth/me`, {
+        const res = await fetch(`${API_BASE}/api/auth/me?_=${Date.now()}`, {
           method: "GET",
           credentials: "include", // send cookies
           headers,
