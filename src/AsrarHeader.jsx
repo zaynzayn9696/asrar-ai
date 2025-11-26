@@ -1,4 +1,4 @@
-// src/AsrarHeader.jsx
+﻿// src/AsrarHeader.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
@@ -25,17 +25,17 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
     onLangChange?.(newLang);
   };
 
-  const engineLabel = isAr ? 'محرك المشاعر' : 'Emotional Engine';
+  const engineLabel = isAr ? 'Ù…Ø­Ø±Ùƒ Ø§Ù„Ù…Ø´Ø§Ø¹Ø±' : 'Emotional Engine';
 
   const nav = isAr
     ? {
-        home: "الرئيسية",
-        dashboard: "لوحة التحكم",
-        history: "سجل المحادثات",
-        chat: "المحادثة",
-        settings: "الإعدادات",
-        billing: "الفوترة والاشتراك",
-        logout: "تسجيل الخروج",
+        home: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
+        dashboard: "Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…",
+        history: "Ø³Ø¬Ù„ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§Øª",
+        chat: "Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©",
+        settings: "Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª",
+        billing: "Ø§Ù„ÙÙˆØªØ±Ø© ÙˆØ§Ù„Ø§Ø´ØªØ±Ø§Ùƒ",
+        logout: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬",
       }
     : {
         home: "Home",
@@ -48,7 +48,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
       };
 
   const authLabels = isAr
-    ? { login: "تسجيل الدخول", signup: "أنشئ حسابًا" }
+    ? { login: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„", signup: "Ø£Ù†Ø´Ø¦ Ø­Ø³Ø§Ø¨Ù‹Ø§" }
     : { login: "Login", signup: "Create Account" };
 
   const goTo = (path) => {
@@ -63,7 +63,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
     } else {
       alert(
         isAr
-          ? "تسجيل الخروج سيتم ربطه لاحقاً."
+          ? "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬ Ø³ÙŠØªÙ… Ø±Ø¨Ø·Ù‡ Ù„Ø§Ø­Ù‚Ø§Ù‹."
           : "Logout will be wired to auth later."
       );
     }
@@ -99,7 +99,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               className={lang === "ar" ? "active" : ""}
               onClick={() => handleLangSwitch("ar")}
             >
-              عربي
+              Ø¹Ø±Ø¨ÙŠ
             </button>
           </div>
 
@@ -134,7 +134,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               </Link>
               {user?.email && user.email.toLowerCase() === 'zaynzayn9696@gmail.com' && (
                 <Link to="/admin" className="asrar-dash-header-link">
-                  {isAr ? 'الإدارة' : 'Admin'}
+                  {isAr ? 'Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©' : 'Admin'}
                 </Link>
               )}
 
@@ -227,11 +227,11 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
                 className={lang === "ar" ? "active" : ""}
                 onClick={() => handleLangSwitch("ar")}
               >
-                عربي
+                Ø¹Ø±Ø¨ÙŠ
               </button>
             </div>
 
-            {/* Emotional Engine (mobile) – shown for all users */}
+            {/* Emotional Engine (mobile) â€“ shown for all users */}
             <Link to="/#emotional-engine" onClick={() => setIsMobileNavOpen(false)}>
               {engineLabel}
             </Link>
@@ -297,6 +297,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
     </>
   );
 }
+
 
 
 
