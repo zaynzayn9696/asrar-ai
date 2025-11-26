@@ -145,41 +145,41 @@ function getCharacterRecommendation(message) {
       "fear",
       "scared",
       // Arabic emotion words (common)
-      "Ø­Ø²ÙŠÙ†",
-      "Ø­Ø²ÙŠÙ†Ø©",
-      "Ø­Ø²Ù†",
-      "Ø²Ø¹Ù„Ø§Ù†",
-      "Ø²Ø¹Ù„",
-      "Ù…ÙƒØ³ÙˆØ±",
-      "Ù…Ù‚Ù‡ÙˆØ±",
-      "Ù‚Ù‡Ø±",
-      "ÙˆØ­Ø¯Ø©",
-      "ÙˆØ­ÙŠØ¯",
-      "ÙˆØ­ÙŠØ¯Ø©",
-      "Ù…Ù‡Ù…ÙˆÙ…",
-      "Ø¶ÙŠÙ‚",
-      "Ø¶ÙŠÙ‚Ø©",
-      "Ø§ÙƒØªØ¦Ø§Ø¨",
-      "Ù…ÙƒØªØ¦Ø¨",
-      "Ù‚Ù„Ù‚",
-      "Ù‚Ù„Ù‚Ø§Ù†",
-      "ØªÙˆØªØ±",
-      "Ù…ØªÙˆØªØ±",
-      "Ø®ÙˆÙ",
-      "Ø®Ø§ÙŠÙ",
-      "Ù…Ø±Ø¹ÙˆØ¨",
-      "ØªØ¹Ø¨Ø§Ù†",
-      "ØªØ¹Ø¨",
-      "Ù…Ø±Ù‡Ù‚",
-      "Ù…Ù†Ù‡Ùƒ",
-      "Ø·ÙØ´Ø§Ù†",
-      "Ø·ÙØ´",
-      "Ø²Ù‡Ù‚Ø§Ù†",
-      "Ù…Ù„Ù„",
-      "Ù…Ø¹ØµØ¨",
-      "Ø¹ØµØ¨ÙŠØ©",
-      "ØºØ¶Ø¨Ø§Ù†",
-      "ØºØ¶Ø¨",
+      "حزين",
+      "حزينة",
+      "حزن",
+      "زعلان",
+      "زعل",
+      "مكسور",
+      "مقهور",
+      "قهر",
+      "وحدة",
+      "وحيد",
+      "وحيدة",
+      "مهموم",
+      "ضيق",
+      "ضيقة",
+      "اكتئاب",
+      "مكتئب",
+      "قلق",
+      "قلقان",
+      "توتر",
+      "متوتر",
+      "خوف",
+      "خايف",
+      "مرعوب",
+      "تعبان",
+      "تعب",
+      "مرهق",
+      "منهك",
+      "طفشان",
+      "طفش",
+      "زهقان",
+      "ملل",
+      "معصب",
+      "عصبية",
+      "غضبان",
+      "غضب",
     ])
   ) {
     return "hana";
@@ -202,15 +202,15 @@ function getCharacterRecommendation(message) {
       "pressure",
       "under pressure",
       // Arabic anxiety / stress
-      "Ù‚Ù„Ù‚",
-      "Ù‚Ù„Ù‚Ø§Ù†",
-      "ØªÙˆØªØ±",
-      "Ù…ØªÙˆØªØ±",
-      "Ø®ÙˆÙ",
-      "Ø®Ø§ÙŠÙ",
-      "Ù…Ø±Ø¹ÙˆØ¨",
-      "Ù…Ø¶ØºÙˆØ·",
-      "Ø¶ØºØ·",
+      "قلق",
+      "قلقان",
+      "توتر",
+      "متوتر",
+      "خوف",
+      "خايف",
+      "مرعوب",
+      "مضغوط",
+      "ضغط",
     ])
   ) {
     return "hana";
@@ -231,14 +231,14 @@ function getCharacterRecommendation(message) {
       "cant focus",
       "hard to focus",
       // Arabic low motivation
-      "ÙƒØ³Ù„",
-      "ÙƒØ³Ù„Ø§Ù†",
-      "Ø¨Ø¯ÙˆÙ† Ø·Ø§Ù‚Ø©",
-      "Ù…Ø§ÙÙŠ Ø·Ø§Ù‚Ø©",
-      "Ù…Ø§ ÙÙŠ Ø·Ø§Ù‚Ø©",
-      "Ø®Ù…ÙˆÙ„",
-      "Ù…Ùˆ Ù…Ø±ÙƒØ²",
-      "Ù…Ø´ Ù…Ø±ÙƒØ²",
+      "كسل",
+      "كسلان",
+      "بدون طاقة",
+      "مافي طاقة",
+      "ما في طاقة",
+      "خمول",
+      "مو مركز",
+      "مش مركز",
     ])
   ) {
     return "rashid";
@@ -264,17 +264,17 @@ function getCharacterRecommendation(message) {
       "project",
       "deadline",
       // Arabic study / work
-      "Ø¯Ø±Ø§Ø³Ø©",
-      "Ø§Ø¯Ø±Ø³",
-      "Ø£Ø¯Ø±Ø³",
-      "Ø§Ù…ØªØ­Ø§Ù†",
-      "Ø§Ù…ØªØ­Ø§Ù†Ø§Øª",
-      "Ø¬Ø§Ù…Ø¹Ø©",
-      "Ù…Ø¯Ø±Ø³Ø©",
-      "Ø´ØºÙ„",
-      "ÙˆØ¸ÙŠÙØ©",
-      "Ù…Ø´Ø±ÙˆØ¹",
-      "Ø¯ÙˆØ§Ù…",
+     "دراسة",
+      "ادرس",
+      "أدرس",
+      "امتحان",
+      "امتحانات",
+      "جامعة",
+      "مدرسة",
+      "شغل",
+      "وظيفة",
+      "مشروع",
+      "دوام",
     ])
   ) {
     return "rashid";
@@ -293,10 +293,10 @@ function getCharacterRecommendation(message) {
       "roast",
       "roast me",
       // Arabic directness
-      "ØµØ§Ø±Ø­Ù†ÙŠ",
-      "Ø¨Ø¯ÙˆÙ† Ù…Ø¬Ø§Ù…Ù„Ø©",
-      "Ø¨Ø¯ÙˆÙ† Ù…Ø¬Ø§Ù…Ù„Ø§Øª",
-      "Ø¬Ù„Ø¯",
+         "صارحني",
+      "بدون مجاملة",
+      "بدون مجاملات",
+      "جلد",
     ])
   ) {
     return "nour";
@@ -318,15 +318,15 @@ function getCharacterRecommendation(message) {
       "memes",
       "lol",
       // Arabic fun / boredom
-      "Ø·ÙØ´Ø§Ù†",
-      "Ø·ÙØ´",
-      "Ø²Ù‡Ù‚Ø§Ù†",
-      "Ù…Ù„Ù„",
-      "Ù†ÙƒØª",
-      "Ø¶Ø­Ùƒ",
-      "Ø§Ø¶Ø­Ùƒ",
-      "Ø£Ø¶Ø­Ùƒ",
-      "Ù…ÙŠÙ…Ø²",
+       "طفشان",
+      "طفش",
+      "زهقان",
+      "ملل",
+      "نكت",
+      "ضحك",
+      "اضحك",
+      "أضحك",
+      "ميمز",
     ])
   ) {
     return "farah";
@@ -347,19 +347,19 @@ function getCharacterRecommendation(message) {
       "relationship",
       "relationships",
       // Arabic family / life guidance
-      "Ø£Ø¨",
-      "Ø§Ø¨Ùˆ",
-      "Ø£Ø¨Ùˆ",
-      "Ø£Ù…",
-      "Ø§Ù…ÙŠ",
-      "Ø£Ù…ÙŠ",
-      "Ø£Ù‡Ù„",
-      "Ø¹Ø§Ø¦Ù„Ø©",
-      "Ø²ÙˆØ§Ø¬",
-      "Ù…ØªØ²ÙˆØ¬",
-      "Ø²ÙˆØ¬ØªÙŠ",
-      "Ø²ÙˆØ¬ÙŠ",
-      "Ø®Ø·ÙˆØ¨Ø©",
+       "أب",
+      "ابو",
+      "أبو",
+      "أم",
+      "امي",
+      "أمي",
+      "أهل",
+      "عائلة",
+      "زواج",
+      "متزوج",
+      "زوجتي",
+      "زوجي",
+      "خطوبة",
     ])
   ) {
     return "abu-zain";
@@ -374,10 +374,10 @@ function getCharacterRecommendation(message) {
       "burned out",
       "burnt out",
       // Arabic exhaustion / burnout
-      "ØªØ¹Ø¨Ø§Ù†",
-      "ØªØ¹Ø¨",
-      "Ù…Ø±Ù‡Ù‚",
-      "Ù…Ù†Ù‡Ùƒ",
+      "تعبان",
+      "تعب",
+      "مرهق",
+      "منهك",
     ])
   ) {
     return "abu-zain";
@@ -395,7 +395,7 @@ function getMiniChatReply(message, isAr) {
     return {
       charId: null,
       text: isAr
-        ? "Ø§ÙƒØªØ¨ Ù„ÙŠ Ø¬Ù…Ù„Ø© Ø£Ùˆ Ø¬Ù…Ù„ØªÙŠÙ† Ø¹Ù† ÙŠÙˆÙ…Ùƒ Ø£Ùˆ Ø§Ù„Ø´ÙŠØ¡ Ø§Ù„Ù„ÙŠ Ù…Ø¶Ø§ÙŠÙ‚ÙƒØŒ Ø¹Ø´Ø§Ù† Ø£Ù‚Ø¯Ø± Ø£Ø³Ø§Ø¹Ø¯Ùƒ Ø£ÙƒØ«Ø±."
+        ? "اكتب لي جملة أو جملتين عن يومك أو الشيء اللي مضايقك، عشان أقدر أساعدك أكثر."
         : "Try writing one or two sentences about your day or whatâ€™s bothering you so I can actually help.",
     };
   }
@@ -464,41 +464,41 @@ function getMiniChatReply(message, isAr) {
     "fear",
     "scared",
     // Arabic emotion words (common)
-    "Ø­Ø²ÙŠÙ†",
-    "Ø­Ø²ÙŠÙ†Ø©",
-    "Ø­Ø²Ù†",
-    "Ø²Ø¹Ù„Ø§Ù†",
-    "Ø²Ø¹Ù„",
-    "Ù…ÙƒØ³ÙˆØ±",
-    "Ù…Ù‚Ù‡ÙˆØ±",
-    "Ù‚Ù‡Ø±",
-    "ÙˆØ­Ø¯Ø©",
-    "ÙˆØ­ÙŠØ¯",
-    "ÙˆØ­ÙŠØ¯Ø©",
-    "Ù…Ù‡Ù…ÙˆÙ…",
-    "Ø¶ÙŠÙ‚",
-    "Ø¶ÙŠÙ‚Ø©",
-    "Ø§ÙƒØªØ¦Ø§Ø¨",
-    "Ù…ÙƒØªØ¦Ø¨",
-    "Ù‚Ù„Ù‚",
-    "Ù‚Ù„Ù‚Ø§Ù†",
-    "ØªÙˆØªØ±",
-    "Ù…ØªÙˆØªØ±",
-    "Ø®ÙˆÙ",
-    "Ø®Ø§ÙŠÙ",
-    "Ù…Ø±Ø¹ÙˆØ¨",
-    "ØªØ¹Ø¨Ø§Ù†",
-    "ØªØ¹Ø¨",
-    "Ù…Ø±Ù‡Ù‚",
-    "Ù…Ù†Ù‡Ùƒ",
-    "Ø·ÙØ´Ø§Ù†",
-    "Ø·ÙØ´",
-    "Ø²Ù‡Ù‚Ø§Ù†",
-    "Ù…Ù„Ù„",
-    "Ù…Ø¹ØµØ¨",
-    "Ø¹ØµØ¨ÙŠØ©",
-    "ØºØ¶Ø¨Ø§Ù†",
-    "ØºØ¶Ø¨",
+    "حزين",
+    "حزينة",
+    "حزن",
+    "زعلان",
+    "زعل",
+    "مكسور",
+    "مقهور",
+    "قهر",
+    "وحدة",
+    "وحيد",
+    "وحيدة",
+    "مهموم",
+    "ضيق",
+    "ضيقة",
+    "اكتئاب",
+    "مكتئب",
+    "قلق",
+    "قلقان",
+    "توتر",
+    "متوتر",
+    "خوف",
+    "خايف",
+    "مرعوب",
+    "تعبان",
+    "تعب",
+    "مرهق",
+    "منهك",
+    "طفشان",
+    "طفش",
+    "زهقان",
+    "ملل",
+    "معصب",
+    "عصبية",
+    "غضبان",
+    "غضب",
   ];
 
   const hasKnownKeyword = knownKeywords.some((kw) => lower.includes(kw));
@@ -508,8 +508,8 @@ function getMiniChatReply(message, isAr) {
     return {
       charId: null,
       text: isAr
-        ? "Ù…Ø§ Ù‚Ø¯Ø±Øª Ø£ÙÙ‡Ù… Ø§Ù„ÙƒÙ„Ù…Ø© Ø§Ù„Ù„ÙŠ ÙƒØªØ¨ØªÙ‡Ø§. Ø¬Ø±Ù‘Ø¨ ØªÙƒØªØ¨ Ø¨Ø¬Ù…Ù„Ùƒ Ø§Ù„Ø¨Ø³ÙŠØ·Ø© Ø¹Ù† Ø´Ø¹ÙˆØ±Ùƒ Ø£Ùˆ Ø¹Ù† Ø§Ù„Ø´ÙŠØ¡ Ø§Ù„Ù„ÙŠ ØµØ§ÙŠØ± Ù…Ø¹Ùƒ Ø¹Ø´Ø§Ù† Ø£Ù‚Ø¯Ø± Ø£ÙÙ‡Ù…Ùƒ Ø£ÙƒØ«Ø±."
-        : "I couldnâ€™t really understand what you wrote. Try using simple words to describe how you feel or whatâ€™s happening so I can follow you.",
+        ? "ما قدرت أفهم الكلمة اللي كتبتها. جرّب تكتب بجملك البسيطة عن شعورك أو عن الشيء اللي صاير معك عشان أقدر أفهمك أكثر."
+        : "I couldn’t really understand what you wrote. Try using simple words to describe how you feel or what’s happening so I can follow you.",
     };
   }
 
@@ -520,15 +520,15 @@ function getMiniChatReply(message, isAr) {
     return {
       charId: null,
       text: isAr
-        ? "Ø£Ø´Ø¹Ø± Ø¨Ø«Ù‚Ù„ Ø§Ù„ÙƒÙ„Ø§Ù… Ø§Ù„Ø°ÙŠ ÙƒØªØ¨ØªÙ‡ØŒ ÙˆÙ‡Ø°Ø§ Ù…ÙƒØ§Ù† Ø¢Ù…Ù† ØªÙ…Ø§Ù…Ø§Ù‹ Ù„ÙØ¶ÙØ¶ØªÙƒ. Ø­ØªÙ‰ Ù„Ùˆ Ø´Ø¹Ø±Øª Ø£Ù†Ùƒ ÙˆØ­Ø¯ÙƒØŒ Ø£Ù†Øª Ù„Ø³Øª ÙˆØ­Ø¯Ùƒ Ù‡Ù†Ø§."
-        : "I can feel thereâ€™s a lot in what you wrote. This is a safe place to unload â€“ even if it feels like youâ€™re alone, youâ€™re not alone here.",
+        ? "أشعر بثقل الكلام الذي كتبته، وهذا مكان آمن تماماً لفضفضتك. حتى لو شعرت أنك وحدك، أنت لست وحدك هنا."
+        : "I can feel there’s a lot in what you wrote. This is a safe place to unload – even if it feels like you’re alone, you’re not alone here.",
     };
   }
 
   if (isAr) {
-    const intro = "Ø£ÙÙ‡Ù… Ø£Ù† Ù…Ø§ ÙƒØªØ¨ØªÙ‡ Ù„ÙŠØ³ Ø³Ù‡Ù„Ø§Ù‹ØŒ ÙˆØ´Ø¹ÙˆØ±Ùƒ Ù…ÙÙ‡Ù… Ù‡Ù†Ø§.";
-    const body = `Ù…Ù† Ø¨ÙŠÙ† Ø±ÙÙ‚Ø§Ø¡ Ø£Ø³Ø±Ø§Ø±ØŒ Ø£Ø±Ù‰ Ø£Ù† ${char.nameAr} (${char.roleAr}) Ø£Ù†Ø³Ø¨ Ø±ÙÙŠÙ‚ Ù„Ùƒ Ø§Ù„Ø¢Ù†. ${char.descriptionAr}`;
-    const ctaHint = "ØªÙ‚Ø¯Ø± ØªØ¨Ø¯Ø£ Ù…Ø­Ø§Ø¯Ø«Ø© ÙƒØ§Ù…Ù„Ø© Ù…Ø¹Ù‡/Ù…Ø¹Ù‡Ø§ Ù…Ù† Ø§Ù„Ø²Ø± Ø¨Ø§Ù„Ø£Ø³ÙÙ„.";
+    const intro = "أفهم أن ما كتبته ليس سهلاً، وشعورك مُهم هنا.";
+    const body = `من بين رفقاء أسرار، أرى أن ${char.nameAr} (${char.roleAr}) أنسب رفيق لك الآن. ${char.descriptionAr}`;
+    const ctaHint = "تقدر تبدأ محادثة كاملة معه/معها من الزر بالأسفل.";
     return {
       charId: recId,
       text: `${intro} ${body} ${ctaHint}`,
@@ -616,7 +616,7 @@ export default function HomePage() {
     return (
       <div className="asrar-fullpage-loading">
         <div className="asrar-loading-spinner"></div>
-        <p>{isAr ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„..." : "Loading your experience..."}</p>
+        <p>{isAr ? "جاري التحميل..." : "Loading your experience..."}</p>
       </div>
     );
   }
@@ -639,13 +639,12 @@ export default function HomePage() {
 
   const navItems = isAr
     ? [
-        { href: "#hero", label: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©" },
-        { href: "#emotional-engine", label: "Ù…Ø­Ø±Ùƒ Ø§Ù„Ù…Ø´Ø§Ø¹Ø±" },
-        { href: "#about", label: "Ù…Ù† Ù†Ø­Ù†" },
-        { href: "#characters", label: "Ø§Ù„Ø´Ø®ØµÙŠØ§Øª" },
-        { href: "#security-privacy", label: "Ø§Ù„Ø£Ù…Ø§Ù† ÙˆØ§Ù„Ø®ØµÙˆØµÙŠØ©" },
-        { href: "#how-it-works", label: "ÙƒÙŠÙ ÙŠØ¹Ù…Ù„ØŸ" },
-        { href: "#pricing", label: "Ø§Ù„Ø£Ø³Ø¹Ø§Ø±" },
+        { href: "#hero", label: "الرئيسية" },
+        { href: "#about", label: "من نحن" },
+        { href: "#characters", label: "الشخصيات" },
+        { href: "#security-privacy", label: "الأمان والخصوصية" },
+        { href: "#how-it-works", label: "كيف يعمل؟" },
+        { href: "#pricing", label: "الأسعار" },
       ]
     : [
         { href: "#hero", label: "Home" },
@@ -660,18 +659,18 @@ export default function HomePage() {
   const brandLabel = "ASRAR AI";
 
   const authLabels = isAr
-    ? { login: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„", signup: "Ø£Ù†Ø´Ø¦ Ø­Ø³Ø§Ø¨Ù‹Ø§" }
+    ? { login: "تسجيل الدخول", signup: "أنشئ حسابًا" }
     : { login: "Login", signup: "Create Account" };
 
-  const homeDashboardLabel = isAr ? "Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…" : "Dashboard";
+  const homeDashboardLabel = isAr ? "لوحة التحكم" : "Dashboard";
 
-  const chatInputTitle = isAr ? "Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„ØªÙƒ" : "Compose your message";
+  const chatInputTitle = isAr ? "اكتب رسالتك" : "Compose your message";
   const chatInputSubtitle = isAr
-    ? "Ù‡Ø°Ø§ Ø³ÙŠØµÙ„ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¥Ù„Ù‰ Ø±ÙÙŠÙ‚Ùƒ"
+    ? "هذا سيصل مباشرة إلى رفيقك"
     : "Goes straight to your companion";
   const chatInputFootnote = isAr
-    ? "Ø§Ø¶ØºØ· Enter Ù„Ù„Ø¥Ø±Ø³Ø§Ù„ â€¢ Ø§Ø³ØªØ®Ø¯Ù… Shift+Enter Ù„Ø³Ø·Ø± Ø¬Ø¯ÙŠØ¯"
-    : "Press Enter to send â€¢ Shift+Enter for a new line";
+    ? "اضغط Enter للإرسال • استخدم Shift+Enter لسطر جديد"
+    : "Press Enter to send • Shift+Enter for a new line";
 
   const handleMiniChatChange = (event) => {
     const textarea = event.target;
@@ -768,20 +767,12 @@ export default function HomePage() {
 
   const handleNavClick = (href) => {
     if (!href || !href.startsWith("#")) return;
-    if (typeof document === "undefined" || typeof window === "undefined") return;
     const id = href.slice(1);
     const el = document.getElementById(id);
     if (el) {
-      try {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      } catch (_) {}
-    } else {
-      // Set hash so that the mount effect can handle scrolling when the element exists
-      try { window.location.hash = href; } catch (_) {}
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
-
-  
 
   const handleLanguageSwitch = (lang) => {
     setLanguage(lang);
@@ -851,7 +842,7 @@ export default function HomePage() {
               className={language === "ar" ? "active" : ""}
               onClick={() => handleLanguageSwitch("ar")}
             >
-              ????
+              عربي
             </button>
           </div>
 
@@ -887,78 +878,61 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* MOBILE NAV DRAWER */}
+      {/* MOBILE NAV DROPDOWN */}
       {isMobileNavOpen && (
-        <div className="asrar-home-mobile-layer" role="dialog" aria-modal="true">
-          <div
-            className="asrar-home-mobile-overlay"
-            onClick={() => setIsMobileNavOpen(false)}
-          ></div>
-          <nav className="asrar-home-mobile-nav asrar-home-mobile-nav--open">
-            <div className="asrar-home-mobile-nav-header">
-              <span className="asrar-home-mobile-nav-title">ASRAR AI</span>
-              <button
-                className="asrar-mobile-close"
-                aria-label="Close navigation"
-                onClick={() => setIsMobileNavOpen(false)}
-              >
-                &times;
-              </button>
+        <nav className="asrar-home-mobile-nav">
+          {/* language toggle inside dropdown */}
+          <div className="asrar-lang-toggle asrar-home-mobile-lang">
+            <button
+              className={language === "en" ? "active" : ""}
+              onClick={() => handleLanguageSwitch("en")}
+            >
+              EN
+            </button>
+            <button
+              className={language === "ar" ? "active" : ""}
+              onClick={() => handleLanguageSwitch("ar")}
+            >
+              عربي
+            </button>
+          </div>
+
+          {/* Nav links */}
+          {navItems.map((item) => (
+            <button
+              key={item.href}
+              type="button"
+              className="asrar-home-mobile-nav-link"
+              onClick={() => {
+                handleNavClick(item.href);
+                setIsMobileNavOpen(false);
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+
+          {/* Auth buttons */}
+          {!user && (
+            <div className="asrar-header-auth-buttons asrar-home-mobile-auth">
+              <Link to="/login" className="asrar-btn ghost" onClick={() => setIsMobileNavOpen(false)}>
+                {authLabels.login}
+              </Link>
+              <Link to="/create-account" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
+                {authLabels.signup}
+              </Link>
             </div>
+          )}
 
-            {/* language toggle inside dropdown */}
-            <div className="asrar-lang-toggle asrar-home-mobile-lang">
-              <button
-                className={language === "en" ? "active" : ""}
-                onClick={() => handleLanguageSwitch("en")}
-              >
-                EN
-              </button>
-              <button
-                className={language === "ar" ? "active" : ""}
-                onClick={() => handleLanguageSwitch("ar")}
-              >
-                ????Š
-              </button>
+          {/* Dashboard button when logged in */}
+          {user && (
+            <div className="asrar-header-auth-buttons asrar-home-mobile-auth">
+              <Link to="/dashboard" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
+                {homeDashboardLabel}
+              </Link>
             </div>
-
-            {/* Nav links */}
-            {navItems.map((item) => (
-              <button
-                key={item.href}
-                type="button"
-                className="asrar-home-mobile-nav-link"
-                onClick={() => {
-                  handleNavClick(item.href);
-                  setIsMobileNavOpen(false);
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-
-            {/* Auth buttons */}
-            {!user && (
-              <div className="asrar-header-auth-buttons asrar-home-mobile-auth">
-                <Link to="/login" className="asrar-btn ghost" onClick={() => setIsMobileNavOpen(false)}>
-                  {authLabels.login}
-                </Link>
-                <Link to="/create-account" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
-                  {authLabels.signup}
-                </Link>
-              </div>
-            )}
-
-            {/* Dashboard button when logged in */}
-            {user && (
-              <div className="asrar-header-auth-buttons asrar-home-mobile-auth">
-                <Link to="/dashboard" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
-                  {homeDashboardLabel}
-                </Link>
-              </div>
-            )}
-          </nav>
-        </div>
+          )}
+        </nav>
       )}
 
       {/* MAIN */}
@@ -973,13 +947,13 @@ export default function HomePage() {
  <div className="asrar-hero-copy">
   <p className="asrar-hero-eyebrow">
     {isAr
-      ? "Ø£ÙˆÙ‘Ù„ Ø±ÙÙÙ‚Ø§Ø¡ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø®Ø§ØµÙ‘ÙˆÙ†â€¦ Ù…ÙØµÙ…Ù‘Ù…ÙˆÙ† Ø®ØµÙŠØµØ§Ù‹ Ù„Ù„Ø´Ø±Ù‚ Ø§Ù„Ø£ÙˆØ³Ø·."
+      ? "أوّل رُفقاء ذكاء اصطناعي خاصّون… مُصمّمون خصيصاً للشرق الأوسط."
       : "The First Private AI Companions Built for the Middle East."}
   </p>
 
   <h1 className="asrar-hero-title">
     {isAr
-      ? "Ø­ÙŠØ« ØªÙ„ØªÙ‚ÙŠ Ø§Ù„Ø«Ù‚Ø§ÙØ© Ø¨Ø§Ù„Ù…Ø´Ø§Ø¹Ø± ÙˆØ§Ù„ØªÙ‚Ù†ÙŠØ©."
+      ? "حيث تلتقي الثقافة بالمشاعر والتقنية."
       : "Where culture, emotion, and technology meet."}
   </h1>
 
@@ -1000,13 +974,13 @@ export default function HomePage() {
                     <div className="bubble bubble-ai">
                       <div className="bubble-ai-label">
                         {isAr
-                          ? " Ø¯Ø¹Ù… Ø¹Ù…ÙŠÙ‚"
+                          ? " دعم عميق"
                           : " Deep Support"}
                       </div>
                       <p className="bubble-ai-text">
                         {isAr
-                          ? "Ø£Ù†Ø§ Ù…Ø¹Ùƒ. Ø®Ø° Ù†ÙØ³ Ø¹Ù…ÙŠÙ‚ØŒ ÙˆØ§ÙƒØªØ¨ Ù„ÙŠ Ø¨ØµØ±Ø§Ø­Ø©â€¦ Ù…Ø§ Ø§Ù„Ø´ÙŠØ¡ Ø§Ù„Ù„ÙŠ Ø­Ø§Ø³Ø³ Ø¥Ù†Ù‡ Ø¬Ø§Ù„Ø³ Ø¹Ù„Ù‰ ØµØ¯Ø±Ùƒ Ø§Ù„ÙŠÙˆÙ…ØŸ"
-                          : "Iâ€™m here. Take a slow breath. Tell me honestly â€” whatâ€™s been sitting on your chest lately?"}
+                          ? "أنا معك. خذ نفس عميق، واكتب لي بصراحة… ما الشيء اللي حاسس إنه جالس على صدرك اليوم؟"
+                          : "I’m here. Take a slow breath. Tell me honestly — what’s been sitting on your chest lately?"}
                       </p>
                     </div>
 
@@ -1033,7 +1007,7 @@ export default function HomePage() {
                             }}
                           >
                             {isAr
-                              ? `Ø§Ø¨Ø¯Ø£ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø© Ù…Ø¹ ${miniChatCharacter.nameAr}`
+                              ? `ابدأ المحادثة مع ${miniChatCharacter.nameAr}`
                               : `Chat with ${miniChatCharacter.nameEn.split(" ")[0]}`}
                           </Link>
                         )}
@@ -1041,96 +1015,35 @@ export default function HomePage() {
                     )}
                   </div>
 
-         <form
-  className="asrar-mood-form"
-  onSubmit={handleMiniChatSubmit}
->
-  <div className="asrar-mood-shell">
-    <div className="asrar-mood-bar">
-      <textarea
-        ref={miniChatInputRef}
-        className="asrar-mood-input"
-        value={miniChatInput}
-        onChange={handleMiniChatChange}
-        onKeyDown={handleMiniChatKeyDown}
-        placeholder={
-          isAr
-            ? "Ø§ÙƒØªØ¨ ÙƒÙŠÙ ÙƒØ§Ù† ÙŠÙˆÙ…Ùƒ ÙØ¹Ù„Ø§Ù‹ Ø§Ù„Ø¢Ù†..."
-            : "Type how you feel today..."
-        }
-      />
-    <button className="asrar-mood-send" type="submit" aria-label="Send">
-  <svg
-    className="asrar-mood-send-icon"
-    viewBox="0 0 24 24"
-    aria-hidden="true"
-  >
-    <path
-      d="M4 11.5L19 4l-7.5 15-1.6-5.4L4 11.5z"
-      fill="currentColor"
-    />
-  </svg>
-</button>
-
-    </div>
-    <div className="asrar-mood-foot">
-      {chatInputFootnote}
-    </div>
-  </div>
-</form>
-
-
-
+                  <form
+                    className="asrar-chat-input"
+                    onSubmit={handleMiniChatSubmit}
+                  >
+                    <div className="asrar-chat-input-shell">
+                      <div className="asrar-chat-input-bar">
+                        <textarea
+                          ref={miniChatInputRef}
+                          className="asrar-chat-input-field"
+                          value={miniChatInput}
+                          onChange={handleMiniChatChange}
+                          onKeyDown={handleMiniChatKeyDown}
+                          placeholder={
+                            isAr
+                              ? "اكتب كيف كان يومك فعلاً الآن..."
+                              : "Type how you feel today..."
+                          }
+                        />
+                        <button className="asrar-chat-send" type="submit">
+                          ↗
+                        </button>
+                      </div>
+                      <div className="asrar-chat-input-foot">
+                        {chatInputFootnote}
+                      </div>
+                    </div>
+                  </form>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* EMOTIONAL ENGINE */}
-        <section id="emotional-engine" className="asrar-section asrar-engine">
-          <div className="asrar-engine-inner">
-            <p className="asrar-eyebrow">
-              {isAr ? "Ù…ÙØ­Ø±Ùƒ Ø§Ù„Ù…Ø´Ø§Ø¹Ø± Ù…Ù† Ø£Ø³Ø±Ø§Ø±" : "ASRAR EMOTIONAL ENGINEâ„¢"}
-            </p>
-            <h2 className="asrar-engine-title">
-              {isAr
-                ? "Ø°ÙƒØ§Ø¡ Ø¹Ø§Ø·ÙÙŠ Ø­Ù‚ÙŠÙ‚ÙŠ â€” ÙˆÙ„ÙŠØ³ Ø±Ø¯ÙˆØ¯ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø¹Ø´ÙˆØ§Ø¦ÙŠØ©."
-                : "Real emotional intelligence â€” not generic AI replies."}
-            </h2>
-            <p className="asrar-engine-body">
-              {isAr
-                ? "ÙƒÙ„ Ù…Ø­Ø§Ø¯Ø«Ø© ÙÙŠ Ø£Ø³Ø±Ø§Ø± ØªØ¹Ù…Ù„ Ø¹Ø¨Ø± Ø·Ø¨Ù‚Ø© Ø°ÙƒØ§Ø¡ Ø¹Ø§Ø·ÙÙŠ Ø®Ø§ØµØ© Ø¨Ù†Ø§ Ù…Ø¨Ù†ÙŠØ© ÙÙˆÙ‚ Ù†Ù…Ø§Ø°Ø¬ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù…ØªÙ‚Ø¯Ù…Ø©. Ù‡Ø°Ù‡ Ø§Ù„Ø·Ø¨Ù‚Ø© ØªÙ„ØªÙ‚Ø· Ù…Ø²Ø§Ø¬ÙƒØŒ ÙˆØªÙÙ‡Ù… Ù†Ø¨Ø±Ø© ÙƒÙ„Ø§Ù…Ùƒ ÙˆØ³ÙŠØ§Ù‚Ùƒ Ø§Ù„Ø«Ù‚Ø§ÙÙŠØŒ Ø«Ù… ØªØ´ÙƒÙ‘Ù„ Ø§Ù„Ø±Ø¯ Ù…Ù† Ø®Ù„Ø§Ù„ Ø´Ø®ØµÙŠØ© ÙƒÙ„ ÙˆØ§Ø­Ø¯ Ù…Ù† Ø±ÙÙ‚Ø§Ø¡ Ø£Ø³Ø±Ø§Ø± â€” Ù„ØªØ´Ø¹Ø± Ø£Ù† Ø§Ù„Ø­Ø¯ÙŠØ« Ø¥Ù†Ø³Ø§Ù†ÙŠ Ø£ÙƒØ«Ø±ØŒ Ø«Ø§Ø¨ØªØŒ ÙˆÙØ¹Ù„Ø§Ù‹ Ø¯Ø§Ø¹Ù…."
-                : "Every conversation in Asrar is powered by our own emotional intelligence layer built on top of advanced AI models. It detects your mood, understands your tone and cultural context, and shapes the reply through the personality of each character â€” so it feels more human, grounded, and truly supportive."}
-            </p>
-
-            <div className="asrar-engine-grid">
-              <article className="asrar-engine-card">
-                <h3>{isAr ? "Ø§Ø³ØªØ¬Ø§Ø¨Ø§Øª ÙˆØ§Ø¹ÙŠØ© Ø¨Ø§Ù„Ù…Ø´Ø§Ø¹Ø±" : "Emotion-Aware Responses"}</h3>
-                <p>
-                  {isAr
-                    ? "ÙŠÙ‚ÙˆÙ… Ø§Ù„Ù…Ø­Ø±Ùƒ Ø¨ØªØµÙ†ÙŠÙ Ù…Ø§ ØªØ´Ø¹Ø± Ø¨Ù‡ â€” Ù…Ø«Ù„ Ø§Ù„Ø­Ø²Ù†ØŒ Ø§Ù„Ù‚Ù„Ù‚ØŒ Ø§Ù„ÙˆØ­Ø¯Ø©ØŒ Ø§Ù„ØºØ¶Ø¨ ÙˆØºÙŠØ±Ù‡Ø§ â€” ÙˆÙŠØ¶Ø¨Ø· Ù†Ø¨Ø±Ø© ÙˆØ¹Ù…Ù‚ Ø§Ù„Ø±Ø¯ Ù„ÙŠØªÙ†Ø§Ø³Ø¨ Ù…Ø¹ Ø­Ø§Ù„ØªÙƒ Ø§Ù„Ø¹Ø§Ø·ÙÙŠØ©."
-                    : "The engine classifies how you feel â€” sadness, anxiety, loneliness, anger, and more â€” and adapts the tone and depth of the reply to match your emotional state."}
-                </p>
-              </article>
-
-              <article className="asrar-engine-card">
-                <h3>{isAr ? "Ø¯Ø¹Ù… Ù…Ø®ØµØµ Ù„ÙƒÙ„ Ø´Ø®ØµÙŠØ©" : "Persona-Driven Support"}</h3>
-                <p>
-                  {isAr
-                    ? "Ù‡ÙŽÙ†Ø§ØŒ Ø£Ø¨Ùˆ Ø²ÙŠÙ†ØŒ Ø±Ø´ÙŠØ¯ØŒ Ù†ÙˆØ±ØŒ ÙˆÙÙŽØ±ÙŽØ­ ÙŠØ´ØªØ±ÙƒÙˆÙ† ÙÙŠ Ù†ÙØ³ Ù…Ø­Ø±Ùƒ Ø§Ù„Ù…Ø´Ø§Ø¹Ø±ØŒ Ù„ÙƒÙ† ÙƒÙ„ ÙˆØ§Ø­Ø¯ Ù…Ù†Ù‡Ù… ÙŠØ±Ø¯ Ø¨Ø£Ø³Ù„ÙˆØ¨ ÙˆØµÙˆØª ÙˆÙ…Ø³ØªÙˆÙ‰ ØªÙˆØ¬ÙŠÙ‡ Ù…Ø®ØªÙ„Ù."
-                    : "Hana, Abu Zain, Rashid, Nour, and Farah all share the same emotional engine, but each one responds with a different style, voice, and level of guidance."}
-                </p>
-              </article>
-
-              <article className="asrar-engine-card">
-                <h3>{isAr ? "Ù…ØµÙ…Ù… Ø®ØµÙŠØµØ§Ù‹ Ù„Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„????ŠØ©" : "Built for the Middle East"}</h3>
-                <p>
-                  {isAr
-                    ? "ØªÙ… ØªØµÙ…ÙŠÙ… Ø£Ø³Ø±Ø§Ø± ÙÙŠ Ø§Ù„Ø£Ø±Ø¯Ù† Ù…Ø¹ Ø£Ø®Ø° Ø§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„????ŠØ© ÙÙŠ Ø§Ù„Ø­Ø³Ø¨Ø§Ù†ØŒ Ù„ØªØ¬Ù…Ø¹ Ø¨ÙŠÙ† Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø§Ù„Ø­Ø¯ÙŠØ« ÙˆØ§Ù„Ø­Ø³ Ø§Ù„Ù…Ø­Ù„ÙŠ ÙˆØ§Ù„Ø§Ø­ØªØ±Ø§Ù… ÙˆØ§Ù„Ø¯ÙØ¡ â€” ÙˆÙ„ÙŠØ³ Ù…Ø¬Ø±Ø¯ Ù†Ø³Ø®Ø© Ù…Ù† Ù‚Ø§Ù„Ø¨ ØºØ±Ø¨ÙŠ."
-                    : "Designed in Jordan with Arab culture in mind, Asrar blends modern AI with local nuance, respect, and warmth â€” not a copy-paste of a Western template."}
-                </p>
-              </article>
             </div>
           </div>
         </section>
@@ -1138,12 +1051,12 @@ export default function HomePage() {
         {/* ABOUT */}
         <section id="about" className="asrar-section asrar-section--about">
           <h2 className="asrar-section-title">
-            {isAr ? "Ù…Ù† Ù†Ø­Ù†" : "We Are Asrar AI"}
+            {isAr ? "من نحن" : "We Are Asrar AI"}
           </h2>
           <p className="asrar-section-body">
             {isAr
-              ? 'Ø£Ø³Ø±Ø§Ø± ØªØ¹Ù†ÙŠ "Ø§Ù„Ø£Ø³Ø±Ø§Ø±". ÙˆÙÙ„Ø¯ Ù‡Ø°Ø§ Ø§Ù„Ù…Ø´Ø±ÙˆØ¹ Ù…Ù† ÙÙƒØ±Ø© Ø£Ù† Ø§Ù„Ù†Ø§Ø³ ÙÙŠ Ø§Ù„Ø¹Ø§Ù„Ù… Ø§Ù„????Š ÙŠØ³ØªØ­Ù‚ÙˆÙ† Ù…Ø³Ø§Ø­Ø© Ø®Ø§ØµØ© ÙˆØ¢Ù…Ù†Ø© Ù„ÙŠÙØ¶ÙØ¶ÙˆØ§ ÙˆÙŠÙƒØªØ¨ÙˆØ§ ÙˆÙŠÙØ³Ù…ÙØ¹ÙˆØ§ Ù…Ø´Ø§Ø¹Ø±Ù‡Ù… ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª. Ø§Ù„Ø´Ø¹Ø§Ø± Ø§Ù„Ø°ÙŠ ØªØ±Ø§Ù‡ Ù‡Ùˆ Ø¨Ø®Ø· ÙŠØ¯ÙŠ ÙˆØ§Ù„Ø¯ÙŠØŒ ÙˆØªØ°ÙƒÙŠØ± Ø£Ù† Ø®Ù„Ù ÙƒÙ„ Ù‡Ø°Ù‡ Ø§Ù„ØªÙ‚Ù†ÙŠØ© Ù‚Ù„ÙˆØ¨ ÙˆÙ‚ØµØµ Ø­Ù‚ÙŠÙ‚ÙŠØ©.'
-              : 'Asrar means â€œsecretsâ€ in Arabic. This project was born from the idea that people in the Arab world deserve a private, culturally aware place to vent, think, and feel supported â€” any time of day. The logo you see is handwritten by my father, and it reminds us that behind all the tech there are real hearts and real stories.'}
+              ? 'أسرار تعني "الأسرار". وُلد هذا المشروع من فكرة أن الناس في العالم العربي يستحقون مساحة خاصة وآمنة ليفضفضوا ويكتبوا ويُسمِعوا مشاعرهم في أي وقت. الشعار الذي تراه هو بخط يدي والدي، وتذكير أن خلف كل هذه التقنية قلوب وقصص حقيقية.'
+              : 'Asrar means “secrets” in Arabic. This project was born from the idea that people in the Arab world deserve a private, culturally aware place to vent, think, and feel supported — any time of day. The logo you see is handwritten by my father, and it reminds us that behind all the tech there are real hearts and real stories.'}
           </p>
         </section>
 
@@ -1151,11 +1064,11 @@ export default function HomePage() {
         <section id="characters" className="asrar-section asrar-characters-section">
           <div className="asrar-section-header">
             <h2 className="asrar-section-title">
-              {isAr ? "Ù‚Ù„Ø¨ Ø¹Ø§Ø¦Ù„Ø© Ø£Ø³Ø±Ø§Ø±" : "The Asrar Core Family"}
+              {isAr ? "قلب عائلة أسرار" : "The Asrar Core Family"}
             </h2>
             <p className="asrar-section-subtitle">
               {isAr
-                ? "Ø®Ù…Ø³Ø© Ø±ÙÙ‚Ø§Ø¡ØŒ ÙƒÙ„ ÙˆØ§Ø­Ø¯ Ù…Ù†Ù‡Ù… ÙŠÙ…Ø«Ù„ Ø¬Ø§Ù†Ø¨Ø§Ù‹ Ù…Ø®ØªÙ„ÙØ§Ù‹ Ù…Ù† Ø§Ø­ØªÙŠØ§Ø¬Ùƒ Ø§Ù„Ø¹Ø§Ø·ÙÙŠ."
+                ? "خمسة رفقاء، كل واحد منهم يمثل جانباً مختلفاً من احتياجك العاطفي."
                 : "Five companions, each reflecting a different side of your emotional needs."}
             </p>
           </div>
@@ -1170,7 +1083,7 @@ export default function HomePage() {
                   <div key={character.id} className={cardClasses} id={`character-${character.id}`}>
                     {isLocked && (
                       <span className="asrar-character-pro-pill">
-                        {isAr ? "Ø®Ø·Ø© Ø¨Ø±Ùˆ ÙÙ‚Ø·" : "Pro only"}
+                        {isAr ? "خطة برو فقط" : "Pro only"}
                       </span>
                     )}
 
@@ -1210,7 +1123,7 @@ export default function HomePage() {
                           }}
                         >
                           {isAr
-                            ? `Ø§Ø¨Ø¯Ø£ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø© Ù…Ø¹ ${character.nameAr}`
+                            ? `ابدأ المحادثة مع ${character.nameAr}`
                             : `Talk to ${character.nameEn}`}
                         </button>
                       </div>
@@ -1239,64 +1152,64 @@ export default function HomePage() {
           className="asrar-section asrar-section--features"
         >
           <h2 className="asrar-section-title">
-            {isAr ? "Ù„Ù…Ø§Ø°Ø§ Ù…ÙƒØ§Ù† Ø£Ø³Ø±Ø§Ø±Ùƒ Ù‡Ù†Ø§ØŸ" : "Why Your Secrets Belong Here"}
+            {isAr ? "لماذا مكان أسرارك هنا؟" : "Why Your Secrets Belong Here"}
           </h2>
           <p className="asrar-section-subtitle">
-            {isAr ? "Ø§Ù„Ø£Ù…Ø§Ù† ÙˆØ§Ù„Ø®ØµÙˆØµÙŠØ©" : "Security & Privacy"}
+            {isAr ? "الأمان والخصوصية" : "Security & Privacy"}
           </p>
 
           <div className="asrar-section-body">
             <p>
               {isAr
-                ? "Ø®ØµÙˆØµÙŠØªÙƒ Ø£ÙˆÙ„Ø§Ù‹ Ø¯Ø§Ø¦Ù…Ø§Ù‹. Ø£Ø³Ø±Ø§Ø± AI Ù…Ø¨Ù†ÙŠ Ù„ÙŠÙƒÙˆÙ† Ù…Ø³Ø§Ø­Ø© Ø¢Ù…Ù†Ø©ØŒ ÙˆÙ„ÙŠØ³ Ù…ØµÙ†Ø¹ Ø¨ÙŠØ§Ù†Ø§Øª. Ù…Ø­Ø§Ø¯Ø«Ø§ØªÙƒ Ù„Ø§ ØªÙØ®Ø²Ù‘ÙŽÙ† Ø£Ø¨Ø¯Ø§Ù‹ ÙƒÙ†Øµ ÙˆØ§Ø¶Ø­Ø› Ø¨Ù„ ØªÙØ´ÙÙ‘ÙŽØ± Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ù‚Ø¨Ù„ Ø£Ù† ØªÙ„Ù…Ø³ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª."
-                : "Your privacy comes first. Asrar AI is built as a safe space, not a data farm. Your conversations are never stored in plain text â€” theyâ€™re encrypted at the application level before they ever touch our database."}
+                ? "خصوصيتك أولاً دائماً. أسرار AI مبني ليكون مساحة آمنة، وليس مصنع بيانات. محادثاتك لا تُخزَّن أبداً كنص واضح؛ بل تُشفَّر على مستوى التطبيق قبل أن تلمس قاعدة البيانات."
+                : "Your privacy comes first. Asrar AI is built as a safe space, not a data farm. Your conversations are never stored in plain text — they’re encrypted at the application level before they ever touch our database."}
             </p>
             <p>
               {isAr
-                ? "Ø£Ù†Øª Ø§Ù„Ù…ØªØ­ÙƒÙ‘Ù… Ø¯Ø§Ø¦Ù…Ø§Ù‹: ÙŠÙ…ÙƒÙ†Ùƒ Ø¥ÙŠÙ‚Ø§Ù Ø­ÙØ¸ Ø³Ø¬Ù„ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§Øª ÙÙŠ Ø£ÙŠ ÙˆÙ‚ØªØŒ ØªÙ†Ø²ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§ØªÙƒØŒ Ø£Ùˆ Ø­Ø°Ù Ø­Ø³Ø§Ø¨Ùƒ ÙˆÙƒÙ„ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ ÙÙŠ Ø®Ø·ÙˆØ§Øª Ø¨Ø³ÙŠØ·Ø©. ÙƒÙ…Ø§ Ù†Ø·Ø¨Ù‘Ù‚ Ø­Ø¯ÙˆØ¯Ø§Ù‹ Ø¹Ù„Ù‰ Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ù…Ù† Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª ÙˆØ§Ù„Ø£Ø¬Ù‡Ø²Ø© Ù„Ù„Ø­Ø¯ Ù…Ù† Ø§Ù„Ø¥Ø³Ø§Ø¡Ø© ÙˆØ­Ù…Ø§ÙŠØ© Ø§Ù„Ù…Ù†ØµÙ‘Ø© Ù„Ù„Ø¬Ù…ÙŠØ¹."
-                : "Youâ€™re always in control: you can turn chat history off at any time, download your data, or delete your account and all messages in a few clicks. We also strictly limit how often accounts and devices can hit our servers to reduce abuse and protect the platform for everyone."}
+                ? "أنت المتحكّم دائماً: يمكنك إيقاف حفظ سجل المحادثات في أي وقت، تنزيل بياناتك، أو حذف حسابك وكل الرسائل في خطوات بسيطة. كما نطبّق حدوداً على عدد الطلبات من الحسابات والأجهزة للحد من الإساءة وحماية المنصّة للجميع."
+                : "You’re always in control: you can turn chat history off at any time, download your data, or delete your account and all messages in a few clicks. We also strictly limit how often accounts and devices can hit our servers to reduce abuse and protect the platform for everyone."}
             </p>
             <p>
               {isAr
-                ? "Ù„Ø§ Ù†Ø¨ÙŠØ¹ Ø¨ÙŠØ§Ù†Ø§ØªÙƒØŒ ÙˆÙ„Ø§ Ù†Ø¯Ø±Ù‘Ø¨ Ù†Ù…Ø§Ø°Ø¬Ù†Ø§ Ø¹Ù„Ù‰ Ù…Ø­Ø§Ø¯Ø«Ø§ØªÙƒ Ø§Ù„Ø®Ø§ØµØ©."
-                : "We donâ€™t sell your data, and we donâ€™t train our models on your private conversations."}
+                ? "لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
+                : "We don’t sell your data, and we don’t train our models on your private conversations."}
             </p>
           </div>
 
           <div className="asrar-features-grid">
             <div className="feature">
-              <div className="feature-icon">ðŸ”</div>
-              <h3>{isAr ? "Ù…Ø­Ø§Ø¯Ø«Ø§Øª Ù…Ø´ÙÙ‘Ø±Ø©" : "Encrypted Conversations"}</h3>
+              <div className="feature-icon">🔐</div>
+              <h3>{isAr ? "محادثات مشفّرة" : "Encrypted Conversations"}</h3>
               <p>
                 {isAr
-                  ? "Ø±Ø³Ø§Ø¦Ù„Ùƒ ØªÙØ´ÙÙ‘ÙŽØ± Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ù‚Ø¨Ù„ Ø£Ù† ØªÙØ®Ø²Ù‘ÙŽÙ† ÙÙŠ Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª. Ù„Ø§ ØªÙˆØ¬Ø¯ Ø³Ø¬Ù„Ø§Øª Ù…Ø­Ø§Ø¯Ø«Ø© ÙƒÙ†Øµ ÙˆØ§Ø¶Ø­."
-                  : "Your messages are encrypted at the application level before theyâ€™re stored in our database. There are no plain-text chat logs."}
+                  ? "رسائلك تُشفَّر على مستوى التطبيق قبل أن تُخزَّن في قاعدة البيانات. لا توجد سجلات محادثة كنص واضح."
+                  : "Your messages are encrypted at the application level before they’re stored in our database. There are no plain-text chat logs."}
               </p>
             </div>
             <div className="feature">
-              <div className="feature-icon">ðŸ—‚ï¸</div>
-              <h3>{isAr ? "ØªØ­ÙƒÙ‘Ù… ÙƒØ§Ù…Ù„ ÙÙŠ Ø§Ù„Ø³Ø¬Ù„" : "You Control History"}</h3>
+              <div className="feature-icon">🗂️</div>
+              <h3>{isAr ? "تحكّم كامل في السجل" : "You Control History"}</h3>
               <p>
                 {isAr
-                  ? "ÙŠÙ…ÙƒÙ†Ùƒ ØªØ´ØºÙŠÙ„ Ø£Ùˆ Ø¥ÙŠÙ‚Ø§Ù Ø­ÙØ¸ Ø³Ø¬Ù„ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§ØªØŒ ØªÙ†Ø²ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§ØªÙƒØŒ Ø£Ùˆ Ø­Ø°Ù Ø­Ø³Ø§Ø¨Ùƒ ÙˆØ¬Ù…ÙŠØ¹ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„ ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª."
+                  ? "يمكنك تشغيل أو إيقاف حفظ سجل المحادثات، تنزيل بياناتك، أو حذف حسابك وجميع الرسائل في أي وقت."
                   : "You can turn chat history on or off, download your data, or delete your account and all messages at any time."}
               </p>
             </div>
             <div className="feature">
-              <div className="feature-icon">ðŸš«</div>
-              <h3>{isAr ? "Ø¨Ø¯ÙˆÙ† Ø¨ÙŠØ¹ Ø¨ÙŠØ§Ù†Ø§Øª" : "No Data Selling or Training"}</h3>
+              <div className="feature-icon">🚫</div>
+              <h3>{isAr ? "بدون بيع بيانات" : "No Data Selling or Training"}</h3>
               <p>
                 {isAr
-                  ? "Ù…Ø´Ø§Ø¹Ø±Ùƒ Ù„ÙŠØ³Øª Ù…Ù†ØªØ¬Ø§Ù‹ Ø¥Ø¹Ù„Ø§Ù†ÙŠØ§Ù‹. Ù„Ø§ Ù†Ø¨ÙŠØ¹ Ø¨ÙŠØ§Ù†Ø§ØªÙƒØŒ ÙˆÙ„Ø§ Ù†Ø¯Ø±Ù‘Ø¨ Ù†Ù…Ø§Ø°Ø¬Ù†Ø§ Ø¹Ù„Ù‰ Ù…Ø­Ø§Ø¯Ø«Ø§ØªÙƒ Ø§Ù„Ø®Ø§ØµØ©."
-                  : "Your feelings are not an ad product. We donâ€™t sell your data, and we donâ€™t train our models on your private conversations."}
+                  ? "مشاعرك ليست منتجاً إعلانياً. لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
+                  : "Your feelings are not an ad product. We don’t sell your data, and we don’t train our models on your private conversations."}
               </p>
             </div>
             <div className="feature">
-              <div className="feature-icon">Ø§</div>
-              <h3>{isAr ? "ØªØ¬Ø±Ø¨Ø© Ø¨Ø£ÙˆÙ„ÙˆÙŠØ© ????ŠØ©" : "Arabic-First Experience"}</h3>
+              <div className="feature-icon">ا</div>
+              <h3>{isAr ? "تجربة بأولوية عربية" : "Arabic-First Experience"}</h3>
               <p>
                 {isAr
-                  ? "Ù…Ù† Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© Ù…ØµÙ…Ù‘ÙŽÙ… Ù„Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„ØªØ¹Ø¨ÙŠØ± Ø§Ù„????ŠØ© ÙˆØ§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„Ù…Ø­Ù„ÙŠØ©ØŒ ÙˆÙ„ÙŠØ³ Ù…Ø¬Ø±Ø¯ ØªØ±Ø¬Ù…Ø© Ù„Ù…Ù†ØªØ¬ ØºØ±Ø¨ÙŠ."
+                  ? "من البداية مصمَّم لطريقة التعبير العربية والثقافة المحلية، وليس مجرد ترجمة لمنتج غربي."
                   : "Built around Arabic expression and culture from day one, not just translated from a Western template."}
               </p>
             </div>
@@ -1308,33 +1221,33 @@ export default function HomePage() {
         {/* PRICING */}
         <section id="pricing" className="asrar-section asrar-section--pricing">
           <h2 className="asrar-section-title">
-            {isAr ? "Ø§Ù„Ø£Ø³Ø¹Ø§Ø±" : "Pricing"}
+            {isAr ? "الأسعار" : "Pricing"}
           </h2>
 
           <div className="asrar-pricing-grid">
             <div className="pricing-card">
-              <h3>{isAr ? "Ù…Ø¬Ø§Ù†ÙŠ" : "Free"}</h3>
-              <p className="price">{isAr ? "Ù $ / Ø´Ù‡Ø±ÙŠØ§Ù‹" : "$0 / month"}</p>
+              <h3>{isAr ? "مجاني" : "Free"}</h3>
+              <p className="price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
               <ul>
-                <li>{isAr ? "Ø´Ø®ØµÙŠØ© Ø£Ø³Ø§Ø³ÙŠØ© ÙˆØ§Ø­Ø¯Ø©" : "1 core character"}</li>
-                <li>{isAr ? "Ù¥ Ø±Ø³Ø§Ø¦Ù„ ÙŠÙˆÙ…ÙŠØ§Ù‹" : "5 messages per day"}</li>
-                <li>{isAr ? "Ø¯Ø¹Ù… Ø£Ø³Ø§Ø³ÙŠ" : "Basic support"}</li>
+                <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
+                <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
+                <li>{isAr ? "دعم أساسي" : "Basic support"}</li>
               </ul>
               <button className="asrar-btn ghost" onClick={() => navigate('/dashboard')}>
-                {isAr ? "Ø§Ø¨Ø¯Ø£ Ù…Ø¬Ø§Ù†Ø§Ù‹" : "Start for free"}
+                {isAr ? "ابدأ مجاناً" : "Start for free"}
               </button>
             </div>
 
             <div className="pricing-card pricing-card--accent">
               
-              <h3>{isAr ? "Ø¨Ø±Ùˆ" : "Pro"}</h3>
-              <p className="price">{isAr ? "$4.99 / Ø´Ù‡Ø±ÙŠØ§Ù‹" : "$4.99 / month"}</p>
+              <h3>{isAr ? "برو" : "Pro"}</h3>
+              <p className="price">{isAr ? "$4.99 / شهرياً" : "$4.99 / month"}</p>
               <ul>
-                <li>{isAr ? "ÙƒÙ„ Ø±ÙØ§Ù‚ Ø£Ø³Ø±Ø§Ø± Ø§Ù„Ø®Ù…Ø³Ø©" : "All 5 Asrar characters"}</li>
-                <li>{isAr ? "Ù£Ù Ù Ù  Ø±Ø³Ø§Ù„Ø© Ø´Ù‡Ø±ÙŠØ§Ù‹" : "3,000 messages per month"}</li>
-                <li>{isAr ? "Ø°Ø§ÙƒØ±Ø© Ù…Ø­Ø§Ø¯Ø«Ø© ÙˆØ¯Ø¹Ù… Ø°Ùˆ Ø£ÙˆÙ„ÙˆÙŠØ©" : "Chat memory & priority support"}</li>
-                <li>{isAr ? "Ø¨Ø¯ÙˆÙ† Ø¥Ø¹Ù„Ø§Ù†Ø§Øª ÙˆÙˆØµÙˆÙ„ Ù…Ø¨ÙƒØ±" : "Adâ€‘free, priority access"}</li>
-                <li>{isAr ? "Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª" : "Cancel anytime"}</li>
+                <li>{isAr ? "كل رفاق أسرار الخمسة" : "All 5 Asrar characters"}</li>
+                <li>{isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}</li>
+                <li>{isAr ? "ذاكرة محادثة ودعم ذو أولوية" : "Chat memory & priority support"}</li>
+                <li>{isAr ? "بدون إعلانات ووصول مبكر" : "Ad‑free, priority access"}</li>
+                <li>{isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}</li>
               </ul>
               <button className="asrar-btn primary" onClick={() => {
                 if (user) {
@@ -1343,7 +1256,7 @@ export default function HomePage() {
                   window.location.href = "/create-account";
                 }
               }}>
-                {isAr ? "Ø¬Ø±Ù‘Ø¨ Ø¨Ø±Ùˆ" : "Try Pro"}
+                {isAr ? "جرّب برو" : "Try Pro"}
               </button>
             </div>
           </div>
@@ -1359,12 +1272,8 @@ export default function HomePage() {
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         aria-label="Back to top"
       >
-        â†‘
+        ↑
       </button>
     </div>
   );
 }
-
-
-
-
