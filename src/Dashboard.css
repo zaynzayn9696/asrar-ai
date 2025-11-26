@@ -62,7 +62,7 @@
 .asrar-dash-header {
   position: -webkit-sticky;
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
   left: 0;
   right: 0;
   display: flex;
@@ -73,7 +73,7 @@
   z-index: 30;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
-  padding-top: 0.4rem;
+  padding-top: calc(0.4rem + env(safe-area-inset-top, 0px));
   padding-bottom: 0.4rem;
   background: rgba(5, 8, 11, 0.95);
   backdrop-filter: blur(10px);
@@ -883,9 +883,12 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
 
 @media (max-width: 600px) {
   .asrar-dash-header {
+    position: sticky;
+    top: 0;
     flex-direction: column;
     align-items: flex-start;
     gap: 0.6rem;
+    padding-top: calc(0.6rem + env(safe-area-inset-top, 0px));
   }
 
   .asrar-dash-logo-frame {
