@@ -208,7 +208,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               <span className="asrar-home-mobile-nav-title">ASRAR AI</span>
               <button
                 className="asrar-mobile-close"
-                aria-label={isAr ? "إغلاق" : "Close navigation"}
+                aria-label={isAr ? "?????" : "Close navigation"}
                 onClick={() => setIsMobileNavOpen(false)}
               >
                 &times;
@@ -297,3 +297,6 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
     </>
   );
 }
+
+
+

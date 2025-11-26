@@ -13,10 +13,16 @@
   color: #f5fbff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
- 
   position: relative;
-    overflow-x: hidden;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.asrar-dash-page > main,
+.asrar-dash-page > .asrar-dash-main,
+.asrar-dash-page > .asrar-dash-content {
+  flex: 1 0 auto;
 }
 
 /* subtle glows */
@@ -49,6 +55,7 @@
 
 /* HEADER */
 .asrar-dash-header {
+  position: -webkit-sticky;
   display: flex;
   align-items: center;
   justify-content: space-between;

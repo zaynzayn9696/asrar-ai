@@ -454,7 +454,7 @@ export default function ChatPage() {
         onClick={handleStartNewChat}
         type="button"
       >
-        {isAr ? 'بدء محادثة جديدة' : '+ Start new chat'}
+        {isAr ? "??? ?????? ?????" : "+ Start new chat"}
       </button>
       <div className="asrar-conversation-list">
         {convLoading && <div className="asrar-conv-item">Loading...</div>}
@@ -477,7 +477,7 @@ export default function ChatPage() {
     </>
   );
 
-  const mobileSidebarTitle = isAr ? "المحادثات" : "Conversations";
+  const mobileSidebarTitle = isAr ? "?????????" : "Conversations";
 
   // Persist history whenever messages change
   useEffect(() => {
@@ -1076,7 +1076,7 @@ export default function ChatPage() {
               (isMobileSidebarOpen ? " asrar-chat-history-toggle--active" : "")
             }
             onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
-            aria-label={isAr ? "تبديل سجل المحادثة" : "Toggle chat history"}
+            aria-label={isAr ? "????? ??? ????????" : "Toggle chat history"}
             aria-pressed={isMobileSidebarOpen}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1101,7 +1101,7 @@ export default function ChatPage() {
               <button
                 type="button"
                 className="asrar-mobile-close"
-                aria-label={isAr ? "إغلاق" : "Close"}
+                aria-label={isAr ? "?????" : "Close"}
                 onClick={() => setIsMobileSidebarOpen(false)}
               >
                 &times;
@@ -1290,6 +1290,10 @@ export default function ChatPage() {
     </div>
   );
 }
+
+
+
+
 
 
 
