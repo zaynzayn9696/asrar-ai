@@ -1,0 +1,853 @@
+/* ============ CHAT PAGE LAYOUT ============ */
+
+.asrar-chat-page {
+  /* no min-height here – let the content define it */
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* If ChatPage is rendered inside the dashboard shell */
+.asrar-dash-page.asrar-chat-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+  min-height: 0;                 /* keep this override */
+  padding-bottom: 0 !important;  /* keep this too */
+  /* ❌ no overflow-y here – let the browser/body own scrolling */
+}
+.asrar-chat-page .asrar-dash-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Make the top site header sticky only on chat page */
+
+
+/* Hide dashboard background orbits on chat page to prevent phantom scroll */
+.asrar-chat-page .asrar-dash-orbit {
+  display: none;
+}
+
+/* Main grid: sidebar + chat column, centered on the page */
+.asrar-chat-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 1.2rem;
+  padding-top: 1rem;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+/* On mobile, single-column layout */
+@media (max-width: 900px) {
+  .asrar-chat-layout {
+    grid-template-columns: 1fr;
+    padding-top: 0.75rem;
+  }
+}
+
+/* ============ SIDEBAR (CONVERSATIONS) ============ */
+
+.asrar-chat-sidebar {
+  background: rgba(3, 10, 24, 0.96);
+  border-radius: 18px;
+  padding: 0.9rem;
+  border: 1px solid rgba(0, 244, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  /* 👉 sticky sidebar that follows scroll */
+  position: sticky;
+  top: 80px;          /* distance under the main header — adjust if needed */
+  align-self: flex-start;
+
+  max-width: 280px;   /* keeps it snug on the left */
+  max-height: calc(100vh - 96px); /* full-height panel without forcing extra scroll */
+  overflow: hidden;   /* only the inner list scrolls */
+}
+
+
+@media (max-width: 900px) {
+  .asrar-chat-sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
+.asrar-new-chat-btn {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 244, 255, 0.7);
+  background: radial-gradient(
+    circle at top left,
+    rgba(0, 244, 255, 0.25),
+    rgba(2, 4, 10, 1)
+  );
+  color: #f5fbff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.asrar-new-chat-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 18px rgba(0, 244, 255, 0.4);
+  border-color: rgba(0, 244, 255, 1);
+}
+
+.asrar-new-chat-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.asrar-conversation-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.asrar-conversation-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.asrar-conversation-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asrar-conversation-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(44, 246, 255, 0.7), rgba(165, 92, 255, 0.7));
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(44, 246, 255, 0.35);
+}
+
+.asrar-conv-item {
+  padding: 0.55rem 0.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-bottom: 0.25rem;
+  background: transparent;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    transform 0.08s ease;
+  border: 1px solid transparent;
+}
+
+.asrar-conv-item:hover {
+  background: rgba(9, 24, 44, 0.9);
+  border-color: rgba(0, 244, 255, 0.16);
+}
+
+.asrar-conv-item--active {
+  background: radial-gradient(
+    circle at top left,
+    rgba(0, 244, 255, 0.25),
+    rgba(3, 10, 24, 0.98)
+  );
+  border-color: rgba(0, 244, 255, 0.8);
+}
+
+.asrar-conv-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #f5fbff;
+}
+
+.asrar-conv-preview {
+  font-size: 0.72rem;
+  color: rgba(203, 220, 255, 0.92);
+  margin-top: 2px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* ============ MAIN CHAT COLUMN ============ */
+
+.asrar-chat-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ---- Header (Hana — Deep Support) ---- */
+
+.asrar-chat-header-strip {
+  padding: 0 0 0.75rem;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  display: flex;
+  justify-content: center;
+}
+
+.asrar-chat-header-main {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 0%, #061a2d 0, #02040c 100%);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.06),
+    0 14px 32px rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.asrar-chat-header-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e8f8ff;
+}
+
+.asrar-chat-header-sub {
+  font-size: 0.82rem;
+  color: #9fb1c3;
+}
+
+/* Full width on mobile */
+@media (max-width: 900px) {
+  .asrar-chat-header-main {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ---- Messages scroll area (single source of truth) ---- */
+.asrar-chat-messages {
+  flex: 1 1 auto;        /* fill available space, page does the scrolling */
+  overflow-y: visible;   /* no inner scrollbar */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 0 1rem;
+  -webkit-overflow-scrolling: auto; /* not needed anymore, but safe */
+}
+
+
+.asrar-chat-messages::-webkit-scrollbar {
+  width: 10px;
+}
+
+.asrar-chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asrar-chat-messages::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(44, 246, 255, 0.9), rgba(165, 92, 255, 0.9));
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(44, 246, 255, 0.35);
+}
+
+.asrar-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(76, 255, 255, 1), rgba(185, 120, 255, 1));
+}
+
+/* Message rows */
+.asrar-chat-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.asrar-chat-row--assistant {
+  width: 100%;
+}
+
+.asrar-chat-row--user {
+  width: 100%;
+}
+
+
+.asrar-chat-row--system {
+  justify-content: center;
+}
+
+/* Avatar */
+.asrar-chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: 0 0 auto;
+  background: radial-gradient(circle at 30% 0%, #061a2d, #02040c);
+  border: 1px solid rgba(0, 240, 255, 0.6);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.12),
+    0 8px 18px rgba(0, 0, 0, 0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #e8f8ff;
+}
+
+.asrar-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.asrar-chat-avatar-fallback {
+  font-size: 0.86rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+/* Bubble */
+.asrar-chat-bubble {
+  border-radius: 16px;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-width: 70%;
+  display: block;
+  width: fit-content;
+  word-break: normal;
+  overflow-wrap: break-word;
+  white-space: pre-line;
+  unicode-bidi: plaintext;
+  text-align: start;
+  margin: 8px 0;
+}
+
+/* Bubble horizontal alignment rules */
+.asrar-chat-row--assistant .asrar-chat-bubble {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.asrar-chat-row--user .asrar-chat-bubble {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+/* Assistant bubble */
+.asrar-chat-row--assistant .asrar-chat-bubble {
+  background: radial-gradient(circle at top left, #051b30, #02040d);
+  border: 1px solid rgba(0, 240, 255, 0.7);
+  color: #e8f8ff;
+  box-shadow: 0 0 18px rgba(0, 240, 255, 0.28);
+}
+
+/* User bubble */
+.asrar-chat-row--user .asrar-chat-bubble {
+  background: radial-gradient(circle at top right, #ff3ba8, #260522);
+  border: 1px solid rgba(255, 147, 223, 0.9);
+  color: #ffeaff;
+  box-shadow: 0 0 18px rgba(255, 120, 220, 0.45);
+}
+
+/* System bubble */
+.asrar-chat-row--system .asrar-chat-bubble {
+  background: radial-gradient(circle at top, #041322, #02040d);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: #d1f6ff;
+}
+
+/* Meta text (timestamp) */
+.asrar-chat-meta {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  color: #9fb1c3;
+  margin-top: 4px;
+}
+
+/* Mobile: full width column + bigger bubbles */
+@media (max-width: 900px) {
+  .asrar-chat-messages {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .asrar-chat-bubble {
+    max-width: 95%;
+  }
+}
+
+/* Typing indicator bubble and animation */
+.asrar-chat-bubble--typing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  padding: 0.5rem 0.7rem;
+}
+
+.asrar-typing-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.asrar-typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #e8f8ff;
+  opacity: 0.4;
+  animation: asrar-typing-bounce 1.4s infinite ease-in-out;
+}
+
+.asrar-typing-dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.asrar-typing-dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes asrar-typing-bounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
+/* ============ COMPOSER (INPUT + BUTTONS) ============ */
+
+.asrar-chat-composer {
+  padding: 0.75rem 0 0;
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.asrar-chat-composer-inner {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(4, 16, 32, 0.9);
+  border: 1px solid rgba(0, 244, 255, 0.32);
+  box-shadow:
+    0 0 0 1px rgba(0, 244, 255, 0.08),
+    0 14px 32px rgba(0, 0, 0, 0.9);
+}
+
+/* Chat input area */
+.asrar-chat-input {
+  flex: 1;
+  max-height: 12em;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.asrar-chat-input::-webkit-scrollbar {
+  display: none;
+}
+
+/* We reuse asrar-room-input-field as the base textarea class */
+.asrar-chat-input.asrar-room-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 999px;
+  padding: 4px 4px;
+  font-size: 0.85rem;
+  color: #e8f8ff;
+  outline: none;
+  resize: none;
+}
+
+.asrar-chat-input.asrar-room-input-field::placeholder {
+  font-size: 0.85rem;
+  color: #7a8ca3;
+}
+
+/* Composer actions on the right (mic + send) */
+.asrar-chat-composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Mic button */
+.asrar-mic-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  background: radial-gradient(circle at 40% 0%, #071b2f 0, #02050d 75%);
+  color: #e8f8ff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.08),
+    0 8px 18px rgba(0, 0, 0, 0.7),
+    inset 0 0 18px rgba(0, 240, 255, 0.05);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.asrar-mic-btn .icon {
+  font-size: 1rem;
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.asrar-mic-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.12),
+    0 12px 22px rgba(0, 0, 0, 0.85),
+    0 0 22px rgba(0, 240, 255, 0.12);
+}
+
+/* Mic recording state */
+.asrar-mic-btn--recording {
+  background: radial-gradient(circle at center, #ff4d6a, #190015);
+  border-color: rgba(255, 90, 130, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(255, 120, 180, 0.24),
+    0 12px 26px rgba(0, 0, 0, 0.85),
+    0 0 26px rgba(255, 90, 130, 0.25);
+  animation: asrar-mic-pulse 1.2s infinite;
+}
+
+.asrar-mic-btn--recording .icon {
+  transform: scale(1.05);
+}
+
+@keyframes asrar-mic-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Send button */
+.asrar-chat-composer .asrar-send-btn {
+  border-radius: 999px;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #00f4ff, #7c4dff);
+  color: #02050b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 12px 26px rgba(0, 0, 0, 0.9),
+    0 0 24px rgba(107, 86, 255, 0.25);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.asrar-send-btn .icon {
+  font-size: 1.1rem;
+  transition: transform 200ms ease;
+}
+
+.asrar-chat-composer .asrar-send-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 16px 30px rgba(0, 0, 0, 0.95),
+    0 0 30px rgba(107, 86, 255, 0.32);
+}
+
+.asrar-chat-composer .asrar-send-btn:hover .icon {
+  transform: rotate(12deg) translateY(-1px);
+}
+
+.asrar-chat-composer .asrar-send-btn:active {
+  transform: translateY(0);
+}
+
+.asrar-chat-composer .asrar-send-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Footer meta: small hint + plan pill, centered under the input */
+.asrar-chat-footer-meta {
+  width: 100%;
+  max-width: 900px;
+  margin: 0.35rem auto 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.asrar-chat-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #7f96ac;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.asrar-chat-header-pill {
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at top,
+    rgba(0, 240, 255, 0.16),
+    rgba(5, 8, 14, 0.9)
+  );
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  color: #9fefff;
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* Mobile: full width footer meta */
+@media (max-width: 900px) {
+  .asrar-chat-composer-inner,
+  .asrar-chat-footer-meta {
+    width: 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* ============ OPTIONAL EXTRAS ============ */
+
+/* Free plan limit banner */
+.asrar-limit-banner {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: rgba(120, 20, 60, 0.35);
+  border: 1px solid rgba(255, 90, 160, 0.7);
+  color: #ffedf7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.asrar-upgrade-btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 120, 200, 0.9),
+    rgba(120, 30, 80, 1)
+  );
+  color: #fff;
+  box-shadow: 0 0 18px rgba(255, 120, 200, 0.6);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.asrar-upgrade-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 26px rgba(255, 140, 210, 0.9);
+}
+
+/* Voice bubble (for voice replies if you use them) */
+.asrar-voice-bubble {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.asrar-voice-play-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.7);
+  background: radial-gradient(circle at 30% 0%, #061a2d, #02040c);
+  color: #e8f8ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.14),
+    0 8px 18px rgba(0, 0, 0, 0.85);
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.asrar-voice-play-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.24),
+    0 12px 26px rgba(0, 0, 0, 0.95);
+}
+
+.asrar-voice-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.asrar-voice-label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.asrar-voice-progress-track {
+  width: 100%;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(9, 38, 62, 0.9);
+  overflow: hidden;
+}
+
+.asrar-voice-progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2cf6ff, #a55cff);
+  transition: width 120ms linear;
+}
+
+/* Cross-character suggestion card */
+.asrar-room-suggestion {
+  margin: 0.5rem 0 0.7rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 14px;
+  background: radial-gradient(circle at top, #041322, #02040d);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.asrar-room-suggestion-text {
+  font-size: 0.85rem;
+  color: #d1f6ff;
+  flex: 1 1 auto;
+}
+
+.asrar-room-suggestion-btn {
+  border-radius: 999px;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #00f4ff 0%, #5d3cff 50%, #a55cff 100%);
+  color: #050313;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 10px 22px rgba(0, 0, 0, 0.85);
+}
+
+.asrar-room-suggestion-btn:hover {
+  transform: translateY(-1px);
+}
+
+.asrar-room-suggestion-btn:active {
+  transform: translateY(0);
+}
+
+
+/* === REMOVE SECOND (INNER) SCROLLBAR ON CHAT PAGE === */
+
+/* let the page itself handle vertical scrolling */
+/* === FORCE HEADER + SIDEBAR TO FOLLOW SCROLL (DESKTOP ONLY) === */
+@media (min-width: 901px) {
+  /* 1) Header stays at the top of the viewport on chat page */
+  .asrar-chat-page .asrar-dash-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+  }
+
+  /* 2) Layout becomes a simple block and leaves space for the fixed header */
+  .asrar-chat-layout {
+    display: block;          /* no grid for desktop – we handle offsets manually */
+    padding-top: 5.5rem;     /* space under the fixed header (tweak if needed) */
+  }
+
+  /* 3) Sidebar fixed on the left and follows scroll */
+  .asrar-chat-sidebar {
+    position: fixed;
+    top: 5.5rem;             /* just under the header */
+    left: 1.4rem;            /* align with your dashboard padding (can tweak) */
+    width: 260px;
+    max-width: 260px;
+    height: calc(100vh - 5.5rem - 1.4rem);  /* full height minus header + bottom space */
+    max-height: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The list inside the sidebar scrolls nicely */
+  .asrar-conversation-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* 4) Main chat column shifted to the right of the fixed sidebar */
+  .asrar-chat-main {
+    margin-left: calc(260px + 1.6rem);  /* sidebar width + gap */
+  }
+}

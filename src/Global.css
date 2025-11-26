@@ -1,0 +1,153 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap");
+
+html, body {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Text", Arial, sans-serif;
+}
+
+.asrar-page--ar,
+.asrar-dash-page--ar,
+[dir="rtl"] {
+  font-family: "Tajawal", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+.asrar-brand-text {
+  font-family: "Cinzel", serif;
+}
+
+.asrar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: radial-gradient(circle at top, #050a12 0, #020307 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--asrar-text-muted, #a0a9b8);
+}
+
+.asrar-char-arrow {
+  display: none;
+}
+
+/* Hide scrollbar globally for the slider container */
+.asrar-char-slider {
+  scrollbar-width: none;
+}
+.asrar-char-slider::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile horizontal character sliders */
+@media (max-width: 768px) {
+  .asrar-char-slider {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    position: relative;
+  }
+  .asrar-char-slider::-webkit-scrollbar { display: none; }
+
+  /* HomePage characters */
+  .asrar-char-slider .asrar-character-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+  }
+  .asrar-char-slider .asrar-character-card {
+    flex: 0 0 80%;
+    max-width: 80%;
+    scroll-snap-align: start;
+  }
+
+  /* Dashboard select characters */
+  .asrar-char-slider .asrar-dash-char-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.9rem;
+  }
+  .asrar-char-slider .asrar-dash-char-card {
+    flex: 0 0 80%;
+    max-width: 80%;
+    scroll-snap-align: start;
+  }
+
+  .asrar-char-arrow {
+    display: flex;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    border-radius: 999px;
+    background: rgba(10, 16, 26, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e6edf6;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  .asrar-char-arrow:hover {
+    background: rgba(14, 22, 35, 0.9);
+  }
+  .asrar-char-arrow--left {
+    left: 8px;
+  }
+  .asrar-char-arrow--right {
+    right: 8px;
+  }
+}
+
+/* GLOBAL LOADING STATES ------------------------------------------------- */
+
+.asrar-fullpage-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #05080b 0%, #0a0f1a 100%);
+  color: #eaf6ff;
+  padding: 40px 20px;
+}
+
+.asrar-fullpage-loading p {
+  margin-top: 24px;
+  font-size: 16px;
+  color: #9bb0c6;
+  font-weight: 500;
+}
+
+.asrar-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(24, 209, 218, 0.1);
+  border-top-color: #18d1da;
+  border-radius: 50%;
+  animation: asrar-spin 0.8s linear infinite;
+}
+
+@keyframes asrar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.asrar-dash-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.asrar-dash-loading p {
+  margin-top: 24px;
+  font-size: 16px;
+  color: #9bb0c6;
+  font-weight: 500;
+  text-align: center;
+}

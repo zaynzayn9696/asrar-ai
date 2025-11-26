@@ -1,0 +1,1059 @@
+/* src/Dashboard.css */
+
+/* PAGE BACKGROUND */
+.asrar-dash-page {
+  min-height: 100vh;
+  background: #02040a;
+  background-image: radial-gradient(
+      circle at top,
+      #071827 0,
+      #02040a 55%,
+      #000108 100%
+    );
+  color: #f5fbff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+ 
+  position: relative;
+    overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* subtle glows */
+.asrar-dash-orbit {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0.55;
+  filter: blur(3px);
+  mix-blend-mode: screen;
+}
+
+.asrar-dash-orbit--top {
+  top: -220px;
+  left: -80px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, #00f4ff33 0, transparent 70%);
+  animation: dashOrbit1 16s ease-in-out infinite;
+}
+
+.asrar-dash-orbit--bottom {
+  bottom: -260px;
+  right: -60px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, #ff3ba833 0, transparent 72%);
+  animation: dashOrbit2 18s ease-in-out infinite;
+}
+
+/* HEADER */
+.asrar-dash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0 0 1.9rem;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+      padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  background: rgba(5, 8, 11, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.asrar-dash-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: 0.5rem;
+}
+
+.asrar-dash-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  text-decoration: none;
+  color: inherit;
+   background: none;
+  border: none;
+}
+
+/* bigger logo */
+.asrar-dash-logo-frame {
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background: radial-gradient(circle at top, #021319 0, #000308 100%);
+  border: 1px solid rgba(0, 240, 255, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 28px rgba(0, 240, 255, 0.85),
+    0 0 0 1px rgba(0, 240, 255, 0.75);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.asrar-dash-logo {
+  width: 120px;
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.95));
+}
+
+.asrar-dash-logo-wrap:hover .asrar-dash-logo-frame {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 0 36px rgba(0, 240, 255, 0.95),
+    0 0 0 1px rgba(0, 240, 255, 0.9);
+}
+
+.asrar-dash-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  font-size: 0.96rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #e9f8ff;
+  font-family: "Cinzel", serif;
+}
+
+.asrar-dash-brand-main {
+  font-size: 0.96rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #e9f8ff;
+  font-family: "Cinzel", serif;
+}
+
+.asrar-dash-brand-sub {
+  font-size: 0.8rem;
+  color: #8ea2ba;
+}
+
+.asrar-dash-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-right: 0.5rem;
+}
+
+/* Auth buttons group in header (Login / Create Account, etc.) */
+.asrar-header-auth-buttons {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem; /* space between language toggle and auth buttons */
+}
+
+/* Shared hamburger button used in headers */
+.asrar-header-menu {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(3, 8, 16, 0.96);
+  border-radius: 999px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+.asrar-header-menu-line {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #e8f8ff;
+  margin: 2px 0;
+}
+
+/* Mobile dropdown nav used by AsrarHeader (hidden by default on desktop) */
+@media (min-width: 769px) {
+  .asrar-dash-mobile-nav {
+    display: none;
+  }
+}
+
+/* Mobile: keep existing slider behavior */
+@media (max-width: 767px) {
+  .asrar-character-track.asrar-character-grid {
+    display: flex;
+  }
+  
+  /* Ensure images are centered on mobile */
+  .asrar-dash-char-avatar-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .asrar-dash-char-avatar {
+    width: 80px;
+    height: 120px;
+    margin: 10px auto;
+  }
+  
+  .asrar-dash-char-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 15px;
+    min-height: 260px;
+  }
+}
+
+/* Mobile hamburger toggle (hidden on desktop) */
+.asrar-dash-header-menu-toggle {
+  display: none;
+}
+
+.asrar-dash-header-hint {
+  font-size: 0.8rem;
+  color: #8ea2ba;
+}
+
+/* user avatar + menu */
+.asrar-dash-header-user {
+  position: relative;
+}
+
+.asrar-dash-header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(236, 196, 255, 0.7);
+  background: radial-gradient(circle at top, #4a3277, #131024);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 18px rgba(255, 122, 255, 0.5),
+    0 0 0 1px rgba(255, 200, 255, 0.35);
+  cursor: pointer;
+  padding: 0;
+  color: #ffe9ff;
+}
+
+.asrar-dash-user-menu {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  min-width: 190px;
+  border-radius: 16px;
+  padding: 0.35rem 0;
+  background: radial-gradient(
+    circle at top,
+    rgba(35, 24, 68, 0.9),
+    rgba(5, 5, 20, 0.98)
+  );
+  border: 1px solid rgba(166, 138, 255, 0.7);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.96),
+    0 0 26px rgba(163, 120, 255, 0.7);
+  z-index: 40;
+}
+
+.asrar-dash-page--ar .asrar-dash-user-menu {
+  right: 0;       /* keep it on the right side */
+  left: auto;
+  text-align: right;
+}
+
+
+.asrar-dash-user-menu button {
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 0.86rem;
+  color: #e4f4ff;
+  cursor: pointer;
+}
+.asrar-dash-page--ar .asrar-dash-user-menu button {
+  text-align: right;
+}
+
+.asrar-dash-user-menu button:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.asrar-dash-user-menu-danger {
+  color: #ff94b4;
+}
+
+
+
+
+
+.asrar-dash-main {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* PANEL */
+.asrar-dash-panel {
+  border-radius: 26px;
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  background: radial-gradient(
+    circle at top left,
+    #061627 0,
+    #02050d 42%,
+    #01030a 100%
+  );
+  padding: 2.2rem 2.1rem 2.1rem;
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.04),
+    0 28px 90px rgba(0, 0, 0, 0.96),
+    0 0 40px rgba(0, 240, 255, 0.22);
+  opacity: 0;
+  transform: translateY(18px);
+  animation: asrar-dash-fade-up 0.7s ease-out forwards;
+}
+
+/* TITLES */
+.asrar-dash-eyebrow {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #8bb8ff;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.asrar-dash-title {
+  font-size: 1.8rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  text-align: center;
+}
+
+.asrar-dash-subtitle {
+  font-size: 0.9rem;
+  color: #a6b7c7;
+  max-width: 34rem;
+  margin: 0 auto 1.6rem;
+  text-align: center;
+}
+
+/* MINI MOOD CHAT ------------------------------------------------ */
+.asrar-dash-mini-chat {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 1.2rem;
+  padding: 1.1rem 1rem;
+  border-radius: 22px;
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  background: radial-gradient(
+    circle at top left,
+    rgba(0, 240, 255, 0.18),
+    rgba(12, 9, 32, 0.98)
+  );
+  margin-bottom: 1.8rem;
+}
+
+.asrar-dash-mini-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.asrar-dash-mini-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.asrar-dash-mini-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: radial-gradient(circle at top, #00f4ff, #02101b);
+  box-shadow:
+    0 0 18px rgba(0, 240, 255, 0.9),
+    0 0 0 1px rgba(0, 240, 255, 0.8);
+  position: relative;
+}
+
+.asrar-dash-mini-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.asrar-dash-mini-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.asrar-dash-mini-status {
+  font-size: 0.75rem;
+  color: #8ea2ba;
+}
+
+.asrar-dash-mini-tag {
+  margin-left: auto;
+  margin-right: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #ffc2ff;
+}
+
+.asrar-dash-mini-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.asrar-dash-mini-bubble {
+  border-radius: 16px;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.asrar-dash-mini-bubble-ai {
+  align-self: flex-start;
+  background: radial-gradient(circle at top left, #071827, #02040d);
+  border: 1px solid rgba(0, 240, 255, 0.55);
+  color: #d7f7ff;
+}
+
+.asrar-dash-mini-bubble-user {
+  align-self: flex-end;
+  background: radial-gradient(circle at top right, #ff3ba8, #260522);
+  border: 1px solid rgba(255, 147, 223, 0.8);
+  color: #ffeaff;
+}
+
+/* input side */
+.asrar-dash-mini-input {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.asrar-dash-mini-textarea {
+  flex: 1;
+  border-radius: 16px;
+  border: none;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.86rem;
+  resize: none;
+  background: radial-gradient(circle at top, #020817, #02030b);
+  color: #f5fbff;
+  outline: none;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.8);
+}
+
+.asrar-dash-mini-textarea::placeholder {
+  color: #5f7085;
+}
+
+.asrar-dash-mini-send {
+  width: 42px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(
+    135deg,
+    #00f4ff 0%,
+    #ff3ba8 50%,
+    #ffa53f 100%
+  );
+  color: #050313;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 10px 24px rgba(0, 0, 0, 0.85);
+}
+
+/* CHARACTERS ----------------------------------------------------- */
+.asrar-dash-characters {
+  margin-bottom: 2.5rem;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.asrar-dash-char-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  justify-content: center;
+}
+
+.asrar-dash-char-card {
+  border-radius: var(--asrar-radius-md);
+  padding: 22px 20px;
+  background: radial-gradient(circle at top, #0f1925 0, #05070c 65%);
+  border: 1px solid var(--asrar-border-subtle);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.85);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 280px; /* Reduced height to remove extra space */
+  cursor: pointer;
+  flex: 0 1 180px;
+  max-width: 220px;
+  position: relative; /* For absolute positioning of Pro pill */
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    border-color 0.2s ease, background 0.2s ease;
+}
+
+.asrar-dash-char-card:hover:not(.asrar-dash-char-card--selected) {
+  transform: translateY(-2px);
+  border-color: var(--asrar-accent-soft);
+  box-shadow: 0 0 18px rgba(24, 209, 218, 0.25);
+}
+
+.asrar-dash-char-card--selected {
+  border-color: var(--asrar-accent);
+  box-shadow: 0 0 26px rgba(24, 209, 218, 0.9);
+  background: radial-gradient(circle at top, #152234 0, #05070c 70%);
+}
+
+/* Styles for locked (Pro-only) cards */
+.asrar-dash-char-card--locked {
+  opacity: 0.6;
+  filter: saturate(0.7);
+  cursor: pointer;
+}
+
+.asrar-dash-char-card--locked.asrar-dash-char-card--selected {
+  opacity: 0.75;
+  filter: saturate(0.8);
+}
+
+/* Pro pill badge */
+.asrar-char-pro-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(0, 240, 255, 0.18);
+  border: 1px solid rgba(0, 240, 255, 0.85);
+  color: #e8f8ff;
+  backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+.asrar-dash-char-avatar-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.asrar-dash-char-avatar {
+  width: 90px;
+  height: 140px;
+  border-radius: 999px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.75));
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.asrar-dash-char-text {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-top: 5px;
+  /* Removed flex-grow to prevent extra space */
+}
+
+.asrar-dash-char-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f5fbff;
+  margin-bottom: 0.25rem;
+  margin-top: 0;
+}
+
+.asrar-dash-char-role {
+  font-size: 0.85rem;
+  color: #8ea2ba;
+  margin-top: 0;
+}
+
+.asrar-history-snippet {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: #9bb0c6;
+  text-align: center;
+}
+
+.asrar-history-empty {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: #5f7085;
+  text-align: center;
+}
+
+.asrar-history-empty-global {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #9bb0c6;
+  margin-bottom: 1.4rem;
+}
+
+/* Desktop layout for dashboard character strip (match homepage companions row) */
+@media (min-width: 1024px) {
+  /* Center the whole strip inside the panel */
+  .asrar-dashboard-page .asrar-dash-characters {
+    max-width: 1180px;
+    margin: 0 auto 1.8rem;
+  }
+
+  
+
+  /* Use a 5-column grid like the homepage, no horizontal scroll */
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slider {
+    max-width: 1100px;
+    margin: 22px auto 8px;
+    padding: 0;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-track {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 18px;
+    transform: none !important;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slide {
+    flex: 0 0 auto;
+    padding: 0;
+    display: block;
+  }
+
+  /* Hide arrows and dots on desktop; keep them for mobile */
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-arrow,
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-dots {
+    display: none;
+  }
+
+   /* Make the character cards visually bigger on desktop */
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-card {
+    min-height: 320px; /* Larger on desktop but not too tall */
+    padding: 20px 20px;
+    max-width: 240px;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-avatar {
+    width: 120px; /* Larger portrait */
+    height: 180px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-name {
+    font-size: 18px; /* Larger text */
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-role {
+    font-size: 14px;
+    margin-top: 0;
+  }
+}
+
+/* Tablet layout: keep cards visible and nicely wrapped (768px–1024px) */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .asrar-dashboard-page .asrar-dash-characters {
+    max-width: 900px;
+    margin: 0 auto 1.6rem;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slider {
+    max-width: 100%;
+    margin: 18px auto 8px;
+    padding: 0;
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-track {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 24px;       /* vertical, horizontal */
+    transform: none !important;   /* stop slider from shifting cards off-screen */
+  }
+
+  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slide {
+    flex: 0 1 170px;      /* allow 2 rows if needed */
+    padding: 0;
+    display: block;
+  }
+}
+
+/* FOOTER: DIALECT + BUTTON -------------------------------------- */
+.asrar-dash-footer-row {
+  display: flex;
+  flex-direction: column;      /* stack them vertically */
+  align-items: center;         /* center horizontally */
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 1.2rem;
+}
+
+.asrar-dash-dialect-block {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 420px;   /* nice width */
+}
+
+.asrar-dash-dialect-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7f96ac;
+  margin-bottom: 0.5rem;
+  text-align: center;          /* center the text */
+}
+
+.asrar-dash-dialect-select-shell {
+  border-radius: 999px;
+  padding: 1px;
+background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 0.7) );
+}
+
+.asrar-dash-dialect-select {
+  width: 100%;
+  border-radius: 999px;
+  border: none;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.88rem;
+  background: radial-gradient(
+    circle at top,
+    #061827 0,
+    #030612 40%,
+    #02030c 100%
+  );
+  color: #e8f8ff;
+  text-align: center;
+  text-align-last: center;
+  outline: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #8bdcff 50%),
+    linear-gradient(135deg, #8bdcff 50%, transparent 50%);
+  background-position: calc(100% - 16px) 13px, calc(100% - 11px) 13px;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.asrar-dash-dialect-select option {
+  background: #050816;
+}
+
+.asrar-dash-start-button {
+  flex: 0 0 auto;
+  min-width: 200px;
+  border-radius: 999px;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  align-self: center;   
+background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
+  color: #050313;
+  cursor: pointer;
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.16s ease,
+    filter 0.12s ease;
+    
+}
+
+.asrar-dash-start-button:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 18px 52px rgba(0, 0, 0, 0.96);
+}
+
+.asrar-dash-start-button:active {
+  transform: translateY(0);
+}
+
+/* RTL tweaks */
+/* Keep the dashboard header layout LTR even when language is Arabic */
+.asrar-dash-page--ar .asrar-dash-header {
+  direction: ltr;
+}
+
+.asrar-dash-page--ar .asrar-dash-brand {
+  text-align: right;
+}
+
+.asrar-dash-page--ar .asrar-dash-title,
+.asrar-dash-page--ar .asrar-dash-subtitle {
+  text-align: center;
+}
+
+/* SETTINGS & BILLING PAGES ------------------------------------------- */
+.asrar-settings-page .asrar-dash-content,
+.asrar-billing-page .asrar-dash-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* RESPONSIVE ----------------------------------------------------- */
+@media (max-width: 900px) {
+  .asrar-dash-panel {
+    padding: 1.8rem 1.4rem 1.8rem;
+  }
+
+  .asrar-dash-mini-chat {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .asrar-dash-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .asrar-dash-logo-frame {
+    display: none;
+  }
+
+  .asrar-dash-footer-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .asrar-dash-start-button {
+    width: 100%;
+  }
+}
+
+/* ANIMATIONS ----------------------------------------------------- */
+@keyframes dashOrbit1 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(20px, 20px, 0) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes asrar-dash-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashOrbit2 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(-20px, -20px, 0) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hide desktop-only pieces on small screens */
+  .asrar-dash-header-user {
+    display: none;
+  }
+
+  .asrar-dash-header-link {
+    display: none;
+  }
+
+  /* Show hamburger on mobile */
+  .asrar-dash-header-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+  }
+
+  /* Compact mobile header layout */
+  .asrar-dash-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .asrar-dash-header-left {
+    flex-shrink: 0;
+  }
+
+  .asrar-dash-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-left: auto;
+  }
+
+  /* 1) Hide the header language toggle on dashboard mobile */
+  .asrar-dashboard-page .asrar-dash-header-right .asrar-lang-toggle {
+    display: none;
+  }
+
+  /* 2) Show and style the language toggle INSIDE the mobile dropdown */
+  .asrar-dashboard-page .asrar-dash-mobile-lang {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    margin-top: 0.3rem;
+  }
+
+  .asrar-dashboard-page .asrar-dash-mobile-lang button {
+    padding: 0.35rem 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+  }
+
+  /* Shared mobile dropdown panel styling for all pages using AsrarHeader */
+  .asrar-dash-mobile-nav {
+    display: flex !important; /* Force display on mobile */
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    background: radial-gradient(circle at top, #061627 0, #02040d 70%);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    padding: 0.6rem 0.9rem;
+    margin: 0.4rem auto 0.8rem;
+    max-width: 360px;
+    align-items: center;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
+  }
+
+  .asrar-dash-mobile-nav a {
+    color: #e8f8ff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-align: center;
+    width: 100%;
+    padding: 0.55rem 0.9rem;
+    margin: 0.2rem 0;
+    border-radius: 10px;
+  }
+
+  .asrar-dash-mobile-nav a:hover,
+  .asrar-dash-mobile-nav a:focus,
+  .asrar-dash-mobile-nav a:active {
+    background: rgba(255, 255, 255, 0.06);
+    text-decoration: none;
+  }
+
+  .asrar-dash-mobile-nav-btn {
+    width: 100%;
+    text-align: center;
+    background: transparent;
+    border: none;
+    color: #e8f8ff;
+    padding: 0.55rem 0.9rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .asrar-dash-mobile-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .asrar-dash-mobile-nav-danger {
+    color: #ff6b6b;
+  }
+  .asrar-dashboard-page .asrar-dash-header-link,
+  .asrar-settings-page .asrar-dash-header-link,
+  .asrar-billing-page .asrar-dash-header-link {
+    display: none;
+  }
+}
+
+.asrar-dash-header-link {
+  font-size: 0.86rem;
+  color: #e4f4ff;
+  text-decoration: none;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  background: radial-gradient(circle at top, #061827, #02040a);
+  box-shadow:
+    0 0 12px rgba(0, 240, 255, 0.35),
+    0 0 0 1px rgba(0, 240, 255, 0.2);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.16s ease,
+    filter 0.12s ease;
+}
+
+.asrar-dash-header-link:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    0 0 16px rgba(0, 240, 255, 0.5),
+    0 0 0 1px rgba(0, 240, 255, 0.4);
+}
+
+/* DASHBOARD LOADING STATE ------------------------------------------------ */
+
+.asrar-dash-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.asrar-dash-loading p {
+  margin-top: 24px;
+  font-size: 16px;
+  color: #9bb0c6;
+  font-weight: 500;
+  text-align: center;
+}

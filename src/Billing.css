@@ -1,0 +1,259 @@
+/* src/Billing.css */
+
+/* main wrapper tweaks (panel already styled in Dashboard.css) */
+.asrar-billing-main {
+  position: relative;
+  z-index: 2;
+}
+
+.asrar-billing-panel {
+  margin-top: 0.4rem;
+}
+
+/* GRID: LEFT (PLAN) + RIGHT (USAGE) */
+.asrar-billing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 1.4rem;
+  margin-top: 1.8rem;
+}
+
+/* CARDS */
+.asrar-billing-card {
+  border-radius: 24px;
+  padding: 1.5rem 1.6rem 1.8rem;
+  background: radial-gradient(
+    circle at top,
+    #050f1f 0,
+    #050815 40%,
+    #02020b 100%
+  );
+  border: 1px solid rgba(90, 118, 148, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.06),
+    0 26px 70px rgba(0, 0, 0, 0.9);
+}
+
+.asrar-billing-card--plan {
+  border-color: rgba(0, 240, 255, 0.8);
+}
+
+.asrar-billing-card--usage {
+  border-color: rgba(166, 138, 255, 0.8);
+}
+
+.asrar-billing-card-title {
+  font-size: 1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  color: #eaf6ff;
+}
+
+/* PLAN CARD CONTENT */
+.asrar-billing-plan-chip-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.7);
+  background: radial-gradient(circle at top, #061827, #02040a);
+  font-size: 0.78rem;
+  color: #dffbff;
+  margin-bottom: 0.9rem;
+}
+
+.asrar-billing-plan-chip-label {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  opacity: 0.8;
+}
+
+.asrar-billing-plan-chip-name {
+  font-weight: 600;
+}
+
+.asrar-billing-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+}
+
+.asrar-billing-price {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #f5fbff;
+}
+
+.asrar-billing-price-suffix {
+  font-size: 0.9rem;
+  color: #9bb0c6;
+}
+
+.asrar-billing-plan-tagline {
+  font-size: 0.88rem;
+  color: #9bb0c6;
+  margin-bottom: 1rem;
+}
+
+.asrar-billing-feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #d8e8ff;
+}
+
+.asrar-billing-feature-list li::before {
+  content: "•";
+  margin-inline-end: 0.35rem;
+  color: #2cf6ff;
+}
+
+/* UPGRADE BUTTON */
+.asrar-billing-upgrade-btn {
+  border-radius: 999px;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient(
+    135deg,
+    #59bfc4 0%,
+    #1acbe8 45%,
+    #a55cff 100%
+  );
+  color: #050313;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 18px 50px rgba(0, 0, 0, 0.9),
+    0 0 34px rgba(255, 115, 220, 0.9);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.16s ease,
+    filter 0.12s ease;
+}
+
+.asrar-billing-upgrade-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 18px 52px rgba(0, 0, 0, 0.96);
+}
+
+/* USAGE / PAYMENT CARD CONTENT */
+.asrar-billing-usage-block {
+  margin-bottom: 1.1rem;
+}
+
+.asrar-billing-usage-label {
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7f96ac;
+  margin-bottom: 0.3rem;
+}
+
+.asrar-billing-usage-amount {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #f5fbff;
+  margin-bottom: 0.3rem;
+}
+
+.asrar-billing-usage-note {
+  font-size: 0.8rem;
+  color: #9bb0c6;
+}
+
+.asrar-billing-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 240, 255, 0.2),
+    rgba(166, 138, 255, 0.2)
+  );
+  margin: 0.9rem 0;
+}
+
+/* PAYMENT METHOD */
+.asrar-billing-payment-block {
+  margin-bottom: 0.9rem;
+}
+
+.asrar-billing-payment-title {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #eaf6ff;
+}
+
+.asrar-billing-payment-empty {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  color: #9bb0c6;
+}
+
+.asrar-billing-add-card-btn {
+  margin-top: 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.8);
+  padding: 0.45rem 1.2rem;
+  background: radial-gradient(
+    circle at top,
+    rgba(2, 24, 32, 0.9),
+    rgba(1, 10, 18, 0.98)
+  );
+  color: #dcf9ff;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* INVOICES */
+.asrar-billing-invoices-title {
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: #eaf6ff;
+  margin-bottom: 0.2rem;
+}
+
+.asrar-billing-invoices-empty {
+  font-size: 0.82rem;
+  color: #9bb0c6;
+}
+
+/* RTL tweaks for inline elements */
+.asrar-dash-page--ar .asrar-billing-feature-list li::before {
+  margin-inline-start: 0.35rem;
+  margin-inline-end: 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .asrar-billing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .asrar-billing-card {
+    padding: 1.3rem 1.2rem 1.5rem;
+  }
+
+  .asrar-billing-upgrade-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .asrar-billing-add-card-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

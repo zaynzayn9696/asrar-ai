@@ -1,0 +1,156 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// REMOVED ENUM (SQLite does not support enums)
+// enum Plan {
+//   free
+//   pro
+// }
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  name               String
+  email              String    @unique
+  passwordHash       String
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // CHANGED: was `plan Plan @default(free)`
+  plan               String    @default("free") // "free" or "pro"
+  isPremium          Boolean   @default(false)
+  lemonCustomerId     String?   @unique
+  lemonSubscriptionId String?
+
+  saveHistoryEnabled Boolean   @default(true)
+  photoUrl           String?
+
+  usage              Usage?
+  messages           Message[]
+  conversations      Conversation[]
+  emotionProfile     UserEmotionProfile?
+  emotionalTimelineEvents EmotionalTimelineEvent[]
+}
+
+model Usage {
+  userId        Int      @id
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyCount    Int      @default(0)
+  monthlyCount  Int      @default(0)
+  dailyResetAt  DateTime?
+  monthlyResetAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Conversation {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characterId  String
+  title        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  messages     Message[]
+  emotionState ConversationEmotionState?
+  emotionalTimelineEvents EmotionalTimelineEvent[]
+  stateMachine ConversationStateMachine?
+}
+
+model Message {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  characterId     String
+  conversationId  Int
+  role            String
+  content         String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  emotion         MessageEmotion?
+}
+
+// Emotional Engine v1
+enum EmotionLabel {
+  NEUTRAL
+  SAD
+  ANXIOUS
+  ANGRY
+  LONELY
+  STRESSED
+  HOPEFUL
+  GRATEFUL
+}
+
+model MessageEmotion {
+  id            Int           @id @default(autoincrement())
+  messageId     Int           @unique
+  message       Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  primaryEmotion EmotionLabel
+  intensity     Int           // 1–5
+  confidence    Float         // 0–1
+  cultureTag    String?       // e.g., "ARABIC" | "ENGLISH" | "MIXED"
+  notes         String?
+  createdAt     DateTime      @default(now())
+}
+
+model ConversationEmotionState {
+  id               Int          @id @default(autoincrement())
+  conversationId   Int          @unique
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  dominantEmotion  EmotionLabel
+  avgIntensity     Float        @default(0)
+  sadnessScore     Float        @default(0)
+  anxietyScore     Float        @default(0)
+  angerScore       Float        @default(0)
+  lonelinessScore  Float        @default(0)
+  lastUpdatedAt    DateTime     @default(now())
+}
+
+// Emotional Engine v2 — Long-term timeline and user profile
+model EmotionalTimelineEvent {
+  id             Int          @id @default(autoincrement())
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  emotion        EmotionLabel
+  intensity      Int
+  createdAt      DateTime     @default(now())
+  tag            String?
+}
+
+model UserEmotionProfile {
+  id               Int       @id @default(autoincrement())
+  userId           Int       @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sadnessScore     Float     @default(0)
+  anxietyScore     Float     @default(0)
+  angerScore       Float     @default(0)
+  lonelinessScore  Float     @default(0)
+  hopeScore        Float     @default(0)
+  gratitudeScore   Float     @default(0)
+  avgIntensity     Float     @default(0)
+  lastUpdatedAt    DateTime  @default(now())
+}
+
+// Phase 3 — Conversation state machine (predictive conversation flow)
+model ConversationStateMachine {
+  id             Int          @id @default(autoincrement())
+  conversationId Int          @unique
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  currentState   String
+  lastEmotion    EmotionLabel
+  lastUpdatedAt  DateTime     @default(now())
+  notes          String?
+}
+
