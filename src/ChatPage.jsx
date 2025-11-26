@@ -195,6 +195,7 @@ export default function ChatPage() {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [modalText, setModalText] = useState("");
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Free plan limit banner state
   const [limitExceeded, setLimitExceeded] = useState(false);
@@ -238,27 +239,6 @@ export default function ChatPage() {
       },
     ];
   });
-
-  // helper: convert recorded Blob to base64 so we can render user's own voice note as a bubble
-  const blobToBase64 = (blob) =>
-    new Promise((resolve, reject) => {
-      try {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const result = reader.result;
-          if (typeof result === "string") {
-            const commaIndex = result.indexOf(",");
-            resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : result);
-          } else {
-            resolve("");
-          }
-        };
-        reader.onerror = (e) => reject(e);
-        reader.readAsDataURL(blob);
-      } catch (e) {
-        resolve("");
-      }
-    });
 
   useEffect(() => {
     setUsageInfo(user?.usage || null);
@@ -413,6 +393,7 @@ export default function ChatPage() {
 
   const handleStartNewChat = () => {
     try {
+      setIsMobileSidebarOpen(false);
       // Clear UI and reset conversation pointer; backend will create on next send
       setConversationId(null);
       const now = new Date().toISOString();
@@ -460,6 +441,43 @@ export default function ChatPage() {
       setConvError('Failed to load conversation');
     }
   };
+
+  const handleConversationClick = (id) => {
+    handleSelectConversation(id);
+    setIsMobileSidebarOpen(false);
+  };
+
+  const renderSidebarContent = () => (
+    <>
+      <button
+        className="asrar-new-chat-btn"
+        onClick={handleStartNewChat}
+        type="button"
+      >
+        {isAr ? 'بدء محادثة جديدة' : '+ Start new chat'}
+      </button>
+      <div className="asrar-conversation-list">
+        {convLoading && <div className="asrar-conv-item">Loading...</div>}
+        {convError && !convLoading && (
+          <div className="asrar-conv-item">{convError}</div>
+        )}
+        {!convLoading && !convError && Array.isArray(conversations) && conversations.map((conv) => (
+          <div
+            key={conv.id}
+            className={
+              "asrar-conv-item" + (conv.id === conversationId ? " asrar-conv-item--active" : "")
+            }
+            onClick={() => handleConversationClick(conv.id)}
+          >
+            <div className="asrar-conv-title">{getName(character)}</div>
+            <div className="asrar-conv-preview">{(conv.firstUserMessage && conv.firstUserMessage.trim()) ? conv.firstUserMessage.slice(0, 60) : "No messages yet"}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+
+  const mobileSidebarTitle = isAr ? "المحادثات" : "Conversations";
 
   // Persist history whenever messages change
   useEffect(() => {
@@ -571,8 +589,9 @@ export default function ChatPage() {
     return null;
   };
 
-  const sendMessage = async () => {
-    const trimmed = inputValue.trim();
+  const sendMessage = async (overrideText) => {
+    const source = typeof overrideText === "string" ? overrideText : inputValue;
+    const trimmed = source.trim();
     if (!trimmed || isSending) return;
 
     const userMessage = {
@@ -583,7 +602,9 @@ export default function ChatPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
+    if (typeof overrideText !== "string") {
+      setInputValue("");
+    }
 
     const suggested = suggestBetterCompanion(trimmed, selectedCharacterId);
 
@@ -744,8 +765,9 @@ export default function ChatPage() {
   const handleSend = (e) => {
     e.preventDefault();
     if (isRecording) {
-      try { voiceStopIntentRef.current = 'cancel'; } catch (_) {}
+      try { voiceStopIntentRef.current = 'send'; } catch (_) {}
       stopRecording();
+      return;
     }
     sendMessage();
   };
@@ -914,10 +936,6 @@ export default function ChatPage() {
           const blob = new Blob(audioChunksRef.current, { type: mime });
           const ext = mime.includes('ogg') ? 'ogg' : mime.includes('mpeg') ? 'mp3' : 'webm';
           const file = new File([blob], `voice.${ext}`, { type: mime });
-
-          // prepare local base64 copy so the user's own voice input can be shown as a bubble
-          const localUserAudioBase64 = await blobToBase64(blob).catch(() => null);
-
           const form = new FormData();
           form.append('audio', file);
           form.append('characterId', selectedCharacterId);
@@ -984,24 +1002,21 @@ export default function ChatPage() {
 
           if (data.usage) setUsageInfo(data.usage);
 
-          const nextId = messages.length ? messages[messages.length - 1].id + 1 : 1;
-          const nowIso = new Date().toISOString();
-          const userMsg = {
-            id: nextId,
-            from: 'user',
-            text: data.userText || '',
-            audioBase64: localUserAudioBase64 || null,
-            createdAt: nowIso,
-          };
-          const aiMsg = {
-            id: nextId + 1,
-            from: 'ai',
-            text: data.assistantText || '',
-            // attach optional base64 audio so UI can render tap-to-play bubble
-            audioBase64: data.audioBase64 || null,
-            createdAt: nowIso,
-          };
-          setMessages((prev) => [...prev, userMsg, aiMsg]);
+          const transcript = (data.userText || '').trim();
+          if (!transcript) {
+            const errorMessage = {
+              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+              from: 'system',
+              text: isArabicConversation
+                ? 'لم نستطع فهم التسجيل. حاول مرة أخرى.'
+                : 'We could not understand that recording. Try again.',
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            return;
+          }
+
+          await sendMessage(transcript);
           console.log('Mic: voice response OK');
         } catch (err) {
           console.error('Voice send error', err);
@@ -1053,38 +1068,56 @@ export default function ChatPage() {
         isAr={isAr}
         onLangChange={handleLangSwitch}
         onLogout={handleLogout}
+        mobileLeftSlot={
+          <button
+            type="button"
+            className={
+              "asrar-chat-history-toggle" +
+              (isMobileSidebarOpen ? " asrar-chat-history-toggle--active" : "")
+            }
+            onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
+            aria-label={isAr ? "تبديل سجل المحادثة" : "Toggle chat history"}
+            aria-pressed={isMobileSidebarOpen}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="4" y="4" width="4" height="16" rx="1.2" fill="currentColor" />
+              <rect x="11" y="6" width="9" height="2" rx="1" fill="currentColor" />
+              <rect x="11" y="11" width="9" height="2" rx="1" fill="currentColor" />
+              <rect x="11" y="16" width="9" height="2" rx="1" fill="currentColor" />
+            </svg>
+          </button>
+        }
       />
+
+      {isMobileSidebarOpen && (
+        <div className="asrar-chat-mobile-layer" role="dialog" aria-modal="true">
+          <div
+            className="asrar-chat-mobile-overlay"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          ></div>
+          <div className="asrar-chat-mobile-drawer">
+            <div className="asrar-chat-mobile-drawer-header">
+              <span className="asrar-chat-mobile-drawer-title">{mobileSidebarTitle}</span>
+              <button
+                type="button"
+                className="asrar-mobile-close"
+                aria-label={isAr ? "إغلاق" : "Close"}
+                onClick={() => setIsMobileSidebarOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+            {renderSidebarContent()}
+          </div>
+        </div>
+      )}
 
       {/* derive usage counter for header pill */}
       {(() => null)()}
       {/* MAIN */}
       <main className="asrar-chat-layout">
         <aside className="asrar-chat-sidebar">
-          <button
-            className="asrar-new-chat-btn"
-            onClick={handleStartNewChat}
-            type="button"
-          >
-            {isAr ? 'بدء محادثة جديدة' : '+ Start new chat'}
-          </button>
-          <div className="asrar-conversation-list">
-            {convLoading && <div className="asrar-conv-item">Loading…</div>}
-            {convError && !convLoading && (
-              <div className="asrar-conv-item">{convError}</div>
-            )}
-            {!convLoading && !convError && Array.isArray(conversations) && conversations.map((conv) => (
-              <div
-                key={conv.id}
-                className={
-                  "asrar-conv-item" + (conv.id === conversationId ? " asrar-conv-item--active" : "")
-                }
-                onClick={() => handleSelectConversation(conv.id)}
-              >
-                <div className="asrar-conv-title">{getName(character)}</div>
-                <div className="asrar-conv-preview">{(conv.firstUserMessage && conv.firstUserMessage.trim()) ? conv.firstUserMessage.slice(0, 60) : "No messages yet"}</div>
-              </div>
-            ))}
-          </div>
+          {renderSidebarContent()}
         </aside>
         <div className="asrar-chat-main">
           <header className="asrar-chat-header-strip">
@@ -1257,3 +1290,6 @@ export default function ChatPage() {
     </div>
   );
 }
+
+
+

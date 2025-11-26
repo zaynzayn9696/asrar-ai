@@ -474,11 +474,11 @@ export default function Dashboard() {
             <p style={{ marginTop: 0, marginBottom: 14, color: '#9bb0c6' }}>
               {isAr ? "قم بالترقية إلى بريميوم لفتح هذه الشخصية وتجربة كاملة." : "Upgrade to Premium to unlock this character and the full experience."}
             </p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-              <button className="asrar-dash-start-button" onClick={handleUpgrade}>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button className="asrar-dash-start-button" onClick={handleUpgrade} style={{ flex: '1 1 180px' }}>
                 {isAr ? "الترقية إلى بريميوم" : "Upgrade to Premium"}
               </button>
-              <button className="asrar-dash-header-link" onClick={() => setShowPremiumModal(false)}>
+              <button className="asrar-dash-header-link" onClick={() => setShowPremiumModal(false)} style={{ flex: '1 1 180px' }}>
                 {isAr ? "إغلاق" : "Close"}
               </button>
             </div>
@@ -488,3 +488,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

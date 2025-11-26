@@ -398,6 +398,22 @@
   gap: 10px;
 }
 
+@media (max-width: 600px) {
+  .asrar-modal {
+    margin: 0 16px;
+  }
+
+  .asrar-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .asrar-modal-actions .asrar-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* Success toast for Settings */
 .asrar-success {
   position: fixed;

@@ -24,6 +24,82 @@
   z-index: 50;
 }
 
+.asrar-chat-mobile-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.asrar-chat-mobile-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.asrar-chat-mobile-drawer {
+  position: relative;
+  z-index: 71;
+  width: min(320px, 84vw);
+  height: 100%;
+  padding: 1.2rem 1rem 1.6rem;
+  background: radial-gradient(circle at top left, #081429 0, #02040b 75%);
+  border-right: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 24px 0 50px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  animation: asrar-chat-drawer 0.25s ease forwards;
+}
+
+.asrar-chat-mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.asrar-chat-mobile-drawer-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  color: #e8f8ff;
+  text-transform: uppercase;
+}
+
+.asrar-chat-mobile-drawer .asrar-mobile-close {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(5, 10, 18, 0.9);
+  color: #e8f8ff;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.asrar-chat-mobile-drawer .asrar-mobile-close:hover {
+  border-color: #18d1da;
+  color: #18d1da;
+}
+
+@keyframes asrar-chat-drawer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
 /* Make the top site header sticky only on chat page */
 
 
@@ -76,8 +152,7 @@
 
 @media (max-width: 900px) {
   .asrar-chat-sidebar {
-    position: static;
-    max-height: none;
+    display: none;
   }
 }
 

@@ -5,7 +5,7 @@ import { useAuth } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 import defaultAvatar from "./assets/favicon.png";
 
-export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, externalMobileNavOpen, setExternalMobileNavOpen }) {
+export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, externalMobileNavOpen, setExternalMobileNavOpen, mobileLeftSlot }) {
   // Use external state if provided, otherwise use internal state
   const [internalMobileNavOpen, setInternalMobileNavOpen] = useState(false);
   const isMobileNavOpen = externalMobileNavOpen !== undefined ? externalMobileNavOpen : internalMobileNavOpen;
@@ -76,6 +76,11 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
       {/* TOP HEADER (desktop) */}
       <header className="asrar-dash-header">
         <div className="asrar-dash-header-left">
+          {mobileLeftSlot && (
+            <div className="asrar-header-mobile-slot">
+              {mobileLeftSlot}
+            </div>
+          )}
           <Link to="/" className="asrar-dash-logo-wrap">
             <span className="asrar-dash-brand">ASRAR AI</span>
           </Link>
@@ -191,86 +196,103 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
         </div>
       </header>
 
-      {/* MOBILE NAV DROPDOWN */}
+      {/* MOBILE NAV DRAWER */}
       {isMobileNavOpen && (
-        <nav className="asrar-dash-mobile-nav">
-          {/* language toggle inside dropdown */}
-          <div className="asrar-lang-toggle asrar-dash-mobile-lang">
-            <button
-              className={lang === "en" ? "active" : ""}
-              onClick={() => handleLangSwitch("en")}
-            >
-              EN
-            </button>
-            <button
-              className={lang === "ar" ? "active" : ""}
-              onClick={() => handleLangSwitch("ar")}
-            >
-              عربي
-            </button>
-          </div>
-
-          {/* Emotional Engine (mobile) – shown for all users */}
-          <Link to="/#emotional-engine" onClick={() => setIsMobileNavOpen(false)}>
-            {engineLabel}
-          </Link>
-
-          {/* Logged-out: show auth buttons */}
-          {!user && (
-            <div className="asrar-header-auth-buttons asrar-dash-mobile-auth">
-              <Link to="/login" className="asrar-btn ghost" onClick={() => setIsMobileNavOpen(false)}>
-                {authLabels.login}
-              </Link>
-              <Link to="/create-account" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
-                {authLabels.signup}
-              </Link>
+        <div className="asrar-dash-mobile-layer" role="dialog" aria-modal="true">
+          <div
+            className="asrar-dash-mobile-overlay"
+            onClick={() => setIsMobileNavOpen(false)}
+          ></div>
+          <nav className="asrar-dash-mobile-nav asrar-dash-mobile-nav--open">
+            <div className="asrar-dash-mobile-nav-header">
+              <span className="asrar-home-mobile-nav-title">ASRAR AI</span>
+              <button
+                className="asrar-mobile-close"
+                aria-label={isAr ? "إغلاق" : "Close navigation"}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
+                &times;
+              </button>
             </div>
-          )}
 
-          {/* Logged-in: show dashboard links */}
-          {user && (
-            <>
-              {/* main links */}
-              <Link to="/" onClick={() => setIsMobileNavOpen(false)}>
-                {nav.home}
-              </Link>
-              <Link to="/dashboard" onClick={() => setIsMobileNavOpen(false)}>
-                {nav.dashboard}
-              </Link>
-              <Link to="/history" onClick={() => setIsMobileNavOpen(false)}>
-                {nav.history}
-              </Link>
-              <Link to="/chat" onClick={() => setIsMobileNavOpen(false)}>
-                {nav.chat}
-              </Link>
-
-              {/* extra actions */}
+            {/* language toggle inside dropdown */}
+            <div className="asrar-lang-toggle asrar-dash-mobile-lang">
               <button
-                type="button"
-                className="asrar-dash-mobile-nav-btn"
-                onClick={() => goTo("/settings")}
+                className={lang === "en" ? "active" : ""}
+                onClick={() => handleLangSwitch("en")}
               >
-                {nav.settings}
+                EN
               </button>
-
               <button
-                type="button"
-                className="asrar-dash-mobile-nav-btn"
-                onClick={() => goTo("/billing")}
+                className={lang === "ar" ? "active" : ""}
+                onClick={() => handleLangSwitch("ar")}
               >
-                {nav.billing}
+                عربي
               </button>
+            </div>
 
-              <button
-                type="button"
-                className="asrar-dash-mobile-nav-btn asrar-dash-mobile-nav-danger"
-                onClick={handleLogout}
-              >
-                {nav.logout}
-              </button>
-            </>
-          )}
-        </nav>
+            {/* Emotional Engine (mobile) – shown for all users */}
+            <Link to="/#emotional-engine" onClick={() => setIsMobileNavOpen(false)}>
+              {engineLabel}
+            </Link>
+
+            {/* Logged-out: show auth buttons */}
+            {!user && (
+              <div className="asrar-header-auth-buttons asrar-dash-mobile-auth">
+                <Link to="/login" className="asrar-btn ghost" onClick={() => setIsMobileNavOpen(false)}>
+                  {authLabels.login}
+                </Link>
+                <Link to="/create-account" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
+                  {authLabels.signup}
+                </Link>
+              </div>
+            )}
+
+            {/* Logged-in: show dashboard links */}
+            {user && (
+              <>
+                {/* main links */}
+                <Link to="/" onClick={() => setIsMobileNavOpen(false)}>
+                  {nav.home}
+                </Link>
+                <Link to="/dashboard" onClick={() => setIsMobileNavOpen(false)}>
+                  {nav.dashboard}
+                </Link>
+                <Link to="/history" onClick={() => setIsMobileNavOpen(false)}>
+                  {nav.history}
+                </Link>
+                <Link to="/chat" onClick={() => setIsMobileNavOpen(false)}>
+                  {nav.chat}
+                </Link>
+
+                {/* extra actions */}
+                <button
+                  type="button"
+                  className="asrar-dash-mobile-nav-btn"
+                  onClick={() => goTo("/settings")}
+                >
+                  {nav.settings}
+                </button>
+
+                <button
+                  type="button"
+                  className="asrar-dash-mobile-nav-btn"
+                  onClick={() => goTo("/billing")}
+                >
+                  {nav.billing}
+                </button>
+
+                <button
+                  type="button"
+                  className="asrar-dash-mobile-nav-btn asrar-dash-mobile-nav-danger"
+                  onClick={handleLogout}
+                >
+                  {nav.logout}
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
       )}
     </>
   );
