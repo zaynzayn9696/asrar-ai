@@ -62,7 +62,7 @@ const CHARACTERS = [
 
 // --- DIALECTS ---------------------------------------------
 const DIALECTS = [
-  { id: "msa", labelEn: "Modern Standard Arabic", labelAr: "العربية الفصحى" },
+  { id: "msa", labelEn: "Modern Standard Arabic", labelAr: "العربية الفصحى الحديثة" },
   { id: "jo", labelEn: "Jordanian Arabic", labelAr: "اللهجة الأردنية" },
   { id: "sy", labelEn: "Syrian Arabic", labelAr: "اللهجة السورية" },
   { id: "lb", labelEn: "Lebanese Arabic", labelAr: "اللهجة اللبنانية" },
@@ -75,7 +75,7 @@ const DIALECTS = [
   { id: "bh", labelEn: "Bahraini Arabic", labelAr: "اللهجة البحرينية" },
   { id: "om", labelEn: "Omani Arabic", labelAr: "اللهجة العُمانية" },
   { id: "ye", labelEn: "Yemeni Arabic", labelAr: "اللهجة اليمنية" },
-  { id: "en", labelEn: "English", labelAr: "الإنجليزية" },
+  { id: "en", labelEn: "English", labelAr: "اللغة الإنجليزية" },
 ];
 
 // --- LANGUAGE ---------------------------------------------
@@ -488,4 +488,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
 

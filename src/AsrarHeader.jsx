@@ -1,15 +1,26 @@
-﻿// src/AsrarHeader.jsx
+// src/AsrarHeader.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
-import { API_BASE } from "./apiBase";
 import defaultAvatar from "./assets/favicon.png";
 
-export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, externalMobileNavOpen, setExternalMobileNavOpen, mobileLeftSlot }) {
+export default function AsrarHeader({
+  lang,
+  isAr,
+  onLangChange,
+  onLogout,
+  externalMobileNavOpen,
+  setExternalMobileNavOpen,
+  mobileLeftSlot,
+}) {
   // Use external state if provided, otherwise use internal state
   const [internalMobileNavOpen, setInternalMobileNavOpen] = useState(false);
-  const isMobileNavOpen = externalMobileNavOpen !== undefined ? externalMobileNavOpen : internalMobileNavOpen;
-  const setIsMobileNavOpen = setExternalMobileNavOpen || setInternalMobileNavOpen;
+  const isMobileNavOpen =
+    externalMobileNavOpen !== undefined
+      ? externalMobileNavOpen
+      : internalMobileNavOpen;
+  const setIsMobileNavOpen =
+    setExternalMobileNavOpen || setInternalMobileNavOpen;
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const navigate = useNavigate();
@@ -25,17 +36,17 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
     onLangChange?.(newLang);
   };
 
-  const engineLabel = isAr ? 'Ù…Ø­Ø±Ùƒ Ø§Ù„Ù…Ø´Ø§Ø¹Ø±' : 'Emotional Engine';
+  const engineLabel = isAr ? "محرك المشاعر" : "Emotional Engine";
 
   const nav = isAr
     ? {
-        home: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
-        dashboard: "Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…",
-        history: "Ø³Ø¬Ù„ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø§Øª",
-        chat: "Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©",
-        settings: "Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª",
-        billing: "Ø§Ù„ÙÙˆØªØ±Ø© ÙˆØ§Ù„Ø§Ø´ØªØ±Ø§Ùƒ",
-        logout: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬",
+        home: "الرئيسية",
+        dashboard: "لوحة التحكم",
+        history: "سجل المحادثة",
+        chat: "المحادثة",
+        settings: "الإعدادات",
+        billing: "الفوترة والاشتراك",
+        logout: "تسجيل الخروج",
       }
     : {
         home: "Home",
@@ -48,7 +59,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
       };
 
   const authLabels = isAr
-    ? { login: "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„", signup: "Ø£Ù†Ø´Ø¦ Ø­Ø³Ø§Ø¨Ù‹Ø§" }
+    ? { login: "تسجيل الدخول", signup: "إنشاء حساب" }
     : { login: "Login", signup: "Create Account" };
 
   const goTo = (path) => {
@@ -63,7 +74,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
     } else {
       alert(
         isAr
-          ? "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬ Ø³ÙŠØªÙ… Ø±Ø¨Ø·Ù‡ Ù„Ø§Ø­Ù‚Ø§Ù‹."
+          ? "تسجيل الخروج سيتم ربطه لاحقاً."
           : "Logout will be wired to auth later."
       );
     }
@@ -73,13 +84,11 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
 
   return (
     <>
-      {/* TOP HEADER (desktop) */}
+      {/* TOP HEADER (desktop + mobile) */}
       <header className="asrar-dash-header">
         <div className="asrar-dash-header-left">
           {mobileLeftSlot && (
-            <div className="asrar-header-mobile-slot">
-              {mobileLeftSlot}
-            </div>
+            <div className="asrar-header-mobile-slot">{mobileLeftSlot}</div>
           )}
           <Link to="/" className="asrar-dash-logo-wrap">
             <span className="asrar-dash-brand">ASRAR AI</span>
@@ -99,7 +108,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               className={lang === "ar" ? "active" : ""}
               onClick={() => handleLangSwitch("ar")}
             >
-              Ø¹Ø±Ø¨ÙŠ
+              عربي
             </button>
           </div>
 
@@ -132,11 +141,12 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               <Link to="/history" className="asrar-dash-header-link">
                 {nav.history}
               </Link>
-              {user?.email && user.email.toLowerCase() === 'zaynzayn9696@gmail.com' && (
-                <Link to="/admin" className="asrar-dash-header-link">
-                  {isAr ? 'Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©' : 'Admin'}
-                </Link>
-              )}
+              {user?.email &&
+                user.email.toLowerCase() === "zaynzayn9696@gmail.com" && (
+                  <Link to="/admin" className="asrar-dash-header-link">
+                    {isAr ? "الإدارة" : "Admin"}
+                  </Link>
+                )}
 
               {/* user avatar + dropdown */}
               <div className="asrar-dash-header-user">
@@ -182,11 +192,11 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               </div>
             </>
           )}
-          
+
           {/* mobile menu toggle - always visible */}
           <button
             className="asrar-header-menu asrar-dash-header-menu-toggle"
-            aria-label="Toggle navigation"
+            aria-label={isAr ? "تبديل القائمة" : "Toggle navigation"}
             onClick={() => setIsMobileNavOpen((prev) => !prev)}
           >
             <span className="asrar-header-menu-line"></span>
@@ -208,7 +218,7 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
               <span className="asrar-home-mobile-nav-title">ASRAR AI</span>
               <button
                 className="asrar-mobile-close"
-                aria-label={isAr ? "?????" : "Close navigation"}
+                aria-label={isAr ? "إغلاق" : "Close navigation"}
                 onClick={() => setIsMobileNavOpen(false)}
               >
                 &times;
@@ -227,22 +237,33 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
                 className={lang === "ar" ? "active" : ""}
                 onClick={() => handleLangSwitch("ar")}
               >
-                Ø¹Ø±Ø¨ÙŠ
+                عربي
               </button>
             </div>
 
-            {/* Emotional Engine (mobile) â€“ shown for all users */}
-            <Link to="/#emotional-engine" onClick={() => setIsMobileNavOpen(false)}>
+            {/* Emotional Engine (mobile) – shown for all users */}
+            <Link
+              to="/#emotional-engine"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
               {engineLabel}
             </Link>
 
             {/* Logged-out: show auth buttons */}
             {!user && (
               <div className="asrar-header-auth-buttons asrar-dash-mobile-auth">
-                <Link to="/login" className="asrar-btn ghost" onClick={() => setIsMobileNavOpen(false)}>
+                <Link
+                  to="/login"
+                  className="asrar-btn ghost"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
                   {authLabels.login}
                 </Link>
-                <Link to="/create-account" className="asrar-btn primary" onClick={() => setIsMobileNavOpen(false)}>
+                <Link
+                  to="/create-account"
+                  className="asrar-btn primary"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
                   {authLabels.signup}
                 </Link>
               </div>
@@ -251,11 +272,13 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
             {/* Logged-in: show dashboard links */}
             {user && (
               <>
-                {/* main links */}
                 <Link to="/" onClick={() => setIsMobileNavOpen(false)}>
                   {nav.home}
                 </Link>
-                <Link to="/dashboard" onClick={() => setIsMobileNavOpen(false)}>
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsMobileNavOpen(false)}
+                >
                   {nav.dashboard}
                 </Link>
                 <Link to="/history" onClick={() => setIsMobileNavOpen(false)}>
@@ -265,7 +288,6 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
                   {nav.chat}
                 </Link>
 
-                {/* extra actions */}
                 <button
                   type="button"
                   className="asrar-dash-mobile-nav-btn"
@@ -297,7 +319,3 @@ export default function AsrarHeader({ lang, isAr, onLangChange, onLogout, extern
     </>
   );
 }
-
-
-
-

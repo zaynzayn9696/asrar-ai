@@ -1,4 +1,4 @@
-// src/ChatPage.jsx
+﻿// src/ChatPage.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./ChatPage.css";
@@ -60,7 +60,7 @@ const CHARACTERS = [
 
 // dialects (same as dashboard)
 const DIALECTS = [
-  { id: "msa", labelEn: "Modern Standard Arabic", labelAr: "العربية الفصحى" },
+  { id: "msa", labelEn: "Modern Standard Arabic", labelAr: "العربية الفصحى الحديثة" },
   { id: "jo", labelEn: "Jordanian Arabic", labelAr: "اللهجة الأردنية" },
   { id: "sy", labelEn: "Syrian Arabic", labelAr: "اللهجة السورية" },
   { id: "lb", labelEn: "Lebanese Arabic", labelAr: "اللهجة اللبنانية" },
@@ -73,7 +73,7 @@ const DIALECTS = [
   { id: "bh", labelEn: "Bahraini Arabic", labelAr: "اللهجة البحرينية" },
   { id: "om", labelEn: "Omani Arabic", labelAr: "اللهجة العُمانية" },
   { id: "ye", labelEn: "Yemeni Arabic", labelAr: "اللهجة اليمنية" },
-  { id: "en", labelEn: "English", labelAr: "الإنجليزية" },
+  { id: "en", labelEn: "English", labelAr: "اللغة الإنجليزية" },
 ];
 
 // language helpers
@@ -115,17 +115,17 @@ const TONES_UI = [
   {
     id: "energetic",
     labelEn: "Energetic & Motivating",
-    labelAr: "حيوي ومحفِّز",
+    labelAr: "متحمس ومحفز",
   },
   {
     id: "strict",
     labelEn: "Direct & Honest",
-    labelAr: "صريح ومباشر",
+    labelAr: "مباشر وصريح",
   },
   {
     id: "soft",
     labelEn: "Soft & Empathetic",
-    labelAr: "لطيف ومتفهِّم",
+    labelAr: "لطيف ومتفهّم",
   },
 ];
 
@@ -142,10 +142,10 @@ const TEXT = {
   },
   ar: {
     typingPlaceholder: "اكتب ما تشعر به الآن…",
-    systemIntro: "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا.",
-    dialectLabel: "لهجة المحادثة",
-    toneLabel: "نبرة الحديث",
-    changeCompanion: "تغيير الرفيق",
+    systemIntro: "هذه مساحتك الخاصة. لا حكم على ما تقوله هنا.",
+    dialectLabel: "لهجة التواصل",
+    toneLabel: "النبرة العاطفية",
+    changeCompanion: "غيّر الرفيق",
     you: "أنت",
   },
 };
@@ -225,7 +225,7 @@ export default function ChatPage() {
         id: 1,
         from: "system",
         text: isArabicConversation
-          ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+          ? "┘ç╪░┘ç ┘à╪│╪º╪¡╪¬┘â ╪º┘ä╪«╪º╪╡╪⌐. ┘ä╪º ╪ú╪¡╪» ┘è╪¡┘â┘à ╪╣┘ä┘ë ┘à╪º ╪¬┘é┘ê┘ä┘ç ┘ç┘å╪º."
           : "This is your private space. Nothing you say here is judged.",
         createdAt: now,
       },
@@ -233,7 +233,7 @@ export default function ChatPage() {
         id: 2,
         from: "ai",
         text: isArabicConversation
-          ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+          ? `╪ú┘ç┘ä╪º┘ï╪î ╪ú┘å╪º ${characterDisplayName}. ╪ú┘å╪º ┘ç┘å╪º ╪¿╪º┘ä┘â╪º┘à┘ä ┘ä┘â. ╪«╪░ ╪▒╪º╪¡╪¬┘â ┘ü┘è ╪º┘ä┘â╪¬╪º╪¿╪⌐╪î ┘ê┘ä╪º ┘è┘ê╪¼╪» ╪┤┘è╪í ╪¬╪º┘ü┘ç ╪ú┘ê ┘â╪½┘è╪▒.`
           : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
         createdAt: now,
       },
@@ -402,7 +402,7 @@ export default function ChatPage() {
           id: 1,
           from: 'system',
           text: isArabicConversation
-            ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+            ? "┘ç╪░┘ç ┘à╪│╪º╪¡╪¬┘â ╪º┘ä╪«╪º╪╡╪⌐. ┘ä╪º ╪ú╪¡╪» ┘è╪¡┘â┘à ╪╣┘ä┘ë ┘à╪º ╪¬┘é┘ê┘ä┘ç ┘ç┘å╪º."
             : "This is your private space. Nothing you say here is judged.",
           createdAt: now,
         },
@@ -410,7 +410,7 @@ export default function ChatPage() {
           id: 2,
           from: 'ai',
           text: isArabicConversation
-            ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+            ? `╪ú┘ç┘ä╪º┘ï╪î ╪ú┘å╪º ${characterDisplayName}. ╪ú┘å╪º ┘ç┘å╪º ╪¿╪º┘ä┘â╪º┘à┘ä ┘ä┘â. ╪«╪░ ╪▒╪º╪¡╪¬┘â ┘ü┘è ╪º┘ä┘â╪¬╪º╪¿╪⌐╪î ┘ê┘ä╪º ┘è┘ê╪¼╪» ╪┤┘è╪í ╪¬╪º┘ü┘ç ╪ú┘ê ┘â╪½┘è╪▒.`
             : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
           createdAt: now,
         },
@@ -454,7 +454,7 @@ export default function ChatPage() {
         onClick={handleStartNewChat}
         type="button"
       >
-        {isAr ? "??? ?????? ?????" : "+ Start new chat"}
+        {isAr ? "+ ابدأ محادثة جديدة" : "+ Start new chat"}
       </button>
       <div className="asrar-conversation-list">
         {convLoading && <div className="asrar-conv-item">Loading...</div>}
@@ -477,7 +477,7 @@ export default function ChatPage() {
     </>
   );
 
-  const mobileSidebarTitle = isAr ? "?????????" : "Conversations";
+  const mobileSidebarTitle = isAr ? "المحادثات" : "Conversations";
 
   // Persist history whenever messages change
   useEffect(() => {
@@ -528,6 +528,7 @@ export default function ChatPage() {
         "routine",
         "schedule",
         "plan my day",
+        "مذاكرة",
         "دراسة",
         "امتحان",
         "امتحانات",
@@ -536,6 +537,9 @@ export default function ChatPage() {
         "شغل",
         "وظيفة",
         "روتين",
+        "تركيز",
+        "خطة",
+        "جدول",
       ])
     ) {
       suggestedId = "rashid";
@@ -552,6 +556,8 @@ export default function ChatPage() {
         "نكت",
         "مزح",
         "فرفشة",
+        "اضحكني",
+        "ضحكني",
       ])
     ) {
       suggestedId = "farah";
@@ -568,12 +574,18 @@ export default function ChatPage() {
         "guide me",
         "life direction",
         "purpose",
-        "زوجتي",
-        "زوجي",
-        "زواج",
-        "أهلي",
-        "أهل",
         "عائلة",
+        "أهل",
+        "أب",
+        "أم",
+        "والدي",
+        "والدتي",
+        "زواج",
+        "خطوبة",
+        "نصيحة",
+        "توجيه",
+        "مسار الحياة",
+        "هدف",
       ])
     ) {
       suggestedId = "abu-zain";
@@ -659,7 +671,7 @@ export default function ChatPage() {
         if (data && data.code === "PRO_CHARACTER_LOCKED") {
           setModalText(
             isArabicConversation
-              ? "هذه الشخصية متاحة فقط في خطة برو. بإمكانك الترقية لفتح جميع الرفقاء."
+              ? "┘ç╪░┘ç ╪º┘ä╪┤╪«╪╡┘è╪⌐ ┘à╪¬╪º╪¡╪⌐ ┘ü┘é╪╖ ┘ü┘è ╪«╪╖╪⌐ ╪¿╪▒┘ê. ╪¿╪Ñ┘à┘â╪º┘å┘â ╪º┘ä╪¬╪▒┘é┘è╪⌐ ┘ä┘ü╪¬╪¡ ╪¼┘à┘è╪╣ ╪º┘ä╪▒┘ü┘é╪º╪í."
               : "This companion is available on the Pro plan. Upgrade to unlock all characters."
           );
           setShowLockedModal(true);
@@ -671,8 +683,8 @@ export default function ChatPage() {
           if (isArabicConversation) {
             setModalText(
               data.limitType === "monthly"
-                ? "وصلت إلى حد ٣٠٠٠ رسالة هذا الشهر. يرجى الانتظار حتى الشهر القادم أو التواصل مع الدعم."
-                : "وصلت إلى حدك اليومي في الخطة المجانية. قم بالترقية إلى بريميوم للحصول على ٣٠٠٠ رسالة شهريًا."
+                ? "┘ê╪╡┘ä╪¬ ╪Ñ┘ä┘ë ╪¡╪» ┘ú┘á┘á┘á ╪▒╪│╪º┘ä╪⌐ ┘ç╪░╪º ╪º┘ä╪┤┘ç╪▒. ┘è╪▒╪¼┘ë ╪º┘ä╪º┘å╪¬╪╕╪º╪▒ ╪¡╪¬┘ë ╪º┘ä╪┤┘ç╪▒ ╪º┘ä┘é╪º╪»┘à ╪ú┘ê ╪º┘ä╪¬┘ê╪º╪╡┘ä ┘à╪╣ ╪º┘ä╪»╪╣┘à."
+                : "┘ê╪╡┘ä╪¬ ╪Ñ┘ä┘ë ╪¡╪»┘â ╪º┘ä┘è┘ê┘à┘è ┘ü┘è ╪º┘ä╪«╪╖╪⌐ ╪º┘ä┘à╪¼╪º┘å┘è╪⌐. ┘é┘à ╪¿╪º┘ä╪¬╪▒┘é┘è╪⌐ ╪Ñ┘ä┘ë ╪¿╪▒┘è┘à┘è┘ê┘à ┘ä┘ä╪¡╪╡┘ê┘ä ╪╣┘ä┘ë ┘ú┘á┘á┘á ╪▒╪│╪º┘ä╪⌐ ╪┤┘ç╪▒┘è┘ï╪º."
             );
           } else {
             setModalText(
@@ -689,7 +701,7 @@ export default function ChatPage() {
           id: userMessage.id + 1,
           from: "system",
           text: isArabicConversation
-            ? "حدث خطأ أثناء توليد الرد. حاول مرة أخرى لاحقاً."
+            ? "╪¡╪»╪½ ╪«╪╖╪ú ╪ú╪½┘å╪º╪í ╪¬┘ê┘ä┘è╪» ╪º┘ä╪▒╪». ╪¡╪º┘ê┘ä ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë ┘ä╪º╪¡┘é╪º┘ï."
             : "Something went wrong while generating a reply. Please try again later.",
           createdAt: new Date().toISOString(),
         };
@@ -700,7 +712,7 @@ export default function ChatPage() {
       if (data.usage) setUsageInfo(data.usage);
 
       const aiText = data.reply || (isArabicConversation
-        ? `واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل.`
+        ? `┘ê╪º╪¼┘ç╪¬ ┘à╪┤┘â┘ä╪⌐ ╪¿╪│┘è╪╖╪⌐ ┘ü┘è ╪º┘ä╪º╪¬╪╡╪º┘ä. ╪¡╪º┘ê┘ä ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë ╪¿╪╣╪» ┘é┘ä┘è┘ä.`
         : "I had a small issue connecting. Please try again in a moment.");
       let finalText = aiText;
       if (suggested) {
@@ -709,11 +721,11 @@ export default function ChatPage() {
         const alreadyMentions = (
           (suggestedName && lower.includes(suggestedName.toLowerCase())) ||
           lower.includes('switch to') ||
-          finalText.includes('تقدر تنتقل')
+          finalText.includes('╪¬┘é╪»╪▒ ╪¬┘å╪¬┘é┘ä')
         );
         if (!alreadyMentions) {
           const rec = isArabicConversation
-            ? `لو حابّ توجيه عملي أكثر في هذا الموضوع، ممكن تجرب الدردشة مع ${suggestedName}.`
+            ? `┘ä┘ê ╪¡╪º╪¿┘æ ╪¬┘ê╪¼┘è┘ç ╪╣┘à┘ä┘è ╪ú┘â╪½╪▒ ┘ü┘è ┘ç╪░╪º ╪º┘ä┘à┘ê╪╢┘ê╪╣╪î ┘à┘à┘â┘å ╪¬╪¼╪▒╪¿ ╪º┘ä╪»╪▒╪»╪┤╪⌐ ┘à╪╣ ${suggestedName}.`
             : `If you'd like more practical guidance focused on this topic, you can try chatting with ${suggestedName}.`;
           finalText = `${finalText}\n\n${rec}`;
         }
@@ -752,7 +764,7 @@ export default function ChatPage() {
         id: userMessage.id + 1,
         from: "system",
         text: isArabicConversation
-          ? "حدث خطأ أثناء توليد الرد. حاول مرة أخرى لاحقاً."
+          ? "╪¡╪»╪½ ╪«╪╖╪ú ╪ú╪½┘å╪º╪í ╪¬┘ê┘ä┘è╪» ╪º┘ä╪▒╪». ╪¡╪º┘ê┘ä ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë ┘ä╪º╪¡┘é╪º┘ï."
           : "Something went wrong while generating a reply. Please try again later.",
         createdAt: new Date().toISOString(),
       };
@@ -800,7 +812,7 @@ export default function ChatPage() {
           id: messages.length ? messages[messages.length - 1].id + 1 : 1,
           from: 'system',
           text: isArabicConversation
-            ? 'الميكروفون غير مدعوم في المتصفح أو يجب فتح الصفحة عبر اتصال آمن.'
+            ? '╪º┘ä┘à┘è┘â╪▒┘ê┘ü┘ê┘å ╪║┘è╪▒ ┘à╪»╪╣┘ê┘à ┘ü┘è ╪º┘ä┘à╪¬╪╡┘ü╪¡ ╪ú┘ê ┘è╪¼╪¿ ┘ü╪¬╪¡ ╪º┘ä╪╡┘ü╪¡╪⌐ ╪╣╪¿╪▒ ╪º╪¬╪╡╪º┘ä ╪ó┘à┘å.'
             : 'Microphone is not supported or a secure context is required.',
           createdAt: new Date().toISOString(),
         };
@@ -817,7 +829,7 @@ export default function ChatPage() {
           id: messages.length ? messages[messages.length - 1].id + 1 : 1,
           from: 'system',
           text: isArabicConversation
-            ? 'يلزم اتصال آمن (HTTPS) لاستخدام الميكروفون. جرّب فتح الصفحة عبر https أو عبر localhost.'
+            ? '┘è┘ä╪▓┘à ╪º╪¬╪╡╪º┘ä ╪ó┘à┘å (HTTPS) ┘ä╪º╪│╪¬╪«╪»╪º┘à ╪º┘ä┘à┘è┘â╪▒┘ê┘ü┘ê┘å. ╪¼╪▒┘æ╪¿ ┘ü╪¬╪¡ ╪º┘ä╪╡┘ü╪¡╪⌐ ╪╣╪¿╪▒ https ╪ú┘ê ╪╣╪¿╪▒ localhost.'
             : 'A secure context (HTTPS) is required for microphone access. Open via https or localhost.',
           createdAt: new Date().toISOString(),
         };
@@ -837,7 +849,7 @@ export default function ChatPage() {
               id: messages.length ? messages[messages.length - 1].id + 1 : 1,
               from: 'system',
               text: isArabicConversation
-                ? 'لم يتم العثور على ميكروفون متصل بالجهاز.'
+                ? '┘ä┘à ┘è╪¬┘à ╪º┘ä╪╣╪½┘ê╪▒ ╪╣┘ä┘ë ┘à┘è┘â╪▒┘ê┘ü┘ê┘å ┘à╪¬╪╡┘ä ╪¿╪º┘ä╪¼┘ç╪º╪▓.'
                 : 'No microphone appears to be connected to this device.',
               createdAt: new Date().toISOString(),
             };
@@ -860,7 +872,7 @@ export default function ChatPage() {
               id: messages.length ? messages[messages.length - 1].id + 1 : 1,
               from: 'system',
               text: isArabicConversation
-                ? 'لم يتم العثور على ميكروفون في هذا الجهاز.'
+                ? '┘ä┘à ┘è╪¬┘à ╪º┘ä╪╣╪½┘ê╪▒ ╪╣┘ä┘ë ┘à┘è┘â╪▒┘ê┘ü┘ê┘å ┘ü┘è ┘ç╪░╪º ╪º┘ä╪¼┘ç╪º╪▓.'
                 : 'No microphone was found on this device.',
               createdAt: new Date().toISOString(),
             };
@@ -874,7 +886,7 @@ export default function ChatPage() {
               id: messages.length ? messages[messages.length - 1].id + 1 : 1,
               from: 'system',
               text: isArabicConversation
-                ? 'تعذّر الوصول إلى الميكروفون. تحقّق من الإعدادات والأذونات.'
+                ? '╪¬╪╣╪░┘æ╪▒ ╪º┘ä┘ê╪╡┘ê┘ä ╪Ñ┘ä┘ë ╪º┘ä┘à┘è┘â╪▒┘ê┘ü┘ê┘å. ╪¬╪¡┘é┘æ┘é ┘à┘å ╪º┘ä╪Ñ╪╣╪»╪º╪»╪º╪¬ ┘ê╪º┘ä╪ú╪░┘ê┘å╪º╪¬.'
                 : 'Could not access the microphone. Please check settings and permissions.',
               createdAt: new Date().toISOString(),
             };
@@ -886,7 +898,7 @@ export default function ChatPage() {
             id: messages.length ? messages[messages.length - 1].id + 1 : 1,
             from: 'system',
             text: isArabicConversation
-              ? 'تم رفض إذن الميكروفون. الرجاء السماح للمتصفح باستخدام الميكروفون.'
+              ? '╪¬┘à ╪▒┘ü╪╢ ╪Ñ╪░┘å ╪º┘ä┘à┘è┘â╪▒┘ê┘ü┘ê┘å. ╪º┘ä╪▒╪¼╪º╪í ╪º┘ä╪│┘à╪º╪¡ ┘ä┘ä┘à╪¬╪╡┘ü╪¡ ╪¿╪º╪│╪¬╪«╪»╪º┘à ╪º┘ä┘à┘è┘â╪▒┘ê┘ü┘ê┘å.'
               : 'Microphone permission was denied. Please allow access and try again.',
             createdAt: new Date().toISOString(),
           };
@@ -968,7 +980,7 @@ export default function ChatPage() {
             if (data && data.code === 'VOICE_PRO_ONLY') {
               setModalText(
                 isArabicConversation
-                  ? 'المحادثة الصوتية متاحة فقط لمشتركي برو.'
+                  ? '╪º┘ä┘à╪¡╪º╪»╪½╪⌐ ╪º┘ä╪╡┘ê╪¬┘è╪⌐ ┘à╪¬╪º╪¡╪⌐ ┘ü┘é╪╖ ┘ä┘à╪┤╪¬╪▒┘â┘è ╪¿╪▒┘ê.'
                   : 'Voice chat is available for Pro members only.'
               );
               setShowLockedModal(true);
@@ -979,8 +991,8 @@ export default function ChatPage() {
               setModalText(
                 isArabicConversation
                   ? data.limitType === 'monthly'
-                    ? 'وصلت للحد الشهري للرسائل. يمكنك الترقية إلى برو لحدود أعلى.'
-                    : 'وصلت للحد اليومي للرسائل. يمكنك الترقية إلى برو لحدود أعلى.'
+                    ? '┘ê╪╡┘ä╪¬ ┘ä┘ä╪¡╪» ╪º┘ä╪┤┘ç╪▒┘è ┘ä┘ä╪▒╪│╪º╪ª┘ä. ┘è┘à┘â┘å┘â ╪º┘ä╪¬╪▒┘é┘è╪⌐ ╪Ñ┘ä┘ë ╪¿╪▒┘ê ┘ä╪¡╪»┘ê╪» ╪ú╪╣┘ä┘ë.'
+                    : '┘ê╪╡┘ä╪¬ ┘ä┘ä╪¡╪» ╪º┘ä┘è┘ê┘à┘è ┘ä┘ä╪▒╪│╪º╪ª┘ä. ┘è┘à┘â┘å┘â ╪º┘ä╪¬╪▒┘é┘è╪⌐ ╪Ñ┘ä┘ë ╪¿╪▒┘ê ┘ä╪¡╪»┘ê╪» ╪ú╪╣┘ä┘ë.'
                   : data.limitType === 'monthly'
                   ? 'You have reached your monthly message limit. Upgrade to Pro for higher limits.'
                   : 'You have reached your daily message limit. Upgrade to Pro for higher limits.'
@@ -992,7 +1004,7 @@ export default function ChatPage() {
               id: messages.length ? messages[messages.length - 1].id + 1 : 1,
               from: 'system',
               text: isArabicConversation
-                ? 'فشل إرسال الصوت. حاول مرة أخرى.'
+                ? '┘ü╪┤┘ä ╪Ñ╪▒╪│╪º┘ä ╪º┘ä╪╡┘ê╪¬. ╪¡╪º┘ê┘ä ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë.'
                 : 'Voice message failed. Please try again.',
               createdAt: new Date().toISOString(),
             };
@@ -1008,7 +1020,7 @@ export default function ChatPage() {
               id: messages.length ? messages[messages.length - 1].id + 1 : 1,
               from: 'system',
               text: isArabicConversation
-                ? 'لم نستطع فهم التسجيل. حاول مرة أخرى.'
+                ? '┘ä┘à ┘å╪│╪¬╪╖╪╣ ┘ü┘ç┘à ╪º┘ä╪¬╪│╪¼┘è┘ä. ╪¡╪º┘ê┘ä ┘à╪▒╪⌐ ╪ú╪«╪▒┘ë.'
                 : 'We could not understand that recording. Try again.',
               createdAt: new Date().toISOString(),
             };
@@ -1076,7 +1088,7 @@ export default function ChatPage() {
               (isMobileSidebarOpen ? " asrar-chat-history-toggle--active" : "")
             }
             onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
-            aria-label={isAr ? "????? ??? ????????" : "Toggle chat history"}
+            aria-label={isAr ? "تبديل سجل المحادثة" : "Toggle chat history"}
             aria-pressed={isMobileSidebarOpen}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1101,7 +1113,7 @@ export default function ChatPage() {
               <button
                 type="button"
                 className="asrar-mobile-close"
-                aria-label={isAr ? "?????" : "Close"}
+                aria-label={isAr ? "إغلاق" : "Close"}
                 onClick={() => setIsMobileSidebarOpen(false)}
               >
                 &times;
@@ -1122,7 +1134,7 @@ export default function ChatPage() {
         <div className="asrar-chat-main">
           <header className="asrar-chat-header-strip">
             <div className="asrar-chat-header-main">
-              <h1 className="asrar-chat-header-title">{getName(character)} — {getRole(character)}</h1>
+              <h1 className="asrar-chat-header-title">{getName(character)} ΓÇö {getRole(character)}</h1>
             </div>
             {null}
           </header>
@@ -1165,8 +1177,8 @@ export default function ChatPage() {
               <div className="asrar-limit-banner">
                 <p>
                   {limitUsage && typeof limitUsage.dailyLimit === 'number'
-                    ? `You’ve reached the limit for your free plan (${limitUsage.dailyLimit} messages).`
-                    : 'You’ve reached the limit for your free plan.'}
+                    ? `YouΓÇÖve reached the limit for your free plan (${limitUsage.dailyLimit} messages).`
+                    : 'YouΓÇÖve reached the limit for your free plan.'}
                 </p>
                 <button
                   type="button"
@@ -1203,7 +1215,7 @@ export default function ChatPage() {
                   className={isRecording ? 'asrar-mic-btn asrar-mic-btn--recording asrar-chat-voice-btn' : 'asrar-mic-btn asrar-chat-voice-btn'}
                   onClick={handleToggleRecording}
                   disabled={isSending || isSendingVoice || isBlocked}
-                  title={isRecording ? (isAr ? 'إيقاف التسجيل' : 'Stop recording') : (isAr ? 'ابدأ التسجيل' : 'Start recording')}
+                  title={isRecording ? (isAr ? '╪Ñ┘è┘é╪º┘ü ╪º┘ä╪¬╪│╪¼┘è┘ä' : 'Stop recording') : (isAr ? '╪º╪¿╪»╪ú ╪º┘ä╪¬╪│╪¼┘è┘ä' : 'Start recording')}
                 >
                   <span className="icon" aria-hidden="true">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -1217,7 +1229,7 @@ export default function ChatPage() {
                   disabled={isSending || isBlocked || limitExceeded}
                 >
                   <span className="asrar-send-btn-label">
-                    {isArabicConversation ? 'إرسال' : 'Send'}
+                    {isArabicConversation ? '╪Ñ╪▒╪│╪º┘ä' : 'Send'}
                   </span>
                 </button>
               </div>
@@ -1225,7 +1237,7 @@ export default function ChatPage() {
             <div className="asrar-chat-footer-meta">
               <p className="asrar-chat-hint">
                 {isArabicConversation
-                  ? 'قد يخطئ الذكاء الاصطناعي أحياناً، فلا تعتمد عليه وحده في القرارات الحساسة.'
+                  ? '┘é╪» ┘è╪«╪╖╪ª ╪º┘ä╪░┘â╪º╪í ╪º┘ä╪º╪╡╪╖┘å╪º╪╣┘è ╪ú╪¡┘è╪º┘å╪º┘ï╪î ┘ü┘ä╪º ╪¬╪╣╪¬┘à╪» ╪╣┘ä┘è┘ç ┘ê╪¡╪»┘ç ┘ü┘è ╪º┘ä┘é╪▒╪º╪▒╪º╪¬ ╪º┘ä╪¡╪│╪º╪│╪⌐.'
                   : 'AI may make mistakes sometimes. Do not rely on it alone for sensitive decisions.'}
               </p>
               {(() => {
@@ -1238,7 +1250,7 @@ export default function ChatPage() {
                 const modelText = 'gpt-4o-mini';
                 return (
                   <div className="asrar-chat-header-pill">
-                    {isAr ? `الخطة: ${counterText} رسائل` : `Plan: ${counterText} messages`} | {modelText}
+                    {isAr ? `╪º┘ä╪«╪╖╪⌐: ${counterText} ╪▒╪│╪º╪ª┘ä` : `Plan: ${counterText} messages`} | {modelText}
                   </div>
                 );
               })()}
@@ -1247,8 +1259,8 @@ export default function ChatPage() {
               <div className="asrar-recording-indicator">
                 <span className="dot" />
                 {isRecording
-                  ? (isAr ? 'جارٍ التسجيل…' : 'Recording…')
-                  : (isAr ? 'جارٍ معالجة الصوت…' : 'Processing voice…')}
+                  ? (isAr ? '╪¼╪º╪▒┘ì ╪º┘ä╪¬╪│╪¼┘è┘äΓÇª' : 'RecordingΓÇª')
+                  : (isAr ? '╪¼╪º╪▒┘ì ┘à╪╣╪º┘ä╪¼╪⌐ ╪º┘ä╪╡┘ê╪¬ΓÇª' : 'Processing voiceΓÇª')}
               </div>
             )}
           </footer>
@@ -1269,7 +1281,7 @@ export default function ChatPage() {
                   setShowLimitModal(false);
                 }}
               >
-                {isAr ? "إغلاق" : "Close"}
+                {isAr ? "╪Ñ╪║┘ä╪º┘é" : "Close"}
               </button>
               <button
                 type="button"
@@ -1280,7 +1292,7 @@ export default function ChatPage() {
                   navigate("/billing");
                 }}
               >
-                {isAr ? "الترقية إلى برو" : "Upgrade to Pro"}
+                {isAr ? "╪º┘ä╪¬╪▒┘é┘è╪⌐ ╪Ñ┘ä┘ë ╪¿╪▒┘ê" : "Upgrade to Pro"}
               </button>
             </div>
           </div>
@@ -1290,6 +1302,9 @@ export default function ChatPage() {
     </div>
   );
 }
+
+
+
 
 
 

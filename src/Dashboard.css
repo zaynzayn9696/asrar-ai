@@ -881,6 +881,26 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
   }
 }
 
+/* Keep the logged-in header following the viewport on mobile */
+@media (max-width: 900px) {
+  .asrar-dash-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 85;
+  }
+
+  .asrar-dash-page {
+    padding-top: calc(72px + env(safe-area-inset-top, 0px));
+  }
+
+  /* Chat page variant (keeps header clearance without affecting desktop layout) */
+  .asrar-chat-page.asrar-dash-page {
+    padding-top: calc(70px + env(safe-area-inset-top, 0px));
+  }
+}
+
 @media (max-width: 600px) {
   .asrar-dash-header {
     position: sticky;

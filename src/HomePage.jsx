@@ -20,61 +20,61 @@ const CHARACTERS = [
     id: "abu-zain",
     avatar: abuZainAvatar,
     nameEn: "Abu Zain",
-    nameAr: "Ø£Ø¨Ùˆ Ø²ÙŠÙ†",
+    nameAr: "أبو زين",
     roleEn: "Guidance",
-    roleAr: "Ø¥Ø±Ø´Ø§Ø¯ ÙˆØ­ÙƒÙ…Ø©",
+    roleAr: "إرشاد وحكمة",
     descriptionEn:
       "Warm, wise, grounded. Gives life lessons, emotional stability, and gentle guidance.",
     descriptionAr:
-      "Ù‡Ø§Ø¯Ø¦ ÙˆØ­ÙƒÙŠÙ… ÙˆÙ…ØªØ²Ù†. ÙŠÙ…Ù†Ø­Ùƒ Ù†ØµØ§Ø¦Ø­ Ø­ÙŠØ§ØªÙŠØ© ÙˆØªÙˆØ§Ø²Ù†Ø§Ù‹ Ø¹Ø§Ø·ÙÙŠØ§Ù‹ ÙˆØ¥Ø±Ø´Ø§Ø¯Ø§Ù‹ ØµØ§Ø¯Ù‚Ø§Ù‹.",
+      "دافئ وحكيم ومتزن. يمنحك نصائح حياتية وتوازناً عاطفياً وتوجيهاً لطيفاً.",
   },
   {
     id: "hana",
     avatar: hanaAvatar,
     nameEn: "Hana",
-    nameAr: "Ù‡ÙŽÙ†Ø§",
+    nameAr: "هَنا",
     roleEn: "Deep Support",
-    roleAr: "Ø¯Ø¹Ù… Ø¹Ø§Ø·ÙÙŠ Ø¹Ù…ÙŠÙ‚",
+    roleAr: "دعم عاطفي عميق",
     descriptionEn:
       "Gentle, validating, reassuring. Helps with overthinking, sadness, loneliness, and stress.",
     descriptionAr:
-      "Ù„Ø·ÙŠÙØ© ÙˆØªØªÙÙ‡Ù… Ù…Ø´Ø§Ø¹Ø±Ùƒ. ØªØ³Ø§Ø¹Ø¯Ùƒ Ù…Ø¹ ÙƒØ«Ø±Ø© Ø§Ù„ØªÙÙƒÙŠØ± ÙˆØ§Ù„Ø­Ø²Ù† ÙˆØ§Ù„ÙˆØ­Ø¯Ø© ÙˆØ§Ù„Ø¶ØºØ·.",
+      "لطيفة ومتفهّمة. تساعدك مع كثرة التفكير، الحزن، الوحدة، والضغط.",
   },
   {
     id: "rashid",
     avatar: rashidAvatar,
     nameEn: "Rashid",
-    nameAr: "Ø±Ø§Ø´Ø¯",
+    nameAr: "راشد",
     roleEn: "Focus & Study",
-    roleAr: "ØªØ±ÙƒÙŠØ² ÙˆØ¯Ø±Ø§Ø³Ø©",
+    roleAr: "تركيز ودراسة",
     descriptionEn:
       "Structured, strategic, motivational. Helps with studying, planning, and routines.",
     descriptionAr:
-      "Ù…Ù†Ø¸Ù‘Ù… ÙˆØ§Ø³ØªØ±Ø§ØªÙŠØ¬ÙŠ ÙˆÙ…Ø­ÙÙ‘Ø². ÙŠØ³Ø§Ø¹Ø¯Ùƒ ÙÙŠ Ø§Ù„Ø¯Ø±Ø§Ø³Ø©ØŒ Ø§Ù„ØªØ®Ø·ÙŠØ·ØŒ ÙˆØ§Ù„Ø¹Ø§Ø¯Ø§Øª Ø§Ù„ÙŠÙˆÙ…ÙŠØ©.",
+      "منظم واستراتيجي ومحفّز. يساعدك في الدراسة والتخطيط والعادات اليومية.",
   },
   {
     id: "nour",
     avatar: nourAvatar,
     nameEn: "Nour",
-    nameAr: "Ù†ÙˆØ±",
+    nameAr: "نور",
     roleEn: "Brutal Honesty",
-    roleAr: "ØµØ±Ø§Ø­Ø© Ù‚Ø§Ø³ÙŠØ©",
+    roleAr: "صراحة قاسية",
     descriptionEn:
       "Unfiltered, sarcastic. Tells you the truth with good intentions, no sugar-coating.",
     descriptionAr:
-      "ØµØ±ÙŠØ­ Ø¨Ø¯ÙˆÙ† ÙÙ„ØªØ±ØŒ Ø­Ø§Ø¯ ÙˆØ³Ø§Ø®Ø±. ÙŠÙ‚ÙˆÙ„ Ù„Ùƒ Ø§Ù„Ø­Ù‚ÙŠÙ‚Ø© Ø¨Ù†ÙŠØ© Ø·ÙŠØ¨Ø© Ø¨Ø¯ÙˆÙ† ØªÙ„Ù…ÙŠØ¹.",
+      "صريح بلا مجاملة وبنوايا طيبة. يقول لك الحقيقة دون تلطيف.",
   },
   {
     id: "farah",
     avatar: farahAvatar,
     nameEn: "Farah",
-    nameAr: "ÙØ±Ø­",
+    nameAr: "فرح",
     roleEn: "Fun & Laughter",
-    roleAr: "Ø¶Ø­Ùƒ ÙˆÙ…Ø±Ø­",
+    roleAr: "ضحك ومرح",
     descriptionEn:
       "Light-hearted, witty, sarcastic. Jokes, memes, and playful energy.",
     descriptionAr:
-      "Ø®ÙÙŠÙØ© Ø¸Ù„ ÙˆÙ…Ø±Ø­Ø© ÙˆØ³Ø§Ø®Ø±Ø©. Ù†ÙƒØªØŒ Ù…ÙŠÙ…Ø²ØŒ ÙˆØ·Ø§Ù‚Ø© Ø¶Ø­Ùƒ ÙˆÙ„Ø¹Ø¨.",
+      "خفيفة ظل ومرحة. نكات، ميمز، وطاقة ضحك ولعب.",
   },
 ];
 
@@ -851,7 +851,7 @@ export default function HomePage() {
               className={language === "ar" ? "active" : ""}
               onClick={() => handleLanguageSwitch("ar")}
             >
-              عربي
+              ????
             </button>
           </div>
 
@@ -918,7 +918,7 @@ export default function HomePage() {
                 className={language === "ar" ? "active" : ""}
                 onClick={() => handleLanguageSwitch("ar")}
               >
-                عربيŠ
+                ????Š
               </button>
             </div>
 
@@ -1124,10 +1124,10 @@ export default function HomePage() {
               </article>
 
               <article className="asrar-engine-card">
-                <h3>{isAr ? "Ù…ØµÙ…Ù… Ø®ØµÙŠØµØ§Ù‹ Ù„Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„عربيŠØ©" : "Built for the Middle East"}</h3>
+                <h3>{isAr ? "Ù…ØµÙ…Ù… Ø®ØµÙŠØµØ§Ù‹ Ù„Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„????ŠØ©" : "Built for the Middle East"}</h3>
                 <p>
                   {isAr
-                    ? "ØªÙ… ØªØµÙ…ÙŠÙ… Ø£Ø³Ø±Ø§Ø± ÙÙŠ Ø§Ù„Ø£Ø±Ø¯Ù† Ù…Ø¹ Ø£Ø®Ø° Ø§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„عربيŠØ© ÙÙŠ Ø§Ù„Ø­Ø³Ø¨Ø§Ù†ØŒ Ù„ØªØ¬Ù…Ø¹ Ø¨ÙŠÙ† Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø§Ù„Ø­Ø¯ÙŠØ« ÙˆØ§Ù„Ø­Ø³ Ø§Ù„Ù…Ø­Ù„ÙŠ ÙˆØ§Ù„Ø§Ø­ØªØ±Ø§Ù… ÙˆØ§Ù„Ø¯ÙØ¡ â€” ÙˆÙ„ÙŠØ³ Ù…Ø¬Ø±Ø¯ Ù†Ø³Ø®Ø© Ù…Ù† Ù‚Ø§Ù„Ø¨ ØºØ±Ø¨ÙŠ."
+                    ? "ØªÙ… ØªØµÙ…ÙŠÙ… Ø£Ø³Ø±Ø§Ø± ÙÙŠ Ø§Ù„Ø£Ø±Ø¯Ù† Ù…Ø¹ Ø£Ø®Ø° Ø§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„????ŠØ© ÙÙŠ Ø§Ù„Ø­Ø³Ø¨Ø§Ù†ØŒ Ù„ØªØ¬Ù…Ø¹ Ø¨ÙŠÙ† Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø§Ù„Ø­Ø¯ÙŠØ« ÙˆØ§Ù„Ø­Ø³ Ø§Ù„Ù…Ø­Ù„ÙŠ ÙˆØ§Ù„Ø§Ø­ØªØ±Ø§Ù… ÙˆØ§Ù„Ø¯ÙØ¡ â€” ÙˆÙ„ÙŠØ³ Ù…Ø¬Ø±Ø¯ Ù†Ø³Ø®Ø© Ù…Ù† Ù‚Ø§Ù„Ø¨ ØºØ±Ø¨ÙŠ."
                     : "Designed in Jordan with Arab culture in mind, Asrar blends modern AI with local nuance, respect, and warmth â€” not a copy-paste of a Western template."}
                 </p>
               </article>
@@ -1142,7 +1142,7 @@ export default function HomePage() {
           </h2>
           <p className="asrar-section-body">
             {isAr
-              ? 'Ø£Ø³Ø±Ø§Ø± ØªØ¹Ù†ÙŠ "Ø§Ù„Ø£Ø³Ø±Ø§Ø±". ÙˆÙÙ„Ø¯ Ù‡Ø°Ø§ Ø§Ù„Ù…Ø´Ø±ÙˆØ¹ Ù…Ù† ÙÙƒØ±Ø© Ø£Ù† Ø§Ù„Ù†Ø§Ø³ ÙÙŠ Ø§Ù„Ø¹Ø§Ù„Ù… Ø§Ù„عربيŠ ÙŠØ³ØªØ­Ù‚ÙˆÙ† Ù…Ø³Ø§Ø­Ø© Ø®Ø§ØµØ© ÙˆØ¢Ù…Ù†Ø© Ù„ÙŠÙØ¶ÙØ¶ÙˆØ§ ÙˆÙŠÙƒØªØ¨ÙˆØ§ ÙˆÙŠÙØ³Ù…ÙØ¹ÙˆØ§ Ù…Ø´Ø§Ø¹Ø±Ù‡Ù… ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª. Ø§Ù„Ø´Ø¹Ø§Ø± Ø§Ù„Ø°ÙŠ ØªØ±Ø§Ù‡ Ù‡Ùˆ Ø¨Ø®Ø· ÙŠØ¯ÙŠ ÙˆØ§Ù„Ø¯ÙŠØŒ ÙˆØªØ°ÙƒÙŠØ± Ø£Ù† Ø®Ù„Ù ÙƒÙ„ Ù‡Ø°Ù‡ Ø§Ù„ØªÙ‚Ù†ÙŠØ© Ù‚Ù„ÙˆØ¨ ÙˆÙ‚ØµØµ Ø­Ù‚ÙŠÙ‚ÙŠØ©.'
+              ? 'Ø£Ø³Ø±Ø§Ø± ØªØ¹Ù†ÙŠ "Ø§Ù„Ø£Ø³Ø±Ø§Ø±". ÙˆÙÙ„Ø¯ Ù‡Ø°Ø§ Ø§Ù„Ù…Ø´Ø±ÙˆØ¹ Ù…Ù† ÙÙƒØ±Ø© Ø£Ù† Ø§Ù„Ù†Ø§Ø³ ÙÙŠ Ø§Ù„Ø¹Ø§Ù„Ù… Ø§Ù„????Š ÙŠØ³ØªØ­Ù‚ÙˆÙ† Ù…Ø³Ø§Ø­Ø© Ø®Ø§ØµØ© ÙˆØ¢Ù…Ù†Ø© Ù„ÙŠÙØ¶ÙØ¶ÙˆØ§ ÙˆÙŠÙƒØªØ¨ÙˆØ§ ÙˆÙŠÙØ³Ù…ÙØ¹ÙˆØ§ Ù…Ø´Ø§Ø¹Ø±Ù‡Ù… ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª. Ø§Ù„Ø´Ø¹Ø§Ø± Ø§Ù„Ø°ÙŠ ØªØ±Ø§Ù‡ Ù‡Ùˆ Ø¨Ø®Ø· ÙŠØ¯ÙŠ ÙˆØ§Ù„Ø¯ÙŠØŒ ÙˆØªØ°ÙƒÙŠØ± Ø£Ù† Ø®Ù„Ù ÙƒÙ„ Ù‡Ø°Ù‡ Ø§Ù„ØªÙ‚Ù†ÙŠØ© Ù‚Ù„ÙˆØ¨ ÙˆÙ‚ØµØµ Ø­Ù‚ÙŠÙ‚ÙŠØ©.'
               : 'Asrar means â€œsecretsâ€ in Arabic. This project was born from the idea that people in the Arab world deserve a private, culturally aware place to vent, think, and feel supported â€” any time of day. The logo you see is handwritten by my father, and it reminds us that behind all the tech there are real hearts and real stories.'}
           </p>
         </section>
@@ -1293,10 +1293,10 @@ export default function HomePage() {
             </div>
             <div className="feature">
               <div className="feature-icon">Ø§</div>
-              <h3>{isAr ? "ØªØ¬Ø±Ø¨Ø© Ø¨Ø£ÙˆÙ„ÙˆÙŠØ© عربيŠØ©" : "Arabic-First Experience"}</h3>
+              <h3>{isAr ? "ØªØ¬Ø±Ø¨Ø© Ø¨Ø£ÙˆÙ„ÙˆÙŠØ© ????ŠØ©" : "Arabic-First Experience"}</h3>
               <p>
                 {isAr
-                  ? "Ù…Ù† Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© Ù…ØµÙ…Ù‘ÙŽÙ… Ù„Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„ØªØ¹Ø¨ÙŠØ± Ø§Ù„عربيŠØ© ÙˆØ§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„Ù…Ø­Ù„ÙŠØ©ØŒ ÙˆÙ„ÙŠØ³ Ù…Ø¬Ø±Ø¯ ØªØ±Ø¬Ù…Ø© Ù„Ù…Ù†ØªØ¬ ØºØ±Ø¨ÙŠ."
+                  ? "Ù…Ù† Ø§Ù„Ø¨Ø¯Ø§ÙŠØ© Ù…ØµÙ…Ù‘ÙŽÙ… Ù„Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„ØªØ¹Ø¨ÙŠØ± Ø§Ù„????ŠØ© ÙˆØ§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„Ù…Ø­Ù„ÙŠØ©ØŒ ÙˆÙ„ÙŠØ³ Ù…Ø¬Ø±Ø¯ ØªØ±Ø¬Ù…Ø© Ù„Ù…Ù†ØªØ¬ ØºØ±Ø¨ÙŠ."
                   : "Built around Arabic expression and culture from day one, not just translated from a Western template."}
               </p>
             </div>
@@ -1364,6 +1364,7 @@ export default function HomePage() {
     </div>
   );
 }
+
 
 
 
