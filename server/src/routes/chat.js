@@ -430,6 +430,71 @@ router.get('/conversations/:conversationId/messages', async (req, res) => {
   }
 });
 
+// Delete a single conversation and all related emotional state for this user
+router.delete('/conversations/:conversationId', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const conversationId = Number(req.params.conversationId);
+
+    if (!Number.isFinite(conversationId)) {
+      return res.status(400).json({ message: 'Invalid conversationId' });
+    }
+
+    const conv = await prisma.conversation.findFirst({
+      where: { id: conversationId, userId },
+      select: { id: true },
+    });
+
+    if (!conv) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    console.log('[Chat] delete-conversation convoId=%s userId=%s', String(conv.id), String(userId));
+
+    await prisma.$transaction(async (tx) => {
+      await tx.messageEmotion.deleteMany({
+        where: {
+          message: {
+            conversationId: conv.id,
+            userId,
+          },
+        },
+      });
+
+      await tx.emotionalTimelineEvent.deleteMany({
+        where: {
+          conversationId: conv.id,
+          userId,
+        },
+      });
+
+      await tx.conversationEmotionState.deleteMany({
+        where: { conversationId: conv.id },
+      });
+
+      await tx.conversationStateMachine.deleteMany({
+        where: { conversationId: conv.id },
+      });
+
+      await tx.message.deleteMany({
+        where: {
+          conversationId: conv.id,
+          userId,
+        },
+      });
+
+      await tx.conversation.delete({
+        where: { id: conv.id },
+      });
+    });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete conversation error', err && err.message ? err.message : err);
+    return res.status(500).json({ message: 'Failed to delete conversation' });
+  }
+});
+
 router.delete('/delete-all', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;

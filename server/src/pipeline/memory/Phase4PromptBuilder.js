@@ -117,6 +117,34 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
       shortLines.push(`Current active themes: ${threadTopics.join(', ')}.`);
     }
 
+    // Fallback: if the rolling window is not yet populated, use scalar
+    // ConversationEmotionState fields so Phase 4 still contributes signal.
+    if (!shortLines.length) {
+      const dom = convoState.dominantEmotion || null;
+      const avgScalar =
+        typeof convoState.avgIntensity === 'number'
+          ? convoState.avgIntensity
+          : null;
+
+      const summaryBits = [];
+      if (dom) {
+        summaryBits.push(
+          `So far in this conversation, the overall emotional centre has tended toward ${dom}.`
+        );
+      }
+      if (avgScalar != null && avgScalar > 0) {
+        summaryBits.push(
+          `Typical intensity across turns so far is around ${(avgScalar * 5).toFixed(
+            1
+          )}/5.`
+        );
+      }
+
+      if (summaryBits.length) {
+        shortLines.push(summaryBits.join(' '));
+      }
+    }
+
     if (shortLines.length) {
       lines.push(
         'Context from recent messages (use as soft guidance, not hard rules):',
@@ -131,16 +159,37 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     let longDominant = null;
     let longDominantScore = 0;
 
-    Object.keys(emotionStats).forEach((label) => {
-      const e = emotionStats[label] || {};
-      const count = e.count || 0;
-      const avg = typeof e.avgIntensity === 'number' ? e.avgIntensity : 0;
-      const score = count * avg;
-      if (score > longDominantScore) {
-        longDominantScore = score;
-        longDominant = label;
+    const emotionStatKeys = Object.keys(emotionStats);
+    if (emotionStatKeys.length) {
+      emotionStatKeys.forEach((label) => {
+        const e = emotionStats[label] || {};
+        const count = e.count || 0;
+        const avg = typeof e.avgIntensity === 'number' ? e.avgIntensity : 0;
+        const score = count * avg;
+        if (score > longDominantScore) {
+          longDominantScore = score;
+          longDominant = label;
+        }
+      });
+    } else {
+      // Fallback: derive a dominant long-term tendency from scalar scores
+      // when Phase 4 JSON stats have not yet been populated.
+      const scalarPairs = [
+        ['SAD', profile.sadnessScore || 0],
+        ['ANXIOUS', profile.anxietyScore || 0],
+        ['ANGRY', profile.angerScore || 0],
+        ['LONELY', profile.lonelinessScore || 0],
+        ['HOPEFUL', profile.hopeScore || 0],
+        ['GRATEFUL', profile.gratitudeScore || 0],
+      ];
+      for (const [label, score] of scalarPairs) {
+        const s = typeof score === 'number' ? score : 0;
+        if (s > longDominantScore) {
+          longDominantScore = s;
+          longDominant = label;
+        }
       }
-    });
+    }
 
     const topicProfile = ensureObject(profile.topicProfile);
     const topicEntries = Object.keys(topicProfile).map((key) => ({
@@ -189,6 +238,39 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
       } else if (outcome < -0.1) {
         longLines.push(
           'Be extra gentle: past interactions with this companion style sometimes aligned with higher emotional intensity.'
+        );
+      }
+    }
+
+    // If the kernel JSON fields are still mostly empty but scalar
+    // UserEmotionProfile scores exist, add a compact fallback summary
+    // so Phase 4 never returns an empty block once a profile is present.
+    if (!longLines.length) {
+      const sadness = profile.sadnessScore || 0;
+      const anxiety = profile.anxietyScore || 0;
+      const loneliness = profile.lonelinessScore || 0;
+      const hope = profile.hopeScore || 0;
+      const gratitude = profile.gratitudeScore || 0;
+      const avgIntensity = profile.avgIntensity || 0;
+
+      const negSum = sadness + anxiety + loneliness;
+      const posSum = hope + gratitude;
+
+      if (negSum >= 0.9) {
+        longLines.push(
+          'Across many past conversations, the user frequently leans into heavier feelings such as sadness, anxiety or loneliness. Be especially steady and gentle.'
+        );
+      } else if (posSum >= 0.6) {
+        longLines.push(
+          'Over time the user often shows hopeful or grateful tones alongside difficulties; you can carefully reinforce these moments without forcing positivity.'
+        );
+      }
+
+      if (avgIntensity > 0) {
+        longLines.push(
+          `Typical emotional intensity across conversations is around ${(avgIntensity * 5).toFixed(
+            1
+          )}/5; match your pacing to that level unless the current message clearly calls for a different depth.`
         );
       }
     }

@@ -80,6 +80,19 @@ function mapEmotionField(label) {
  */
 async function updateUserEmotionProfile({ userId }) {
   try {
+    const now = new Date();
+    const THROTTLE_MS = 5 * 60 * 1000; // ~5 minutes
+
+    const existing = await prisma.userEmotionProfile.findUnique({ where: { userId } });
+    if (existing && existing.lastUpdatedAt) {
+      const last = existing.lastUpdatedAt instanceof Date
+        ? existing.lastUpdatedAt
+        : new Date(existing.lastUpdatedAt);
+      if (now - last < THROTTLE_MS) {
+        return;
+      }
+    }
+
     const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // ~30 days
 
     const rows = await prisma.messageEmotion.findMany({
@@ -128,7 +141,6 @@ async function updateUserEmotionProfile({ userId }) {
     const weightOld = 0.7;
     const weightNew = 0.3;
 
-    const existing = await prisma.userEmotionProfile.findUnique({ where: { userId } });
     if (!existing) {
       await prisma.userEmotionProfile.create({
         data: {
@@ -156,7 +168,7 @@ async function updateUserEmotionProfile({ userId }) {
         hopeScore: weightOld * existing.hopeScore + weightNew * newScores.hopeScore,
         gratitudeScore: weightOld * existing.gratitudeScore + weightNew * newScores.gratitudeScore,
         avgIntensity: weightOld * existing.avgIntensity + weightNew * newScores.avgIntensity,
-        lastUpdatedAt: new Date(),
+        lastUpdatedAt: now,
       },
     });
   } catch (e) {
@@ -231,7 +243,20 @@ async function getLongTermEmotionalSnapshot({ userId }) {
  */
 async function detectEmotionalTriggers({ userId }) {
   try {
-    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // ~30 days
+    const now = new Date();
+    const THROTTLE_MS = 10 * 60 * 1000; // ~10 minutes
+
+    const prof = await prisma.userEmotionProfile.findUnique({ where: { userId } }).catch(() => null);
+    if (prof && prof.lastPatternRefreshAt) {
+      const last = prof.lastPatternRefreshAt instanceof Date
+        ? prof.lastPatternRefreshAt
+        : new Date(prof.lastPatternRefreshAt);
+      if (now - last < THROTTLE_MS) {
+        return [];
+      }
+    }
+
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000); // ~14 days
     const rows = await prisma.messageEmotion.findMany({
       where: {
         message: {
@@ -244,7 +269,7 @@ async function detectEmotionalTriggers({ userId }) {
       include: {
         message: { select: { content: true, createdAt: true } },
       },
-      take: 200,
+      take: 80,
       orderBy: { id: 'desc' },
     });
 
@@ -307,9 +332,162 @@ async function detectEmotionalTriggers({ userId }) {
   }
 }
 
+async function updateEmotionalPatterns({ userId }) {
+  try {
+    if (!userId || !prisma.emotionalPattern) return;
+
+    const now = new Date();
+    const THROTTLE_MS = 10 * 60 * 1000; // ~10 minutes
+
+    const profile = await prisma.userEmotionProfile.findUnique({ where: { userId } });
+    if (!profile) return;
+
+    if (profile.lastPatternRefreshAt) {
+      const last = profile.lastPatternRefreshAt instanceof Date
+        ? profile.lastPatternRefreshAt
+        : new Date(profile.lastPatternRefreshAt);
+      if (now - last < THROTTLE_MS) {
+        return;
+      }
+    }
+
+    const sadness = profile.sadnessScore || 0;
+    const anxiety = profile.anxietyScore || 0;
+    const anger = profile.angerScore || 0;
+    const loneliness = profile.lonelinessScore || 0;
+    const hope = profile.hopeScore || 0;
+    const gratitude = profile.gratitudeScore || 0;
+    const volatility = profile.volatilityIndex || 0;
+
+    const patterns = [];
+
+    const negCore = sadness + anxiety + loneliness;
+    const posCore = hope + gratitude;
+
+    if (negCore >= 1.2) {
+      patterns.push({ kind: 'CHRONIC_SADNESS', score: Math.min(1, negCore / 2) });
+    } else if (sadness >= 0.5) {
+      patterns.push({ kind: 'SADNESS_TENDENCY', score: Math.min(1, sadness) });
+    }
+
+    if (anxiety >= 0.5) {
+      patterns.push({ kind: 'ANXIETY_SPIKES', score: Math.min(1, anxiety) });
+    }
+
+    if (loneliness >= 0.5) {
+      patterns.push({ kind: 'LONELINESS_PATTERN', score: Math.min(1, loneliness) });
+    }
+
+    if (posCore >= 0.7) {
+      patterns.push({ kind: 'POSITIVE_TILT', score: Math.min(1, posCore / 2) });
+    }
+
+    if (volatility >= 0.4) {
+      patterns.push({ kind: 'VOLATILE_EMOTIONS', score: Math.min(1, volatility) });
+    }
+
+    // Light inspection of recent high-intensity timeline events for refinement.
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const events = await prisma.emotionalTimelineEvent.findMany({
+      where: {
+        userId,
+        createdAt: { gte: cutoff },
+        intensity: { gte: 4 },
+      },
+      take: 100,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (events && events.length) {
+      const counts = { SAD: 0, ANXIOUS: 0, LONELY: 0 };
+      for (const ev of events) {
+        const label = String(ev.emotion || '').toUpperCase();
+        if (label === 'SAD' || label === 'ANXIOUS' || label === 'LONELY') {
+          counts[label] += 1;
+        }
+      }
+
+      const anxietyBursts = counts.ANXIOUS || 0;
+      const lonelinessBursts = counts.LONELY || 0;
+      if (anxietyBursts >= 3) {
+        patterns.push({ kind: 'ACUTE_ANXIETY_EPISODES', score: Math.min(1, anxietyBursts / 6) });
+      }
+      if (lonelinessBursts >= 3) {
+        patterns.push({ kind: 'RECURRING_LONELINESS_EPISODES', score: Math.min(1, lonelinessBursts / 6) });
+      }
+    }
+
+    if (!patterns.length) {
+      await prisma.userEmotionProfile.update({
+        where: { userId },
+        data: { lastPatternRefreshAt: now },
+      });
+      return;
+    }
+
+    // Normalise scores into 0..1 and keep a small, stable set.
+    const kinds = new Set();
+    const finalPatterns = [];
+    for (const p of patterns) {
+      if (kinds.has(p.kind)) continue;
+      kinds.add(p.kind);
+      finalPatterns.push({ kind: p.kind, score: Math.max(0, Math.min(1, p.score || 0)) });
+      if (finalPatterns.length >= 6) break;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const p of finalPatterns) {
+        const existingPattern = await tx.emotionalPattern.findFirst({
+          where: { userId, kind: p.kind },
+          orderBy: { id: 'asc' },
+        });
+
+        if (existingPattern) {
+          await tx.emotionalPattern.update({
+            where: { id: existingPattern.id },
+            data: {
+              score: p.score,
+              status: 'ACTIVE',
+              lastSeenAt: now,
+            },
+          });
+        } else {
+          await tx.emotionalPattern.create({
+            data: {
+              userId,
+              kind: p.kind,
+              score: p.score,
+              status: 'ACTIVE',
+              firstSeenAt: now,
+              lastSeenAt: now,
+            },
+          });
+        }
+      }
+
+      // Mark patterns not present in this refresh as inactive, but retain them.
+      await tx.emotionalPattern.updateMany({
+        where: {
+          userId,
+          kind: { notIn: Array.from(kinds) },
+        },
+        data: { status: 'INACTIVE' },
+      });
+
+      await tx.userEmotionProfile.update({
+        where: { userId },
+        data: { lastPatternRefreshAt: now },
+      });
+    });
+  } catch (e) {
+    console.error('updateEmotionalPatterns error', e && e.message ? e.message : e);
+  }
+}
+
 module.exports = {
   logEmotionalTimelineEvent,
   updateUserEmotionProfile,
   getLongTermEmotionalSnapshot,
   detectEmotionalTriggers,
+  updateEmotionalPatterns,
 };

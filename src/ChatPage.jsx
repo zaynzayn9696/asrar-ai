@@ -471,6 +471,66 @@ export default function ChatPage() {
     setIsMobileSidebarOpen(false);
   };
 
+  const handleDeleteConversation = async (id, event) => {
+    if (event && typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
+
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : undefined;
+
+      const res = await fetch(`${API_BASE}/api/chat/conversations/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+
+      if (!res.ok) {
+        console.error('[ChatPage] delete conversation failed', { status: res.status });
+        return;
+      }
+
+      setConversations((prev) => (Array.isArray(prev) ? prev.filter((c) => c.id !== id) : []));
+
+      if (conversationId === id) {
+        setConversationId(null);
+        const now = new Date().toISOString();
+        setMessages([
+          {
+            id: 1,
+            from: 'system',
+            text: isArabicConversation
+              ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+              : "This is your private space. Nothing you say here is judged.",
+            createdAt: now,
+          },
+          {
+            id: 2,
+            from: 'ai',
+            text: isArabicConversation
+              ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+              : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
+            createdAt: now,
+          },
+        ]);
+
+        if (user && typeof window !== 'undefined') {
+          try {
+            const storageKey = `asrar-chat-history-${user.id}-${selectedCharacterId}`;
+            localStorage.removeItem(storageKey);
+          } catch (e) {
+            console.error('[ChatPage] failed to clear deleted conversation history', e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[ChatPage] delete conversation error', e);
+    }
+  };
+
   const renderSidebarContent = () => (
     <>
       <button
@@ -493,7 +553,16 @@ export default function ChatPage() {
             }
             onClick={() => handleConversationClick(conv.id)}
           >
-            <div className="asrar-conv-title">{getName(character)}</div>
+            <div className="asrar-conv-title-row">
+              <span className="asrar-conv-title">{getName(character)}</span>
+              <button
+                type="button"
+                className="asrar-conv-delete-btn"
+                onClick={(e) => handleDeleteConversation(conv.id, e)}
+              >
+                ×
+              </button>
+            </div>
             <div className="asrar-conv-preview">{(conv.firstUserMessage && conv.firstUserMessage.trim()) ? conv.firstUserMessage.slice(0, 60) : "No messages yet"}</div>
           </div>
         ))}

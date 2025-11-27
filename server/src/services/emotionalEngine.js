@@ -11,6 +11,7 @@ const {
   updateUserEmotionProfile,
   getLongTermEmotionalSnapshot,
   detectEmotionalTriggers,
+  updateEmotionalPatterns,
 } = require('./emotionalLongTerm');
 const {
   updateConversationStateMachine,
@@ -418,6 +419,8 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     try { longTermSnapshot = await getLongTermEmotionalSnapshot({ userId }); } catch (_) {}
     let triggers = [];
     try { triggers = await detectEmotionalTriggers({ userId }); } catch (_) { triggers = []; }
+    // Lightweight pattern extraction over long-term profile (best-effort)
+    try { await updateEmotionalPatterns({ userId }); } catch (_) {}
 
     // Phase 3: update and fetch conversation state machine
     let flowState = null;
