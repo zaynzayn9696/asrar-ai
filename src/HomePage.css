@@ -39,6 +39,32 @@ body {
 #root {
   min-height: 100vh;
 }
+html,
+body,
+.asrar-chat-messages,
+.asrar-conversation-list {
+  scrollbar-width: thin;
+  scrollbar-color: #2cf6ff rgba(3, 8, 18, 0.9);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(3, 8, 18, 0.9);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #2cf6ff, #a55cff);
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(44, 246, 255, 0.45);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #6bffff, #c689ff);
+}
 
 /* TOKENS -------------------------------------------------------------- */
 
@@ -96,6 +122,7 @@ body {
   height: 72px;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   background: rgba(5, 8, 11, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -227,7 +254,7 @@ body {
 }
 
 .asrar-home-mobile-nav[dir="rtl"] .asrar-home-mobile-lang {
-  flex-direction: row-reverse;
+  flex-direction: row;
 }
 
 .asrar-home-mobile-nav-header {
@@ -340,6 +367,7 @@ body {
   gap: 0.5rem;
   margin-bottom: 1rem;
   margin-top: 0.3rem;
+  direction: ltr;
 }
 
 .asrar-home-mobile-auth {

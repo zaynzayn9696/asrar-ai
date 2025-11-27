@@ -982,7 +982,7 @@ export default function HomePage() {
   <h1 className="asrar-hero-title">
     {isAr
       ? "حيث تلتقي الثقافة بالمشاعر والتقنية."
-      : "Test culture, emotion, and technology meet."}
+      : "Where culture, emotion, and technology meet."}
   </h1>
 
  
