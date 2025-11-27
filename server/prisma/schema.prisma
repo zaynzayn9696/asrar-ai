@@ -1,5 +1,3 @@
-// server/prisma/schema.prisma
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "windows"]
@@ -10,11 +8,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// REMOVED ENUM (SQLite does not support enums)
-// enum Plan {
-//   free
-//   pro
-// }
+///
+//// BASE MODELS (unchanged)
+///
 
 model User {
   id                 Int       @id @default(autoincrement())
@@ -24,8 +20,7 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  // CHANGED: was `plan Plan @default(free)`
-  plan               String    @default("free") // "free" or "pro"
+  plan               String    @default("free") 
   isPremium          Boolean   @default(false)
   lemonCustomerId     String?   @unique
   lemonSubscriptionId String?
@@ -38,6 +33,7 @@ model User {
   conversations      Conversation[]
   emotionProfile     UserEmotionProfile?
   emotionalTimelineEvents EmotionalTimelineEvent[]
+  emotionalPatterns  EmotionalPattern[] 
 }
 
 model Usage {
@@ -79,7 +75,9 @@ model Message {
   emotion         MessageEmotion?
 }
 
-// Emotional Engine v1
+//
+// Emotional Engine v1 enum
+//
 enum EmotionLabel {
   NEUTRAL
   SAD
@@ -91,22 +89,55 @@ enum EmotionLabel {
   GRATEFUL
 }
 
-model MessageEmotion {
-  id            Int           @id @default(autoincrement())
-  messageId     Int           @unique
-  message       Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  primaryEmotion EmotionLabel
-  intensity     Int           // 1–5
-  confidence    Float         // 0–1
-  cultureTag    String?       // e.g., "ARABIC" | "ENGLISH" | "MIXED"
-  notes         String?
-  createdAt     DateTime      @default(now())
+//
+// PHASE-4 NEW ENUMS
+//
+enum EmotionTrend {
+  UP
+  DOWN
+  STABLE
+  VOLATILE
 }
 
+enum UserMemoryMode {
+  LIGHT
+  STANDARD
+  RICH
+}
+
+//
+// MESSAGE EMOTION — With Phase-4 extensions
+//
+model MessageEmotion {
+  id             Int           @id @default(autoincrement())
+  messageId      Int           @unique
+  message        Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  primaryEmotion EmotionLabel
+  intensity      Int
+  confidence     Float
+  cultureTag     String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+
+  /// PHASE-4 FIELDS
+  secondaryEmotion EmotionLabel?
+  emotionVector    Json?          // distribution / vector
+  intensityDelta   Float?         // change vs previous
+  trend            EmotionTrend?  // UP / DOWN / STABLE / VOLATILE
+  topicTags        String[] @default([])
+  isKernelRelevant Boolean  @default(true)
+  detectorVersion  String?
+}
+
+//
+// CONVERSATION EMOTION STATE — With Phase-4 short-term kernel fields
+//
 model ConversationEmotionState {
   id               Int          @id @default(autoincrement())
   conversationId   Int          @unique
   conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
   dominantEmotion  EmotionLabel
   avgIntensity     Float        @default(0)
   sadnessScore     Float        @default(0)
@@ -114,9 +145,22 @@ model ConversationEmotionState {
   angerScore       Float        @default(0)
   lonelinessScore  Float        @default(0)
   lastUpdatedAt    DateTime     @default(now())
+
+  /// PHASE-4 SHORT-TERM MEMORY
+  windowSize             Int     @default(20)
+  rollingEmotionStats    Json?
+  rollingTopicStats      Json?
+  activeThreads          Json?
+  sessionBaselineEmotion EmotionLabel?
+  currentBaselineEmotion EmotionLabel?
+  stabilityScore         Float   @default(0)
+  flags                  Json?
+  lastKernelUpdateAt     DateTime?
 }
 
-// Emotional Engine v2 — Long-term timeline and user profile
+//
+// EMOTIONAL TIMELINE — Unchanged
+//
 model EmotionalTimelineEvent {
   id             Int          @id @default(autoincrement())
   userId         Int
@@ -129,10 +173,14 @@ model EmotionalTimelineEvent {
   tag            String?
 }
 
+//
+// USER EMOTION PROFILE — With Phase-4 long-term memory & pattern fields
+//
 model UserEmotionProfile {
   id               Int       @id @default(autoincrement())
   userId           Int       @unique
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   sadnessScore     Float     @default(0)
   anxietyScore     Float     @default(0)
   angerScore       Float     @default(0)
@@ -141,9 +189,40 @@ model UserEmotionProfile {
   gratitudeScore   Float     @default(0)
   avgIntensity     Float     @default(0)
   lastUpdatedAt    DateTime  @default(now())
+
+  /// PHASE-4 LONG-TERM MEMORY
+  emotionTraitVector   Json?
+  emotionStats         Json?
+  topicProfile         Json?
+  personaAffinity      Json?
+  volatilityIndex      Float    @default(0)
+  recentKernelSnapshot Json?
+  memoryMode           UserMemoryMode @default(STANDARD)
+  retentionPolicy      Json?
+  lastPatternRefreshAt DateTime?
 }
 
-// Phase 3 — Conversation state machine (predictive conversation flow)
+//
+// PHASE-4 — Emotional Pattern Table
+//
+model EmotionalPattern {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        String
+  score       Float
+  status      String   @default("ACTIVE")
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  metadata    Json?
+
+  @@index([userId])
+  @@index([userId, kind])
+}
+
+//
+// PHASE-3 — Conversation State Machine (unchanged)
+//
 model ConversationStateMachine {
   id             Int          @id @default(autoincrement())
   conversationId Int          @unique
@@ -153,4 +232,3 @@ model ConversationStateMachine {
   lastUpdatedAt  DateTime     @default(now())
   notes          String?
 }
-

@@ -13,6 +13,7 @@ const { CHARACTER_VOICES } = require('../config/characterVoices');
 const { TONES } = require('../config/tones');
 const { runEmotionalEngine } = require('../services/emotionalEngine');
 const { selectModelForResponse } = require('../services/emotionalEngine');
+const { recordEvent: recordMemoryEvent } = require('../pipeline/memory/memoryKernel');
 const { orchestrateResponse } = require('../services/responseOrchestrator');
 const multer = require('multer');
 const path = require('path');
@@ -971,7 +972,7 @@ router.post('/message', async (req, res) => {
 
         // Best-effort: persist emotion metadata for the user's message
         try {
-          await prisma.messageEmotion.create({
+          const me = await prisma.messageEmotion.create({
             data: {
               messageId: userRow.id,
               primaryEmotion: emo.primaryEmotion,
@@ -981,6 +982,25 @@ router.post('/message', async (req, res) => {
               notes: emo.notes || null,
             },
           });
+
+          // Phase 4 Memory Kernel: update short-term and long-term emotional memory.
+          // This runs after MessageEmotion is saved and before the next reply.
+          try {
+            await recordMemoryEvent({
+              userId,
+              conversationId: cid,
+              messageId: userRow.id,
+              characterId,
+              emotion: emo,
+              topics: Array.isArray(emo.topics) ? emo.topics : [],
+              secondaryEmotion: emo.secondaryEmotion || null,
+              emotionVector: emo.emotionVector || null,
+              detectorVersion: emo.detectorVersion || null,
+              isKernelRelevant: true,
+            });
+          } catch (kernelErr) {
+            console.error('[Chat] Memory kernel recordEvent error', kernelErr && kernelErr.message ? kernelErr.message : kernelErr);
+          }
         } catch (e) {
           console.error('MessageEmotion create error', e && e.message ? e.message : e);
         }
