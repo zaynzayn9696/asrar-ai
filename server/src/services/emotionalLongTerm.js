@@ -307,9 +307,95 @@ async function detectEmotionalTriggers({ userId }) {
   }
 }
 
+/**
+ * Phase 3 �?" Emotional Pattern table (lightweight).
+ * Best-effort: if the EmotionalPattern model is not present in the Prisma
+ * client (older schemas), this function becomes a no-op.
+ *
+ * @param {Object} params
+ * @param {number} params.userId
+ * @param {{ scores?: { sadness:number, anxiety:number, anger:number, loneliness:number, hope:number, gratitude:number } }|null} params.snapshot
+ * @param {Array<{topic:string, emotion:string, score:number}>} params.triggers
+ */
+async function updateEmotionalPatterns({ userId, snapshot, triggers }) {
+  try {
+    if (!userId) return;
+    // Older schemas may not have this model; guard safely.
+    if (!prisma.emotionalPattern) return;
+
+    const scores = (snapshot && snapshot.scores) || {};
+    const sadness = scores.sadness || 0;
+    const anxiety = scores.anxiety || 0;
+    const anger = scores.anger || 0;
+    const loneliness = scores.loneliness || 0;
+    const hope = scores.hope || 0;
+    const gratitude = scores.gratitude || 0;
+
+    const negativeAggregate = sadness + anxiety + loneliness;
+    const positiveAggregate = hope + gratitude;
+
+    const patterns = [];
+
+    if (negativeAggregate > 0.25) {
+      patterns.push({
+        kind: 'NEGATIVE_MOOD',
+        score: Math.max(0, Math.min(1, negativeAggregate)),
+        metadata: { scores },
+      });
+    }
+
+    if (positiveAggregate > 0.25) {
+      patterns.push({
+        kind: 'POSITIVE_MOOD',
+        score: Math.max(0, Math.min(1, positiveAggregate)),
+        metadata: { scores },
+      });
+    }
+
+    if (Array.isArray(triggers) && triggers.length) {
+      for (const t of triggers.slice(0, 5)) {
+        if (!t || !t.topic) continue;
+        patterns.push({
+          kind: `TRIGGER_TOPIC:${t.topic}`,
+          score: Math.max(0, Math.min(1, t.score || 0)),
+          metadata: { emotion: t.emotion || null },
+        });
+      }
+    }
+
+    // If there are no patterns, clear existing rows for this user and exit.
+    if (!patterns.length) {
+      await prisma.emotionalPattern.deleteMany({ where: { userId } });
+      return;
+    }
+
+    const now = new Date();
+
+    await prisma.$transaction([
+      prisma.emotionalPattern.deleteMany({ where: { userId } }),
+      ...patterns.map((p) =>
+        prisma.emotionalPattern.create({
+          data: {
+            userId,
+            kind: p.kind,
+            score: p.score,
+            status: 'ACTIVE',
+            firstSeenAt: now,
+            lastSeenAt: now,
+            metadata: p.metadata || null,
+          },
+        })
+      ),
+    ]);
+  } catch (e) {
+    console.error('updateEmotionalPatterns error', e && e.message ? e.message : e);
+  }
+}
+
 module.exports = {
   logEmotionalTimelineEvent,
   updateUserEmotionProfile,
   getLongTermEmotionalSnapshot,
   detectEmotionalTriggers,
+  updateEmotionalPatterns,
 };
