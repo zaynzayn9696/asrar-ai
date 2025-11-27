@@ -819,18 +819,8 @@ router.post('/message', async (req, res) => {
       dbUser.plan
     );
     const isPremiumUser = !!(dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro');
+    const isFreePlanUser = !isPremiumUser && dbUser.plan === 'free';
     const userId = dbUser.id;
-
-    // Character gating for free plan
-    if (dbUser.plan === 'free' && characterId !== freeCharacterId) {
-      return res.status(403).json({
-        code: 'PRO_CHARACTER_LOCKED',
-        message:
-          'This companion is available on the Pro plan. Upgrade to unlock all characters.',
-        plan: dbUser.plan,
-        allowedCharacterId: freeCharacterId,
-      });
-    }
 
     // Server-side limits
     if (!isTester && isPremiumUser) {
@@ -1028,6 +1018,68 @@ router.post('/message', async (req, res) => {
       if (typeof aiMessage !== 'string' || !aiMessage.trim()) aiMessage = rawReply;
     } catch (_) {
       aiMessage = rawReply; // fail softly
+    }
+
+    // Phase 4: character-based routing without blocking access.
+    // For free users, only Hana gives full responses. Other companions respond briefly
+    // and recommend the main unlocked companion instead of providing deep content.
+    if (isFreePlanUser && characterId !== freeCharacterId) {
+      if (!isArabicConversation) {
+        const briefLines = [];
+        if (characterId === 'rashid') {
+          briefLines.push(
+            "I can share a tiny hint in Rashid's style, but Hana is the main companion unlocked on your plan for deeper support."
+          );
+          briefLines.push(
+            "If you want to explore this more, you can switch to Hana from the companions section."
+          );
+        } else if (characterId === 'abu-zain') {
+          briefLines.push(
+            "I can offer a very small reflection here, but Hana is available on your plan for deeper emotional support."
+          );
+          briefLines.push(
+            "When you want to go further, you can switch to Hana from the companions section."
+          );
+        } else if (characterId === 'farah') {
+          briefLines.push(
+            "I can give you a light nudge, but Hana is unlocked on your plan for fuller support."
+          );
+          briefLines.push(
+            "If you want more time and depth, try switching to Hana from the companions section."
+          );
+        } else if (characterId === 'nour') {
+          briefLines.push(
+            "I can give you a very brief, direct nudge, but Hana is the main companion on your plan for holding heavier feelings."
+          );
+          briefLines.push(
+            "Whenever you want more space to talk, you can switch to Hana from the companions section."
+          );
+        } else {
+          briefLines.push(
+            "I can give a short hint here, but Hana is available on your plan for deeper support."
+          );
+          briefLines.push(
+            "You can switch to Hana from the companions section whenever you like."
+          );
+        }
+        aiMessage = briefLines.join(' ');
+      }
+    }
+
+    // Premium users: if Hana is being used heavily for non-support topics like study/productivity,
+    // softly suggest switching to Rashid instead of turning Hana into a productivity coach.
+    if (isPremiumUser && characterId === 'hana' && !isArabicConversation) {
+      const lower = userText.toLowerCase();
+      const studyKeywords = ['exam', 'study', 'studying', 'homework', 'assignment', 'test'];
+      const productivityKeywords = ['productivity', 'routine', 'routines', 'schedule', 'plan', 'planning', 'focus'];
+      const mentionsStudy = studyKeywords.some((w) => lower.includes(w));
+      const mentionsProductivity = productivityKeywords.some((w) => lower.includes(w));
+      if (mentionsStudy || mentionsProductivity) {
+        aiMessage =
+          aiMessage +
+          '\n\n' +
+          "For more structured help with study, routines, and focus, Rashid is designed just for that. You can switch to him from the companions section whenever you like.";
+      }
     }
 
     // Persist both user and assistant messages when allowed (and attach MessageEmotion to the user message)
