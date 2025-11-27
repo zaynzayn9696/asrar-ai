@@ -434,7 +434,7 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    console.log('[Chat][DeleteAll] request received', {
+    console.log('[DeleteAll][Start]', {
       userId: userId == null ? 'null' : String(userId),
     });
 
@@ -445,36 +445,11 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
     });
     const convIds = conversations.map((c) => c.id);
 
-    console.log('[Chat][DeleteAll] conversations lookup', {
+    console.log('[DeleteAll][Conversations]', {
       userId: userId == null ? 'null' : String(userId),
+      conversationIds: convIds,
       conversationCount: convIds.length,
     });
-
-    // If there are no conversations, we still want to clear any emotional patterns
-    // and return a successful response.
-    if (!convIds.length) {
-      const patternsDeleted = prisma.emotionalPattern
-        ? await prisma.emotionalPattern.deleteMany({ where: { userId } })
-        : { count: 0 };
-
-      console.log('[Chat][DeleteAll] no conversations found, cleared patterns only', {
-        userId: userId == null ? 'null' : String(userId),
-        patterns: patternsDeleted.count || 0,
-      });
-
-      return res.json({
-        success: true,
-        counts: {
-          conversations: 0,
-          messages: 0,
-          messageEmotions: 0,
-          timelineEvents: 0,
-          conversationEmotionState: 0,
-          conversationStateMachine: 0,
-          patterns: patternsDeleted.count || 0,
-        },
-      });
-    }
 
     const [
       messageEmotionsDeleted,
@@ -516,6 +491,7 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
       prisma.conversation.deleteMany({
         where: {
           id: { in: convIds },
+          userId,
         },
       }),
       prisma.emotionalPattern
@@ -528,16 +504,82 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
         ? patternsDeleted.count
         : 0;
 
-    console.log('[Chat][DeleteAll] completed', {
-      userId: userId == null ? 'null' : String(userId),
-      conversations: conversationsDeleted.count || 0,
-      messages: messagesDeleted.count || 0,
-      messageEmotions: messageEmotionsDeleted.count || 0,
-      timelineEvents: timelineDeleted.count || 0,
-      conversationEmotionState: convoEmotionDeleted.count || 0,
-      conversationStateMachine: stateMachineDeleted.count || 0,
-      patterns: patternsCount,
+    // Post-deletion verification for this user
+    const remainingConversations = await prisma.conversation.count({
+      where: { userId },
     });
+    const remainingMessages = convIds.length
+      ? await prisma.message.count({
+          where: { conversationId: { in: convIds } },
+        })
+      : 0;
+    const remainingMessageEmotions = convIds.length
+      ? await prisma.messageEmotion.count({
+          where: {
+            message: {
+              conversationId: { in: convIds },
+            },
+          },
+        })
+      : 0;
+    const remainingTimeline = convIds.length
+      ? await prisma.emotionalTimelineEvent.count({
+          where: {
+            conversationId: { in: convIds },
+            userId,
+          },
+        })
+      : 0;
+    const remainingConvoEmotionState = convIds.length
+      ? await prisma.conversationEmotionState.count({
+          where: {
+            conversationId: { in: convIds },
+          },
+        })
+      : 0;
+    const remainingStateMachine = convIds.length
+      ? await prisma.conversationStateMachine.count({
+          where: {
+            conversationId: { in: convIds },
+          },
+        })
+      : 0;
+    const remainingPatterns = prisma.emotionalPattern
+      ? await prisma.emotionalPattern.count({ where: { userId } })
+      : 0;
+
+    console.log('[DeleteAll][After]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationsDeleted: conversationsDeleted.count || 0,
+      messagesDeleted: messagesDeleted.count || 0,
+      messageEmotionsDeleted: messageEmotionsDeleted.count || 0,
+      timelineDeleted: timelineDeleted.count || 0,
+      convoEmotionDeleted: convoEmotionDeleted.count || 0,
+      stateMachineDeleted: stateMachineDeleted.count || 0,
+      patternsDeleted: patternsCount,
+      remainingConversations,
+      remainingMessages,
+      remainingMessageEmotions,
+      remainingTimeline,
+      remainingConvoEmotionState,
+      remainingStateMachine,
+      remainingPatterns,
+    });
+
+    if (
+      remainingConversations > 0 ||
+      remainingMessages > 0 ||
+      remainingMessageEmotions > 0 ||
+      remainingTimeline > 0 ||
+      remainingConvoEmotionState > 0 ||
+      remainingStateMachine > 0 ||
+      remainingPatterns > 0
+    ) {
+      return res.status(500).json({
+        message:
+          'Failed to fully delete conversations for this user. Some records remain.',
+      });
+    }
 
     res.json({
       success: true,

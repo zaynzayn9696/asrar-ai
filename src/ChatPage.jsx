@@ -244,6 +244,8 @@ export default function ChatPage() {
     setUsageInfo(user?.usage || null);
   }, [user]);
 
+  const [reloadConversationsToken, setReloadConversationsToken] = useState(0);
+
   useEffect(() => {
     const loadConversations = async () => {
       try {
@@ -264,7 +266,7 @@ export default function ChatPage() {
         if (Array.isArray(list)) setConversations(list);
 
         let cid = (Array.isArray(list) && list.length) ? list[0].id : null;
-        if (!cid) {
+        if (!cid && !reloadConversationsToken) {
           const createRes = await fetch(`${API_BASE}/api/chat/conversations`, {
             method: 'POST', credentials: 'include', headers,
             body: JSON.stringify({ characterId: selectedCharacterId })
@@ -296,7 +298,7 @@ export default function ChatPage() {
       }
     };
     loadConversations();
-  }, [user, selectedCharacterId]);
+  }, [user, selectedCharacterId, reloadConversationsToken]);
 
   // Debug: track which companion is selected in chat
   useEffect(() => {
@@ -353,6 +355,7 @@ export default function ChatPage() {
       setMessages([]);
       setHasHydratedHistory(false);
       setIsMobileSidebarOpen(false);
+      setReloadConversationsToken((prev) => prev + 1);
     };
     window.addEventListener(
       "asrar-conversations-deleted",
@@ -1336,7 +1339,6 @@ export default function ChatPage() {
     </div>
   );
 }
-
 
 
 
