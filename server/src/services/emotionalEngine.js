@@ -17,6 +17,7 @@ const {
   updateConversationStateMachine,
   getConversationState,
 } = require('./emotionalStateMachine');
+const { buildPhase4MemoryBlock } = require('../pipeline/memory/Phase4PromptBuilder');
 
 /**
  * @typedef {Object} Emotion
@@ -359,7 +360,48 @@ function selectModelForResponse({ emotion, convoState }) {
  */
 async function runEmotionalEngine({ userMessage, recentMessages, personaId, personaText, language, conversationId, userId }) {
   try {
-    const emo = await classifyEmotion({ userMessage, recentMessages, language });
+    const tStart = Date.now();
+
+    // First-turn optimisation: when there is no prior context, avoid an extra
+    // model round-trip by using a lightweight heuristic classifier.
+    const hasHistory = Array.isArray(recentMessages) && recentMessages.length > 0;
+    const tClassStart = Date.now();
+    let emo;
+
+    if (!hasHistory) {
+      const text = String(userMessage || '').toLowerCase();
+      const cultureTag =
+        language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
+
+      let primaryEmotion = 'NEUTRAL';
+      if (/(sad|depress|cry|alone|lonely|hurt)/.test(text)) {
+        primaryEmotion = 'SAD';
+      } else if (/(anxious|anxiety|worried|worry|panic|nervous|afraid|scared)/.test(text)) {
+        primaryEmotion = 'ANXIOUS';
+      } else if (/(angry|mad|furious|rage|irritated|pissed)/.test(text)) {
+        primaryEmotion = 'ANGRY';
+      } else if (/(stress|stressed|overwhelmed|burnout|burned out|tired of)/.test(text)) {
+        primaryEmotion = 'STRESSED';
+      } else if (/(grateful|thankful|hopeful|optimistic)/.test(text)) {
+        primaryEmotion = 'HOPEFUL';
+      }
+
+      const approxLength = text.length;
+      const lengthFactor = Math.max(0, Math.min(approxLength / 80, 4));
+      const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
+
+      emo = {
+        primaryEmotion,
+        intensity,
+        confidence: 0.55,
+        cultureTag,
+        notes: 'Heuristic first-turn classification (no context)',
+        severityLevel: 'CASUAL',
+      };
+    } else {
+      emo = await classifyEmotion({ userMessage, recentMessages, language });
+    }
+    const classifyMs = Date.now() - tClassStart;
 
     // Only update conversation state if we have a conversationId
     let convoState = null;
@@ -377,6 +419,8 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     try { longTermSnapshot = await getLongTermEmotionalSnapshot({ userId }); } catch (_) {}
     let triggers = [];
     try { triggers = await detectEmotionalTriggers({ userId }); } catch (_) { triggers = []; }
+    // Lightweight pattern extraction over long-term profile (best-effort)
+    try { await updateEmotionalPatterns({ userId }); } catch (_) {}
 
     // Phase 3: Emotional Pattern table (best-effort, non-blocking)
     try {
@@ -392,7 +436,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     try { await updateConversationStateMachine({ conversationId, emotion: emo, longTermSnapshot, severityLevel: emo.severityLevel || 'CASUAL' }); } catch (_) {}
     try { flowState = await getConversationState({ conversationId }); } catch (_) { flowState = { currentState: 'NEUTRAL' }; }
 
-    const systemPrompt = buildSystemPrompt({
+    let systemPromptBase = buildSystemPrompt({
       personaText,
       personaId: personaId || 'hana',
       emotion: emo,
@@ -401,7 +445,46 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       longTermSnapshot,
       triggers,
     });
-    return { emo, severityLevel: emo.severityLevel || 'CASUAL', convoState, systemPrompt, flowState, longTermSnapshot, triggers, personaCfg: personas[personaId] || defaultPersona };
+
+    // Phase 4: memory-aware additive block (short + long-term kernel)
+    let phase4Block = '';
+    try {
+      phase4Block = await buildPhase4MemoryBlock({
+        userId,
+        conversationId,
+        language,
+        personaId: personaId || 'hana',
+      });
+    } catch (_) {
+      phase4Block = '';
+    }
+
+    const systemPrompt = phase4Block
+      ? `${systemPromptBase}\n\n${phase4Block}`
+      : systemPromptBase;
+
+    const totalMs = Date.now() - tStart;
+    console.log(
+      '[EmoEngine] convoId=%s userId=%s classifyMs=%d totalMs=%d phase4BlockLen=%d hasConvoState=%s hasProfileSnapshot=%s',
+      conversationId == null ? 'null' : String(conversationId),
+      userId == null ? 'null' : String(userId),
+      classifyMs,
+      totalMs,
+      typeof phase4Block === 'string' ? phase4Block.length : 0,
+      !!convoState,
+      !!longTermSnapshot
+    );
+
+    return {
+      emo,
+      severityLevel: emo.severityLevel || 'CASUAL',
+      convoState,
+      systemPrompt,
+      flowState,
+      longTermSnapshot,
+      triggers,
+      personaCfg: personas[personaId] || defaultPersona,
+    };
   } catch (e) {
     // Fallback: neutral prompt using persona only
     const fallbackEmotion = {

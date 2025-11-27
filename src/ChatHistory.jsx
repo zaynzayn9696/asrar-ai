@@ -1,5 +1,5 @@
 // src/ChatHistory.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import AsrarHeader from "./AsrarHeader";
@@ -95,13 +95,18 @@ export default function ChatHistory() {
 
   const [historyMap, setHistoryMap] = useState({});
 
-  // Load per-character history from the same keys ChatPage uses
-  useEffect(() => {
-    if (!user) return;
+  const hydrateHistory = useCallback(() => {
+    if (!user) {
+      setHistoryMap({});
+      return;
+    }
     if (typeof window === "undefined") return;
 
     const userId = user.id;
-    if (!userId) return;
+    if (!userId) {
+      setHistoryMap({});
+      return;
+    }
 
     try {
       const map = {};
@@ -120,8 +125,24 @@ export default function ChatHistory() {
       setHistoryMap(map);
     } catch (e) {
       console.error("[ChatHistory] Failed to load chat history", e);
+      setHistoryMap({});
     }
   }, [user]);
+
+  useEffect(() => {
+    hydrateHistory();
+  }, [hydrateHistory]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const handleCleared = () => {
+      hydrateHistory();
+    };
+    window.addEventListener("asrar-conversations-deleted", handleCleared);
+    return () => {
+      window.removeEventListener("asrar-conversations-deleted", handleCleared);
+    };
+  }, [hydrateHistory]);
 
   const handleLangSwitch = (newLang) => {
     setLang(newLang);

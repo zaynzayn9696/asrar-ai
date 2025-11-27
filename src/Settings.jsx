@@ -107,6 +107,7 @@ export default function Settings() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [isUpdatingSaveHistory, setIsUpdatingSaveHistory] = useState(false); // track toggle loading state
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
+  const [isDeletingConversations, setIsDeletingConversations] = useState(false);
 
   // --- LOAD SETTINGS FROM BACKEND (FIXED with credentials) -------------
   useEffect(() => {
@@ -347,6 +348,76 @@ export default function Settings() {
     }
   };
 
+  const deleteAllConversationsImproved = async () => {
+    if (isDeletingConversations) return false;
+
+    setIsDeletingConversations(true);
+    setErrorMessage("");
+
+    try {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+      const res = await fetch(`${API_BASE}/api/chat/delete-all`, {
+        method: "DELETE",
+        credentials: "include",
+        headers,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setErrorMessage(
+          data?.message ||
+            (isAr
+              ? "فشل حذف المحادثات."
+              : "Failed to delete conversations. Please try again.")
+        );
+        return false;
+      }
+
+      try {
+        if (typeof window !== "undefined") {
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("asrar-chat-history-")) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+          localStorage.removeItem("asrar-chat-history");
+
+          window.dispatchEvent(new Event("asrar-conversations-deleted"));
+        }
+      } catch (storageErr) {
+        console.error(
+          "[Settings] Failed to clear local chat history",
+          storageErr
+        );
+      }
+
+      setSuccessMessage(
+        isAr
+          ? "تم حذف جميع المحادثات."
+          : "All conversations have been deleted."
+      );
+      return true;
+    } catch (err) {
+      console.error("[Settings] deleteAllConversations error", err);
+      setErrorMessage(
+        isAr
+          ? "فشل حذف المحادثات."
+          : "Failed to delete conversations. Please try again."
+      );
+      return false;
+    } finally {
+      setIsDeletingConversations(false);
+    }
+  };
+
   return (
     <div
       className={`asrar-dash-page asrar-dashboard-page asrar-settings-page ${
@@ -513,6 +584,7 @@ export default function Settings() {
                   type="button"
                   className="asrar-settings-delete-btn"
                   onClick={() => setShowConfirmModal(true)}
+                  disabled={isDeletingConversations}
                 >
                   {t.deleteConversations}
                 </button>
@@ -533,12 +605,15 @@ export default function Settings() {
               </button>
               <button
                 className="asrar-btn primary"
-                onClick={() => {
-                  deleteAllConversations();
-                  setShowConfirmModal(false);
+                disabled={isDeletingConversations}
+                onClick={async () => {
+                  const ok = await deleteAllConversationsImproved();
+                  if (ok) {
+                    setShowConfirmModal(false);
+                  }
                 }}
               >
-                {t.confirm}
+                {isDeletingConversations ? (isAr ? "جاري الحذف..." : "Deleting...") : t.confirm}
               </button>
             </div>
           </div>

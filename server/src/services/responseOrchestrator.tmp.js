@@ -104,7 +104,7 @@ function avoidTriggerReintensification(text, triggers) {
     const token = String(t.topic || '').trim();
     if (!token) continue;
     const re = new RegExp(`\\b${token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    out = out.replace(re, 'this area');
+    out = out.replace(re, 'that topic');
   }
   return out;
 }

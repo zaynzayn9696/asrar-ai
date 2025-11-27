@@ -13,6 +13,7 @@ const { CHARACTER_VOICES } = require('../config/characterVoices');
 const { TONES } = require('../config/tones');
 const { runEmotionalEngine } = require('../services/emotionalEngine');
 const { selectModelForResponse } = require('../services/emotionalEngine');
+const { recordEvent: recordMemoryEvent } = require('../pipeline/memory/memoryKernel');
 const { orchestrateResponse } = require('../services/responseOrchestrator');
 const multer = require('multer');
 const path = require('path');
@@ -429,12 +430,236 @@ router.get('/conversations/:conversationId/messages', async (req, res) => {
   }
 });
 
+// Delete a single conversation and all related emotional state for this user
+router.delete('/conversations/:conversationId', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const conversationId = Number(req.params.conversationId);
+
+    if (!Number.isFinite(conversationId)) {
+      return res.status(400).json({ message: 'Invalid conversationId' });
+    }
+
+    const conv = await prisma.conversation.findFirst({
+      where: { id: conversationId, userId },
+      select: { id: true },
+    });
+
+    if (!conv) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+
+    console.log('[Chat] delete-conversation convoId=%s userId=%s', String(conv.id), String(userId));
+
+    await prisma.$transaction(async (tx) => {
+      await tx.messageEmotion.deleteMany({
+        where: {
+          message: {
+            conversationId: conv.id,
+            userId,
+          },
+        },
+      });
+
+      await tx.emotionalTimelineEvent.deleteMany({
+        where: {
+          conversationId: conv.id,
+          userId,
+        },
+      });
+
+      await tx.conversationEmotionState.deleteMany({
+        where: { conversationId: conv.id },
+      });
+
+      await tx.conversationStateMachine.deleteMany({
+        where: { conversationId: conv.id },
+      });
+
+      await tx.message.deleteMany({
+        where: {
+          conversationId: conv.id,
+          userId,
+        },
+      });
+
+      await tx.conversation.delete({
+        where: { id: conv.id },
+      });
+    });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Delete conversation error', err && err.message ? err.message : err);
+    return res.status(500).json({ message: 'Failed to delete conversation' });
+  }
+});
+
 router.delete('/delete-all', requireAuth, async (req, res) => {
   try {
-    const deleted = await prisma.message.deleteMany({ where: { userId: req.user.id } });
-    res.json({ success: true, count: deleted.count });
+    const userId = req.user.id;
+
+    console.log('[DeleteAll][Start]', {
+      userId: userId == null ? 'null' : String(userId),
+    });
+
+    // Find all conversations for this user
+    const conversations = await prisma.conversation.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    const convIds = conversations.map((c) => c.id);
+
+    console.log('[DeleteAll][Conversations]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationIds: convIds,
+      conversationCount: convIds.length,
+    });
+
+    const [
+      messageEmotionsDeleted,
+      timelineDeleted,
+      convoEmotionDeleted,
+      stateMachineDeleted,
+      messagesDeleted,
+      conversationsDeleted,
+      patternsDeleted,
+    ] = await prisma.$transaction([
+      prisma.messageEmotion.deleteMany({
+        where: {
+          message: {
+            conversationId: { in: convIds },
+          },
+        },
+      }),
+      prisma.emotionalTimelineEvent.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+          userId,
+        },
+      }),
+      prisma.conversationEmotionState.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+        },
+      }),
+      prisma.conversationStateMachine.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+        },
+      }),
+      prisma.message.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+        },
+      }),
+      prisma.conversation.deleteMany({
+        where: {
+          id: { in: convIds },
+          userId,
+        },
+      }),
+      prisma.emotionalPattern
+        ? prisma.emotionalPattern.deleteMany({ where: { userId } })
+        : prisma.$executeRaw`SELECT 0 AS count`,
+    ]);
+
+    const patternsCount =
+      patternsDeleted && typeof patternsDeleted.count === 'number'
+        ? patternsDeleted.count
+        : 0;
+
+    // Post-deletion verification for this user
+    const remainingConversations = await prisma.conversation.count({
+      where: { userId },
+    });
+    const remainingMessages = convIds.length
+      ? await prisma.message.count({
+          where: { conversationId: { in: convIds } },
+        })
+      : 0;
+    const remainingMessageEmotions = convIds.length
+      ? await prisma.messageEmotion.count({
+          where: {
+            message: {
+              conversationId: { in: convIds },
+            },
+          },
+        })
+      : 0;
+    const remainingTimeline = convIds.length
+      ? await prisma.emotionalTimelineEvent.count({
+          where: {
+            conversationId: { in: convIds },
+            userId,
+          },
+        })
+      : 0;
+    const remainingConvoEmotionState = convIds.length
+      ? await prisma.conversationEmotionState.count({
+          where: {
+            conversationId: { in: convIds },
+          },
+        })
+      : 0;
+    const remainingStateMachine = convIds.length
+      ? await prisma.conversationStateMachine.count({
+          where: {
+            conversationId: { in: convIds },
+          },
+        })
+      : 0;
+    const remainingPatterns = prisma.emotionalPattern
+      ? await prisma.emotionalPattern.count({ where: { userId } })
+      : 0;
+
+    console.log('[DeleteAll][After]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationsDeleted: conversationsDeleted.count || 0,
+      messagesDeleted: messagesDeleted.count || 0,
+      messageEmotionsDeleted: messageEmotionsDeleted.count || 0,
+      timelineDeleted: timelineDeleted.count || 0,
+      convoEmotionDeleted: convoEmotionDeleted.count || 0,
+      stateMachineDeleted: stateMachineDeleted.count || 0,
+      patternsDeleted: patternsCount,
+      remainingConversations,
+      remainingMessages,
+      remainingMessageEmotions,
+      remainingTimeline,
+      remainingConvoEmotionState,
+      remainingStateMachine,
+      remainingPatterns,
+    });
+
+    if (
+      remainingConversations > 0 ||
+      remainingMessages > 0 ||
+      remainingMessageEmotions > 0 ||
+      remainingTimeline > 0 ||
+      remainingConvoEmotionState > 0 ||
+      remainingStateMachine > 0 ||
+      remainingPatterns > 0
+    ) {
+      return res.status(500).json({
+        message:
+          'Failed to fully delete conversations for this user. Some records remain.',
+      });
+    }
+
+    res.json({
+      success: true,
+      counts: {
+        conversations: conversationsDeleted.count || 0,
+        messages: messagesDeleted.count || 0,
+        messageEmotions: messageEmotionsDeleted.count || 0,
+        timelineEvents: timelineDeleted.count || 0,
+        conversationEmotionState: convoEmotionDeleted.count || 0,
+        conversationStateMachine: stateMachineDeleted.count || 0,
+        patterns: patternsCount,
+      },
+    });
   } catch (err) {
-    console.error('Delete all messages error:', err);
+    console.error('Delete all messages error:', err && err.message ? err.message : err);
     res.status(500).json({ message: 'Failed to delete messages.' });
   }
 });
@@ -750,18 +975,8 @@ router.post('/message', async (req, res) => {
       dbUser.plan
     );
     const isPremiumUser = !!(dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro');
+    const isFreePlanUser = !isPremiumUser && dbUser.plan === 'free';
     const userId = dbUser.id;
-
-    // Character gating for free plan
-    if (dbUser.plan === 'free' && characterId !== freeCharacterId) {
-      return res.status(403).json({
-        code: 'PRO_CHARACTER_LOCKED',
-        message:
-          'This companion is available on the Pro plan. Upgrade to unlock all characters.',
-        plan: dbUser.plan,
-        allowedCharacterId: freeCharacterId,
-      });
-    }
 
     // Server-side limits
     if (!isTester && isPremiumUser) {
@@ -856,15 +1071,18 @@ router.post('/message', async (req, res) => {
       // Load previous messages from DB for this conversation
       const prev = await prisma.message.findMany({
         where: { conversationId: cid },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: 'desc' },
+        take: MAX_CONTEXT_MESSAGES,
         select: { role: true, content: true },
       });
       const decryptedMsgs = prev
         .filter((m) => m && typeof m.content === 'string')
-        .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
-      recentContext = decryptedMsgs.length > MAX_CONTEXT_MESSAGES
-        ? decryptedMsgs.slice(-MAX_CONTEXT_MESSAGES)
-        : decryptedMsgs;
+        .reverse()
+        .map((m) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content,
+        }));
+      recentContext = decryptedMsgs;
     } else {
       // Fall back to messages passed from client (for non-saving users)
       const incoming = Array.isArray(messages) ? messages : [];
@@ -889,8 +1107,30 @@ router.post('/message', async (req, res) => {
       return res.status(400).json({ message: 'No user content provided' });
     }
 
+    // Free-plan character gating for detailed questions on locked companions.
+    // Hana (or freeCharacterId) remains fully available; other companions are available
+    // only for light/brief questions on the free plan. Detailed questions trigger
+    // the upgrade modal via PRO_CHARACTER_LOCKED.
+    if (!isTester && isFreePlanUser && characterId !== freeCharacterId) {
+      const detailedPunctuationMatches = userText.match(/[?.!؟]/g) || [];
+      const isLong = userText.length > 120;
+      const hasMultipleSentences = detailedPunctuationMatches.length >= 2;
+      const isDetailedQuestion = isLong || hasMultipleSentences;
+
+      if (isDetailedQuestion) {
+        return res.status(403).json({
+          code: 'PRO_CHARACTER_LOCKED',
+          message:
+            'This companion is available on the Pro plan for deeper, detailed questions. Upgrade to unlock full access.',
+          plan: dbUser.plan,
+          allowedCharacterId: freeCharacterId,
+        });
+      }
+    }
+
     // Emotional Engine: classify and build emotionally-aware system prompt
     const languageForEngine = lang === 'mixed' ? 'mixed' : (isArabicConversation ? 'ar' : 'en');
+    const tEngineStart = Date.now();
     const { emo, severityLevel, systemPrompt, flowState, longTermSnapshot, triggers, personaCfg } = await runEmotionalEngine({
       userMessage: userText,
       recentMessages: recentContext,
@@ -900,6 +1140,13 @@ router.post('/message', async (req, res) => {
       conversationId: cid,
       userId,
     });
+    const engineMs = Date.now() - tEngineStart;
+    console.log(
+      '[Chat] emoEngine convoId=%s userId=%s ms=%d',
+      cid == null ? 'null' : String(cid),
+      userId == null ? 'null' : String(userId),
+      engineMs
+    );
 
     const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
     const systemMessage = `${systemPrompt}\n\n${toneInstruction}`;
@@ -912,11 +1159,20 @@ router.post('/message', async (req, res) => {
     // Phase 3: Multi-model routing based on emotion intensity and state machine
     const routedModel = selectModelForResponse({ emotion: emo, convoState: flowState || { currentState: 'NEUTRAL' } });
 
+    const tOpenAIStart = Date.now();
     const completion = await openai.chat.completions.create({
       model: routedModel,
       messages: openAIMessages,
       temperature: 0.8,
     });
+    const openAiMs = Date.now() - tOpenAIStart;
+    console.log(
+      '[Chat] openai convoId=%s userId=%s ms=%d model=%s',
+      cid == null ? 'null' : String(cid),
+      userId == null ? 'null' : String(userId),
+      openAiMs,
+      routedModel
+    );
 
     const rawReply = completion.choices?.[0]?.message?.content?.trim();
     if (!rawReply) {
@@ -944,7 +1200,71 @@ router.post('/message', async (req, res) => {
       aiMessage = rawReply; // fail softly
     }
 
-    // Persist both user and assistant messages when allowed (and attach MessageEmotion to the user message)
+    // Phase 4: character-based routing without blocking access.
+    // For free users, only the main unlocked companion (e.g. Hana) gives full responses.
+    // Other companions respond briefly and recommend the main unlocked companion
+    // instead of providing deep content.
+    if (isFreePlanUser && characterId !== freeCharacterId) {
+      if (!isArabicConversation) {
+        const briefLines = [];
+        if (characterId === 'rashid') {
+          briefLines.push(
+            "I can share a tiny hint in Rashid's style, but Hana is the main companion unlocked on your plan for deeper support."
+          );
+          briefLines.push(
+            "If you want to explore this more, you can switch to Hana from the companions section."
+          );
+        } else if (characterId === 'abu-zain') {
+          briefLines.push(
+            "I can offer a very small reflection here, but Hana is available on your plan for deeper emotional support."
+          );
+          briefLines.push(
+            "When you want to go further, you can switch to Hana from the companions section."
+          );
+        } else if (characterId === 'farah') {
+          briefLines.push(
+            "I can give you a light nudge, but Hana is unlocked on your plan for fuller support."
+          );
+          briefLines.push(
+            "If you want more time and depth, try switching to Hana from the companions section."
+          );
+        } else if (characterId === 'nour') {
+          briefLines.push(
+            "I can give you a very brief, direct nudge, but Hana is the main companion on your plan for holding heavier feelings."
+          );
+          briefLines.push(
+            "Whenever you want more space to talk, you can switch to Hana from the companions section."
+          );
+        } else {
+          briefLines.push(
+            "I can give a short hint here, but Hana is available on your plan for deeper support."
+          );
+          briefLines.push(
+            "You can switch to Hana from the companions section whenever you like."
+          );
+        }
+        aiMessage = briefLines.join(' ');
+      }
+    }
+
+    // Premium users: if Hana is being used heavily for non-support topics like study/productivity,
+    // softly suggest switching to Rashid instead of turning Hana into a productivity coach.
+    if (isPremiumUser && characterId === 'hana' && !isArabicConversation) {
+      const lower = userText.toLowerCase();
+      const studyKeywords = ['exam', 'study', 'studying', 'homework', 'assignment', 'test'];
+      const productivityKeywords = ['productivity', 'routine', 'routines', 'schedule', 'plan', 'planning', 'focus'];
+      const mentionsStudy = studyKeywords.some((w) => lower.includes(w));
+      const mentionsProductivity = productivityKeywords.some((w) => lower.includes(w));
+      if (mentionsStudy || mentionsProductivity) {
+        aiMessage =
+          aiMessage +
+          '\n\n' +
+          "For more structured help with study, routines, and focus, Rashid is designed just for that. You can switch to him from the companions section whenever you like.";
+      }
+    }
+
+    // Persist both user and assistant messages when allowed.
+    // MessageEmotion + memory kernel are best-effort and non-blocking for latency.
     if (shouldSave) {
       try {
         const [userRow] = await prisma.$transaction([
@@ -966,12 +1286,16 @@ router.post('/message', async (req, res) => {
               content: aiMessage,
             },
           }),
-          prisma.conversation.update({ where: { id: cid }, data: { updatedAt: new Date() } }),
+          prisma.conversation.update({
+            where: { id: cid },
+            data: { updatedAt: new Date() },
+          }),
         ]);
 
-        // Best-effort: persist emotion metadata for the user's message
-        try {
-          await prisma.messageEmotion.create({
+        // Fire-and-forget: enrich MessageEmotion + update memory kernel without
+        // blocking the HTTP response.
+        prisma.messageEmotion
+          .create({
             data: {
               messageId: userRow.id,
               primaryEmotion: emo.primaryEmotion,
@@ -980,10 +1304,27 @@ router.post('/message', async (req, res) => {
               cultureTag: emo.cultureTag,
               notes: emo.notes || null,
             },
+          })
+          .then(() =>
+            recordMemoryEvent({
+              userId,
+              conversationId: cid,
+              messageId: userRow.id,
+              characterId,
+              emotion: emo,
+              topics: Array.isArray(emo.topics) ? emo.topics : [],
+              secondaryEmotion: emo.secondaryEmotion || null,
+              emotionVector: emo.emotionVector || null,
+              detectorVersion: emo.detectorVersion || null,
+              isKernelRelevant: true,
+            })
+          )
+          .catch((err) => {
+            console.error(
+              '[Chat] MessageEmotion/memory kernel async error',
+              err && err.message ? err.message : err
+            );
           });
-        } catch (e) {
-          console.error('MessageEmotion create error', e && e.message ? e.message : e);
-        }
       } catch (err) {
         console.error('Message persistence error', err);
       }

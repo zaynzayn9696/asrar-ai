@@ -244,6 +244,8 @@ export default function ChatPage() {
     setUsageInfo(user?.usage || null);
   }, [user]);
 
+  const [reloadConversationsToken, setReloadConversationsToken] = useState(0);
+
   useEffect(() => {
     const loadConversations = async () => {
       try {
@@ -264,7 +266,7 @@ export default function ChatPage() {
         if (Array.isArray(list)) setConversations(list);
 
         let cid = (Array.isArray(list) && list.length) ? list[0].id : null;
-        if (!cid) {
+        if (!cid && !reloadConversationsToken) {
           const createRes = await fetch(`${API_BASE}/api/chat/conversations`, {
             method: 'POST', credentials: 'include', headers,
             body: JSON.stringify({ characterId: selectedCharacterId })
@@ -296,7 +298,7 @@ export default function ChatPage() {
       }
     };
     loadConversations();
-  }, [user, selectedCharacterId]);
+  }, [user, selectedCharacterId, reloadConversationsToken]);
 
   // Debug: track which companion is selected in chat
   useEffect(() => {
@@ -344,6 +346,28 @@ export default function ChatPage() {
       setHasHydratedHistory(true);
     }
   }, [user, selectedCharacterId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const handleConversationsCleared = () => {
+      setConversations([]);
+      setConversationId(null);
+      setMessages([]);
+      setHasHydratedHistory(false);
+      setIsMobileSidebarOpen(false);
+      setReloadConversationsToken((prev) => prev + 1);
+    };
+    window.addEventListener(
+      "asrar-conversations-deleted",
+      handleConversationsCleared
+    );
+    return () => {
+      window.removeEventListener(
+        "asrar-conversations-deleted",
+        handleConversationsCleared
+      );
+    };
+  }, [user]);
 
   // Auto-scroll messages container to bottom whenever messages or character change
   useEffect(() => {
@@ -447,6 +471,66 @@ export default function ChatPage() {
     setIsMobileSidebarOpen(false);
   };
 
+  const handleDeleteConversation = async (id, event) => {
+    if (event && typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
+
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const headers = token
+        ? { Authorization: `Bearer ${token}` }
+        : undefined;
+
+      const res = await fetch(`${API_BASE}/api/chat/conversations/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+
+      if (!res.ok) {
+        console.error('[ChatPage] delete conversation failed', { status: res.status });
+        return;
+      }
+
+      setConversations((prev) => (Array.isArray(prev) ? prev.filter((c) => c.id !== id) : []));
+
+      if (conversationId === id) {
+        setConversationId(null);
+        const now = new Date().toISOString();
+        setMessages([
+          {
+            id: 1,
+            from: 'system',
+            text: isArabicConversation
+              ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+              : "This is your private space. Nothing you say here is judged.",
+            createdAt: now,
+          },
+          {
+            id: 2,
+            from: 'ai',
+            text: isArabicConversation
+              ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+              : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
+            createdAt: now,
+          },
+        ]);
+
+        if (user && typeof window !== 'undefined') {
+          try {
+            const storageKey = `asrar-chat-history-${user.id}-${selectedCharacterId}`;
+            localStorage.removeItem(storageKey);
+          } catch (e) {
+            console.error('[ChatPage] failed to clear deleted conversation history', e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[ChatPage] delete conversation error', e);
+    }
+  };
+
   const renderSidebarContent = () => (
     <>
       <button
@@ -469,7 +553,16 @@ export default function ChatPage() {
             }
             onClick={() => handleConversationClick(conv.id)}
           >
-            <div className="asrar-conv-title">{getName(character)}</div>
+            <div className="asrar-conv-title-row">
+              <span className="asrar-conv-title">{getName(character)}</span>
+              <button
+                type="button"
+                className="asrar-conv-delete-btn"
+                onClick={(e) => handleDeleteConversation(conv.id, e)}
+              >
+                ×
+              </button>
+            </div>
             <div className="asrar-conv-preview">{(conv.firstUserMessage && conv.firstUserMessage.trim()) ? conv.firstUserMessage.slice(0, 60) : "No messages yet"}</div>
           </div>
         ))}
@@ -1139,7 +1232,7 @@ export default function ChatPage() {
         <div className="asrar-chat-main">
           <header className="asrar-chat-header-strip">
             <div className="asrar-chat-header-main">
-              <h1 className="asrar-chat-header-title">{getName(character)} ΓÇö {getRole(character)}</h1>
+              <h1 className="asrar-chat-header-title">{getName(character)} - {getRole(character)}</h1>
             </div>
             {null}
           </header>
@@ -1274,8 +1367,16 @@ export default function ChatPage() {
 
       {/* Modals */}
       {(showLockedModal || showLimitModal) && (
-        <div className="asrar-modal-backdrop">
-          <div className="asrar-modal">
+        <div
+          className="asrar-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowLockedModal(false);
+              setShowLimitModal(false);
+            }
+          }}
+        >
+          <div className="asrar-modal" onClick={(e) => e.stopPropagation()}>
             <div className="asrar-modal-body">{modalText}</div>
             <div className="asrar-modal-actions">
               <button
@@ -1307,10 +1408,6 @@ export default function ChatPage() {
     </div>
   );
 }
-
-
-
-
 
 
 

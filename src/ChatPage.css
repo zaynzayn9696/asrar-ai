@@ -10,7 +10,9 @@
 
 @media (max-width: 900px) {
   .asrar-chat-page {
+    /* Use dynamic viewport height on mobile to avoid extra space / phantom scroll */
     min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
