@@ -360,8 +360,46 @@ function selectModelForResponse({ emotion, convoState }) {
 async function runEmotionalEngine({ userMessage, recentMessages, personaId, personaText, language, conversationId, userId }) {
   try {
     const tStart = Date.now();
+
+    // First-turn optimisation: when there is no prior context, avoid an extra
+    // model round-trip by using a lightweight heuristic classifier.
+    const hasHistory = Array.isArray(recentMessages) && recentMessages.length > 0;
     const tClassStart = Date.now();
-    const emo = await classifyEmotion({ userMessage, recentMessages, language });
+    let emo;
+
+    if (!hasHistory) {
+      const text = String(userMessage || '').toLowerCase();
+      const cultureTag =
+        language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
+
+      let primaryEmotion = 'NEUTRAL';
+      if (/(sad|depress|cry|alone|lonely|hurt)/.test(text)) {
+        primaryEmotion = 'SAD';
+      } else if (/(anxious|anxiety|worried|worry|panic|nervous|afraid|scared)/.test(text)) {
+        primaryEmotion = 'ANXIOUS';
+      } else if (/(angry|mad|furious|rage|irritated|pissed)/.test(text)) {
+        primaryEmotion = 'ANGRY';
+      } else if (/(stress|stressed|overwhelmed|burnout|burned out|tired of)/.test(text)) {
+        primaryEmotion = 'STRESSED';
+      } else if (/(grateful|thankful|hopeful|optimistic)/.test(text)) {
+        primaryEmotion = 'HOPEFUL';
+      }
+
+      const approxLength = text.length;
+      const lengthFactor = Math.max(0, Math.min(approxLength / 80, 4));
+      const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
+
+      emo = {
+        primaryEmotion,
+        intensity,
+        confidence: 0.55,
+        cultureTag,
+        notes: 'Heuristic first-turn classification (no context)',
+        severityLevel: 'CASUAL',
+      };
+    } else {
+      emo = await classifyEmotion({ userMessage, recentMessages, language });
+    }
     const classifyMs = Date.now() - tClassStart;
 
     // Only update conversation state if we have a conversationId

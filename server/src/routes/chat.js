@@ -434,12 +434,47 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
 
+    console.log('[Chat][DeleteAll] request received', {
+      userId: userId == null ? 'null' : String(userId),
+    });
+
     // Find all conversations for this user
     const conversations = await prisma.conversation.findMany({
       where: { userId },
       select: { id: true },
     });
     const convIds = conversations.map((c) => c.id);
+
+    console.log('[Chat][DeleteAll] conversations lookup', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationCount: convIds.length,
+    });
+
+    // If there are no conversations, we still want to clear any emotional patterns
+    // and return a successful response.
+    if (!convIds.length) {
+      const patternsDeleted = prisma.emotionalPattern
+        ? await prisma.emotionalPattern.deleteMany({ where: { userId } })
+        : { count: 0 };
+
+      console.log('[Chat][DeleteAll] no conversations found, cleared patterns only', {
+        userId: userId == null ? 'null' : String(userId),
+        patterns: patternsDeleted.count || 0,
+      });
+
+      return res.json({
+        success: true,
+        counts: {
+          conversations: 0,
+          messages: 0,
+          messageEmotions: 0,
+          timelineEvents: 0,
+          conversationEmotionState: 0,
+          conversationStateMachine: 0,
+          patterns: patternsDeleted.count || 0,
+        },
+      });
+    }
 
     const [
       messageEmotionsDeleted,
@@ -493,12 +528,26 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
         ? patternsDeleted.count
         : 0;
 
+    console.log('[Chat][DeleteAll] completed', {
+      userId: userId == null ? 'null' : String(userId),
+      conversations: conversationsDeleted.count || 0,
+      messages: messagesDeleted.count || 0,
+      messageEmotions: messageEmotionsDeleted.count || 0,
+      timelineEvents: timelineDeleted.count || 0,
+      conversationEmotionState: convoEmotionDeleted.count || 0,
+      conversationStateMachine: stateMachineDeleted.count || 0,
+      patterns: patternsCount,
+    });
+
     res.json({
       success: true,
       counts: {
         conversations: conversationsDeleted.count || 0,
         messages: messagesDeleted.count || 0,
         messageEmotions: messageEmotionsDeleted.count || 0,
+        timelineEvents: timelineDeleted.count || 0,
+        conversationEmotionState: convoEmotionDeleted.count || 0,
+        conversationStateMachine: stateMachineDeleted.count || 0,
         patterns: patternsCount,
       },
     });
@@ -915,15 +964,18 @@ router.post('/message', async (req, res) => {
       // Load previous messages from DB for this conversation
       const prev = await prisma.message.findMany({
         where: { conversationId: cid },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { createdAt: 'desc' },
+        take: MAX_CONTEXT_MESSAGES,
         select: { role: true, content: true },
       });
       const decryptedMsgs = prev
         .filter((m) => m && typeof m.content === 'string')
-        .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
-      recentContext = decryptedMsgs.length > MAX_CONTEXT_MESSAGES
-        ? decryptedMsgs.slice(-MAX_CONTEXT_MESSAGES)
-        : decryptedMsgs;
+        .reverse()
+        .map((m) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: m.content,
+        }));
+      recentContext = decryptedMsgs;
     } else {
       // Fall back to messages passed from client (for non-saving users)
       const incoming = Array.isArray(messages) ? messages : [];
@@ -946,6 +998,27 @@ router.post('/message', async (req, res) => {
 
     if (!userText) {
       return res.status(400).json({ message: 'No user content provided' });
+    }
+
+    // Free-plan character gating for detailed questions on locked companions.
+    // Hana (or freeCharacterId) remains fully available; other companions are available
+    // only for light/brief questions on the free plan. Detailed questions trigger
+    // the upgrade modal via PRO_CHARACTER_LOCKED.
+    if (!isTester && isFreePlanUser && characterId !== freeCharacterId) {
+      const detailedPunctuationMatches = userText.match(/[?.!؟]/g) || [];
+      const isLong = userText.length > 120;
+      const hasMultipleSentences = detailedPunctuationMatches.length >= 2;
+      const isDetailedQuestion = isLong || hasMultipleSentences;
+
+      if (isDetailedQuestion) {
+        return res.status(403).json({
+          code: 'PRO_CHARACTER_LOCKED',
+          message:
+            'This companion is available on the Pro plan for deeper, detailed questions. Upgrade to unlock full access.',
+          plan: dbUser.plan,
+          allowedCharacterId: freeCharacterId,
+        });
+      }
     }
 
     // Emotional Engine: classify and build emotionally-aware system prompt
@@ -1021,8 +1094,9 @@ router.post('/message', async (req, res) => {
     }
 
     // Phase 4: character-based routing without blocking access.
-    // For free users, only Hana gives full responses. Other companions respond briefly
-    // and recommend the main unlocked companion instead of providing deep content.
+    // For free users, only the main unlocked companion (e.g. Hana) gives full responses.
+    // Other companions respond briefly and recommend the main unlocked companion
+    // instead of providing deep content.
     if (isFreePlanUser && characterId !== freeCharacterId) {
       if (!isArabicConversation) {
         const briefLines = [];
@@ -1082,7 +1156,8 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    // Persist both user and assistant messages when allowed (and attach MessageEmotion to the user message)
+    // Persist both user and assistant messages when allowed.
+    // MessageEmotion + memory kernel are best-effort and non-blocking for latency.
     if (shouldSave) {
       try {
         const [userRow] = await prisma.$transaction([
@@ -1104,12 +1179,16 @@ router.post('/message', async (req, res) => {
               content: aiMessage,
             },
           }),
-          prisma.conversation.update({ where: { id: cid }, data: { updatedAt: new Date() } }),
+          prisma.conversation.update({
+            where: { id: cid },
+            data: { updatedAt: new Date() },
+          }),
         ]);
 
-        // Best-effort: persist emotion metadata for the user's message
-        try {
-          const me = await prisma.messageEmotion.create({
+        // Fire-and-forget: enrich MessageEmotion + update memory kernel without
+        // blocking the HTTP response.
+        prisma.messageEmotion
+          .create({
             data: {
               messageId: userRow.id,
               primaryEmotion: emo.primaryEmotion,
@@ -1118,12 +1197,9 @@ router.post('/message', async (req, res) => {
               cultureTag: emo.cultureTag,
               notes: emo.notes || null,
             },
-          });
-
-          // Phase 4 Memory Kernel: update short-term and long-term emotional memory.
-          // This runs after MessageEmotion is saved and before the next reply.
-          try {
-            await recordMemoryEvent({
+          })
+          .then(() =>
+            recordMemoryEvent({
               userId,
               conversationId: cid,
               messageId: userRow.id,
@@ -1134,13 +1210,14 @@ router.post('/message', async (req, res) => {
               emotionVector: emo.emotionVector || null,
               detectorVersion: emo.detectorVersion || null,
               isKernelRelevant: true,
-            });
-          } catch (kernelErr) {
-            console.error('[Chat] Memory kernel recordEvent error', kernelErr && kernelErr.message ? kernelErr.message : kernelErr);
-          }
-        } catch (e) {
-          console.error('MessageEmotion create error', e && e.message ? e.message : e);
-        }
+            })
+          )
+          .catch((err) => {
+            console.error(
+              '[Chat] MessageEmotion/memory kernel async error',
+              err && err.message ? err.message : err
+            );
+          });
       } catch (err) {
         console.error('Message persistence error', err);
       }

@@ -1295,8 +1295,16 @@ export default function ChatPage() {
 
       {/* Modals */}
       {(showLockedModal || showLimitModal) && (
-        <div className="asrar-modal-backdrop">
-          <div className="asrar-modal">
+        <div
+          className="asrar-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowLockedModal(false);
+              setShowLimitModal(false);
+            }
+          }}
+        >
+          <div className="asrar-modal" onClick={(e) => e.stopPropagation()}>
             <div className="asrar-modal-body">{modalText}</div>
             <div className="asrar-modal-actions">
               <button
@@ -1328,7 +1336,6 @@ export default function ChatPage() {
     </div>
   );
 }
-
 
 
 
