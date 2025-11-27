@@ -186,7 +186,7 @@ body {
   inset: 0;
   z-index: 80;
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: stretch;
 }
 
@@ -204,15 +204,15 @@ body {
   max-width: 400px;
   height: 100%;
   padding: 1.5rem 1.2rem;
-  background: radial-gradient(circle at top right, #08182a 0, #02050c 70%);
-  border-left: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: 32px 0 0 32px;
-  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.85);
+  background: radial-gradient(circle at top left, #08182a 0, #02050c 70%);
+  border-right: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 0 32px 32px 0;
+  box-shadow: 24px 0 60px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
-  transform: translateX(100%);
-  animation: asrar-nav-slide-in 0.25s ease forwards;
+  transform: translateX(-100%);
+  animation: asrar-home-nav-slide-in 0.25s ease forwards;
 }
 
 .asrar-home-mobile-nav--open {
@@ -1457,6 +1457,26 @@ body {
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes asrar-dash-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes asrar-home-nav-slide-in {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 

@@ -23,7 +23,7 @@
   overflow-x: hidden;
   min-height: 100vh;
   padding-bottom: 0 !important;  /* keep this too */
-  /* ❌ no overflow-y here – let the browser/body own scrolling */
+  /* desktop will further constrain height/overflow in a media query */
 }
 .asrar-chat-page .asrar-dash-header {
   position: sticky;
@@ -1023,6 +1023,12 @@
 
 /* === DESKTOP LAYOUT: FIXED HEADER + SIDEBAR, FULL-HEIGHT CHAT COLUMN === */
 @media (min-width: 901px) {
+  /* Constrain the whole chat shell to the viewport and let only messages scroll */
+  .asrar-dash-page.asrar-chat-page {
+    height: 100vh;
+    overflow-y: hidden;
+  }
+
   /* Header stays fixed at the very top on the chat page */
   .asrar-chat-page .asrar-dash-header {
     position: fixed;
@@ -1037,19 +1043,19 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    padding-top: 5.5rem; /* header height offset */
-    min-height: calc(100vh - 5.5rem);
+    padding-top: 4.5rem; /* header height offset (approx 72px) */
+    min-height: calc(100vh - 4.5rem);
     box-sizing: border-box;
   }
 
   /* Sidebar: fixed to the left edge, directly under the header */
   .asrar-chat-sidebar {
     position: fixed;
-    top: 5.5rem; /* exactly under the header */
+    top: 4.5rem; /* exactly under the header */
     left: 0;     /* flush with viewport left edge */
     width: 260px;
     max-width: 260px;
-    height: calc(100vh - 5.5rem);
+    height: calc(100vh - 4.5rem);
     max-height: none;
     overflow: hidden;
     display: flex;
@@ -1065,7 +1071,7 @@
   /* Main chat column lives to the right of the fixed sidebar */
   .asrar-chat-main {
     margin-left: calc(260px + 1.6rem); /* sidebar width + gutter */
-    min-height: calc(100vh - 5.5rem);
+    min-height: calc(100vh - 4.5rem);
     display: flex;
     flex-direction: column;
   }
