@@ -396,7 +396,7 @@ function getMiniChatReply(message, isAr) {
       charId: null,
       text: isAr
         ? "اكتب لي جملة أو جملتين عن يومك أو الشيء اللي مضايقك، عشان أقدر أساعدك أكثر."
-        : "Try writing one or two sentences about your day or whatâ€™s bothering you so I can actually help.",
+        : "Try writing one or two sentences about your day or what's bothering you so I can actually help.",
     };
   }
 
@@ -535,8 +535,8 @@ function getMiniChatReply(message, isAr) {
     };
   }
 
-  const intro = "I can tell what you shared isnâ€™t easy, and your feelings matter here.";
-  const body = `Out of the Asrar companions, Iâ€™d match you with ${char.nameEn} (${char.roleEn}) right now. ${char.descriptionEn}`;
+  const intro = "I can tell what you shared isn't easy, and your feelings matter here.";
+  const body = `Out of the Asrar companions, I'd match you with ${char.nameEn} (${char.roleEn}) right now. ${char.descriptionEn}`;
   const ctaHint = "You can start a full conversation with them using the button below.";
 
   return {
@@ -1067,48 +1067,48 @@ export default function HomePage() {
             </div>
           </div>
         </section>
- {/* EMOTIONAL ENGINE */}
+  {/* EMOTIONAL ENGINE */}
         <section id="emotional-engine" className="asrar-section asrar-engine">
           <div className="asrar-engine-inner">
             <p className="asrar-eyebrow">
-              {isAr ? "Ù…ÙØ­Ø±Ùƒ Ø§Ù„Ù…Ø´Ø§Ø¹Ø± Ù…Ù† Ø£Ø³Ø±Ø§Ø±" : "ASRAR EMOTIONAL ENGINEâ„¢"}
+              {isAr ? "مُحرك المشاعر من أسرار" : "ASRAR EMOTIONAL ENGINE™"}
             </p>
             <h2 className="asrar-engine-title">
               {isAr
-                ? "Ø°ÙƒØ§Ø¡ Ø¹Ø§Ø·ÙÙŠ Ø­Ù‚ÙŠÙ‚ÙŠ â€” ÙˆÙ„ÙŠØ³ Ø±Ø¯ÙˆØ¯ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø¹Ø´ÙˆØ§Ø¦ÙŠØ©."
-                : "Real emotional intelligence â€” not generic AI replies."}
+                ? "ذكاء عاطفي حقيقي — وليس ردود ذكاء اصطناعي عشوائية."
+                : "Real emotional intelligence — not generic AI replies."}
             </h2>
             <p className="asrar-engine-body">
               {isAr
-                ? "ÙƒÙ„ Ù…Ø­Ø§Ø¯Ø«Ø© ÙÙŠ Ø£Ø³Ø±Ø§Ø± ØªØ¹Ù…Ù„ Ø¹Ø¨Ø± Ø·Ø¨Ù‚Ø© Ø°ÙƒØ§Ø¡ Ø¹Ø§Ø·ÙÙŠ Ø®Ø§ØµØ© Ø¨Ù†Ø§ Ù…Ø¨Ù†ÙŠØ© ÙÙˆÙ‚ Ù†Ù…Ø§Ø°Ø¬ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù…ØªÙ‚Ø¯Ù…Ø©. Ù‡Ø°Ù‡ Ø§Ù„Ø·Ø¨Ù‚Ø© ØªÙ„ØªÙ‚Ø· Ù…Ø²Ø§Ø¬ÙƒØŒ ÙˆØªÙÙ‡Ù… Ù†Ø¨Ø±Ø© ÙƒÙ„Ø§Ù…Ùƒ ÙˆØ³ÙŠØ§Ù‚Ùƒ Ø§Ù„Ø«Ù‚Ø§ÙÙŠØŒ Ø«Ù… ØªØ´ÙƒÙ‘Ù„ Ø§Ù„Ø±Ø¯ Ù…Ù† Ø®Ù„Ø§Ù„ Ø´Ø®ØµÙŠØ© ÙƒÙ„ ÙˆØ§Ø­Ø¯ Ù…Ù† Ø±ÙÙ‚Ø§Ø¡ Ø£Ø³Ø±Ø§Ø± â€” Ù„ØªØ´Ø¹Ø± Ø£Ù† Ø§Ù„Ø­Ø¯ÙŠØ« Ø¥Ù†Ø³Ø§Ù†ÙŠ Ø£ÙƒØ«Ø±ØŒ Ø«Ø§Ø¨ØªØŒ ÙˆÙØ¹Ù„Ø§Ù‹ Ø¯Ø§Ø¹Ù…."
-                : "Every conversation in Asrar is powered by our own emotional intelligence layer built on top of advanced AI models. It detects your mood, understands your tone and cultural context, and shapes the reply through the personality of each character â€” so it feels more human, grounded, and truly supportive."}
+                ? "كل محادثة في أسرار تعمل عبر طبقة ذكاء عاطفي خاصة بنا مبنية فوق نماذج ذكاء اصطناعي متقدمة. هذه الطبقة تلتقط مزاجك، وتفهم نبرة كلامك وسياقك الثقافي، ثم تشكّل الرد من خلال شخصية كل واحد من رفقاء أسرار — لتشعر أن الحديث إنساني أكثر، ثابت، وفعلاً داعم."
+                : "Every conversation in Asrar is powered by our own emotional intelligence layer built on top of advanced AI models. It detects your mood, understands your tone and cultural context, and shapes the reply through the personality of each character — so it feels more human, grounded, and truly supportive."}
             </p>
 
             <div className="asrar-engine-grid">
               <article className="asrar-engine-card">
-                <h3>{isAr ? "Ø§Ø³ØªØ¬Ø§Ø¨Ø§Øª ÙˆØ§Ø¹ÙŠØ© Ø¨Ø§Ù„Ù…Ø´Ø§Ø¹Ø±" : "Emotion-Aware Responses"}</h3>
+                <h3>{isAr ? "استجابات واعية بالمشاعر" : "Emotion-Aware Responses"}</h3>
                 <p>
                   {isAr
-                    ? "ÙŠÙ‚ÙˆÙ… Ø§Ù„Ù…Ø­Ø±Ùƒ Ø¨ØªØµÙ†ÙŠÙ Ù…Ø§ ØªØ´Ø¹Ø± Ø¨Ù‡ â€” Ù…Ø«Ù„ Ø§Ù„Ø­Ø²Ù†ØŒ Ø§Ù„Ù‚Ù„Ù‚ØŒ Ø§Ù„ÙˆØ­Ø¯Ø©ØŒ Ø§Ù„ØºØ¶Ø¨ ÙˆØºÙŠØ±Ù‡Ø§ â€” ÙˆÙŠØ¶Ø¨Ø· Ù†Ø¨Ø±Ø© ÙˆØ¹Ù…Ù‚ Ø§Ù„Ø±Ø¯ Ù„ÙŠØªÙ†Ø§Ø³Ø¨ Ù…Ø¹ Ø­Ø§Ù„ØªÙƒ Ø§Ù„Ø¹Ø§Ø·ÙÙŠØ©."
-                    : "The engine classifies how you feel â€” sadness, anxiety, loneliness, anger, and more â€” and adapts the tone and depth of the reply to match your emotional state."}
+                    ? "يقوم المحرك بتصنيف ما تشعر به — مثل الحزن، القلق، الوحدة، الغضب وغيرها — ويضبط نبرة وعمق الرد ليتناسب مع حالتك العاطفية."
+                    : "The engine classifies how you feel — sadness, anxiety, loneliness, anger, and more — and adapts the tone and depth of the reply to match your emotional state."}
                 </p>
               </article>
 
               <article className="asrar-engine-card">
-                <h3>{isAr ? "Ø¯Ø¹Ù… Ù…Ø®ØµØµ Ù„ÙƒÙ„ Ø´Ø®ØµÙŠØ©" : "Persona-Driven Support"}</h3>
+                <h3>{isAr ? "دعم مخصص لكل شخصية" : "Persona-Driven Support"}</h3>
                 <p>
                   {isAr
-                    ? "Ù‡ÙŽÙ†Ø§ØŒ Ø£Ø¨Ùˆ Ø²ÙŠÙ†ØŒ Ø±Ø´ÙŠØ¯ØŒ Ù†ÙˆØ±ØŒ ÙˆÙÙŽØ±ÙŽØ­ ÙŠØ´ØªØ±ÙƒÙˆÙ† ÙÙŠ Ù†ÙØ³ Ù…Ø­Ø±Ùƒ Ø§Ù„Ù…Ø´Ø§Ø¹Ø±ØŒ Ù„ÙƒÙ† ÙƒÙ„ ÙˆØ§Ø­Ø¯ Ù…Ù†Ù‡Ù… ÙŠØ±Ø¯ Ø¨Ø£Ø³Ù„ÙˆØ¨ ÙˆØµÙˆØª ÙˆÙ…Ø³ØªÙˆÙ‰ ØªÙˆØ¬ÙŠÙ‡ Ù…Ø®ØªÙ„Ù."
+                    ? "هَنا، أبو زين، رشيد، نور، وفَرَح يشتركون في نفس محرك المشاعر، لكن كل واحد منهم يرد بأسلوب وصوت ومستوى توجيه مختلف."
                     : "Hana, Abu Zain, Rashid, Nour, and Farah all share the same emotional engine, but each one responds with a different style, voice, and level of guidance."}
                 </p>
               </article>
 
               <article className="asrar-engine-card">
-                <h3>{isAr ? "Ù…ØµÙ…Ù… Ø®ØµÙŠØµØ§Ù‹ Ù„Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„????ŠØ©" : "Built for the Middle East"}</h3>
+                <h3>{isAr ? "مصمم خصيصاً للمنطقة العربية" : "Built for the Middle East"}</h3>
                 <p>
                   {isAr
-                    ? "ØªÙ… ØªØµÙ…ÙŠÙ… Ø£Ø³Ø±Ø§Ø± ÙÙŠ Ø§Ù„Ø£Ø±Ø¯Ù† Ù…Ø¹ Ø£Ø®Ø° Ø§Ù„Ø«Ù‚Ø§ÙØ© Ø§Ù„????ŠØ© ÙÙŠ Ø§Ù„Ø­Ø³Ø¨Ø§Ù†ØŒ Ù„ØªØ¬Ù…Ø¹ Ø¨ÙŠÙ† Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø§Ù„Ø­Ø¯ÙŠØ« ÙˆØ§Ù„Ø­Ø³ Ø§Ù„Ù…Ø­Ù„ÙŠ ÙˆØ§Ù„Ø§Ø­ØªØ±Ø§Ù… ÙˆØ§Ù„Ø¯ÙØ¡ â€” ÙˆÙ„ÙŠØ³ Ù…Ø¬Ø±Ø¯ Ù†Ø³Ø®Ø© Ù…Ù† Ù‚Ø§Ù„Ø¨ ØºØ±Ø¨ÙŠ."
-                    : "Designed in Jordan with Arab culture in mind, Asrar blends modern AI with local nuance, respect, and warmth â€” not a copy-paste of a Western template."}
+                    ? "تم تصميم أسرار في الأردن مع أخذ الثقافة العربية في الحسبان، لتجمع بين الذكاء الاصطناعي الحديث والحس المحلي والاحترام والدفء — وليس مجرد نسخة من قالب غربي."
+                    : "Designed in Jordan with Arab culture in mind, Asrar blends modern AI with local nuance, respect, and warmth — not a copy-paste of a Western template."}
                 </p>
               </article>
             </div>
