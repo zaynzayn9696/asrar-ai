@@ -202,6 +202,7 @@ export default function ChatPage() {
   const [limitUsage, setLimitUsage] = useState(null);
 
   const [hasHydratedHistory, setHasHydratedHistory] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
@@ -369,12 +370,57 @@ export default function ChatPage() {
     };
   }, [user]);
 
-  // Auto-scroll messages container to bottom whenever messages or character change
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom =
+      el.scrollHeight - el.scrollTop - el.clientHeight;
+    const threshold = 200;
+    const shouldShow = distanceFromBottom > threshold;
+    setShowScrollToBottom((prev) =>
+      prev !== shouldShow ? shouldShow : prev
+    );
+  };
+
+  const handleScrollToBottomClick = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    try {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    } catch (_) {
+      el.scrollTop = el.scrollHeight;
+    }
+    setShowScrollToBottom(false);
+  };
+
+  // Auto-scroll to bottom on initial thread load / character switch
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [messages, selectedCharacterId]);
+    try {
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    } catch (_) {
+      el.scrollTop = el.scrollHeight;
+    }
+    setShowScrollToBottom(false);
+  }, [selectedCharacterId]);
+
+  // Auto-scroll new messages only when user is already near the bottom
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom =
+      el.scrollHeight - el.scrollTop - el.clientHeight;
+    const threshold = 80;
+    if (distanceFromBottom <= threshold) {
+      try {
+        el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+      } catch (_) {
+        el.scrollTop = el.scrollHeight;
+      }
+      setShowScrollToBottom(false);
+    }
+  }, [messages]);
 
   // Auto-expand textarea up to ~3 lines, then scroll internally
   useEffect(() => {
@@ -1237,7 +1283,11 @@ export default function ChatPage() {
             {null}
           </header>
 
-          <div className="asrar-chat-messages" ref={messagesContainerRef}>
+          <div
+            className="asrar-chat-messages"
+            ref={messagesContainerRef}
+            onScroll={handleMessagesScroll}
+          >
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -1279,6 +1329,22 @@ export default function ChatPage() {
                 </div>
               )}
             </div>
+
+            <button
+              type="button"
+              className={
+                "asrar-scroll-bottom" +
+                (showScrollToBottom ? " asrar-scroll-bottom--visible" : "")
+              }
+              aria-label={
+                isArabicConversation
+                  ? "الانتقال إلى آخر الرسائل"
+                  : "Scroll to bottom"
+              }
+              onClick={handleScrollToBottomClick}
+            >
+              ↓
+            </button>
 
             {limitExceeded && (
               <div className="asrar-limit-banner">

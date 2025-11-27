@@ -136,6 +136,20 @@ body {
   margin-left: auto;
 }
 
+/* Explicit utility for right-aligned nav cluster (lang toggle + buttons) */
+.asrar-nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Keep the language toggle itself LTR even when the page is RTL */
+.asrar-lang-toggle-wrapper {
+  direction: ltr !important;
+  display: inline-flex;
+}
+
 .asrar-home-header-nav--ar {
   direction: rtl;
 }

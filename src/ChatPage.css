@@ -154,7 +154,7 @@
 /* ============ SIDEBAR (CONVERSATIONS) ============ */
 
 .asrar-chat-sidebar {
-  background: rgba(3, 10, 24, 0.96);
+  background: radial-gradient(circle at top left, #05080d 0, #02040b 70%);
   border-radius: 18px;
   padding: 0.9rem;
   border: 1px solid rgba(0, 244, 255, 0.18);
@@ -382,16 +382,16 @@
   }
 }
 
-/* ---- Messages scroll area (single source of truth) ---- */
+/* ---- Messages scroll area (single scroll region inside chat column) ---- */
 .asrar-chat-messages {
-  flex: 1 1 auto;        /* fill available space, page does the scrolling */
-  overflow-y: visible;   /* no inner scrollbar */
+  flex: 1 1 auto;
+  overflow-y: auto;
   overflow-x: hidden;
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
   padding: 1.5rem 0 1rem;
-  -webkit-overflow-scrolling: auto; /* not needed anymore, but safe */
+  -webkit-overflow-scrolling: touch;
 }
 
 
@@ -818,6 +818,60 @@
     max-width: 100%;
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+}
+
+/* Floating scroll-to-bottom button (appears when user scrolls up) */
+.asrar-scroll-bottom {
+  position: fixed;
+  right: 2.4rem;
+  bottom: 6.2rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.55);
+  background: radial-gradient(
+    circle at top,
+    rgba(0, 240, 255, 0.28),
+    rgba(3, 10, 24, 0.96)
+  );
+  color: #e8f8ff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.24),
+    0 14px 30px rgba(0, 0, 0, 0.9),
+    0 0 20px rgba(0, 240, 255, 0.55);
+  z-index: 80;
+  opacity: 0;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease,
+    background 0.15s ease;
+}
+
+.asrar-scroll-bottom--visible {
+  display: inline-flex;
+  opacity: 1;
+}
+
+.asrar-scroll-bottom:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.3),
+    0 18px 36px rgba(0, 0, 0, 0.95),
+    0 0 26px rgba(0, 240, 255, 0.75);
+}
+
+@media (max-width: 900px) {
+  .asrar-scroll-bottom {
+    right: 1.2rem;
+    bottom: 5.4rem;
+    width: 34px;
+    height: 34px;
   }
 }
 
