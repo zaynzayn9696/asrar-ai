@@ -107,6 +107,7 @@ export default function Settings() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [isUpdatingSaveHistory, setIsUpdatingSaveHistory] = useState(false); // track toggle loading state
   const [deleteConfirmValue, setDeleteConfirmValue] = useState("");
+  const [isDeletingConversations, setIsDeletingConversations] = useState(false);
 
   // --- LOAD SETTINGS FROM BACKEND (FIXED with credentials) -------------
   useEffect(() => {
@@ -513,6 +514,7 @@ export default function Settings() {
                   type="button"
                   className="asrar-settings-delete-btn"
                   onClick={() => setShowConfirmModal(true)}
+                  disabled={isDeletingConversations}
                 >
                   {t.deleteConversations}
                 </button>
@@ -533,12 +535,15 @@ export default function Settings() {
               </button>
               <button
                 className="asrar-btn primary"
-                onClick={() => {
-                  deleteAllConversations();
-                  setShowConfirmModal(false);
+                disabled={isDeletingConversations}
+                onClick={async () => {
+                  const ok = await deleteAllConversations();
+                  if (ok) {
+                    setShowConfirmModal(false);
+                  }
                 }}
               >
-                {t.confirm}
+                {isDeletingConversations ? (isAr ? "جاري الحذف..." : "Deleting...") : t.confirm}
               </button>
             </div>
           </div>

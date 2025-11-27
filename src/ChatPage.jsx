@@ -345,6 +345,27 @@ export default function ChatPage() {
     }
   }, [user, selectedCharacterId]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const handleConversationsCleared = () => {
+      setConversations([]);
+      setConversationId(null);
+      setMessages([]);
+      setHasHydratedHistory(false);
+      setIsMobileSidebarOpen(false);
+    };
+    window.addEventListener(
+      "asrar-conversations-deleted",
+      handleConversationsCleared
+    );
+    return () => {
+      window.removeEventListener(
+        "asrar-conversations-deleted",
+        handleConversationsCleared
+      );
+    };
+  }, [user]);
+
   // Auto-scroll messages container to bottom whenever messages or character change
   useEffect(() => {
     const el = messagesContainerRef.current;
@@ -1307,7 +1328,6 @@ export default function ChatPage() {
     </div>
   );
 }
-
 
 
 
