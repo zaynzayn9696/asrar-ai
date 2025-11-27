@@ -23,6 +23,31 @@
   height: 100vh;      /* lock to viewport */
   overflow: hidden;   /* no body scroll, we control it */
 }
+@media (max-width: 900px) {
+  .asrar-dash-page.asrar-chat-page {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;  /* body can scroll */
+  }
+
+  .asrar-chat-layout {
+    flex-direction: column;
+    padding-top: 72px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .asrar-chat-main {
+    margin-left: 0;
+    min-height: calc(100vh - 72px);
+    padding-bottom: 0.5rem;
+  }
+
+  .asrar-chat-sidebar {
+    display: none;     /* use your existing mobile history UI */
+  }
+}
 .asrar-chat-page .asrar-dash-header {
   position: fixed;
   top: 0;
@@ -156,16 +181,12 @@
 /* ============ SIDEBAR (CONVERSATIONS) ============ */
 
 .asrar-chat-sidebar {
-  background: #05080b; /* same dark as header */
-  border-radius: 0;    /* so it visually attaches to header left */
+  background: #05080b;              /* match header */
+  border-radius: 0;
   border-right: 1px solid rgba(0, 244, 255, 0.18);
-  border-left: none;
-  border-top: none;
-  border-bottom: none;
-
   position: fixed;
-  top: 72px;      /* exactly under the header */
-  left: 0;        /* flush with left edge */
+  top: 72px;                        /* directly under header */
+  left: 0;
   width: 260px;
   height: calc(100vh - 72px);
   display: flex;
@@ -321,8 +342,8 @@
 .asrar-chat-main {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 72px);            /* full height under header */
-  margin-left: calc(260px + 1.5rem);     /* sidebar width + gap */
+  margin-left: calc(260px + 1.5rem);  /* sidebar + gap */
+  min-height: calc(100vh - 72px);
   box-sizing: border-box;
 }
 @media (max-width: 900px) {
@@ -393,9 +414,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 1.5rem 0 1rem;
+  margin: 0;                         /* no centered box */
+  padding: 1.5rem 1.5rem 1rem 1.5rem; /* breathing space from edges */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -535,9 +555,7 @@
   .asrar-chat-messages {
     width: 100%;
     max-width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-bottom: 0.25rem;
+    padding: 1rem 1rem 0.25rem 1rem;
   }
 
   .asrar-chat-bubble {
