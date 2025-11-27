@@ -847,6 +847,96 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
   transform: translateY(0);
 }
 
+/* Premium upgrade modal */
+.asrar-upgrade-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asrar-upgrade-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.asrar-upgrade-panel {
+  position: relative;
+  z-index: 121;
+  width: min(92vw, 420px);
+  border-radius: 20px;
+  padding: 20px 20px 16px;
+  background: radial-gradient(circle at top, #061627, #02040d);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  color: #e8f8ff;
+  text-align: center;
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.08),
+    0 40px 90px rgba(0, 0, 0, 0.95);
+}
+
+.asrar-upgrade-panel h3 {
+  margin: 0 0 8px;
+}
+
+.asrar-upgrade-panel p {
+  margin: 0 0 14px;
+  color: #9bb0c6;
+}
+
+.asrar-upgrade-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.asrar-upgrade-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(4, 10, 18, 0.9);
+  color: #e8f8ff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.asrar-upgrade-close:hover {
+  border-color: #18d1da;
+  color: #18d1da;
+}
+
+.asrar-upgrade-cancel {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #e8f8ff;
+  padding: 0.65rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.asrar-upgrade-cancel:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 600px) {
+  .asrar-upgrade-panel {
+    padding: 18px 16px 14px;
+  }
+}
+
 /* RTL tweaks */
 /* Keep the dashboard header layout LTR even when language is Arabic */
 .asrar-dash-page--ar .asrar-dash-header {
@@ -892,12 +982,19 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
   }
 
   .asrar-dash-page {
-    padding-top: calc(72px + env(safe-area-inset-top, 0px));
+    padding-top: 0;
   }
 
-  /* Chat page variant (keeps header clearance without affecting desktop layout) */
-  .asrar-chat-page.asrar-dash-page {
-    padding-top: calc(70px + env(safe-area-inset-top, 0px));
+  .asrar-dash-main,
+  .asrar-dash-content,
+  .asrar-settings-main,
+  .asrar-billing-main {
+    margin-top: calc(72px + env(safe-area-inset-top, 0px));
+  }
+
+  .asrar-chat-page .asrar-chat-layout {
+    margin-top: calc(70px + env(safe-area-inset-top, 0px));
+    min-height: calc(100vh - 70px - env(safe-area-inset-top, 0px));
   }
 }
 
@@ -1026,6 +1123,43 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
     align-items: center;
     gap: 0.6rem;
     margin-left: auto;
+  }
+
+  .asrar-chat-page .asrar-dash-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .asrar-chat-page .asrar-header-mobile-slot {
+    grid-column: 1 / 2;
+    justify-content: flex-start;
+  }
+
+  .asrar-chat-page .asrar-dash-header-left {
+    grid-column: 2 / 3;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .asrar-chat-page .asrar-dash-brand {
+    text-align: center;
+    width: 100%;
+  }
+
+  .asrar-chat-page .asrar-dash-logo-frame {
+    display: none;
+  }
+
+  .asrar-chat-page .asrar-dash-header-right {
+    grid-column: 3 / 4;
+    margin-left: 0;
+  }
+
+  .asrar-chat-page .asrar-dash-header-right .asrar-lang-toggle {
+    display: none;
   }
 
   /* 1) Hide the header language toggle on dashboard mobile */

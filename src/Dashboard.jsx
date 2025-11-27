@@ -459,26 +459,36 @@ export default function Dashboard() {
       <AsrarFooter />
 
       {showPremiumModal && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
-          <div style={{
-            width: 'min(92vw, 420px)', borderRadius: 16, padding: '16px 16px 12px',
-            background: 'radial-gradient(circle at top, #061627, #02040d)',
-            border: '1px solid rgba(0,240,255,0.35)', color: '#e8f8ff', textAlign: 'center'
-          }} role="dialog" aria-modal>
-            <h3 style={{ marginTop: 0, marginBottom: 8 }}>
+        <div className="asrar-upgrade-layer" role="dialog" aria-modal="true">
+          <div
+            className="asrar-upgrade-overlay"
+            onClick={() => setShowPremiumModal(false)}
+          ></div>
+          <div className="asrar-upgrade-panel">
+            <button
+              type="button"
+              className="asrar-upgrade-close"
+              aria-label="Close upgrade modal"
+              onClick={() => setShowPremiumModal(false)}
+            >
+              &times;
+            </button>
+            <h3>
               {isAr ? "شخصية مميزة" : "Premium Character"}
             </h3>
-            <p style={{ marginTop: 0, marginBottom: 14, color: '#9bb0c6' }}>
+            <p>
               {isAr ? "قم بالترقية إلى بريميوم لفتح هذه الشخصية وتجربة كاملة." : "Upgrade to Premium to unlock this character and the full experience."}
             </p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div className="asrar-upgrade-actions">
               <button className="asrar-dash-start-button" onClick={handleUpgrade} style={{ flex: '1 1 180px' }}>
                 {isAr ? "الترقية إلى بريميوم" : "Upgrade to Premium"}
               </button>
-              <button className="asrar-dash-header-link" onClick={() => setShowPremiumModal(false)} style={{ flex: '1 1 180px' }}>
+              <button
+                type="button"
+                className="asrar-upgrade-cancel"
+                onClick={() => setShowPremiumModal(false)}
+                style={{ flex: '1 1 180px' }}
+              >
                 {isAr ? "إغلاق" : "Close"}
               </button>
             </div>

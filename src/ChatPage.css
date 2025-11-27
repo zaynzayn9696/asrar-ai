@@ -8,6 +8,12 @@
   overflow-x: hidden;
 }
 
+@media (max-width: 900px) {
+  .asrar-chat-page {
+    min-height: 100vh;
+  }
+}
+
 /* If ChatPage is rendered inside the dashboard shell */
 .asrar-dash-page.asrar-chat-page {
   display: flex;
@@ -135,6 +141,7 @@
   .asrar-chat-layout {
     grid-template-columns: 1fr;
     padding-top: 0.75rem;
+    padding-bottom: 0.5rem;
   }
 }
 
@@ -270,6 +277,12 @@
   min-height: 0;
 }
 
+@media (max-width: 900px) {
+  .asrar-chat-main {
+    padding-bottom: 0.5rem;
+  }
+}
+
 /* ---- Header (Hana — Deep Support) ---- */
 
 .asrar-chat-header-strip {
@@ -316,6 +329,10 @@
     max-width: 100%;
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+
+  .asrar-chat-header-strip {
+    display: none;
   }
 }
 
@@ -469,6 +486,7 @@
     max-width: 100%;
     padding-left: 1rem;
     padding-right: 1rem;
+    padding-bottom: 0.25rem;
   }
 
   .asrar-chat-bubble {

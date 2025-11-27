@@ -777,8 +777,7 @@ export default function ChatPage() {
   const handleSend = (e) => {
     e.preventDefault();
     if (isRecording) {
-      try { voiceStopIntentRef.current = 'send'; } catch (_) {}
-      stopRecording();
+      stopRecording("send");
       return;
     }
     sendMessage();
@@ -793,8 +792,7 @@ export default function ChatPage() {
         await startRecording();
       } else {
         console.log('stopping recording...');
-        try { voiceStopIntentRef.current = 'send'; } catch (_) {}
-        stopRecording();
+        stopRecording("send");
       }
     } catch (err) {
       console.error('Mic: toggle error', err);
@@ -946,6 +944,7 @@ export default function ChatPage() {
           setIsSendingVoice(true);
           const mime = recorder.mimeType || 'audio/webm';
           const blob = new Blob(audioChunksRef.current, { type: mime });
+          audioChunksRef.current = [];
           const ext = mime.includes('ogg') ? 'ogg' : mime.includes('mpeg') ? 'mp3' : 'webm';
           const file = new File([blob], `voice.${ext}`, { type: mime });
           const form = new FormData();
@@ -1046,12 +1045,18 @@ export default function ChatPage() {
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = (intent = "send") => {
+    try {
+      voiceStopIntentRef.current = intent;
+    } catch (_) {}
     if (!isRecording) return;
     try {
       console.log('Mic: stopping recording');
       const rec = recorderRef.current;
       if (rec && rec.state !== 'inactive') {
+        try {
+          if (typeof rec.requestData === 'function') rec.requestData();
+        } catch (_) {}
         rec.stop();
       }
     } catch (_) {}
@@ -1302,9 +1307,6 @@ export default function ChatPage() {
     </div>
   );
 }
-
-
-
 
 
 
