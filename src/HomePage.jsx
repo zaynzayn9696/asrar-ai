@@ -396,7 +396,7 @@ function getMiniChatReply(message, isAr) {
       charId: null,
       text: isAr
         ? "اكتب لي جملة أو جملتين عن يومك أو الشيء اللي مضايقك، عشان أقدر أساعدك أكثر."
-        : "Try writing one or two sentences about your day or whatâ€™s bothering you so I can actually help.",
+        : "Try writing one or two sentences about your day or what's bothering you so I can actually help.",
     };
   }
 
@@ -535,8 +535,8 @@ function getMiniChatReply(message, isAr) {
     };
   }
 
-  const intro = "I can tell what you shared isnâ€™t easy, and your feelings matter here.";
-  const body = `Out of the Asrar companions, Iâ€™d match you with ${char.nameEn} (${char.roleEn}) right now. ${char.descriptionEn}`;
+  const intro = "I can tell what you shared isn't easy, and your feelings matter here.";
+  const body = `Out of the Asrar companions, I'd match you with ${char.nameEn} (${char.roleEn}) right now. ${char.descriptionEn}`;
   const ctaHint = "You can start a full conversation with them using the button below.";
 
   return {
