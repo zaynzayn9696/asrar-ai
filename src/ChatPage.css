@@ -1021,12 +1021,9 @@
 }
 
 
-/* === REMOVE SECOND (INNER) SCROLLBAR ON CHAT PAGE === */
-
-/* let the page itself handle vertical scrolling */
-/* === FORCE HEADER + SIDEBAR TO FOLLOW SCROLL (DESKTOP ONLY) === */
+/* === DESKTOP LAYOUT: FIXED HEADER + SIDEBAR, FULL-HEIGHT CHAT COLUMN === */
 @media (min-width: 901px) {
-  /* 1) Header stays at the top of the viewport on chat page */
+  /* Header stays fixed at the very top on the chat page */
   .asrar-chat-page .asrar-dash-header {
     position: fixed;
     top: 0;
@@ -1035,35 +1032,41 @@
     z-index: 60;
   }
 
-  /* 2) Layout becomes a simple block and leaves space for the fixed header */
+  /* Under the header, use a full-height horizontal layout */
   .asrar-chat-layout {
-    display: block;          /* no grid for desktop – we handle offsets manually */
-    padding-top: 5.5rem;     /* space under the fixed header (tweak if needed) */
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    padding-top: 5.5rem; /* header height offset */
+    min-height: calc(100vh - 5.5rem);
+    box-sizing: border-box;
   }
 
-  /* 3) Sidebar fixed on the left and follows scroll */
+  /* Sidebar: fixed to the left edge, directly under the header */
   .asrar-chat-sidebar {
     position: fixed;
-    top: 5.5rem;             /* just under the header */
-    left: 0;                 /* flush with the left edge of the viewport */
+    top: 5.5rem; /* exactly under the header */
+    left: 0;     /* flush with viewport left edge */
     width: 260px;
     max-width: 260px;
-    height: calc(100vh - 5.5rem - 1.4rem);  /* full height minus header + bottom space */
+    height: calc(100vh - 5.5rem);
     max-height: none;
     overflow: hidden;
     display: flex;
     flex-direction: column;
   }
 
-  /* The list inside the sidebar scrolls nicely */
+  /* The list inside the sidebar scrolls independently */
   .asrar-conversation-list {
     flex: 1;
     overflow-y: auto;
   }
 
-  /* 4) Main chat column shifted to the right of the fixed sidebar */
+  /* Main chat column lives to the right of the fixed sidebar */
   .asrar-chat-main {
-    margin-left: calc(260px + 1.6rem);  /* sidebar width + gap */
-    min-height: calc(100vh - 5.5rem - 1.4rem);
+    margin-left: calc(260px + 1.6rem); /* sidebar width + gutter */
+    min-height: calc(100vh - 5.5rem);
+    display: flex;
+    flex-direction: column;
   }
 }
