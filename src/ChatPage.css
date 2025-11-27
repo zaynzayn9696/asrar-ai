@@ -20,15 +20,15 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  overflow-x: hidden;
-  min-height: 100vh;
-  padding-bottom: 0 !important;  /* keep this too */
-  /* desktop will further constrain height/overflow in a media query */
+  height: 100vh;      /* lock to viewport */
+  overflow: hidden;   /* no body scroll, we control it */
 }
 .asrar-chat-page .asrar-dash-header {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 50;
+  left: 0;
+  right: 0;
+  z-index: 60;
 }
 
 @media (max-width: 900px) {
@@ -133,12 +133,12 @@
 /* Main grid: sidebar + chat column, centered on the page */
 .asrar-chat-layout {
   flex: 1 1 auto;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 1.2rem;
-  padding-top: 1rem;
+  display: flex;
+  flex-direction: row;
   align-items: stretch;
+  padding-top: 72px;             /* same as header height */
+  padding-left: 0;
+  padding-right: 1.5rem;
   box-sizing: border-box;
 }
 
@@ -154,22 +154,23 @@
 /* ============ SIDEBAR (CONVERSATIONS) ============ */
 
 .asrar-chat-sidebar {
-  background: radial-gradient(circle at top left, #05080d 0, #02040b 70%);
-  border-radius: 18px;
-  padding: 0.9rem;
-  border: 1px solid rgba(0, 244, 255, 0.18);
+  background: #05080b; /* same dark as header */
+  border-radius: 0;    /* so it visually attaches to header left */
+  border-right: 1px solid rgba(0, 244, 255, 0.18);
+  border-left: none;
+  border-top: none;
+  border-bottom: none;
+
+  position: fixed;
+  top: 72px;      /* exactly under the header */
+  left: 0;        /* flush with left edge */
+  width: 260px;
+  height: calc(100vh - 72px);
   display: flex;
   flex-direction: column;
+  padding: 0.9rem;
   gap: 0.75rem;
-
-  /* 👉 sticky sidebar that follows scroll */
-  position: sticky;
-  top: 80px;          /* distance under the main header — adjust if needed */
-  align-self: flex-start;
-
-  max-width: 280px;   /* keeps it snug on the left */
-  max-height: calc(100vh - 96px); /* full-height panel without forcing extra scroll */
-  overflow: hidden;   /* only the inner list scrolls */
+  box-sizing: border-box;
 }
 
 
@@ -215,7 +216,6 @@
   flex: 1;
   overflow-y: auto;
   padding-right: 4px;
-  scrollbar-width: thin;
 }
 
 .asrar-conversation-list::-webkit-scrollbar {
@@ -319,10 +319,10 @@
 .asrar-chat-main {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
+  height: calc(100vh - 72px);            /* full height under header */
+  margin-left: calc(260px + 1.5rem);     /* sidebar width + gap */
+  box-sizing: border-box;
 }
-
 @media (max-width: 900px) {
   .asrar-chat-main {
     padding-bottom: 0.5rem;
@@ -849,8 +849,7 @@
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
-    opacity 0.15s ease,
-    background 0.15s ease;
+    opacity 0.15s ease;
 }
 
 .asrar-scroll-bottom--visible {
@@ -1025,8 +1024,9 @@
 @media (min-width: 901px) {
   /* Constrain the whole chat shell to the viewport and let only messages scroll */
   .asrar-dash-page.asrar-chat-page {
-    height: 100vh;
-    overflow-y: hidden;
+   height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   /* Header stays fixed at the very top on the chat page */
@@ -1040,12 +1040,10 @@
 
   /* Under the header, use a full-height horizontal layout */
   .asrar-chat-layout {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    padding-top: 4.5rem; /* header height offset (approx 72px) */
-    min-height: calc(100vh - 4.5rem);
-    box-sizing: border-box;
+    flex-direction: column;
+    padding-top: 72px;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
   }
 
   /* Sidebar: fixed to the left edge, directly under the header */
@@ -1070,9 +1068,8 @@
 
   /* Main chat column lives to the right of the fixed sidebar */
   .asrar-chat-main {
-    margin-left: calc(260px + 1.6rem); /* sidebar width + gutter */
-    min-height: calc(100vh - 4.5rem);
-    display: flex;
-    flex-direction: column;
+    margin-left: 0;
+    height: auto;
+    min-height: calc(100vh - 72px);
   }
 }

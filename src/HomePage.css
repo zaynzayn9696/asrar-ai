@@ -96,11 +96,10 @@ body {
   height: 72px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   background: rgba(5, 8, 11, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  direction: ltr;
+  direction: ltr; /* always LTR layout */
 }
 
 /* Offset main content so it doesn't sit under the fixed header + nav */
@@ -117,13 +116,13 @@ body {
 }
 
 .asrar-home-header-center {
+  flex: 1 1 auto;
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
   align-items: center;
   font-size: 13px;
-  flex: 1 1 auto;
 }
 
 /* Keep the header center layout LTR even when language is Arabic */
@@ -132,10 +131,10 @@ body {
 }
 
 .asrar-home-header-right {
+  margin-left: auto; /* pushes this cluster to the FAR RIGHT */
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-left: auto;
 }
 
 /* Explicit utility for right-aligned nav cluster (lang toggle + buttons) */

@@ -808,77 +808,83 @@ export default function HomePage() {
   return (
     <div className={`asrar-page ${isAr ? "asrar-page--ar" : ""}`}>
       {/* CUSTOM HOME PAGE HEADER */}
-      <header className="asrar-home-header">
-        <div className="asrar-home-header-left">
-          <Link to="/" className="asrar-dash-logo-wrap">
-            <span className="asrar-dash-brand">ASRAR AI</span>
-          </Link>
-        </div>
+     <header className="asrar-home-header">
+  {/* LEFT: Logo */}
+  <div className="asrar-home-header-left">
+    <Link to="/" className="asrar-dash-logo-wrap">
+      <span className="asrar-dash-brand">ASRAR AI</span>
+    </Link>
+  </div>
 
-        {/* CENTER NAV LINKS */}
-        <nav className={`asrar-home-header-center ${isAr ? "asrar-home-header-center--ar" : ""}`}>
-          {navItems.map((item) => (
-            <button
-              key={item.href}
-              type="button"
-              className="asrar-home-header-nav-link"
-              onClick={() => handleNavClick(item.href)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
+  {/* CENTER: Nav links, always visually centered */}
+  <nav
+    className={`asrar-home-header-center ${
+      isAr ? "asrar-home-header-center--ar" : ""
+    }`}
+  >
+    {navItems.map((item) => (
+      <button
+        key={item.href}
+        type="button"
+        className="asrar-home-header-nav-link"
+        onClick={() => handleNavClick(item.href)}
+      >
+        {item.label}
+      </button>
+    ))}
+  </nav>
 
-        <div className="asrar-home-header-right asrar-nav-right">
-          {/* language toggle */}
-          <div className="asrar-lang-toggle-wrapper">
-            <div className="asrar-lang-toggle">
-              <button
-                className={language === "en" ? "active" : ""}
-                onClick={() => handleLanguageSwitch("en")}
-              >
-                EN
-              </button>
-              <button
-                className={language === "ar" ? "active" : ""}
-                onClick={() => handleLanguageSwitch("ar")}
-              >
-                عربي
-              </button>
-            </div>
-          </div>
+  {/* RIGHT: language toggle + auth/dashboard + hamburger */}
+  <div className="asrar-home-header-right">
+    {/* language toggle – always LTR inside */}
+    <div className="asrar-lang-toggle-wrapper">
+      <div className="asrar-lang-toggle">
+        <button
+          className={language === "en" ? "active" : ""}
+          onClick={() => handleLanguageSwitch("en")}
+        >
+          EN
+        </button>
+        <button
+          className={language === "ar" ? "active" : ""}
+          onClick={() => handleLanguageSwitch("ar")}
+        >
+          عربي
+        </button>
+      </div>
+    </div>
 
-          {/* Auth buttons */}
-          {!user && (
-            <div className="asrar-header-auth-buttons">
-              <Link to="/login" className="asrar-btn ghost">
-                {authLabels.login}
-              </Link>
-              <Link to="/create-account" className="asrar-btn primary">
-                {authLabels.signup}
-              </Link>
-            </div>
-          )}
+    {/* Auth buttons */}
+    {!user && (
+      <div className="asrar-header-auth-buttons">
+        <Link to="/login" className="asrar-btn ghost">
+          {authLabels.login}
+        </Link>
+        <Link to="/create-account" className="asrar-btn primary">
+          {authLabels.signup}
+        </Link>
+      </div>
+    )}
 
-          {/* Dashboard button when logged in */}
-          {user && (
-            <Link to="/dashboard" className="asrar-btn primary">
-              {homeDashboardLabel}
-            </Link>
-          )}
+    {/* Dashboard button when logged in */}
+    {user && (
+      <Link to="/dashboard" className="asrar-btn primary">
+        {homeDashboardLabel}
+      </Link>
+    )}
 
-          {/* Mobile menu toggle */}
-          <button
-            className="asrar-header-menu asrar-home-header-menu-toggle"
-            aria-label="Toggle navigation"
-            onClick={() => setIsMobileNavOpen((prev) => !prev)}
-          >
-            <span className="asrar-header-menu-line"></span>
-            <span className="asrar-header-menu-line"></span>
-            <span className="asrar-header-menu-line"></span>
-          </button>
-        </div>
-      </header>
+    {/* Mobile hamburger */}
+    <button
+      className="asrar-header-menu asrar-home-header-menu-toggle"
+      aria-label="Toggle navigation"
+      onClick={() => setIsMobileNavOpen((prev) => !prev)}
+    >
+      <span className="asrar-header-menu-line"></span>
+      <span className="asrar-header-menu-line"></span>
+      <span className="asrar-header-menu-line"></span>
+    </button>
+  </div>
+</header>
 
       {/* MOBILE NAV DROPDOWN */}
       {isMobileNavOpen && (
