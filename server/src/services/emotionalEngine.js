@@ -16,6 +16,7 @@ const {
   updateConversationStateMachine,
   getConversationState,
 } = require('./emotionalStateMachine');
+const { buildPhase4MemoryBlock } = require('../pipeline/memory/Phase4PromptBuilder');
 
 /**
  * @typedef {Object} Emotion
@@ -382,7 +383,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     try { await updateConversationStateMachine({ conversationId, emotion: emo, longTermSnapshot, severityLevel: emo.severityLevel || 'CASUAL' }); } catch (_) {}
     try { flowState = await getConversationState({ conversationId }); } catch (_) { flowState = { currentState: 'NEUTRAL' }; }
 
-    const systemPrompt = buildSystemPrompt({
+    let systemPromptBase = buildSystemPrompt({
       personaText,
       personaId: personaId || 'hana',
       emotion: emo,
@@ -391,7 +392,34 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       longTermSnapshot,
       triggers,
     });
-    return { emo, severityLevel: emo.severityLevel || 'CASUAL', convoState, systemPrompt, flowState, longTermSnapshot, triggers, personaCfg: personas[personaId] || defaultPersona };
+
+    // Phase 4: memory-aware additive block (short + long-term kernel)
+    let phase4Block = '';
+    try {
+      phase4Block = await buildPhase4MemoryBlock({
+        userId,
+        conversationId,
+        language,
+        personaId: personaId || 'hana',
+      });
+    } catch (_) {
+      phase4Block = '';
+    }
+
+    const systemPrompt = phase4Block
+      ? `${systemPromptBase}\n\n${phase4Block}`
+      : systemPromptBase;
+
+    return {
+      emo,
+      severityLevel: emo.severityLevel || 'CASUAL',
+      convoState,
+      systemPrompt,
+      flowState,
+      longTermSnapshot,
+      triggers,
+      personaCfg: personas[personaId] || defaultPersona,
+    };
   } catch (e) {
     // Fallback: neutral prompt using persona only
     const fallbackEmotion = {
