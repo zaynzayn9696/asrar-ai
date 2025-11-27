@@ -440,13 +440,21 @@ router.delete('/conversations/:conversationId', async (req, res) => {
       return res.status(400).json({ message: 'Invalid conversationId' });
     }
 
+    // Verify that this conversation belongs to the current user.
+    // If it does not exist or is already deleted, treat as a no-op and
+    // still return { ok: true } to keep the route idempotent.
     const conv = await prisma.conversation.findFirst({
       where: { id: conversationId, userId },
       select: { id: true },
     });
 
     if (!conv) {
-      return res.status(404).json({ message: 'Conversation not found' });
+      console.log(
+        '[Chat] delete-conversation no-op (not found or not owned) convoId=%s userId=%s',
+        String(conversationId),
+        String(userId)
+      );
+      return res.json({ ok: true });
     }
 
     console.log('[Chat] delete-conversation convoId=%s userId=%s', String(conv.id), String(userId));
@@ -483,8 +491,11 @@ router.delete('/conversations/:conversationId', async (req, res) => {
         },
       });
 
-      await tx.conversation.delete({
-        where: { id: conv.id },
+      await tx.conversation.deleteMany({
+        where: {
+          id: conv.id,
+          userId,
+        },
       });
     });
 

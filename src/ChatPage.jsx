@@ -1265,7 +1265,16 @@ export default function ChatPage() {
               {isSending && (
                 <div className="asrar-chat-row asrar-chat-row--assistant">
                   <div className="asrar-chat-bubble asrar-chat-bubble--typing">
-                    <div className="asrar-typing-dots"><span></span><span></span><span></span></div>
+                    <div className="asrar-typing-content">
+                      <div className="asrar-typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                      <span className="asrar-typing-label">
+                        {isArabicConversation ? 'جارٍ التفكير…' : 'Thinking…'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}

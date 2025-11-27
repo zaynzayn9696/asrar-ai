@@ -133,6 +133,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-left: auto;
 }
 
 .asrar-home-header-nav--ar {
