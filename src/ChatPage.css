@@ -138,7 +138,7 @@
   align-items: stretch;
   padding-top: 72px;             /* same as header height */
   padding-left: 0;
-  padding-right: 1.5rem;
+  padding-right: 0;              /* avoid extra gap on the right */
   box-sizing: border-box;
 }
 
@@ -317,6 +317,7 @@
 .asrar-chat-main {
   display: flex;
   flex-direction: column;
+  position: relative;                      /* anchor scroll button inside chat area */
   margin-left: calc(260px + 1.5rem);  /* sidebar + gap */
   height: calc(100vh - 72px);         /* fixed height under header so messages can scroll */
   box-sizing: border-box;
@@ -821,9 +822,9 @@
 
 /* Floating scroll-to-bottom button (appears when user scrolls up) */
 .asrar-scroll-bottom {
-  position: fixed;
-  right: 2.8rem;
-  bottom: 5.4rem; /* sit a bit closer to composer so it's always visible */
+  position: absolute; /* relative to .asrar-chat-main */
+  right: max(1.2rem, calc((100% - 1120px) / 2));
+  bottom: 5.4rem;     /* float just above the composer strip */
   width: 38px;
   height: 38px;
   border-radius: 999px;
@@ -865,6 +866,7 @@
 
 @media (max-width: 900px) {
   .asrar-scroll-bottom {
+    position: fixed;  /* mobile keeps viewport-fixed behavior */
     right: 1.2rem;
     bottom: 5.4rem;
     width: 34px;
@@ -1046,7 +1048,7 @@
     align-items: stretch;
     padding-top: 72px; /* header height */
     padding-left: 0;
-    padding-right: 1.5rem;
+    padding-right: 0;
     min-height: calc(100vh - 72px);
     box-sizing: border-box;
   }
@@ -1074,6 +1076,7 @@
     flex-direction: column;
     margin-left: calc(260px + 1.5rem); /* sidebar width + gutter */
     min-height: calc(100vh - 72px);
+    position: relative;                 /* ensure absolute children (scroll button) are scoped here */
   }
 
   .asrar-chat-messages {

@@ -366,12 +366,12 @@ body,
 
 .asrar-home-mobile-lang {
   display: flex;
-  justify-content: flex-end; /* instead of space-between */
+  justify-content: flex-end; /* keep buttons grouped on the right */
+  align-self: flex-end;      /* pin the whole toggle row to the drawer's right edge */
   gap: 0.5rem;
   margin-bottom: 1rem;
   margin-top: 0.3rem;
   direction: ltr;
-  margin-left: auto;         /* push whole row to the right */
 }
 
 .asrar-home-mobile-auth {
