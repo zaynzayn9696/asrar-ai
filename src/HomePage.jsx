@@ -775,6 +775,7 @@ export default function HomePage() {
   };
 
   const handleLanguageSwitch = (lang) => {
+    if (lang === language) return;
     setLanguage(lang);
     if (typeof window !== "undefined") {
       localStorage.setItem("asrar-lang", lang);

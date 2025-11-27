@@ -342,7 +342,7 @@
 
 .asrar-chat-header-main {
   width: 100%;
-  max-width: 900px;
+  max-width: 1120px; /* wider desktop chat width */
   margin: 0 auto;
   padding: 10px 18px;
   border-radius: 999px;
@@ -388,7 +388,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%;
-  max-width: 900px;                  /* constrain width on large screens */
+  max-width: 1120px;                 /* constrain width on large screens */
   margin: 0 auto;                    /* center within chat main */
   padding: 1.5rem 0 1rem;            /* vertical breathing space */
   -webkit-overflow-scrolling: touch;
@@ -605,7 +605,7 @@
 
 .asrar-chat-composer-inner {
   width: 100%;
-  max-width: 900px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 10px 18px;
   display: flex;
@@ -773,7 +773,7 @@
 /* Footer meta: small hint + plan pill, centered under the input */
 .asrar-chat-footer-meta {
   width: 100%;
-  max-width: 900px;
+  max-width: 1120px;
   margin: 0.35rem auto 0.5rem;
   padding: 0;
   display: flex;
@@ -822,8 +822,8 @@
 /* Floating scroll-to-bottom button (appears when user scrolls up) */
 .asrar-scroll-bottom {
   position: fixed;
-  right: 2.4rem;
-  bottom: 6.2rem;
+  right: 2.8rem;
+  bottom: 5.4rem; /* sit a bit closer to composer so it's always visible */
   width: 38px;
   height: 38px;
   border-radius: 999px;

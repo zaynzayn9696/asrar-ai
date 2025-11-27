@@ -161,10 +161,10 @@ body,
 
 .asrar-home-header-right {
   flex: 0 0 auto;
-  margin-left: auto;      /* pushes to the far right */
+  margin-left: auto;      /* pushes to the far right, like AsrarHeader */
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.6rem;
 }
 
 /* Explicit utility for right-aligned nav cluster (lang toggle + buttons) */
