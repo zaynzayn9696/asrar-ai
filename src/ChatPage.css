@@ -23,31 +23,6 @@
   height: 100vh;      /* lock to viewport */
   overflow: hidden;   /* no body scroll, we control it */
 }
-@media (max-width: 900px) {
-  .asrar-dash-page.asrar-chat-page {
-    height: auto;
-    min-height: 100vh;
-    overflow-x: hidden;
-    overflow-y: auto;  /* body can scroll */
-  }
-
-  .asrar-chat-layout {
-    flex-direction: column;
-    padding-top: 72px;
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .asrar-chat-main {
-    margin-left: 0;
-    min-height: calc(100vh - 72px);
-    padding-bottom: 0.5rem;
-  }
-
-  .asrar-chat-sidebar {
-    display: none;     /* use your existing mobile history UI */
-  }
-}
 .asrar-chat-page .asrar-dash-header {
   position: fixed;
   top: 0;
@@ -343,14 +318,13 @@
   display: flex;
   flex-direction: column;
   margin-left: calc(260px + 1.5rem);  /* sidebar + gap */
-  min-height: calc(100vh - 72px);
+  height: calc(100vh - 72px);         /* fixed height under header so messages can scroll */
   box-sizing: border-box;
 }
 @media (max-width: 900px) {
   .asrar-chat-main {
     margin-left: 0;
-    height: auto;
-    min-height: calc(100vh - 72px);
+    height: calc(100vh - 72px);
     padding-bottom: 0.5rem;
   }
 }
@@ -414,8 +388,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%;
-  margin: 0;                         /* no centered box */
-  padding: 1.5rem 1.5rem 1rem 1.5rem; /* breathing space from edges */
+  max-width: 900px;                  /* constrain width on large screens */
+  margin: 0 auto;                    /* center within chat main */
+  padding: 1.5rem 0 1rem;            /* vertical breathing space */
   -webkit-overflow-scrolling: touch;
 }
 

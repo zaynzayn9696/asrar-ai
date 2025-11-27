@@ -144,14 +144,14 @@ body,
 }
 
 .asrar-home-header-center {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
   align-items: center;
   font-size: 13px;
-  margin: 0 auto;        /* key: let it push away from both sides */
+  margin: 0;
 }
 
 /* Keep the header center layout LTR even when language is Arabic */
