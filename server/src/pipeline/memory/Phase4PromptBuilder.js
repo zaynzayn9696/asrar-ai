@@ -65,12 +65,48 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         : null;
 
     const shortLines = [];
+
+    const recentAvg =
+      typeof rolling.recentAvgIntensity === 'number'
+        ? rolling.recentAvgIntensity
+        : null;
+    const trendDelta =
+      typeof rolling.trendDelta === 'number' ? rolling.trendDelta : null;
     if (totalCount > 0 && recentDominant) {
       shortLines.push(
         `Recent window (${totalCount} turns): mostly ${recentDominant} with average intensity ${(recentDominantIntensity * 5).toFixed(
           1
         )}/5.`
       );
+    }
+
+    // If intensity is high and unstable for anxiety/stress, steer into grounding.
+    const highIntensity =
+      recentDominantIntensity && recentDominantIntensity >= 0.7;
+    const unstable =
+      typeof stability === 'number' ? stability < 0.4 : false;
+    if (
+      recentDominant &&
+      (recentDominant === 'ANXIOUS' || recentDominant === 'STRESSED') &&
+      highIntensity &&
+      unstable
+    ) {
+      shortLines.push(
+        'Right now, keep the pace slow and grounding. Use small, structured steps and avoid pushing big tasks or sharp emotional jumps.'
+      );
+    }
+
+    // Trend-aware hint: if intensity is easing down, lean into gentle reinforcement.
+    if (trendDelta != null && Math.abs(trendDelta) >= 0.2) {
+      if (trendDelta < 0) {
+        shortLines.push(
+          'Recent signals suggest the user is starting to feel a bit calmer; gently acknowledge this progress and reinforce small positive shifts.'
+        );
+      } else {
+        shortLines.push(
+          'Recent signals suggest emotional intensity is climbing; prioritise containment, grounding and reassurance over ambitious plans.'
+        );
+      }
     }
     if (stability != null) {
       const stabilityDesc =
@@ -132,6 +168,10 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
       longLines.push(
         `Common recurring topics over time: ${topTopics.join(', ')}.`
       );
+      // Nudge model to stay aware of strong themes without over-focusing.
+      longLines.push(
+        'When it fits naturally, you may lightly connect your guidance to these recurring areas, without forcing the conversation back to them.'
+      );
     }
     if (volatility != null) {
       const volDesc =
@@ -144,11 +184,11 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
       const outcome = personaStats.avgOutcome;
       if (outcome > 0.1) {
         longLines.push(
-          'This companion style seems to help the user over time; keep using it in a consistent, steady way.'
+          'This companion style generally works well for this user; keep the tone consistent with it rather than experimenting wildly.'
         );
       } else if (outcome < -0.1) {
         longLines.push(
-          'Be especially careful: past interactions with this companion style may have coincided with higher emotional intensity.'
+          'Be extra gentle: past interactions with this companion style sometimes aligned with higher emotional intensity.'
         );
       }
     }
@@ -186,4 +226,3 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
 module.exports = {
   buildPhase4MemoryBlock,
 };
-

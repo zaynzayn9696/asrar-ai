@@ -148,6 +148,12 @@ async function updateShortTerm(conversationId, event) {
 
   const rollingEmotionStats = {
     totalCount: intensities.length,
+    recentAvgIntensity: intensities.length
+      ? intensities.reduce((s, v) => s + v, 0) / intensities.length
+      : 0,
+    trendDelta: intensities.length >= 2
+      ? intensities[0] - intensities[intensities.length - 1]
+      : 0,
     emotions: Object.entries(emotionBuckets).reduce((acc, [label, bucket]) => {
       acc[label] = {
         count: bucket.count,
@@ -231,4 +237,3 @@ async function updateShortTerm(conversationId, event) {
 module.exports = {
   updateShortTerm,
 };
-

@@ -359,7 +359,10 @@ function selectModelForResponse({ emotion, convoState }) {
  */
 async function runEmotionalEngine({ userMessage, recentMessages, personaId, personaText, language, conversationId, userId }) {
   try {
+    const tStart = Date.now();
+    const tClassStart = Date.now();
     const emo = await classifyEmotion({ userMessage, recentMessages, language });
+    const classifyMs = Date.now() - tClassStart;
 
     // Only update conversation state if we have a conversationId
     let convoState = null;
@@ -409,6 +412,18 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     const systemPrompt = phase4Block
       ? `${systemPromptBase}\n\n${phase4Block}`
       : systemPromptBase;
+
+    const totalMs = Date.now() - tStart;
+    console.log(
+      '[EmoEngine] convoId=%s userId=%s classifyMs=%d totalMs=%d phase4BlockLen=%d hasConvoState=%s hasProfileSnapshot=%s',
+      conversationId == null ? 'null' : String(conversationId),
+      userId == null ? 'null' : String(userId),
+      classifyMs,
+      totalMs,
+      typeof phase4Block === 'string' ? phase4Block.length : 0,
+      !!convoState,
+      !!longTermSnapshot
+    );
 
     return {
       emo,

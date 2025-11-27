@@ -1139,7 +1139,7 @@ export default function ChatPage() {
         <div className="asrar-chat-main">
           <header className="asrar-chat-header-strip">
             <div className="asrar-chat-header-main">
-              <h1 className="asrar-chat-header-title">{getName(character)} ΓÇö {getRole(character)}</h1>
+              <h1 className="asrar-chat-header-title">{getName(character)} - {getRole(character)}</h1>
             </div>
             {null}
           </header>

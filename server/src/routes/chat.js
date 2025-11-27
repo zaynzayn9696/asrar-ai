@@ -432,10 +432,78 @@ router.get('/conversations/:conversationId/messages', async (req, res) => {
 
 router.delete('/delete-all', requireAuth, async (req, res) => {
   try {
-    const deleted = await prisma.message.deleteMany({ where: { userId: req.user.id } });
-    res.json({ success: true, count: deleted.count });
+    const userId = req.user.id;
+
+    // Find all conversations for this user
+    const conversations = await prisma.conversation.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+    const convIds = conversations.map((c) => c.id);
+
+    const [
+      messageEmotionsDeleted,
+      timelineDeleted,
+      convoEmotionDeleted,
+      stateMachineDeleted,
+      messagesDeleted,
+      conversationsDeleted,
+      patternsDeleted,
+    ] = await prisma.$transaction([
+      prisma.messageEmotion.deleteMany({
+        where: {
+          message: {
+            conversationId: { in: convIds },
+          },
+        },
+      }),
+      prisma.emotionalTimelineEvent.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+          userId,
+        },
+      }),
+      prisma.conversationEmotionState.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+        },
+      }),
+      prisma.conversationStateMachine.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+        },
+      }),
+      prisma.message.deleteMany({
+        where: {
+          conversationId: { in: convIds },
+        },
+      }),
+      prisma.conversation.deleteMany({
+        where: {
+          id: { in: convIds },
+        },
+      }),
+      prisma.emotionalPattern
+        ? prisma.emotionalPattern.deleteMany({ where: { userId } })
+        : prisma.$executeRaw`SELECT 0 AS count`,
+    ]);
+
+    const patternsCount =
+      patternsDeleted && typeof patternsDeleted.count === 'number'
+        ? patternsDeleted.count
+        : 0;
+
+    res.json({
+      success: true,
+      counts: {
+        conversations: conversationsDeleted.count || 0,
+        messages: messagesDeleted.count || 0,
+        messageEmotions: messageEmotionsDeleted.count || 0,
+        patterns: patternsCount,
+      },
+    });
   } catch (err) {
-    console.error('Delete all messages error:', err);
+    console.error('Delete all messages error:', err && err.message ? err.message : err);
     res.status(500).json({ message: 'Failed to delete messages.' });
   }
 });
@@ -892,6 +960,7 @@ router.post('/message', async (req, res) => {
 
     // Emotional Engine: classify and build emotionally-aware system prompt
     const languageForEngine = lang === 'mixed' ? 'mixed' : (isArabicConversation ? 'ar' : 'en');
+    const tEngineStart = Date.now();
     const { emo, severityLevel, systemPrompt, flowState, longTermSnapshot, triggers, personaCfg } = await runEmotionalEngine({
       userMessage: userText,
       recentMessages: recentContext,
@@ -901,6 +970,13 @@ router.post('/message', async (req, res) => {
       conversationId: cid,
       userId,
     });
+    const engineMs = Date.now() - tEngineStart;
+    console.log(
+      '[Chat] emoEngine convoId=%s userId=%s ms=%d',
+      cid == null ? 'null' : String(cid),
+      userId == null ? 'null' : String(userId),
+      engineMs
+    );
 
     const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
     const systemMessage = `${systemPrompt}\n\n${toneInstruction}`;
@@ -913,11 +989,20 @@ router.post('/message', async (req, res) => {
     // Phase 3: Multi-model routing based on emotion intensity and state machine
     const routedModel = selectModelForResponse({ emotion: emo, convoState: flowState || { currentState: 'NEUTRAL' } });
 
+    const tOpenAIStart = Date.now();
     const completion = await openai.chat.completions.create({
       model: routedModel,
       messages: openAIMessages,
       temperature: 0.8,
     });
+    const openAiMs = Date.now() - tOpenAIStart;
+    console.log(
+      '[Chat] openai convoId=%s userId=%s ms=%d model=%s',
+      cid == null ? 'null' : String(cid),
+      userId == null ? 'null' : String(userId),
+      openAiMs,
+      routedModel
+    );
 
     const rawReply = completion.choices?.[0]?.message?.content?.trim();
     if (!rawReply) {
