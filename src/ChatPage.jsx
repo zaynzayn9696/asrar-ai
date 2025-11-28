@@ -150,6 +150,28 @@ const TEXT = {
   },
 };
 
+function getSupportedMimeType() {
+  if (typeof window === 'undefined' || !window.MediaRecorder) return '';
+
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/mp4;codecs=mp4a.40.2',
+    'audio/ogg;codecs=opus',
+    'audio/mpeg',
+  ];
+
+  try {
+    for (const type of candidates) {
+      if (typeof window.MediaRecorder.isTypeSupported === 'function' &&
+          window.MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+  } catch (_) {}
+
+  return '';
+}
+
 export default function ChatPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -1171,18 +1193,7 @@ export default function ChatPage() {
       audioChunksRef.current = [];
       console.log('Mic: media stream acquired');
 
-      let preferredMime = '';
-      try {
-        if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function') {
-          if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-            preferredMime = 'audio/webm;codecs=opus';
-          } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-            preferredMime = 'audio/mp4';
-          } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-            preferredMime = 'audio/ogg;codecs=opus';
-          }
-        }
-      } catch (_) {}
+      const preferredMime = getSupportedMimeType();
 
       const recorder = preferredMime
         ? new MediaRecorder(stream, { mimeType: preferredMime })
@@ -1191,7 +1202,10 @@ export default function ChatPage() {
       console.log('Mic: MediaRecorder created', recorder.mimeType || preferredMime || 'default');
 
       recorder.onstart = () => {
-        console.log('Mic: recording started');
+        console.log('Mic: recording started', {
+          mimeType: recorder.mimeType || preferredMime || 'default',
+          isMobile,
+        });
         if (isMobile) {
           console.log('Mobile recording started');
         }
@@ -1200,6 +1214,9 @@ export default function ChatPage() {
       recorder.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) {
           audioChunksRef.current.push(e.data);
+          console.log('Mic: dataavailable chunk size =', e.data.size);
+        } else {
+          console.log('Mic: dataavailable received empty chunk');
         }
       };
 
@@ -1213,6 +1230,7 @@ export default function ChatPage() {
           console.log('Mic: recorder stopped, preparing to send');
           setIsSendingVoice(true);
           const mime = recorder.mimeType || preferredMime || 'audio/webm';
+          console.log('Mic: building blob from chunks', audioChunksRef.current.length);
           const blob = new Blob(audioChunksRef.current, { type: mime });
           audioChunksRef.current = [];
           if (isMobile) {
