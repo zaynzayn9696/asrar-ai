@@ -36,7 +36,7 @@ export default function AsrarHeader({
     onLangChange?.(newLang);
   };
 
-  const engineLabel = isAr ? "محرك المشاعر" : "Emotional Engine";
+
 
   const nav = isAr
     ? {
@@ -116,9 +116,7 @@ export default function AsrarHeader({
           {!isAuthLoading && !user && (
             <div className="asrar-header-auth-buttons">
               {/* Emotional Engine (desktop) */}
-              <Link to="/#emotional-engine" className="asrar-dash-header-link">
-                {engineLabel}
-              </Link>
+             
               <Link to="/login" className="asrar-btn ghost">
                 {authLabels.login}
               </Link>
@@ -132,9 +130,7 @@ export default function AsrarHeader({
           {!isAuthLoading && user && (
             <>
               {/* Dashboard + history links (desktop only) */}
-              <Link to="/#emotional-engine" className="asrar-dash-header-link">
-                {engineLabel}
-              </Link>
+              
               <Link to="/dashboard" className="asrar-dash-header-link">
                 {nav.dashboard}
               </Link>
@@ -242,12 +238,7 @@ export default function AsrarHeader({
             </div>
 
             {/* Emotional Engine (mobile) – shown for all users */}
-            <Link
-              to="/#emotional-engine"
-              onClick={() => setIsMobileNavOpen(false)}
-            >
-              {engineLabel}
-            </Link>
+          
 
             {/* Logged-out: show auth buttons */}
             {!user && (

@@ -48,6 +48,9 @@ const allowedAudio = new Set([
   'audio/ogg',
   'audio/mpeg',
   'audio/wav',
+  // Mobile Safari / iOS and some Android recorders
+  'audio/mp4',
+  'audio/aac',
 ]);
 
 const audioStorage = multer.diskStorage({

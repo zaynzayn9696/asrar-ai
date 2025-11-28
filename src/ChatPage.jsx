@@ -1060,6 +1060,10 @@ export default function ChatPage() {
   const startRecording = async () => {
     if (isRecording || isSending || isSendingVoice) return;
     try {
+      const isMobile =
+        typeof navigator !== 'undefined' &&
+        /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
       try { voiceStopIntentRef.current = 'send'; } catch (_) {}
       if (!navigator?.mediaDevices?.getUserMedia) {
         console.error('Mic: getUserMedia not available (secure context required or browser unsupported)');
@@ -1167,21 +1171,30 @@ export default function ChatPage() {
       audioChunksRef.current = [];
       console.log('Mic: media stream acquired');
 
-      let options = {};
+      let preferredMime = '';
       try {
-        if (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-          options = { mimeType: 'audio/webm;codecs=opus' };
-        } else if (window.MediaRecorder && MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-          options = { mimeType: 'audio/ogg;codecs=opus' };
+        if (window.MediaRecorder && typeof MediaRecorder.isTypeSupported === 'function') {
+          if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            preferredMime = 'audio/webm;codecs=opus';
+          } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            preferredMime = 'audio/mp4';
+          } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+            preferredMime = 'audio/ogg;codecs=opus';
+          }
         }
       } catch (_) {}
 
-      const recorder = new MediaRecorder(stream, options);
+      const recorder = preferredMime
+        ? new MediaRecorder(stream, { mimeType: preferredMime })
+        : new MediaRecorder(stream);
       recorderRef.current = recorder;
-      console.log('Mic: MediaRecorder created');
+      console.log('Mic: MediaRecorder created', recorder.mimeType || preferredMime || 'default');
 
       recorder.onstart = () => {
         console.log('Mic: recording started');
+        if (isMobile) {
+          console.log('Mobile recording started');
+        }
       };
 
       recorder.ondataavailable = (e) => {
@@ -1199,11 +1212,41 @@ export default function ChatPage() {
           }
           console.log('Mic: recorder stopped, preparing to send');
           setIsSendingVoice(true);
-          const mime = recorder.mimeType || 'audio/webm';
+          const mime = recorder.mimeType || preferredMime || 'audio/webm';
           const blob = new Blob(audioChunksRef.current, { type: mime });
           audioChunksRef.current = [];
-          const ext = mime.includes('ogg') ? 'ogg' : mime.includes('mpeg') ? 'mp3' : 'webm';
-          const file = new File([blob], `voice.${ext}`, { type: mime });
+          if (isMobile) {
+            console.log('Mobile recording stopped: blob size =', blob.size, 'type =', mime);
+          }
+          if (!blob || !blob.size) {
+            const errorMessage = {
+              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+              from: 'system',
+              text: isArabicConversation
+                ? 'فشل تسجيل الصوت. لم نلتقط أي بيانات من الميكروفون.'
+                : 'Voice recording failed. No audio was captured from the microphone.',
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            return;
+          }
+
+          let ext = 'webm';
+          const lowerMime = (mime || '').toLowerCase();
+          if (lowerMime.includes('ogg')) {
+            ext = 'ogg';
+          } else if (lowerMime.includes('mpeg') || lowerMime.includes('mp3')) {
+            ext = 'mp3';
+          } else if (lowerMime.includes('wav')) {
+            ext = 'wav';
+          } else if (lowerMime.includes('mp4')) {
+            ext = 'mp4';
+          } else if (lowerMime.includes('aac')) {
+            ext = 'aac';
+          }
+
+          const filename = `voice-message.${ext}`;
+          const file = new File([blob], filename, { type: mime });
           const form = new FormData();
           form.append('audio', file);
           form.append('characterId', selectedCharacterId);
@@ -1233,6 +1276,9 @@ export default function ChatPage() {
 
           if (!res.ok) {
             console.warn('Mic: voice response not OK');
+            if (isMobile) {
+              console.error('Mobile upload error:', res.status, data);
+            }
             if (data && data.code === 'VOICE_PRO_ONLY') {
               setModalText(
                 isArabicConversation
