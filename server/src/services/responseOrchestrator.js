@@ -155,6 +155,63 @@ function applyStateAdjustments(text, convoState, language) {
 }
 
 /**
+ * Persona Modulation V3 — gently modulate tone based on dominant primary emotion
+ * without changing persona identity. Only adjusts wrappers/phrasing.
+ */
+function modulateByPrimaryEmotion(text, emotion, language) {
+  const primary = String(emotion?.primaryEmotion || '').toUpperCase();
+  const isAr = language === 'ar';
+  const trimmed = String(text || '').trim();
+
+  if (!trimmed) return text;
+
+  // Helper: prepend once if not already present.
+  const prependOnce = (prefixAr, prefixEn) => {
+    const prefix = isAr ? prefixAr : prefixEn;
+    if (!prefix) return text;
+    if (trimmed.startsWith(prefix)) return text;
+    return prefix + ' ' + trimmed;
+  };
+
+  if (primary === 'SAD') {
+    return prependOnce(
+      'أحس إنك متعب عاطفياً، خلّينا نمشي خطوة خطوة.',
+      "It sounds like you're carrying a lot; let's take it one gentle step at a time."
+    );
+  }
+
+  if (primary === 'ANXIOUS') {
+    return prependOnce(
+      'خلّينا نبطّئ الإيقاع ونهدّي التوتر شوي.',
+      "Let's slow things down together so it feels a bit less overwhelming."
+    );
+  }
+
+  if (primary === 'ANGRY') {
+    return prependOnce(
+      'واضح إن في غضب أو انزعاج، وخلّينا نحاول نفهمه بهدوء بدون حكم.',
+      "I can feel the frustration; we can unpack it calmly here without judgment."
+    );
+  }
+
+  if (primary === 'LONELY') {
+    return prependOnce(
+      'أعرف إن الشعور بالوحدة صعب، وأنا هنا معك الآن.',
+      "Feeling lonely is heavy; I'm here with you while we talk through it."
+    );
+  }
+
+  if (primary === 'HOPEFUL') {
+    return prependOnce(
+      'حلو إن في لمحة أمل، نقدر نبني عليها بخطوات صغيرة.',
+      "I love that there is some hope here; we can build on it with small steps."
+    );
+  }
+
+  return text;
+}
+
+/**
  * Applies tone softening, cultural adaptation, empathy, safety guardrails, and state-machine guidance.
  * The rewrite is gentle (not drastic) and avoids clinical framing.
  * @param {Object} params
@@ -204,6 +261,9 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
       }
     }
 
+    // Persona Modulation V3 — emotion-aware tone tweak
+    out = modulateByPrimaryEmotion(out, emotion, language);
+
     const premiumUser = !!isPremiumUser;
 
     // Free-lite shaping: for non-premium users in CORE_FAST, keep the reply
@@ -251,6 +311,7 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
     // Final gentle polish: avoid overly long replies
     const lines = out.split(/\n+/).filter(Boolean);
     if (engineMode === 'CORE_FAST') {
+      // Free-lite path is already sentence-trimmed; this keeps at most ~1–2 paragraphs.
       if (lines.length > 6) {
         out = lines.slice(0, 6).join('\n');
       }
@@ -259,8 +320,17 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
         out = lines.slice(0, 9).join('\n');
       }
     } else if (engineMode === 'PREMIUM_DEEP') {
-      if (lines.length > 12) {
-        out = lines.slice(0, 12).join('\n');
+      const intensity = Number(emotion?.intensity || 0);
+      let maxLines = 10; // default medium
+      if (intensity >= 5) {
+        maxLines = 14; // full structured guidance
+      } else if (intensity >= 3) {
+        maxLines = 10; // 8–10 lines typical
+      } else if (intensity > 0) {
+        maxLines = 8; // gentler for low intensity
+      }
+      if (lines.length > maxLines) {
+        out = lines.slice(0, maxLines).join('\n');
       }
     } else if (convoState?.currentState === 'SAD_SUPPORT' && lines.length > 5) {
       out = lines.slice(0, 5).join('\n');

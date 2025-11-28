@@ -2,6 +2,7 @@
 // Long-term emotional memory (per-user profile)
 
 const prisma = require('../../prisma');
+const { detectAnchorsFromMessage, deriveEmotionalReason } = require('../../services/emotionalReasoning');
 
 /**
  * Safely parse a JSON-like field from Prisma (which is already JS) into an object.
@@ -41,6 +42,9 @@ async function updateLongTerm(userId, event, outcome) {
   let emotionStats = ensureObject(profile && profile.emotionStats);
   let topicProfile = ensureObject(profile && profile.topicProfile);
   let personaAffinity = ensureObject(profile && profile.personaAffinity);
+  let emotionalAnchors = Array.isArray(profile && profile.emotionalAnchors)
+    ? profile.emotionalAnchors.slice()
+    : [];
   let volatilityIndex = profile && typeof profile.volatilityIndex === 'number'
     ? profile.volatilityIndex
     : 0;
@@ -127,11 +131,48 @@ async function updateLongTerm(userId, event, outcome) {
       : absDelta01;
   }
 
+  // Fetch message text for anchors / reasoning.
+  let messageText = '';
+  if (event.messageId) {
+    try {
+      const msg = await prisma.message.findUnique({
+        where: { id: event.messageId },
+        select: { content: true },
+      });
+      if (msg && typeof msg.content === 'string') {
+        messageText = msg.content;
+      }
+    } catch (err) {
+      // best-effort only
+    }
+  }
+
+  // Emotional anchors V2
+  try {
+    const detectedAnchors = detectAnchorsFromMessage(messageText, emo.primaryEmotion, emo.intensity);
+    if (Array.isArray(detectedAnchors) && detectedAnchors.length) {
+      for (const a of detectedAnchors) {
+        if (a && !emotionalAnchors.includes(a)) {
+          emotionalAnchors.push(a);
+        }
+      }
+    }
+  } catch (_) {}
+
+  // Deep emotional reason label (why, not just what)
+  let reasonLabel = null;
+  try {
+    reasonLabel = deriveEmotionalReason(messageText, emotionalAnchors, [], profile || null) || null;
+  } catch (_) {
+    reasonLabel = null;
+  }
+
   // Lightweight snapshot for quick access when building prompts.
   const recentKernelSnapshot = {
     lastEmotion: label,
     lastIntensity: emo.intensity || 0,
     lastUpdatedAt: now.toISOString(),
+    reasonLabel,
   };
 
   // Upsert profile with new Phase 4 fields.
@@ -145,6 +186,7 @@ async function updateLongTerm(userId, event, outcome) {
       volatilityIndex,
       recentKernelSnapshot,
       lastUpdatedAt: now,
+      emotionalAnchors,
     },
     update: {
       emotionStats,
@@ -153,6 +195,7 @@ async function updateLongTerm(userId, event, outcome) {
       volatilityIndex,
       recentKernelSnapshot,
       lastUpdatedAt: now,
+      emotionalAnchors,
     },
   });
 }

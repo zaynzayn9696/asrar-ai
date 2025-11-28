@@ -4,6 +4,7 @@
 // snapshot, and simple trigger detection for prompts.
 
 const prisma = require('../prisma');
+const { detectTriggers } = require('./emotionalReasoning');
 
 /**
  * @typedef {Object} Emotion
@@ -484,10 +485,46 @@ async function updateEmotionalPatterns({ userId }) {
   }
 }
 
+/**
+ * Logs per-message emotional trigger events based on simple keyword tags.
+ * This is best-effort and should not block the main chat flow.
+ * @param {Object} params
+ * @param {number} params.userId
+ * @param {number|null|undefined} params.conversationId
+ * @param {number} params.messageId
+ * @param {string} params.messageText
+ * @param {Emotion} params.emotion
+ */
+async function logTriggerEventsForMessage({ userId, conversationId, messageId, messageText, emotion }) {
+  try {
+    if (!userId || !messageId || !emotion) return;
+
+    const tags = detectTriggers(messageText, emotion.primaryEmotion, emotion.intensity);
+    if (!Array.isArray(tags) || tags.length === 0) return;
+
+    const cid = conversationId && Number.isFinite(Number(conversationId))
+      ? Number(conversationId)
+      : null;
+    const intensity = Math.max(1, Math.min(5, emotion.intensity || 1));
+
+    const data = tags.map((type) => ({
+      userId,
+      conversationId: cid,
+      type,
+      intensity,
+    }));
+
+    await prisma.emotionalTriggerEvent.createMany({ data });
+  } catch (e) {
+    console.error('logTriggerEventsForMessage error', e && e.message ? e.message : e);
+  }
+}
+
 module.exports = {
   logEmotionalTimelineEvent,
   updateUserEmotionProfile,
   getLongTermEmotionalSnapshot,
   detectEmotionalTriggers,
   updateEmotionalPatterns,
+  logTriggerEventsForMessage,
 };

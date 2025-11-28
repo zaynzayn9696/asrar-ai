@@ -286,7 +286,7 @@ async function updateConversationEmotionState(conversationId, emo) {
  * @param {('ar'|'en'|'mixed')} params.language
  * @returns {string}
  */
-function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser }) {
+function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel }) {
   const isArabic = language === 'ar';
   const personaCfg = personas[personaId] || defaultPersona;
   const premiumUser = !!isPremiumUser;
@@ -420,6 +420,10 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       '[/EMOTION_STATE]',
     ];
   } else {
+    const reason = typeof reasonLabel === 'string' && reasonLabel.trim()
+      ? reasonLabel.trim()
+      : null;
+
     emotionStateBlockLines = [
       '[EMOTION_STATE]',
       `primaryEmotion: ${emotion.primaryEmotion}`,
@@ -428,6 +432,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       `recentEvents: ${recentEvents.join(', ')}`,
       `loopTag: ${loopTagStr || 'NONE'}`,
       `anchors: ${anchorsList.join(', ')}`,
+      ...(reason ? [`reasonLabel: ${reason}`] : []),
       '[/EMOTION_STATE]',
     ];
   }

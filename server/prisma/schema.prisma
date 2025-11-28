@@ -34,6 +34,7 @@ model User {
   emotionProfile     UserEmotionProfile?
   emotionalTimelineEvents EmotionalTimelineEvent[]
   emotionalPatterns  EmotionalPattern[] 
+  emotionalTriggerEvents EmotionalTriggerEvent[]
 }
 
 model Usage {
@@ -59,6 +60,8 @@ model Conversation {
   emotionState ConversationEmotionState?
   emotionalTimelineEvents EmotionalTimelineEvent[]
   stateMachine ConversationStateMachine?
+  emotionalTriggerEvents EmotionalTriggerEvent[]
+
 }
 
 model Message {
@@ -200,6 +203,7 @@ model UserEmotionProfile {
   memoryMode           UserMemoryMode @default(STANDARD)
   retentionPolicy      Json?
   lastPatternRefreshAt DateTime?
+  emotionalAnchors     String[] @default([])
 }
 
 //
@@ -218,6 +222,22 @@ model EmotionalPattern {
 
   @@index([userId])
   @@index([userId, kind])
+}
+
+model EmotionalTriggerEvent {
+  id             Int           @id @default(autoincrement())
+  userId         Int
+  conversationId Int?
+
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  type           String        // e.g. "family_conflict"
+  intensity      Int           // 1–5
+  createdAt      DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([conversationId, createdAt])
 }
 
 //

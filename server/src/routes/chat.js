@@ -20,10 +20,14 @@ const {
   updateConversationEmotionState,
   buildSystemPrompt,
 } = require('../services/emotionalEngine');
+const { detectLoopTag, deriveEmotionalReason } = require('../services/emotionalReasoning');
 const {
   logEmotionalTimelineEvent,
   updateUserEmotionProfile,
+  getLongTermEmotionalSnapshot,
+  detectEmotionalTriggers,
   updateEmotionalPatterns,
+  logTriggerEventsForMessage,
 } = require('../services/emotionalLongTerm');
 const { recordEvent: recordMemoryEvent } = require('../pipeline/memory/memoryKernel');
 const { orchestrateResponse } = require('../services/responseOrchestrator');
@@ -1182,6 +1186,47 @@ router.post('/message', async (req, res) => {
       engineMode = ENGINE_MODES.CORE_FAST;
     }
 
+    let loopTag = null;
+    let anchors = [];
+    let reasonLabel = null;
+    let promptTriggers = [];
+
+    // V6: richer internal state only for premium deep modes.
+    if (isPremiumUser && (engineMode === ENGINE_MODES.CORE_DEEP || engineMode === ENGINE_MODES.PREMIUM_DEEP)) {
+      try {
+        const [profile, triggerEvents] = await Promise.all([
+          prisma.userEmotionProfile.findUnique({ where: { userId } }),
+          prisma.emotionalTriggerEvent.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+            take: 3,
+          }),
+        ]);
+
+        anchors = Array.isArray(profile?.emotionalAnchors) ? profile.emotionalAnchors : [];
+
+        const triggerTags = Array.isArray(triggerEvents)
+          ? triggerEvents.map((ev) => ev.type).filter(Boolean)
+          : [];
+
+        promptTriggers = triggerTags.map((tag) => ({
+          topic: tag,
+          emotion: emo.primaryEmotion,
+          score: 1,
+        }));
+
+        reasonLabel = deriveEmotionalReason(userText, anchors, triggerTags, profile || null) || null;
+
+        // Loop detection over current message + recent context
+        loopTag = detectLoopTag(userText, recentContext);
+      } catch (_) {
+        anchors = [];
+        promptTriggers = [];
+        reasonLabel = null;
+        loopTag = null;
+      }
+    }
+
     const systemPrompt = buildSystemPrompt({
       personaText,
       personaId: characterId,
@@ -1189,9 +1234,12 @@ router.post('/message', async (req, res) => {
       convoState: null,
       language: languageForEngine,
       longTermSnapshot: null,
-      triggers: [],
+      triggers: promptTriggers,
       engineMode,
       isPremiumUser,
+      loopTag,
+      anchors,
+      reasonLabel,
     });
 
     const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
@@ -1402,6 +1450,18 @@ router.post('/message', async (req, res) => {
             await logEmotionalTimelineEvent({ userId: bgUserId, conversationId: bgConversationId, emotion: bgEmotion });
           } catch (err) {
             console.error('[EmoEngine][Background] Timeline error', err && err.message ? err.message : err);
+          }
+
+          try {
+            await logTriggerEventsForMessage({
+              userId: bgUserId,
+              conversationId: bgConversationId,
+              messageId: bgMessageId,
+              messageText: userText,
+              emotion: bgEmotion,
+            });
+          } catch (err) {
+            console.error('[EmoEngine][Background] TriggerEvents error', err && err.message ? err.message : err);
           }
 
           try {
