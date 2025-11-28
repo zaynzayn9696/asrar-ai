@@ -1049,6 +1049,13 @@ export default function ChatPage() {
     }
   };
 
+  // Voice flow:
+  // 1) Mic button -> handleToggleRecording -> startRecording / stopRecording
+  // 2) MediaRecorder captures audio and onstop sends it to /api/chat/voice
+  // 3) Backend returns { userText, assistantText, audioBase64, usage }
+  // 4) We append a user message with the transcript text
+  // 5) We append an AI message with assistantText and optional audioBase64 for playback
+  // 6) Text-only messages still go through sendMessage() and /api/chat/message
   // --- Voice recording (MediaRecorder) ---------------------------
   const startRecording = async () => {
     if (isRecording || isSending || isSendingVoice) return;
@@ -1263,6 +1270,11 @@ export default function ChatPage() {
 
           if (data.usage) setUsageInfo(data.usage);
 
+          console.log(
+            'Mic: voice response payload keys',
+            data && typeof data === 'object' ? Object.keys(data) : []
+          );
+
           const transcript = (data.userText || '').trim();
           if (!transcript) {
             const errorMessage = {
@@ -1277,8 +1289,39 @@ export default function ChatPage() {
             return;
           }
 
-          await sendMessage(transcript);
-          console.log('Mic: voice response OK');
+          const assistantTextRaw = (data.assistantText || '').trim();
+          const aiText = assistantTextRaw || (isArabicConversation
+            ? 'واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل.'
+            : 'I had a small issue connecting. Please try again in a moment.');
+
+          const audioBase64 =
+            data && typeof data === 'object' && typeof data.audioBase64 === 'string'
+              ? data.audioBase64
+              : null;
+
+          setMessages((prev) => {
+            const lastId =
+              prev.length && typeof prev[prev.length - 1].id === 'number'
+                ? prev[prev.length - 1].id
+                : prev.length;
+            const nowIso = new Date().toISOString();
+            const userVoiceMessage = {
+              id: lastId + 1,
+              from: 'user',
+              text: transcript,
+              createdAt: nowIso,
+            };
+            const aiVoiceMessage = {
+              id: lastId + 2,
+              from: 'ai',
+              text: aiText,
+              createdAt: nowIso,
+              audioBase64,
+            };
+            return [...prev, userVoiceMessage, aiVoiceMessage];
+          });
+
+          console.log('Mic: voice response OK (voice message + reply applied)');
         } catch (err) {
           console.error('Voice send error', err);
         } finally {
