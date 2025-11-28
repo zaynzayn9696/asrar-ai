@@ -747,6 +747,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const dialect = req.body?.dialect || 'msa';
     const rawToneKey = req.body?.tone;
     const bodyConversationId = req.body?.conversationId;
+    const saveFlag = req.body?.save;
     let incomingMessages = [];
     if (req.body?.messages) {
       try {
@@ -843,7 +844,8 @@ Keep your replies around 3–6 sentences unless the user clearly asks for more d
     }
 
     // Conversation ensure + persistence for voice messages
-    const shouldSaveVoice = !!dbUser.saveHistoryEnabled;
+    const shouldSaveVoice =
+      saveFlag === 'true' || (saveFlag !== 'false' && !!dbUser.saveHistoryEnabled);
     let cid = null;
     if (shouldSaveVoice) {
       try {

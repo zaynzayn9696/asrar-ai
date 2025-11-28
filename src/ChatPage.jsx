@@ -311,7 +311,50 @@ export default function ChatPage() {
           if (msgRes.ok) {
             const serverMsgs = await msgRes.json().catch(() => []);
             if (Array.isArray(serverMsgs) && serverMsgs.length) {
-              setMessages(serverMsgs);
+              let finalMsgs = serverMsgs;
+              try {
+                if (typeof window !== "undefined" && user && user.id) {
+                  const storageKey = `asrar-chat-history-${user.id}-${selectedCharacterId}`;
+                  const raw = localStorage.getItem(storageKey);
+                  if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length) {
+                      const localMsgs = parsed;
+                      const merged = [];
+                      let localIndex = 0;
+                      for (const m of serverMsgs) {
+                        const from = m.from || "system";
+                        const text = (m.text || "").trim();
+                        let overlay = null;
+                        for (; localIndex < localMsgs.length; localIndex++) {
+                          const lm = localMsgs[localIndex];
+                          if (!lm) continue;
+                          const lFrom = lm.from || "system";
+                          const lText = (lm.text || "").trim();
+                          if (lFrom === from && lText === text) {
+                            overlay = lm;
+                            localIndex++;
+                            break;
+                          }
+                        }
+                        if (overlay && overlay.audioBase64) {
+                          merged.push({
+                            ...m,
+                            audioBase64: overlay.audioBase64,
+                            audioMimeType: overlay.audioMimeType,
+                          });
+                        } else {
+                          merged.push(m);
+                        }
+                      }
+                      finalMsgs = merged;
+                    }
+                  }
+                }
+              } catch (mergeErr) {
+                console.error("[ChatPage] Failed to merge server messages with local voice history", mergeErr);
+              }
+              setMessages(finalMsgs);
             }
           }
         }
@@ -1316,6 +1359,13 @@ export default function ChatPage() {
           form.append("lang", lang);
           form.append("dialect", selectedDialect);
           form.append("tone", selectedTone);
+          if (conversationId) {
+            form.append("conversationId", String(conversationId));
+          }
+          form.append(
+            "save",
+            user && user.saveHistoryEnabled ? "true" : "false"
+          );
           const payloadMessages = messages.map((m) => ({
             from: m.from,
             text: m.text,
