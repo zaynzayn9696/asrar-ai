@@ -1295,48 +1295,64 @@ export default function HomePage() {
 
         {/* PRICING */}
         <section id="pricing" className="asrar-section asrar-section--pricing">
-          <h2 className="asrar-section-title">
-            {isAr ? "الأسعار" : "Pricing"}
-          </h2>
+  <h2 className="asrar-section-title">
+    {isAr ? "الأسعار" : "Pricing"}
+  </h2>
 
-          <div className="asrar-pricing-grid">
-            <div className="pricing-card">
-              <h3>{isAr ? "مجاني" : "Free"}</h3>
-              <p className="price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
-              <ul>
-                <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
-                <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
-                <li>{isAr ? "دعم أساسي" : "Basic support"}</li>
-              </ul>
-              <button className="asrar-btn ghost" onClick={() => navigate('/dashboard')}>
-                {isAr ? "ابدأ مجاناً" : "Start for free"}
-              </button>
-            </div>
+  <div className="asrar-pricing-grid">
 
-            <div className="pricing-card pricing-card--accent">
-              
-              <h3>{isAr ? "برو" : "Pro"}</h3>
-              <p className="price">{isAr ? "$4.99 / شهرياً" : "$4.99 / month"}</p>
-              <ul>
-                <li>{isAr ? "كل رفاق أسرار الخمسة" : "All 5 Asrar characters"}</li>
-                <li>{isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}</li>
-                <li>{isAr ? "ذاكرة محادثة ودعم ذو أولوية" : "Chat memory & priority support"}</li>
-                <li>{isAr ? "بدون إعلانات ووصول مبكر" : "Ad‑free, priority access"}</li>
-                <li>{isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}</li>
-              </ul>
-              <button className="asrar-btn primary" onClick={() => {
-                if (user) {
-                  window.location.href = "/dashboard";
-                } else {
-                  window.location.href = "/create-account";
-                }
-              }}>
-                {isAr ? "جرّب برو" : "Try Pro"}
-              </button>
-            </div>
-          </div>
-        </section>
+    {/* FREE PLAN */}
+    <div className="pricing-card">
+      <h3>{isAr ? "مجاني" : "Free"}</h3>
+      <p className="price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
+      <ul>
+        <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
+        <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
+        <li>{isAr ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)" 
+                  : "Lite Emotional Engine (short supportive replies)"}
+        </li>
+        <li>{isAr ? "دعم أساسي" : "Basic support"}</li>
+      </ul>
+      <button className="asrar-btn ghost" onClick={() => navigate('/dashboard')}>
+        {isAr ? "ابدأ مجاناً" : "Start for free"}
+      </button>
+    </div>
 
+    {/* PRO PLAN */}
+    <div className="pricing-card pricing-card--accent">
+      <h3>{isAr ? "برو" : "Pro"}</h3>
+      <p className="price">{isAr ? "٤.٩٩$ / شهرياً" : "$4.99 / month"}</p>
+      <ul>
+        <li>{isAr ? "جميع شخصيات أسرار الخمسة" : "All 5 Asrar characters"}</li>
+        <li>{isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}</li>
+        <li>{isAr ? "محرك المشاعر العميق V5 (إرشاد أعمق وخطوات عملية)" 
+                  : "Deep Emotional Engine V5 (longer, structured guidance)"}
+        </li>
+        <li>{isAr ? "ذاكرة محادثة متقدمة ودعم ذو أولوية" 
+                  : "Advanced chat memory & priority support"}
+        </li>
+        <li>{isAr ? "بدون إعلانات ووصول ذو أولوية" 
+                  : "Ad-free & priority access"}
+        </li>
+        <li>{isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}</li>
+      </ul>
+
+      <button
+        className="asrar-btn primary"
+        onClick={() => {
+          if (user) {
+            window.location.href = "/dashboard";
+          } else {
+            window.location.href = "/create-account";
+          }
+        }}
+      >
+        {isAr ? "جرّب برو" : "Try Pro"}
+      </button>
+    </div>
+
+  </div>
+</section>
       </main>
 
       <AsrarFooter />
