@@ -1243,6 +1243,7 @@ router.post('/message', async (req, res) => {
         severityLevel: emo.severityLevel || 'CASUAL',
         personaCfg: null,
         engineMode,
+        isPremiumUser,
       });
       orchestrateMs = Date.now() - tOrchStart;
       if (typeof aiMessage !== 'string' || !aiMessage.trim()) aiMessage = rawReply;

@@ -168,9 +168,10 @@ function applyStateAdjustments(text, convoState, language) {
  * @param {'CASUAL'|'VENTING'|'SUPPORT'|'HIGH_RISK'} params.severityLevel
  * @param {{ style?: {warmth?:string, humor?:string, directness?:string, energy?:string} }} params.personaCfg
  * @param {'CORE_FAST'|'CORE_DEEP'|'PREMIUM_DEEP'=} params.engineMode
+ * @param {boolean=} params.isPremiumUser
  * @returns {Promise<string>}
  */
-async function orchestrateResponse({ rawReply, persona, emotion, convoState, longTermSnapshot, triggers, language, severityLevel, personaCfg, engineMode }) {
+async function orchestrateResponse({ rawReply, persona, emotion, convoState, longTermSnapshot, triggers, language, severityLevel, personaCfg, engineMode, isPremiumUser }) {
   try {
     if (!rawReply || typeof rawReply !== 'string') return '';
     const isAr = language === 'ar';
@@ -200,6 +201,36 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
       const friendly = isAr ? 'أهلًا، يسعدني نحكي سوا. ' : "Hey, it's good to hear from you. ";
       if (!trimmed.startsWith('أهلًا') && !trimmed.startsWith("Hey, it's good to hear")) {
         out = friendly + out;
+      }
+    }
+
+    const premiumUser = !!isPremiumUser;
+
+    // Free-lite shaping: for non-premium users in CORE_FAST, keep the reply
+    // short, simple, and without heavy list structures, before adding safety
+    // footers. Arabic content is preserved; we only trim length/structure.
+    if (!premiumUser && engineMode === 'CORE_FAST') {
+      const flattenedLines = String(out)
+        .split(/\n+/)
+        .map((line) => {
+          const trimmedLine = String(line || '').trim();
+          if (!trimmedLine) return '';
+          // Remove simple bullet/number prefixes to avoid long lists.
+          return trimmedLine
+            .replace(/^[-*•]\s+/, '')
+            .replace(/^\d+\.\s+/, '');
+        })
+        .filter(Boolean);
+
+      const flattenedText = flattenedLines.join(' ');
+      const sentences = flattenedText
+        .split(/(?<=[.!؟?])\s+/)
+        .filter(Boolean);
+
+      const maxSentences = 4; // ~1–2 short paragraphs
+      const kept = sentences.slice(0, maxSentences).join(' ');
+      if (kept) {
+        out = kept;
       }
     }
 
