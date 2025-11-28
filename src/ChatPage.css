@@ -1149,3 +1149,36 @@
     backdrop-filter: blur(10px);
   }
 }
+
+
+@media (min-width: 901px) {
+  /* Give extra space so last messages are not hidden behind the fixed bar */
+  .asrar-chat-main {
+    padding-bottom: 7.5rem; /* roughly composer height */
+  }
+
+  .asrar-chat-composer {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: 100%;
+    z-index: 95;
+    padding-top: 0.6rem;
+    padding-bottom: 0.9rem;
+    background: linear-gradient(
+      to bottom,
+      rgba(2, 4, 11, 0),
+      rgba(2, 4, 11, 0.96)
+    );
+    backdrop-filter: blur(10px);
+  }
+
+  /* Keep content centered to the chat width */
+  .asrar-chat-composer-inner,
+  .asrar-chat-footer-meta {
+    max-width: var(--asrar-chat-width);
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
