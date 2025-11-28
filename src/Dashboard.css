@@ -1283,13 +1283,15 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
 
   .asrar-dash-mobile-nav-btn {
     width: 100%;
-    text-align: left;
+    text-align: center;
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.05);
     color: #e8f8ff;
     padding: 0.7rem 0.9rem;
     font-size: 0.92rem;
     border-radius: 12px;
+    display: block;
+    width: 100%;
   }
 
   .asrar-dash-mobile-nav-btn:hover {
