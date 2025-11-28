@@ -645,6 +645,7 @@ export default function HomePage() {
         { href: "#security-privacy", label: "الأمان والخصوصية" },
         { href: "#how-it-works", label: "كيف يعمل؟" },
         { href: "#pricing", label: "الأسعار" },
+        { href: "#contact", label: "تواصل معنا" },
       ]
     : [
         { href: "#hero", label: "Home" },
@@ -654,6 +655,7 @@ export default function HomePage() {
         { href: "#security-privacy", label: "Security & Privacy" },
       
         { href: "#pricing", label: "Pricing" },
+        { href: "#contact", label: "Contact" },
       ];
 
   const brandLabel = "ASRAR AI";
@@ -1353,6 +1355,68 @@ export default function HomePage() {
 
   </div>
 </section>
+
+      <section
+        id="contact"
+        className="asrar-section asrar-section--contact"
+      >
+        <h2 className="asrar-section-title">
+          {isAr ? "تواصل معنا" : "Contact"}
+        </h2>
+        <p className="asrar-section-subtitle">
+          {isAr
+            ? "إذا كان لديك أي أسئلة، مشاكل في الحساب، أو اقتراحات لتحسين أسرار AI، يسعدنا سماعك."
+            : "If you have questions, account issues, or ideas to improve Asrar AI, we’d love to hear from you."}
+        </p>
+
+        <div className="asrar-contact-grid">
+          <div className="asrar-contact-card">
+            <h3>{isAr ? "الدعم العام" : "General Support"}</h3>
+            <p>
+              {isAr
+                ? "للمشاكل التقنية، استفسارات الحساب، أو الأسئلة العامة عن المنصة."
+                : "For technical issues, account questions, or general platform support."}
+            </p>
+            <a
+              href="mailto:info@asrarai.com"
+              className="asrar-contact-email"
+            >
+              info@asrarai.com
+            </a>
+          </div>
+
+          <div className="asrar-contact-card">
+            <h3>{isAr ? "الاقتراحات والملاحظات" : "Feedback & Ideas"}</h3>
+            <p>
+              {isAr
+                ? "شاركنا رأيك في تجربة أسرار AI أو أي ميزات تحب أن تراها في المستقبل."
+                : "Share your experience with Asrar AI or features you’d like to see next."}
+            </p>
+            <a
+              href="mailto:info@asrarai.com?subject=Asrar%20AI%20Feedback"
+              className="asrar-contact-email"
+            >
+              info@asrarai.com
+            </a>
+          </div>
+
+          <div className="asrar-contact-card">
+            <h3>{isAr ? "الشراكات والمستثمرون" : "Business & Investors"}</h3>
+            <p>
+              {isAr
+                ? "للاستفسارات المتعلقة بالشراكات، الإعلام، أو المستثمرين."
+                : "For partnerships, media, or investor inquiries."}
+            </p>
+            <a
+              href="mailto:info@asrarai.com?subject=Asrar%20AI%20Business"
+              className="asrar-contact-email"
+            >
+              info@asrarai.com
+            </a>
+          </div>
+        </div>
+      </section>
+
       </main>
 
       <AsrarFooter />
