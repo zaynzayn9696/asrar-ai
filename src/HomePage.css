@@ -2410,7 +2410,7 @@ border: none;
 }
 
 .asrar-engine-card {
-  text-align: left;
+  text-align: center;
   padding: 1.2rem 1.2rem 1.3rem;
   border-radius: var(--asrar-radius-md);
   background: radial-gradient(circle at top, #0b151f 0, #05070c 65%);
