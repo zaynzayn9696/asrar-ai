@@ -11,8 +11,20 @@ console.log('[DEBUG] prisma in chat.js type:', typeof prisma);
 const { LIMITS, getPlanLimits } = require('../config/limits');
 const { CHARACTER_VOICES } = require('../config/characterVoices');
 const { TONES } = require('../config/tones');
-const { runEmotionalEngine } = require('../services/emotionalEngine');
-const { selectModelForResponse } = require('../services/emotionalEngine');
+const {
+  runEmotionalEngine,
+  selectModelForResponse,
+  getEmotionForMessage,
+  ENGINE_MODES,
+  decideEngineMode,
+  updateConversationEmotionState,
+  buildSystemPrompt,
+} = require('../services/emotionalEngine');
+const {
+  logEmotionalTimelineEvent,
+  updateUserEmotionProfile,
+  updateEmotionalPatterns,
+} = require('../services/emotionalLongTerm');
 const { recordEvent: recordMemoryEvent } = require('../pipeline/memory/memoryKernel');
 const { orchestrateResponse } = require('../services/responseOrchestrator');
 const multer = require('multer');
@@ -28,6 +40,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Sliding-window size for model context
 const MAX_CONTEXT_MESSAGES = parseInt(process.env.MAX_CONTEXT_MESSAGES || '20', 10);
+const FAST_CONTEXT_MESSAGES = 10;
 
 // Usage helpers
 function startOfToday() {
@@ -1144,36 +1157,61 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    // Emotional Engine: classify and build emotionally-aware system prompt
     const languageForEngine = lang === 'mixed' ? 'mixed' : (isArabicConversation ? 'ar' : 'en');
-    const tEngineStart = Date.now();
-    const { emo, severityLevel, systemPrompt, flowState, longTermSnapshot, triggers, personaCfg } = await runEmotionalEngine({
+
+    const tClassifyStart = Date.now();
+    const emo = await getEmotionForMessage({
       userMessage: userText,
       recentMessages: recentContext,
-      personaId: characterId,
-      personaText: personaText,
       language: languageForEngine,
-      conversationId: cid,
-      userId,
     });
-    const engineMs = Date.now() - tEngineStart;
-    console.log(
-      '[Chat] emoEngine convoId=%s userId=%s ms=%d',
-      cid == null ? 'null' : String(cid),
-      userId == null ? 'null' : String(userId),
-      engineMs
-    );
+    const classifyMs = Date.now() - tClassifyStart;
+
+    const conversationLength = (Array.isArray(recentContext) ? recentContext.length : 0) + 1;
+    const decidedMode = decideEngineMode({
+      isPremiumUser,
+      primaryEmotion: emo.primaryEmotion,
+      intensity: emo.intensity,
+      conversationLength,
+    });
+
+    let engineMode;
+    if (isPremiumUser) {
+      engineMode = decidedMode;
+    } else {
+      engineMode = ENGINE_MODES.CORE_FAST;
+    }
+
+    const systemPrompt = buildSystemPrompt({
+      personaText,
+      personaId: characterId,
+      emotion: emo,
+      convoState: null,
+      language: languageForEngine,
+      longTermSnapshot: null,
+      triggers: [],
+      engineMode,
+      isPremiumUser,
+    });
 
     const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
     const systemMessage = `${systemPrompt}\n\n${toneInstruction}`;
 
     const openAIMessages = [];
     openAIMessages.push({ role: 'system', content: systemMessage });
-    openAIMessages.push(...recentContext);
+    const limitedContext = Array.isArray(recentContext) && recentContext.length > FAST_CONTEXT_MESSAGES
+      ? recentContext.slice(-FAST_CONTEXT_MESSAGES)
+      : recentContext;
+    if (Array.isArray(limitedContext) && limitedContext.length) {
+      openAIMessages.push(...limitedContext);
+    }
     openAIMessages.push({ role: 'user', content: userText });
 
-    // Phase 3: Multi-model routing based on emotion intensity and state machine
-    const routedModel = selectModelForResponse({ emotion: emo, convoState: flowState || { currentState: 'NEUTRAL' } });
+    const routedModel = selectModelForResponse({
+      emotion: emo,
+      convoState: { currentState: 'NEUTRAL' },
+      engineMode,
+    });
 
     const tOpenAIStart = Date.now();
     const completion = await openai.chat.completions.create({
@@ -1182,13 +1220,6 @@ router.post('/message', async (req, res) => {
       temperature: 0.8,
     });
     const openAiMs = Date.now() - tOpenAIStart;
-    console.log(
-      '[Chat] openai convoId=%s userId=%s ms=%d model=%s',
-      cid == null ? 'null' : String(cid),
-      userId == null ? 'null' : String(userId),
-      openAiMs,
-      routedModel
-    );
 
     const rawReply = completion.choices?.[0]?.message?.content?.trim();
     if (!rawReply) {
@@ -1197,23 +1228,26 @@ router.post('/message', async (req, res) => {
         .json({ message: 'No response from language model.' });
     }
 
-    // Phase 3: Orchestrate final response for warmth, safety, cultural adaptation
     let aiMessage = rawReply;
+    let orchestrateMs = 0;
     try {
+      const tOrchStart = Date.now();
       aiMessage = await orchestrateResponse({
         rawReply,
         persona: personaText,
         emotion: emo,
-        convoState: flowState || { currentState: 'NEUTRAL' },
-        longTermSnapshot: longTermSnapshot || null,
-        triggers: Array.isArray(triggers) ? triggers : [],
+        convoState: { currentState: 'NEUTRAL' },
+        longTermSnapshot: null,
+        triggers: [],
         language: languageForEngine,
-        severityLevel: severityLevel || 'CASUAL',
-        personaCfg: personaCfg || null,
+        severityLevel: emo.severityLevel || 'CASUAL',
+        personaCfg: null,
+        engineMode,
       });
+      orchestrateMs = Date.now() - tOrchStart;
       if (typeof aiMessage !== 'string' || !aiMessage.trim()) aiMessage = rawReply;
     } catch (_) {
-      aiMessage = rawReply; // fail softly
+      aiMessage = rawReply;
     }
 
     // Phase 4: character-based routing without blocking access.
@@ -1279,11 +1313,10 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    // Persist both user and assistant messages when allowed.
-    // MessageEmotion + memory kernel are best-effort and non-blocking for latency.
+    let userRow = null;
     if (shouldSave) {
       try {
-        const [userRow] = await prisma.$transaction([
+        const rows = await prisma.$transaction([
           prisma.message.create({
             data: {
               userId,
@@ -1307,44 +1340,105 @@ router.post('/message', async (req, res) => {
             data: { updatedAt: new Date() },
           }),
         ]);
-
-        // Fire-and-forget: enrich MessageEmotion + update memory kernel without
-        // blocking the HTTP response.
-        prisma.messageEmotion
-          .create({
-            data: {
-              messageId: userRow.id,
-              primaryEmotion: emo.primaryEmotion,
-              intensity: emo.intensity,
-              confidence: emo.confidence,
-              cultureTag: emo.cultureTag,
-              notes: emo.notes || null,
-            },
-          })
-          .then(() =>
-            recordMemoryEvent({
-              userId,
-              conversationId: cid,
-              messageId: userRow.id,
-              characterId,
-              emotion: emo,
-              topics: Array.isArray(emo.topics) ? emo.topics : [],
-              secondaryEmotion: emo.secondaryEmotion || null,
-              emotionVector: emo.emotionVector || null,
-              detectorVersion: emo.detectorVersion || null,
-              isKernelRelevant: true,
-            })
-          )
-          .catch((err) => {
-            console.error(
-              '[Chat] MessageEmotion/memory kernel async error',
-              err && err.message ? err.message : err
-            );
-          });
+        userRow = rows[0];
       } catch (err) {
-        console.error('Message persistence error', err);
+        console.error('Message persistence error', err && err.message ? err.message : err);
       }
     }
+
+    const backgroundJobQueued = !!(shouldSave && userRow && userRow.id);
+
+    if (backgroundJobQueued) {
+      const bgEngineMode = engineMode;
+      const bgUserId = userId;
+      const bgConversationId = cid;
+      const bgCharacterId = characterId;
+      const bgEmotion = emo;
+      const bgMessageId = userRow.id;
+
+      setImmediate(async () => {
+        const tBgStart = Date.now();
+        try {
+          try {
+            await prisma.messageEmotion.create({
+              data: {
+                messageId: bgMessageId,
+                primaryEmotion: bgEmotion.primaryEmotion,
+                intensity: bgEmotion.intensity,
+                confidence: bgEmotion.confidence,
+                cultureTag: bgEmotion.cultureTag,
+                notes: bgEmotion.notes || null,
+              },
+            });
+          } catch (err) {
+            console.error('[EmoEngine][Background] MessageEmotion error', err && err.message ? err.message : err);
+          }
+
+          try {
+            await recordMemoryEvent({
+              userId: bgUserId,
+              conversationId: bgConversationId,
+              messageId: bgMessageId,
+              characterId: bgCharacterId,
+              emotion: bgEmotion,
+              topics: Array.isArray(bgEmotion.topics) ? bgEmotion.topics : [],
+              secondaryEmotion: bgEmotion.secondaryEmotion || null,
+              emotionVector: bgEmotion.emotionVector || null,
+              detectorVersion: bgEmotion.detectorVersion || null,
+              isKernelRelevant: true,
+            });
+          } catch (err) {
+            console.error('[EmoEngine][Background] MemoryKernel error', err && err.message ? err.message : err);
+          }
+
+          try {
+            await updateConversationEmotionState(bgConversationId, bgEmotion);
+          } catch (err) {
+            console.error('[EmoEngine][Background] ConversationEmotionState error', err && err.message ? err.message : err);
+          }
+
+          try {
+            await logEmotionalTimelineEvent({ userId: bgUserId, conversationId: bgConversationId, emotion: bgEmotion });
+          } catch (err) {
+            console.error('[EmoEngine][Background] Timeline error', err && err.message ? err.message : err);
+          }
+
+          try {
+            await updateUserEmotionProfile({ userId: bgUserId });
+          } catch (err) {
+            console.error('[EmoEngine][Background] UserEmotionProfile error', err && err.message ? err.message : err);
+          }
+
+          try {
+            await updateEmotionalPatterns({ userId: bgUserId });
+          } catch (err) {
+            console.error('[EmoEngine][Background] Patterns error', err && err.message ? err.message : err);
+          }
+
+          const bgMs = Date.now() - tBgStart;
+          console.log('[EmoEngine][Background]', {
+            userId: bgUserId == null ? 'null' : String(bgUserId),
+            conversationId: bgConversationId == null ? 'null' : String(bgConversationId),
+            engineMode: bgEngineMode,
+            isPremiumUser: !!isPremiumUser,
+            durationMs: bgMs,
+          });
+        } catch (err) {
+          console.error('[EmoEngine][Background] Unhandled error', err && err.message ? err.message : err);
+        }
+      });
+    }
+
+    console.log('[EmoEngine][Response]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationId: cid == null ? 'null' : String(cid),
+      engineMode,
+      isPremiumUser: !!isPremiumUser,
+      classifyMs,
+      orchestrateMs,
+      openAiMs,
+      backgroundJobQueued,
+    });
 
     res.json({ reply: aiMessage, usage: buildUsageSummary(dbUser, usage) });
   } catch (err) {

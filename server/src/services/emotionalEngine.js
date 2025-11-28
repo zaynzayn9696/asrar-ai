@@ -19,6 +19,30 @@ const {
 } = require('./emotionalStateMachine');
 const { buildPhase4MemoryBlock } = require('../pipeline/memory/Phase4PromptBuilder');
 
+const ENGINE_MODES = {
+  CORE_FAST: 'CORE_FAST',
+  CORE_DEEP: 'CORE_DEEP',
+  PREMIUM_DEEP: 'PREMIUM_DEEP',
+};
+
+function decideEngineMode({ isPremiumUser, primaryEmotion, intensity, conversationLength }) {
+  const safeIntensity = Number.isFinite(Number(intensity)) ? Number(intensity) : 2;
+  const len = Number.isFinite(Number(conversationLength)) ? Number(conversationLength) : 0;
+
+  const NEGATIVE = new Set(['SAD', 'ANXIOUS', 'ANGRY', 'LONELY', 'STRESSED']);
+  const primary = String(primaryEmotion || '').toUpperCase();
+
+  if (isPremiumUser && safeIntensity >= 4 && NEGATIVE.has(primary)) {
+    return ENGINE_MODES.PREMIUM_DEEP;
+  }
+
+  if (safeIntensity >= 3 || len > 16) {
+    return ENGINE_MODES.CORE_DEEP;
+  }
+
+  return ENGINE_MODES.CORE_FAST;
+}
+
 /**
  * @typedef {Object} Emotion
  * @property {('NEUTRAL'|'SAD'|'ANXIOUS'|'ANGRY'|'LONELY'|'STRESSED'|'HOPEFUL'|'GRATEFUL')} primaryEmotion
@@ -123,6 +147,54 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
 }
 
 /**
+ * Shared helper for message-level emotion: uses a lightweight heuristic on the
+ * very first turn (no history) and falls back to full LLM-based
+ * classifyEmotion once there is context.
+ * @param {Object} params
+ * @param {string} params.userMessage
+ * @param {Array<{role:'user'|'assistant',content:string}>} params.recentMessages
+ * @param {('ar'|'en'|'mixed')} params.language
+ * @returns {Promise<Emotion>}
+ */
+async function getEmotionForMessage({ userMessage, recentMessages, language }) {
+  const hasHistory = Array.isArray(recentMessages) && recentMessages.length > 0;
+
+  if (!hasHistory) {
+    const text = String(userMessage || '').toLowerCase();
+    const cultureTag =
+      language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
+
+    let primaryEmotion = 'NEUTRAL';
+    if (/(sad|depress|cry|alone|lonely|hurt)/.test(text)) {
+      primaryEmotion = 'SAD';
+    } else if (/(anxious|anxiety|worried|worry|panic|nervous|afraid|scared)/.test(text)) {
+      primaryEmotion = 'ANXIOUS';
+    } else if (/(angry|mad|furious|rage|irritated|pissed)/.test(text)) {
+      primaryEmotion = 'ANGRY';
+    } else if (/(stress|stressed|overwhelmed|burnout|burned out|tired of)/.test(text)) {
+      primaryEmotion = 'STRESSED';
+    } else if (/(grateful|thankful|hopeful|optimistic)/.test(text)) {
+      primaryEmotion = 'HOPEFUL';
+    }
+
+    const approxLength = text.length;
+    const lengthFactor = Math.max(0, Math.min(approxLength / 80, 4));
+    const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
+
+    return {
+      primaryEmotion,
+      intensity,
+      confidence: 0.55,
+      cultureTag,
+      notes: 'Heuristic first-turn classification (no context)',
+      severityLevel: 'CASUAL',
+    };
+  }
+
+  return classifyEmotion({ userMessage, recentMessages, language });
+}
+
+/**
  * Updates conversation-level emotion state with a weighted average.
  * If no state exists, create one. If conversationId is missing, skip DB and return null.
  * @param {number|undefined|null} conversationId
@@ -214,9 +286,10 @@ async function updateConversationEmotionState(conversationId, emo) {
  * @param {('ar'|'en'|'mixed')} params.language
  * @returns {string}
  */
-function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers }) {
+function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser }) {
   const isArabic = language === 'ar';
   const personaCfg = personas[personaId] || defaultPersona;
+  const premiumUser = !!isPremiumUser;
 
   const emotionLine = isArabic
     ? `حالة المستخدم الآن: ${emotion.primaryEmotion}، الشدة ${emotion.intensity}/5، الثقة ${(emotion.confidence * 100).toFixed(0)}%`
@@ -310,6 +383,69 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       : `Sensitive areas (handle gently): ${triggers.slice(0, 3).map(t => t.topic).join(', ')}`)
     : '';
 
+  const isFreeFast = engineMode === ENGINE_MODES.CORE_FAST && !premiumUser;
+
+  let anchorsList = Array.isArray(anchors) ? anchors.filter(Boolean) : [];
+  let loopTagStr = typeof loopTag === 'string' && loopTag.trim() ? loopTag.trim() : null;
+
+  if (isFreeFast) {
+    anchorsList = [];
+    loopTagStr = null;
+  }
+
+  const dominantTrend = (() => {
+    const primary = String(emotion?.primaryEmotion || '').toUpperCase();
+    const neg = ['SAD', 'ANXIOUS', 'ANGRY', 'LONELY', 'STRESSED'];
+    if (neg.includes(primary) && (emotion?.intensity || 0) >= 3) return 'NEGATIVE';
+    if (primary === 'HOPEFUL' || primary === 'GRATEFUL') return 'POSITIVE';
+    return 'MIXED';
+  })();
+
+  const recentEvents = [];
+  if (Array.isArray(triggers) && triggers.length) {
+    for (const t of triggers.slice(0, 3)) {
+      if (t && typeof t.topic === 'string' && t.topic.trim()) {
+        recentEvents.push(t.topic.trim());
+      }
+    }
+  }
+
+  let emotionStateBlockLines;
+  if (isFreeFast) {
+    emotionStateBlockLines = [
+      '[EMOTION_STATE]',
+      `primaryEmotion: ${emotion.primaryEmotion}`,
+      `intensity: ${emotion.intensity}`,
+      `dominantTrend: ${dominantTrend}`,
+      '[/EMOTION_STATE]',
+    ];
+  } else {
+    emotionStateBlockLines = [
+      '[EMOTION_STATE]',
+      `primaryEmotion: ${emotion.primaryEmotion}`,
+      `intensity: ${emotion.intensity}`,
+      `dominantTrend: ${dominantTrend}`,
+      `recentEvents: ${recentEvents.join(', ')}`,
+      `loopTag: ${loopTagStr || 'NONE'}`,
+      `anchors: ${anchorsList.join(', ')}`,
+      '[/EMOTION_STATE]',
+    ];
+  }
+
+  const summaryBlock = conversationSummary && typeof conversationSummary === 'string'
+    ? ['[CONVERSATION_SUMMARY]', conversationSummary.trim(), '[/CONVERSATION_SUMMARY]']
+    : [];
+
+  const premiumToolkitBlock = engineMode === ENGINE_MODES.PREMIUM_DEEP
+    ? [
+        '[PREMIUM_TOOLKIT]',
+        'For this reply, pick exactly ONE micro-intervention (breathing, grounding, reframing, gratitude, or gentle homework).',
+        'Weave it naturally into your response in the user\'s language without naming the technique explicitly or sounding clinical.',
+        'Keep it practical, safe, and emotionally validating; avoid diagnoses or medical claims.',
+        '[/PREMIUM_TOOLKIT]',
+      ]
+    : [];
+
   return [
     header,
     cultural,
@@ -321,6 +457,10 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     '',
     emotionLine,
     stateLine,
+    '',
+    ...emotionStateBlockLines,
+    ...(summaryBlock.length ? [''] : []),
+    ...summaryBlock,
     longTermBlock ? '' : '',
     longTermBlock,
     longTermHint ? '' : '',
@@ -334,6 +474,8 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     safety,
     '',
     guidance,
+    ...(premiumToolkitBlock.length ? [''] : []),
+    ...premiumToolkitBlock,
   ].join('\n');
 }
 
@@ -343,8 +485,16 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
  * @param {{ intensity:number }} params.emotion
  * @param {{ currentState?:string }|null} params.convoState
  */
-function selectModelForResponse({ emotion, convoState }) {
-  return 'gpt-4o-mini';
+function selectModelForResponse({ emotion, convoState, engineMode }) {
+  if (!engineMode) {
+    return 'gpt-4o-mini';
+  }
+
+  if (engineMode === ENGINE_MODES.PREMIUM_DEEP) {
+    return process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o';
+  }
+
+  return process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
 }
 
 /**
@@ -362,45 +512,8 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
   try {
     const tStart = Date.now();
 
-    // First-turn optimisation: when there is no prior context, avoid an extra
-    // model round-trip by using a lightweight heuristic classifier.
-    const hasHistory = Array.isArray(recentMessages) && recentMessages.length > 0;
     const tClassStart = Date.now();
-    let emo;
-
-    if (!hasHistory) {
-      const text = String(userMessage || '').toLowerCase();
-      const cultureTag =
-        language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
-
-      let primaryEmotion = 'NEUTRAL';
-      if (/(sad|depress|cry|alone|lonely|hurt)/.test(text)) {
-        primaryEmotion = 'SAD';
-      } else if (/(anxious|anxiety|worried|worry|panic|nervous|afraid|scared)/.test(text)) {
-        primaryEmotion = 'ANXIOUS';
-      } else if (/(angry|mad|furious|rage|irritated|pissed)/.test(text)) {
-        primaryEmotion = 'ANGRY';
-      } else if (/(stress|stressed|overwhelmed|burnout|burned out|tired of)/.test(text)) {
-        primaryEmotion = 'STRESSED';
-      } else if (/(grateful|thankful|hopeful|optimistic)/.test(text)) {
-        primaryEmotion = 'HOPEFUL';
-      }
-
-      const approxLength = text.length;
-      const lengthFactor = Math.max(0, Math.min(approxLength / 80, 4));
-      const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
-
-      emo = {
-        primaryEmotion,
-        intensity,
-        confidence: 0.55,
-        cultureTag,
-        notes: 'Heuristic first-turn classification (no context)',
-        severityLevel: 'CASUAL',
-      };
-    } else {
-      emo = await classifyEmotion({ userMessage, recentMessages, language });
-    }
+    const emo = await getEmotionForMessage({ userMessage, recentMessages, language });
     const classifyMs = Date.now() - tClassStart;
 
     // Only update conversation state if we have a conversationId
@@ -510,7 +623,10 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
 module.exports = {
   runEmotionalEngine,
   classifyEmotion,
+  getEmotionForMessage,
   updateConversationEmotionState,
   buildSystemPrompt,
   selectModelForResponse,
+  ENGINE_MODES,
+  decideEngineMode,
 };

@@ -167,9 +167,10 @@ function applyStateAdjustments(text, convoState, language) {
  * @param {'ar'|'en'|'mixed'} params.language
  * @param {'CASUAL'|'VENTING'|'SUPPORT'|'HIGH_RISK'} params.severityLevel
  * @param {{ style?: {warmth?:string, humor?:string, directness?:string, energy?:string} }} params.personaCfg
+ * @param {'CORE_FAST'|'CORE_DEEP'|'PREMIUM_DEEP'=} params.engineMode
  * @returns {Promise<string>}
  */
-async function orchestrateResponse({ rawReply, persona, emotion, convoState, longTermSnapshot, triggers, language, severityLevel, personaCfg }) {
+async function orchestrateResponse({ rawReply, persona, emotion, convoState, longTermSnapshot, triggers, language, severityLevel, personaCfg, engineMode }) {
   try {
     if (!rawReply || typeof rawReply !== 'string') return '';
     const isAr = language === 'ar';
@@ -218,7 +219,19 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
 
     // Final gentle polish: avoid overly long replies
     const lines = out.split(/\n+/).filter(Boolean);
-    if (convoState?.currentState === 'SAD_SUPPORT' && lines.length > 5) {
+    if (engineMode === 'CORE_FAST') {
+      if (lines.length > 6) {
+        out = lines.slice(0, 6).join('\n');
+      }
+    } else if (engineMode === 'CORE_DEEP') {
+      if (lines.length > 9) {
+        out = lines.slice(0, 9).join('\n');
+      }
+    } else if (engineMode === 'PREMIUM_DEEP') {
+      if (lines.length > 12) {
+        out = lines.slice(0, 12).join('\n');
+      }
+    } else if (convoState?.currentState === 'SAD_SUPPORT' && lines.length > 5) {
       out = lines.slice(0, 5).join('\n');
     }
 
