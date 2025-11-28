@@ -1,7 +1,8 @@
 /* ============ CHAT PAGE LAYOUT ============ */
 :root {
-  /* Tweak this number if you want narrower/wider chat later */
-  --asrar-chat-width: 980px;
+  /* Tweak this number if you want narrower/wider chat later.
+     On desktop we cap at 1040px but shrink when viewport or sidebar space is tight. */
+  --asrar-chat-width: min(1040px, calc(100vw - 260px - 4rem));
 }
 .asrar-chat-page {
   display: flex;
@@ -23,8 +24,8 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100vh;      /* lock to viewport */
-  overflow: hidden;   /* no body scroll, we control it */
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 .asrar-chat-page .asrar-dash-header {
   position: fixed;
@@ -321,8 +322,6 @@
   display: flex;
   flex-direction: column;
   position: relative;                      /* anchor scroll button inside chat area */
-  margin-left: calc(260px + 1.5rem);  /* sidebar + gap */
-  height: calc(100vh - 72px);         /* fixed height under header so messages can scroll */
   box-sizing: border-box;
 }
 @media (max-width: 900px) {
@@ -825,7 +824,7 @@
 
 /* Floating scroll-to-bottom button (appears when user scrolls up) */
 .asrar-scroll-bottom {
-  /* Desktop: lock to bottom-right corner of the centered chat column */
+  /* Desktop: visually align with bottom-right of centered chat column */
   position: fixed;
   left: 50%;
   bottom: 5.4rem;
@@ -862,7 +861,8 @@
 }
 
 .asrar-scroll-bottom:hover {
-  transform: translateX(calc(var(--asrar-chat-width) / 2 - 2.6rem))
+  transform:
+    translateX(calc(var(--asrar-chat-width) / 2 - 2.6rem))
     translateY(-1px);
   box-shadow:
     0 0 0 1px rgba(0, 240, 255, 0.3),
@@ -1032,36 +1032,24 @@
 }
 
 
-/* === DESKTOP LAYOUT: FIXED HEADER + SIDEBAR, FULL-HEIGHT CHAT COLUMN === */
+/* === DESKTOP LAYOUT: FIXED HEADER + SIDEBAR, BODY SCROLLS NORMALLY === */
 @media (min-width: 901px) {
-  /* Constrain the whole chat shell to the viewport and let only messages scroll */
   .asrar-dash-page.asrar-chat-page {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: visible;
   }
 
-  /* Header stays fixed at the very top on the chat page */
-  .asrar-chat-page .asrar-dash-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 60;
-  }
-
-  /* Under the header, use a full-height horizontal layout */
+  /* Under the fixed header, space for sidebar + centered chat column */
   .asrar-chat-layout {
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
-    align-items: stretch;
+    align-items: flex-start;
     padding-top: 72px; /* header height */
-    padding-left: 0;
-    padding-right: 0;
-    min-height: calc(100vh - 72px);
+    padding-left: calc(260px + 2rem); /* sidebar width + gutter */
+    padding-right: 2rem;
     box-sizing: border-box;
   }
 
@@ -1082,17 +1070,21 @@
     overflow-y: auto;
   }
 
-  /* Main chat column lives to the right of the fixed sidebar */
+  /* Main chat column lives to the right of the fixed sidebar and is centered */
   .asrar-chat-main {
     display: flex;
     flex-direction: column;
-    margin-left: calc(260px + 1.5rem); /* sidebar width + gutter */
+    position: relative;
+    width: 100%;
+    max-width: var(--asrar-chat-width);
+    margin: 0 auto 3rem;
     min-height: calc(100vh - 72px);
-    position: relative;                 /* ensure absolute children (scroll button) are scoped here */
   }
 
+  /* On desktop, let the page/body own the vertical scroll instead of this container */
   .asrar-chat-messages {
-    flex: 1 1 auto;
-    overflow-y: auto;
+    flex: 0 0 auto;
+    overflow-y: visible;
+    max-height: none;
   }
 }

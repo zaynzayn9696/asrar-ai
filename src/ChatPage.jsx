@@ -373,6 +373,20 @@ export default function ChatPage() {
   const handleMessagesScroll = () => {
     const el = messagesContainerRef.current;
     if (!el) return;
+    const isDesktop =
+      typeof window !== "undefined" && window.innerWidth > 900;
+
+    if (isDesktop) {
+      const rect = el.getBoundingClientRect();
+      const distanceFromBottom = rect.bottom - window.innerHeight;
+      const threshold = 200;
+      const shouldShow = distanceFromBottom > threshold;
+      setShowScrollToBottom((prev) =>
+        prev !== shouldShow ? shouldShow : prev
+      );
+      return;
+    }
+
     const distanceFromBottom =
       el.scrollHeight - el.scrollTop - el.clientHeight;
     const threshold = 200;
@@ -385,11 +399,33 @@ export default function ChatPage() {
   const handleScrollToBottomClick = () => {
     const el = messagesContainerRef.current;
     if (!el) return;
-    try {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-    } catch (_) {
-      el.scrollTop = el.scrollHeight;
+
+    const isDesktop =
+      typeof window !== "undefined" && window.innerWidth > 900;
+
+    if (isDesktop) {
+      try {
+        const rect = el.getBoundingClientRect();
+        const currentY =
+          (window.scrollY || window.pageYOffset || 0);
+        const targetBottom = currentY + rect.bottom - window.innerHeight;
+        const docEl = document.documentElement || document.body;
+        const maxScroll =
+          (docEl.scrollHeight || 0) - window.innerHeight;
+        const finalY = Math.max(0, Math.min(targetBottom + 8, maxScroll));
+        window.scrollTo({ top: finalY, behavior: "smooth" });
+      } catch (_) {
+        // fallback: jump close to page bottom
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+    } else {
+      try {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      } catch (_) {
+        el.scrollTop = el.scrollHeight;
+      }
     }
+
     setShowScrollToBottom(false);
   };
 
@@ -397,11 +433,32 @@ export default function ChatPage() {
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
-    try {
-      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
-    } catch (_) {
-      el.scrollTop = el.scrollHeight;
+
+    const isDesktop =
+      typeof window !== "undefined" && window.innerWidth > 900;
+
+    if (isDesktop) {
+      try {
+        const rect = el.getBoundingClientRect();
+        const currentY =
+          (window.scrollY || window.pageYOffset || 0);
+        const targetBottom = currentY + rect.bottom - window.innerHeight;
+        const docEl = document.documentElement || document.body;
+        const maxScroll =
+          (docEl.scrollHeight || 0) - window.innerHeight;
+        const finalY = Math.max(0, Math.min(targetBottom + 8, maxScroll));
+        window.scrollTo({ top: finalY, behavior: "auto" });
+      } catch (_) {
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+    } else {
+      try {
+        el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+      } catch (_) {
+        el.scrollTop = el.scrollHeight;
+      }
     }
+
     setShowScrollToBottom(false);
   }, [selectedCharacterId]);
 
@@ -409,18 +466,72 @@ export default function ChatPage() {
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
-    const distanceFromBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight;
-    const threshold = 80;
-    if (distanceFromBottom <= threshold) {
-      try {
-        el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
-      } catch (_) {
-        el.scrollTop = el.scrollHeight;
+
+    const isDesktop =
+      typeof window !== "undefined" && window.innerWidth > 900;
+
+    if (isDesktop) {
+      const rect = el.getBoundingClientRect();
+      const distanceFromBottom = rect.bottom - window.innerHeight;
+      const threshold = 80;
+      if (distanceFromBottom <= threshold) {
+        try {
+          const currentY =
+            (window.scrollY || window.pageYOffset || 0);
+          const targetBottom = currentY + rect.bottom - window.innerHeight;
+          const docEl = document.documentElement || document.body;
+          const maxScroll =
+            (docEl.scrollHeight || 0) - window.innerHeight;
+          const finalY = Math.max(0, Math.min(targetBottom + 8, maxScroll));
+          window.scrollTo({ top: finalY, behavior: "auto" });
+        } catch (_) {
+          window.scrollTo(0, document.body.scrollHeight);
+        }
+        setShowScrollToBottom(false);
       }
-      setShowScrollToBottom(false);
+    } else {
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      const threshold = 80;
+      if (distanceFromBottom <= threshold) {
+        try {
+          el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+        } catch (_) {
+          el.scrollTop = el.scrollHeight;
+        }
+        setShowScrollToBottom(false);
+      }
     }
   }, [messages]);
+
+  // Desktop: update scroll-to-bottom visibility on window scroll
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const onScroll = () => {
+      const el = messagesContainerRef.current;
+      if (!el) return;
+
+      const isDesktop = window.innerWidth > 900;
+      if (!isDesktop) return;
+
+      const rect = el.getBoundingClientRect();
+      const distanceFromBottom = rect.bottom - window.innerHeight;
+      const threshold = 200;
+      const shouldShow = distanceFromBottom > threshold;
+      setShowScrollToBottom((prev) =>
+        prev !== shouldShow ? shouldShow : prev
+      );
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    // run once on mount to set initial state
+    onScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   // Auto-expand textarea up to ~3 lines, then scroll internally
   useEffect(() => {
