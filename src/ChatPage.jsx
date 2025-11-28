@@ -1084,355 +1084,697 @@ export default function ChatPage() {
   const startRecording = async () => {
     if (isRecording || isSending || isSendingVoice) return;
     try {
+      const isMobile =
+        typeof navigator !== "undefined" &&
+        /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+
+      try {
+        voiceStopIntentRef.current = "send";
+      } catch (_) {}
+
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        console.error(
+          "Mic: getUserMedia not available (secure context required or browser unsupported)"
+        );
+        const errorMessage = {
+          id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+          from: "system",
+          text: isArabicConversation
+            ? "الميكروفون غير مدعوم في المتصفح أو يجب فتح الصفحة عبر اتصال آمن."
+            : "Microphone is not supported or a secure context is required.",
+          createdAt: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        return;
+      }
+
+      if (
+        typeof window !== "undefined" &&
+        !window.isSecureContext &&
+        !["localhost", "127.0.0.1"].includes(window.location.hostname)
+      ) {
+        const errorMessage = {
+          id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+          from: "system",
+          text: isArabicConversation
+            ? "يلزم اتصال آمن (HTTPS) لاستخدام الميكروفون. جرّب فتح الصفحة عبر https أو عبر localhost."
+            : "A secure context (HTTPS) is required for microphone access. Open via https or localhost.",
+          createdAt: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        return;
+      }
+
+      console.log("Mic: starting recording");
+
+      // quick pre-check: do we see any audioinput devices at all?
+      try {
+        if (navigator?.mediaDevices?.enumerateDevices) {
+          const pre = await navigator.mediaDevices.enumerateDevices();
+          const hasMicPre =
+            Array.isArray(pre) && pre.some((d) => d && d.kind === "audioinput");
+          if (!hasMicPre) {
             const errorMessage = {
               id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-              from: 'system',
+              from: "system",
               text: isArabicConversation
-                ? 'الميكروفون غير مدعوم في المتصفح أو يجب فتح الصفحة عبر اتصال آمن.'
-                : 'Microphone is not supported or a secure context is required.',
+                ? "لم يتم العثور على ميكروفون متصل بالجهاز."
+                : "No microphone appears to be connected to this device.",
               createdAt: new Date().toISOString(),
             };
             setMessages((prev) => [...prev, errorMessage]);
             return;
           }
+        }
+      } catch (err) {
+        console.error("Mic: enumerateDevices error", err);
+      }
 
-          if (
-            typeof window !== 'undefined' &&
-            !window.isSecureContext &&
-            !['localhost', '127.0.0.1'].includes(window.location.hostname)
-          ) {
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        if (err && (err.name === "NotFoundError" || err.name === "OverconstrainedError")) {
+          const deviceId = await getAnyMicDeviceId();
+          if (!deviceId) {
             const errorMessage = {
               id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-              from: 'system',
+              from: "system",
               text: isArabicConversation
-                ? 'يلزم اتصال آمن (HTTPS) لاستخدام الميكروفون. جرّب فتح الصفحة عبر https أو عبر localhost.'
-                : 'A secure context (HTTPS) is required for microphone access. Open via https or localhost.',
+                ? "لم يتم العثور على ميكروفون في هذا الجهاز."
+                : "No microphone was found on this device.",
               createdAt: new Date().toISOString(),
             };
             setMessages((prev) => [...prev, errorMessage]);
             return;
           }
-
-          console.log('Mic: starting recording');
-
           try {
-            if (navigator?.mediaDevices?.enumerateDevices) {
-              const pre = await navigator.mediaDevices.enumerateDevices();
-              const hasMicPre = Array.isArray(pre) && pre.some((d) => d && d.kind === 'audioinput');
-              if (!hasMicPre) {
-                const errorMessage = {
-                  id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-                  from: 'system',
-                  text: isArabicConversation
-                    ? 'لم يتم العثور على ميكروفون متصل بالجهاز.'
-                    : 'No microphone appears to be connected to this device.',
-                  createdAt: new Date().toISOString(),
-                };
-                setMessages((prev) => [...prev, errorMessage]);
-                return;
-              }
-            }
-          } catch (err) {
-            console.error('Mic: enumerateDevices error', err);
-          }
-
-          let stream = null;
-          try {
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          } catch (err) {
-            if (err && (err.name === 'NotFoundError' || err.name === 'OverconstrainedError')) {
-              const deviceId = await getAnyMicDeviceId();
-              if (!deviceId) {
-                const errorMessage = {
-                  id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-                  from: 'system',
-                  text: isArabicConversation
-                    ? 'لم يتم العثور على ميكروفون في هذا الجهاز.'
-                    : 'No microphone was found on this device.',
-                  createdAt: new Date().toISOString(),
-                };
-                setMessages((prev) => [...prev, errorMessage]);
-                return;
-              }
-              try {
-                stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: deviceId } } });
-              } catch (err2) {
-                const errorMessage = {
-                  id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-                  from: 'system',
-                  text: isArabicConversation
-                    ? 'تعذّر الوصول إلى الميكروفون. تحقّق من الإعدادات والأذونات.'
-                    : 'Could not access the microphone. Please check settings and permissions.',
-                  createdAt: new Date().toISOString(),
-                };
-                setMessages((prev) => [...prev, errorMessage]);
-                return;
-              }
-            } else if (err && err.name === 'NotAllowedError') {
-              const errorMessage = {
-                id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-                from: 'system',
-                text: isArabicConversation
-                  ? 'تم رفض إذن الميكروفون. الرجاء السماح للمتصفح باستخدام الميكروفون.'
-                  : 'Microphone permission was denied. Please allow access and try again.',
-                createdAt: new Date().toISOString(),
-              };
-              setMessages((prev) => [...prev, errorMessage]);
-              return;
-            } else {
-              throw err;
-            }
-          }
-
-          mediaStreamRef.current = stream;
-          audioChunksRef.current = [];
-          console.log('Mic: media stream acquired');
-
-          const preferredMime = getSupportedMimeType();
-
-          const recorder = preferredMime
-            ? new MediaRecorder(stream, { mimeType: preferredMime })
-            : new MediaRecorder(stream);
-          recorderRef.current = recorder;
-          console.log('Mic: MediaRecorder created', recorder.mimeType || preferredMime || 'default');
-
-          recorder.onstart = () => {
-            console.log('Mic: recording started', {
-              mimeType: recorder.mimeType || preferredMime || 'default',
-              isMobile,
+            stream = await navigator.mediaDevices.getUserMedia({
+              audio: { deviceId: { exact: deviceId } },
             });
-            if (isMobile) {
-              console.log('Mobile recording started');
-            }
-          };
-
-          recorder.ondataavailable = (e) => {
-            if (e.data && e.data.size > 0) {
-              audioChunksRef.current.push(e.data);
-              console.log('Mic: dataavailable chunk size =', e.data.size);
-            } else {
-              console.log('Mic: dataavailable received empty chunk');
-            }
-          };
-
-          recorder.onstop = async () => {
-            try {
-              const intent = voiceStopIntentRef.current || 'send';
-              if (intent !== 'send') {
-                console.log('Mic: recorder stopped (cancel voice send)');
-                return;
-              }
-              console.log('Mic: recorder stopped, preparing to send');
-              setIsSendingVoice(true);
-              const mime = recorder.mimeType || preferredMime || 'audio/webm';
-              console.log('Mic: building blob from chunks', audioChunksRef.current.length);
-              const blob = new Blob(audioChunksRef.current, { type: mime });
-              audioChunksRef.current = [];
-              if (isMobile) {
-                console.log('Mobile recording stopped: blob size =', blob.size, 'type =', mime);
-              }
-              if (!blob || !blob.size) {
-                const errorMessage = {
-                  id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-                  from: 'system',
-                  text: isArabicConversation
-                    ? 'فشل تسجيل الصوت. لم نلتقط أي بيانات من الميكروفون.'
-                    : 'Voice recording failed. No audio was captured from the microphone.',
-                  createdAt: new Date().toISOString(),
-                };
-                setMessages((prev) => [...prev, errorMessage]);
-                return;
-              }
-
-              let ext = 'webm';
-              const lowerMime = (mime || '').toLowerCase();
-              if (lowerMime.includes('ogg')) {
-                ext = 'ogg';
-              } else if (lowerMime.includes('mpeg') || lowerMime.includes('mp3')) {
-                ext = 'mp3';
-              } else if (lowerMime.includes('wav')) {
-                ext = 'wav';
-              } else if (lowerMime.includes('mp4')) {
-                ext = 'mp4';
-              } else if (lowerMime.includes('aac')) {
-                ext = 'aac';
-              }
-
-              const filename = `voice-message.${ext}`;
-              const file = new File([blob], filename, { type: mime });
-              const form = new FormData();
-              form.append('audio', file);
-              form.append('characterId', selectedCharacterId);
-              form.append('lang', lang);
-              form.append('dialect', selectedDialect);
-              form.append('tone', selectedTone);
-              const payloadMessages = messages.map((m) => ({ from: m.from, text: m.text }));
-              form.append('messages', JSON.stringify(payloadMessages));
-
-              const token =
-                typeof window !== 'undefined'
-                  ? localStorage.getItem(TOKEN_KEY)
-                  : null;
-
-              const headers = token
-                ? { Authorization: `Bearer ${token}` }
-                : undefined;
-
-              console.log('Mic: sending audio to /api/chat/voice');
-              const res = await fetch(`${API_BASE}/api/chat/voice`, {
-                method: 'POST',
-                credentials: 'include',
-                headers,
-                body: form,
-              });
-              const data = await res.json().catch(() => ({}));
-
-              if (!res.ok) {
-                console.warn('Mic: voice response not OK');
-                if (isMobile) {
-                  console.error('Mobile upload error:', res.status, data);
-                }
-                if (data && data.code === 'VOICE_PRO_ONLY') {
-                  setModalText(
-                    isArabicConversation
-                      ? 'المحادثة الصوتية متاحة فقط لمشتركي برو.'
-                      : 'Voice chat is available for Pro members only.'
-                  );
-                  setShowLockedModal(true);
-                  return;
-                }
-                if (data && data.code === 'LIMIT_EXCEEDED') {
-                  setUsageInfo(data.usage || usageInfo);
-                  setModalText(
-                    isArabicConversation
-                      ? data.limitType === 'monthly'
-                        ? 'وصلت للحد الشهري للرسائل. يمكنك الترقية إلى برو لحدود أعلى.'
-                        : 'وصلت للحد اليومي للرسائل. يمكنك الترقية إلى برو لحدود أعلى.'
-                      : data.limitType === 'monthly'
-                      ? 'You have reached your monthly message limit. Upgrade to Pro for higher limits.'
-                      : 'You have reached your daily message limit. Upgrade to Pro for higher limits.'
-                  );
-                  setShowLimitModal(true);
-                  return;
-                }
-                const errorMessage = {
-                  id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-                  from: 'system',
-                  text: isArabicConversation
-                    ? 'فشل إرسال الصوت. حاول مرة أخرى.'
-                    : 'Voice message failed. Please try again.',
-                  createdAt: new Date().toISOString(),
-                };
-                setMessages((prev) => [...prev, errorMessage]);
-                return;
-              }
-
-              if (data.usage) setUsageInfo(data.usage);
-
-              console.log(
-                'Mic: voice response payload keys',
-                data && typeof data === 'object' ? Object.keys(data) : []
-              );
-
-              const transcript = (data.userText || '').trim();
-              if (!transcript) {
-                const errorMessage = {
-                  id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-                  from: 'system',
-                  text: isArabicConversation
-                    ? 'فشل إرسال الصوت. حاول مرة أخرى.'
-                    : 'We could not understand that recording. Try again.',
-                  createdAt: new Date().toISOString(),
-                };
-                setMessages((prev) => [...prev, errorMessage]);
-                return;
-              }
-
-              const assistantTextRaw = (data.assistantText || '').trim();
-              const aiText = assistantTextRaw || (isArabicConversation
-                ? 'واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل.'
-                : 'I had a small issue connecting. Please try again in a moment.');
-
-              const audioBase64 =
-                data && typeof data === 'object' && typeof data.audioBase64 === 'string'
-                  ? data.audioBase64
-                  : null;
-
-              setMessages((prev) => {
-                const lastId =
-                  prev.length && typeof prev[prev.length - 1].id === 'number'
-                    ? prev[prev.length - 1].id
-                    : prev.length;
-                const nowIso = new Date().toISOString();
-                const userVoiceMessage = {
-                  id: lastId + 1,
-                  from: 'user',
-                  text: transcript,
-                  createdAt: nowIso,
-                };
-                const aiVoiceMessage = {
-                  id: lastId + 2,
-                  from: 'ai',
-                  text: aiText,
-                  createdAt: nowIso,
-                  audioBase64,
-                };
-                return [...prev, userVoiceMessage, aiVoiceMessage];
-              });
-
-              console.log('Mic: voice response OK (voice message + reply applied)');
-            } catch (err) {
-              console.error('Voice send error', err);
-            } finally {
-              setIsSendingVoice(false);
-              console.log('Mic: recording stopped, voice sent');
-            }
-          };
-
-          // Timeslice is critical on iOS Safari and some mobile browsers to
-          // ensure that non-empty dataavailable chunks are delivered.
-          if (isMobile) {
-            try {
-              await new Promise((resolve) => setTimeout(resolve, 50));
-            } catch (_) {}
-            const timesliceMs = 250;
-            recorder.start(timesliceMs);
-            console.log('Mic: recorder.start() called with timeslice', timesliceMs);
-          } else {
-            recorder.start();
-            console.log('Mic: recorder.start() called without timeslice');
+          } catch (err2) {
+            const errorMessage = {
+              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+              from: "system",
+              text: isArabicConversation
+                ? "تعذّر الوصول إلى الميكروفون. تحقّق من الإعدادات والأذونات."
+                : "Could not access the microphone. Please check settings and permissions.",
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            return;
           }
+        } else if (err && err.name === "NotAllowedError") {
+          const errorMessage = {
+            id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+            from: "system",
+            text: isArabicConversation
+              ? "تم رفض إذن الميكروفون. الرجاء السماح للمتصفح باستخدام الميكروفون."
+              : "Microphone permission was denied. Please allow access and try again.",
+            createdAt: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+          return;
+        } else {
+          throw err;
+        }
+      }
 
-          setIsRecording(true);
-        } catch (err) {
-          console.error('Failed to start recording', err);
+      mediaStreamRef.current = stream;
+      audioChunksRef.current = [];
+      console.log("Mic: media stream acquired");
+
+      const preferredMime = getSupportedMimeType();
+
+      const recorder = preferredMime
+        ? new MediaRecorder(stream, { mimeType: preferredMime })
+        : new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      console.log(
+        "Mic: MediaRecorder created",
+        recorder.mimeType || preferredMime || "default"
+      );
+
+      recorder.onstart = () => {
+        console.log("Mic: recording started", {
+          mimeType: recorder.mimeType || preferredMime || "default",
+          isMobile,
+        });
+        if (isMobile) {
+          console.log("Mobile recording started");
         }
       };
 
-      const stopRecording = (intent = "send") => {
-        try {
-          voiceStopIntentRef.current = intent;
-        } catch (_) {}
-        if (!isRecording) return;
-        try {
-          console.log('Mic: stopping recording');
-          const rec = recorderRef.current;
-          if (rec && rec.state !== 'inactive') {
-            rec.stop();
-          }
-        } catch (_) {}
-        try {
-          const stream = mediaStreamRef.current;
-          if (stream) {
-            for (const track of stream.getTracks()) track.stop();
-          }
-        } catch (_) {}
-        setIsRecording(false);
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+          console.log("Mic: dataavailable chunk size =", e.data.size);
+        } else {
+          console.log("Mic: dataavailable received empty chunk");
+        }
       };
+
+      recorder.onstop = async () => {
+        try {
+          const intent = voiceStopIntentRef.current || "send";
+          if (intent !== "send") {
+            console.log("Mic: recorder stopped (cancel voice send)");
+            return;
+          }
+          console.log("Mic: recorder stopped, preparing to send");
+          setIsSendingVoice(true);
+          const mime = recorder.mimeType || preferredMime || "audio/webm";
+          console.log(
+            "Mic: building blob from chunks",
+            audioChunksRef.current.length
+          );
+          const blob = new Blob(audioChunksRef.current, { type: mime });
+          audioChunksRef.current = [];
+          if (isMobile) {
+            console.log(
+              "Mobile recording stopped: blob size =",
+              blob.size,
+              "type =",
+              mime
+            );
+          }
+          if (!blob || !blob.size) {
+            const errorMessage = {
+              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+              from: "system",
+              text: isArabicConversation
+                ? "فشل تسجيل الصوت. لم نلتقط أي بيانات من الميكروفون."
+                : "Voice recording failed. No audio was captured from the microphone.",
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            return;
+          }
+
+          let ext = "webm";
+          const lowerMime = (mime || "").toLowerCase();
+          if (lowerMime.includes("ogg")) {
+            ext = "ogg";
+          } else if (lowerMime.includes("mpeg") || lowerMime.includes("mp3")) {
+            ext = "mp3";
+          } else if (lowerMime.includes("wav")) {
+            ext = "wav";
+          } else if (lowerMime.includes("mp4")) {
+            ext = "mp4";
+          } else if (lowerMime.includes("aac")) {
+            ext = "aac";
+          }
+
+          const filename = `voice-message.${ext}`;
+          const file = new File([blob], filename, { type: mime });
+          const form = new FormData();
+          form.append("audio", file);
+          form.append("characterId", selectedCharacterId);
+          form.append("lang", lang);
+          form.append("dialect", selectedDialect);
+          form.append("tone", selectedTone);
+          const payloadMessages = messages.map((m) => ({
+            from: m.from,
+            text: m.text,
+          }));
+          form.append("messages", JSON.stringify(payloadMessages));
+
+          const token =
+            typeof window !== "undefined"
+              ? localStorage.getItem(TOKEN_KEY)
+              : null;
+
+          const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+          console.log("Mic: sending audio to /api/chat/voice");
+          const res = await fetch(`${API_BASE}/api/chat/voice`, {
+            method: "POST",
+            credentials: "include",
+            headers,
+            body: form,
+          });
+          const data = await res.json().catch(() => ({}));
+
+          if (!res.ok) {
+            console.warn("Mic: voice response not OK");
+            if (isMobile) {
+              console.error("Mobile upload error:", res.status, data);
+            }
+            if (data && data.code === "VOICE_PRO_ONLY") {
+              setModalText(
+                isArabicConversation
+                  ? "المحادثة الصوتية متاحة فقط لمشتركي برو."
+                  : "Voice chat is available for Pro members only."
+              );
+              setShowLockedModal(true);
+              return;
+            }
+            if (data && data.code === "LIMIT_EXCEEDED") {
+              setUsageInfo(data.usage || usageInfo);
+              setModalText(
+                isArabicConversation
+                  ? data.limitType === "monthly"
+                    ? "وصلت للحد الشهري للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
+                    : "وصلت للحد اليومي للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
+                  : data.limitType === "monthly"
+                  ? "You have reached your monthly message limit. Upgrade to Pro for higher limits."
+                  : "You have reached your daily message limit. Upgrade to Pro for higher limits."
+              );
+              setShowLimitModal(true);
+              return;
+            }
+            const errorMessage = {
+              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+              from: "system",
+              text: isArabicConversation
+                ? "فشل إرسال الصوت. حاول مرة أخرى."
+                : "Voice message failed. Please try again.",
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            return;
+          }
+
+          if (data.usage) setUsageInfo(data.usage);
+
+          console.log(
+            "Mic: voice response payload keys",
+            data && typeof data === "object" ? Object.keys(data) : []
+          );
+
+          const transcript = (data.userText || "").trim();
+          if (!transcript) {
+            const errorMessage = {
+              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+              from: "system",
+              text: isArabicConversation
+                ? "فشل إرسال الصوت. حاول مرة أخرى."
+                : "We could not understand that recording. Try again.",
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            return;
+          }
+
+          const assistantTextRaw = (data.assistantText || "").trim();
+          const aiText =
+            assistantTextRaw ||
+            (isArabicConversation
+              ? "واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل."
+              : "I had a small issue connecting. Please try again in a moment.");
+
+          const audioBase64 =
+            data && typeof data === "object" && typeof data.audioBase64 === "string"
+              ? data.audioBase64
+              : null;
+
+          setMessages((prev) => {
+            const lastId =
+              prev.length && typeof prev[prev.length - 1].id === "number"
+                ? prev[prev.length - 1].id
+                : prev.length;
+            const nowIso = new Date().toISOString();
+            const userVoiceMessage = {
+              id: lastId + 1,
+              from: "user",
+              text: transcript,
+              createdAt: nowIso,
+            };
+            const aiVoiceMessage = {
+              id: lastId + 2,
+              from: "ai",
+              text: aiText,
+              createdAt: nowIso,
+              audioBase64,
+            };
+            return [...prev, userVoiceMessage, aiVoiceMessage];
+          });
+
+          console.log("Mic: voice response OK (voice message + reply applied)");
+        } catch (err) {
+          console.error("Voice send error", err);
+        } finally {
+          setIsSendingVoice(false);
+          console.log("Mic: recording stopped, voice sent");
+        }
+      };
+
+      // Timeslice is critical on iOS Safari and some mobile browsers to
+      // ensure that non-empty dataavailable chunks are delivered.
+      if (isMobile) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        } catch (_) {}
+        const timesliceMs = 250;
+        recorder.start(timesliceMs);
+        console.log("Mic: recorder.start() called with timeslice", timesliceMs);
+      } else {
+        recorder.start();
+        console.log("Mic: recorder.start() called without timeslice");
+      }
+
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Failed to start recording", err);
+    }
+  };
+
+  const stopRecording = (intent = "send") => {
+    try {
+      voiceStopIntentRef.current = intent;
+    } catch (_) {}
+    if (!isRecording) return;
+    try {
+      console.log("Mic: stopping recording");
+      const rec = recorderRef.current;
+      if (rec && rec.state !== "inactive") {
+        rec.stop();
+      }
+    } catch (_) {}
+    try {
+      const stream = mediaStreamRef.current;
+      if (stream) {
+        for (const track of stream.getTracks()) {
+          track.stop();
+        }
+      }
+    } catch (_) {}
+    setIsRecording(false);
+  };
+
+  return (
+    <div
+      className={`asrar-dash-page asrar-chat-page ${
+        isAr ? "asrar-dash-page--ar" : ""
+      }`}
+    >
+      {/* background glows from dashboard CSS */}
+      <div className="asrar-dash-orbit asrar-dash-orbit--top" />
+      <div className="asrar-dash-orbit asrar-dash-orbit--bottom" />
+
+      {/* HEADER */}
+      <AsrarHeader
+        lang={lang}
+        isAr={isAr}
+        onLangChange={handleLangSwitch}
+        onLogout={handleLogout}
+        mobileLeftSlot={
+          <button
+            type="button"
+            className={
+              "asrar-chat-history-toggle" +
+              (isMobileSidebarOpen ? " asrar-chat-history-toggle--active" : "")
+            }
+            onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
+            aria-label={isAr ? "تبديل سجل المحادثة" : "Toggle chat history"}
+            aria-pressed={isMobileSidebarOpen}
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="4" y="4" width="4" height="16" rx="1.2" fill="currentColor" />
+              <rect x="11" y="6" width="9" height="2" rx="1" fill="currentColor" />
+              <rect x="11" y="11" width="9" height="2" rx="1" fill="currentColor" />
+              <rect x="11" y="16" width="9" height="2" rx="1" fill="currentColor" />
+            </svg>
+          </button>
+        }
+      />
+
+      {isMobileSidebarOpen && (
+        <div className="asrar-chat-mobile-layer" role="dialog" aria-modal="true">
+          <div
+            className="asrar-chat-mobile-overlay"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          ></div>
+          <div className="asrar-chat-mobile-drawer">
+            <div className="asrar-chat-mobile-drawer-header">
+              <span className="asrar-chat-mobile-drawer-title">{mobileSidebarTitle}</span>
+              <button
+                type="button"
+                className="asrar-mobile-close"
+                aria-label={isAr ? "إغلاق" : "Close"}
+                onClick={() => setIsMobileSidebarOpen(false)}
+              >
+                &times;
+              </button>
+            </div>
+            {renderSidebarContent()}
           </div>
         </div>
       )}
-     
+
+      {/* derive usage counter for header pill */}
+      {(() => null)()}
+      {/* MAIN */}
+      <main className="asrar-chat-layout">
+        <aside className="asrar-chat-sidebar">{renderSidebarContent()}</aside>
+        <div className="asrar-chat-main">
+          <header className="asrar-chat-header-strip">
+            <div className="asrar-chat-header-main">
+              <h1 className="asrar-chat-header-title">
+                {getName(character)} - {getRole(character)}
+              </h1>
+            </div>
+            {null}
+          </header>
+
+          <div
+            className="asrar-chat-messages"
+            ref={messagesContainerRef}
+            onScroll={handleMessagesScroll}
+          >
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`asrar-chat-row asrar-chat-row--${
+                  msg.from === "ai"
+                    ? "assistant"
+                    : msg.from === "user"
+                    ? "user"
+                    : "system"
+                }`}
+              >
+                <div className="asrar-chat-bubble">
+                  {msg.audioBase64 ? (
+                    <VoiceMessageBubble
+                      audioBase64={msg.audioBase64}
+                      from={msg.from}
+                      isArabic={isArabicConversation}
+                    />
+                  ) : (
+                    <span
+                      className="asrar-chat-text"
+                      dir={isArabicConversation ? "rtl" : "ltr"}
+                    >
+                      {msg.text}
+                    </span>
+                  )}
+                  {msg.createdAt && (
+                    <div className="asrar-chat-meta">
+                      {new Date(msg.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isSending && (
+              <div className="asrar-chat-row asrar-chat-row--assistant">
+                <div className="asrar-chat-bubble asrar-chat-bubble--typing">
+                  <div className="asrar-typing-content">
+                    <div className="asrar-typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span className="asrar-typing-label">
+                      {isArabicConversation ? "جارٍ التفكير…" : "Thinking…"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className={
+              "asrar-scroll-bottom" +
+              (showScrollToBottom ? " asrar-scroll-bottom--visible" : "")
+            }
+            aria-label={
+              isArabicConversation ? "الانتقال إلى آخر الرسائل" : "Scroll to bottom"
+            }
+            onClick={handleScrollToBottomClick}
+          >
+            ↓
+          </button>
+
+          {limitExceeded && (
+            <div className="asrar-limit-banner">
+              <p>
+                {limitUsage && typeof limitUsage.dailyLimit === "number"
+                  ? `YouΓÇÖve reached the limit for your free plan (${limitUsage.dailyLimit} messages).`
+                  : "YouΓÇÖve reached the limit for your free plan."}
+              </p>
+              <button
+                type="button"
+                className="asrar-upgrade-btn"
+                onClick={() => navigate("/billing")}
+              >
+                Upgrade to keep chatting
+              </button>
+            </div>
+          )}
+
+          {null}
+
+          <footer className="asrar-chat-composer">
+            <form className="asrar-chat-composer-inner" onSubmit={handleSend}>
+              <textarea
+                ref={inputRef}
+                className="asrar-chat-input asrar-room-input-field"
+                rows={1}
+                value={inputValue}
+                disabled={isSending || isBlocked || limitExceeded}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                placeholder={t.typingPlaceholder}
+              />
+              <div className="asrar-chat-composer-actions">
+                <button
+                  type="button"
+                  className={
+                    isRecording
+                      ? "asrar-mic-btn asrar-mic-btn--recording asrar-chat-voice-btn"
+                      : "asrar-mic-btn asrar-chat-voice-btn"
+                  }
+                  onClick={handleToggleRecording}
+                  disabled={isSending || isSendingVoice || isBlocked}
+                  title={
+                    isRecording
+                      ? isAr
+                        ? "إيقاف التسجيل"
+                        : "Stop recording"
+                      : isAr
+                      ? "ابدأ التسجيل"
+                      : "Start recording"
+                  }
+                >
+                  <span className="icon" aria-hidden="true">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2Z" />
+                    </svg>
+                  </span>
+                </button>
+                <button
+                  type="submit"
+                  className="asrar-send-btn"
+                  disabled={isSending || isBlocked || limitExceeded}
+                >
+                  <span className="asrar-send-btn-label">
+                    {isArabicConversation ? "إرسال" : "Send"}
+                  </span>
+                </button>
+              </div>
+            </form>
+            <div className="asrar-chat-footer-meta">
+              <p className="asrar-chat-hint">
+                {isArabicConversation
+                  ? "قد يخطئ الذكاء الاصطناعي أحياناً، فلا تعتمد عليه وحده في القرارات الحساسة."
+                  : "AI may make mistakes sometimes. Do not rely on it alone for sensitive decisions."}
+              </p>
+              {(() => {
+                const isPrem = !!(
+                  user?.isPremium || user?.plan === "premium" || user?.plan === "pro"
+                );
+                const limit = isPrem
+                  ? usageInfo?.monthlyLimit ?? 3000
+                  : usageInfo?.dailyLimit ?? 5;
+                const usedFromUsage = isPrem
+                  ? usageInfo?.monthlyUsed ?? null
+                  : usageInfo?.dailyUsed ?? null;
+                const userMsgs = messages.filter((m) => m.from === "user").length;
+                const used = usedFromUsage ?? userMsgs;
+                const counterText = `${used} / ${limit}`;
+                const modelText = "gpt-4o-mini";
+                return (
+                  <div className="asrar-chat-header-pill">
+                    {isAr
+                      ? `الخطة: ${counterText} رسائل`
+                      : `Plan: ${counterText} messages`} | {modelText}
+                  </div>
+                );
+              })()}
+            </div>
+            {(isRecording || isSendingVoice) && (
+              <div className="asrar-recording-indicator">
+                <span className="dot" />
+                {isRecording
+                  ? isAr
+                    ? "جارٍ التسجيل…"
+                    : "Recording…"
+                  : isAr
+                  ? "جارٍ معالجة الصوت…"
+                  : "Processing voice…"}
+              </div>
+            )}
+          </footer>
+        </div>
+      </main>
+
+      {/* Modals */}
+      {(showLockedModal || showLimitModal) && (
+        <div
+          className="asrar-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowLockedModal(false);
+              setShowLimitModal(false);
+            }
+          }}
+        >
+          <div className="asrar-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="asrar-modal-body">{modalText}</div>
+            <div className="asrar-modal-actions">
+              <button
+                type="button"
+                className="asrar-btn ghost"
+                onClick={() => {
+                  setShowLockedModal(false);
+                  setShowLimitModal(false);
+                }}
+              >
+                {isAr ? "╪Ñ╪║┘ä╪º┘é" : "Close"}
+              </button>
+              <button
+                type="button"
+                className="asrar-btn primary"
+                onClick={() => {
+                  setShowLockedModal(false);
+                  setShowLimitModal(false);
+                  navigate("/billing");
+                }}
+              >
+                {isAr ? "الترقية إلى برو" : "Upgrade to Pro"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
