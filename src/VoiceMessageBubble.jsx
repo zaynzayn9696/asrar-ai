@@ -9,7 +9,7 @@ const SPEED_OPTIONS = [
 
 const VOICE_SPEED_STORAGE_KEY = "asrar-voice-speed";
 
-export default function VoiceMessageBubble({ audioBase64, from, isArabic }) {
+export default function VoiceMessageBubble({ audioBase64, from, isArabic, mimeType = "audio/mpeg" }) {
   const audioRef = useRef(null);
   const trackRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -33,7 +33,7 @@ export default function VoiceMessageBubble({ audioBase64, from, isArabic }) {
 
   useEffect(() => {
     if (!audioBase64) return undefined;
-    const src = `data:audio/mpeg;base64,${audioBase64}`;
+    const src = `data:${mimeType || "audio/mpeg"};base64,${audioBase64}`;
     const audioEl = new Audio(src);
     audioRef.current = audioEl;
     audioEl.playbackRate = playbackRate;
@@ -59,7 +59,7 @@ export default function VoiceMessageBubble({ audioBase64, from, isArabic }) {
       audioEl.removeEventListener("timeupdate", onTimeUpdate);
       audioEl.removeEventListener("ended", onEnded);
     };
-  }, [audioBase64]);
+  }, [audioBase64, mimeType]);
 
   // keep playbackRate in sync with the audio element and persist choice
   useEffect(() => {

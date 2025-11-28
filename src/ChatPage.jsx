@@ -1270,6 +1270,29 @@ export default function ChatPage() {
             setMessages((prev) => [...prev, errorMessage]);
             return;
           }
+          
+          // Encode user's original recording so we can render a voice bubble for them
+          let userAudioBase64 = "";
+          try {
+            userAudioBase64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const result = reader.result;
+                if (typeof result === "string") {
+                  const commaIndex = result.indexOf(",");
+                  resolve(
+                    commaIndex >= 0 ? result.slice(commaIndex + 1) : result
+                  );
+                } else {
+                  reject(new Error("Unexpected FileReader result"));
+                }
+              };
+              reader.onerror = (e) => reject(e);
+              reader.readAsDataURL(blob);
+            });
+          } catch (e) {
+            console.error("Mic: failed to encode user audio as base64", e);
+          }
 
           let ext = "webm";
           const lowerMime = (mime || "").toLowerCase();
@@ -1399,6 +1422,8 @@ export default function ChatPage() {
               from: "user",
               text: transcript,
               createdAt: nowIso,
+              audioBase64: userAudioBase64 || null,
+              audioMimeType: mime,
             };
             const aiVoiceMessage = {
               id: lastId + 2,
@@ -1406,11 +1431,10 @@ export default function ChatPage() {
               text: aiText,
               createdAt: nowIso,
               audioBase64,
+              audioMimeType: "audio/mpeg",
             };
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
-
-          console.log("Mic: voice response OK (voice message + reply applied)");
         } catch (err) {
           console.error("Voice send error", err);
         } finally {
@@ -1559,6 +1583,7 @@ export default function ChatPage() {
                       audioBase64={msg.audioBase64}
                       from={msg.from}
                       isArabic={isArabicConversation}
+                      mimeType={msg.audioMimeType}
                     />
                   ) : (
                     <span
