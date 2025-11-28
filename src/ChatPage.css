@@ -1,5 +1,8 @@
 /* ============ CHAT PAGE LAYOUT ============ */
-
+:root {
+  /* Tweak this number if you want narrower/wider chat later */
+  --asrar-chat-width: 980px;
+}
 .asrar-chat-page {
   display: flex;
   flex-direction: column;
@@ -343,7 +346,7 @@
 
 .asrar-chat-header-main {
   width: 100%;
-  max-width: 1120px; /* wider desktop chat width */
+  max-width: var(--asrar-chat-width); /* same width as chat column */
   margin: 0 auto;
   padding: 10px 18px;
   border-radius: 999px;
@@ -389,9 +392,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%;
-  max-width: 1120px;                 /* constrain width on large screens */
-  margin: 0 auto;                    /* center within chat main */
-  padding: 1.5rem 0 1rem;            /* vertical breathing space */
+  max-width: var(--asrar-chat-width); /* constrain width on large screens */
+  margin: 0 auto;                     /* center within chat main */
+  padding: 1.5rem 0 1rem;             /* vertical breathing space */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -606,7 +609,7 @@
 
 .asrar-chat-composer-inner {
   width: 100%;
-  max-width: 1120px;
+  max-width: var(--asrar-chat-width);
   margin: 0 auto;
   padding: 10px 18px;
   display: flex;
@@ -774,7 +777,7 @@
 /* Footer meta: small hint + plan pill, centered under the input */
 .asrar-chat-footer-meta {
   width: 100%;
-  max-width: 1120px;
+  max-width: var(--asrar-chat-width);
   margin: 0.35rem auto 0.5rem;
   padding: 0;
   display: flex;
@@ -822,9 +825,11 @@
 
 /* Floating scroll-to-bottom button (appears when user scrolls up) */
 .asrar-scroll-bottom {
-  position: absolute; /* relative to .asrar-chat-main */
-  right: max(1.2rem, calc((100% - 1120px) / 2));
-  bottom: 5.4rem;     /* float just above the composer strip */
+  /* Desktop: lock to bottom-right corner of the centered chat column */
+  position: fixed;
+  left: 50%;
+  bottom: 5.4rem;
+  transform: translateX(calc(var(--asrar-chat-width) / 2 - 2.6rem));
   width: 38px;
   height: 38px;
   border-radius: 999px;
@@ -857,7 +862,8 @@
 }
 
 .asrar-scroll-bottom:hover {
-  transform: translateY(-1px);
+  transform: translateX(calc(var(--asrar-chat-width) / 2 - 2.6rem))
+    translateY(-1px);
   box-shadow:
     0 0 0 1px rgba(0, 240, 255, 0.3),
     0 18px 36px rgba(0, 0, 0, 0.95),
@@ -866,11 +872,17 @@
 
 @media (max-width: 900px) {
   .asrar-scroll-bottom {
-    position: fixed;  /* mobile keeps viewport-fixed behavior */
+    position: fixed;
+    left: auto;
     right: 1.2rem;
     bottom: 5.4rem;
     width: 34px;
     height: 34px;
+    transform: none;
+  }
+
+  .asrar-scroll-bottom:hover {
+    transform: translateY(-1px);
   }
 }
 
