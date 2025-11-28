@@ -251,11 +251,11 @@ body,
 }
 
 .asrar-home-mobile-nav[dir="rtl"] {
-  text-align: right;
+  text-align: center;
 }
 
 .asrar-home-mobile-nav[dir="rtl"] .asrar-home-mobile-nav-link {
-  text-align: right;
+  text-align: center;
 }
 
 .asrar-home-mobile-nav[dir="rtl"] .asrar-home-mobile-lang {
@@ -277,6 +277,9 @@ body,
   letter-spacing: 0.4em;
   color: #e8f8ff;
   font-family: "Cinzel", serif;
+  text-align: center;
+  display: block;
+  width: 100%;
 }
 
 .asrar-mobile-close {
@@ -349,7 +352,7 @@ body,
 /* Tidy layout inside the Home mobile dropdown */
 .asrar-home-mobile-nav-link {
   width: 100%;
-  text-align: left;
+  text-align: center;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
   color: #e8f8ff;
@@ -369,9 +372,10 @@ body,
 
 .asrar-home-mobile-lang {
   display: flex;
-  justify-content: flex-end;
-  align-self: flex-end;
+  justify-content: center;
+  align-self: center;
   gap: 0.5rem;
+  width: 100%;
   margin-bottom: 1rem;
   margin-top: 0.3rem;
   direction: ltr;

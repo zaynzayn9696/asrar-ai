@@ -1236,6 +1236,9 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
     letter-spacing: 0.35em;
     color: #e8f8ff;
     text-transform: uppercase;
+     text-align: center !important;
+  width: 100%;
+  display: block;
   }
 
   .asrar-mobile-close {
@@ -1261,7 +1264,8 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
     color: #e8f8ff;
     text-decoration: none;
     font-size: 0.92rem;
-    text-align: left;
+    text-align: center;
+    display:block;
     width: 100%;
     padding: 0.7rem 0.9rem;
     margin: 0.2rem 0;
