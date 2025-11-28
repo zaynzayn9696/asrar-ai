@@ -263,9 +263,10 @@ body,
 }
 
 .asrar-home-mobile-nav-header {
+  position: relative;              /* allow absolute X */
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;         /* center the title */
   gap: 1rem;
   padding-bottom: 0.6rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -279,10 +280,14 @@ body,
   font-family: "Cinzel", serif;
   text-align: center;
   display: block;
-  width: 100%;
+  width: 100%;                     /* full width so it stays centered */
 }
 
+/* X button – always pinned to top-right of the drawer header */
 .asrar-mobile-close {
+  position: absolute;
+ 
+  right: 0.3rem;
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(5, 10, 18, 0.9);
   color: #e8f8ff;
@@ -300,10 +305,17 @@ body,
   border-color: var(--asrar-accent);
   color: var(--asrar-accent);
 }
-
+/* Hide scrollbar inside mobile drawer but keep scrolling */
 .asrar-home-mobile-nav {
   overflow-y: auto;
   padding-bottom: 2rem;
+  scrollbar-width: none;              /* Firefox */
+}
+
+.asrar-home-mobile-nav::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;           /* Chrome / Edge */
 }
 
 /* Mobile styles */
