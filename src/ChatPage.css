@@ -407,6 +407,10 @@
   gap: 0.25rem;
 }
 
+.asrar-chat-status-row .asrar-chat-row {
+  justify-content: flex-start;
+}
+
 .asrar-chat-messages::-webkit-scrollbar {
   width: 10px;
 }
@@ -554,9 +558,13 @@
 .asrar-chat-bubble--typing {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 46px;
-  padding: 0.5rem 0.7rem;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .asrar-typing-content {
@@ -601,6 +609,7 @@
   font-size: 0.78rem;
   color: #c9d6ff;
   opacity: 0.9;
+  white-space: nowrap;
 }
 
 /* ============ COMPOSER (INPUT + BUTTONS) ============ */
