@@ -17,7 +17,7 @@ const SIGNUP_TEXT = {
   en: {
     title: "Create your Asrar account",
     subtitle: "Start building your private space with the companions you choose.",
-    nameLabel: "Name",
+    nameLabel: "Nickname",
     namePlaceholder: "What should we call you?",
     emailLabel: "Email",
     emailPlaceholder: "you@email.com",
