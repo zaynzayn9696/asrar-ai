@@ -1378,7 +1378,7 @@ export default function HomePage() {
                 : "For technical issues, account questions, or general platform support."}
             </p>
             <a
-              href="mailto:info@asrarai.com"
+              href="mailto:support@asrarai.com"
               className="asrar-contact-email"
             >
               info@asrarai.com
@@ -1393,7 +1393,7 @@ export default function HomePage() {
                 : "Share your experience with Asrar AI or features you’d like to see next."}
             </p>
             <a
-              href="mailto:info@asrarai.com?subject=Asrar%20AI%20Feedback"
+              href="mailto:ideas@asrarai.com?subject=Asrar%20AI%20Feedback"
               className="asrar-contact-email"
             >
               info@asrarai.com
@@ -1408,7 +1408,7 @@ export default function HomePage() {
                 : "For partnerships, media, or investor inquiries."}
             </p>
             <a
-              href="mailto:info@asrarai.com?subject=Asrar%20AI%20Business"
+              href="mailto:partners@asrarai.com?subject=Asrar%20AI%20Business"
               className="asrar-contact-email"
             >
               info@asrarai.com

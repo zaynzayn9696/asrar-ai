@@ -12,19 +12,27 @@ function getKey() {
     throw new Error("MESSAGE_ENCRYPTION_KEY is not set");
   }
 
-  // Accept either hex or base64 for the 32-byte key
-  let keyBuf;
-  if (/^[0-9a-fA-F]+$/.test(raw) && raw.length === 64) {
-    keyBuf = Buffer.from(raw, "hex");
-  } else {
-    // assume base64 (or utf8) and let Buffer throw if invalid
-    keyBuf = Buffer.from(raw, "base64");
+  const trimmed = String(raw).trim();
+
+  // 1) If the key is provided as 64-char hex (32 bytes), use it directly.
+  if (/^[0-9a-fA-F]+$/.test(trimmed) && trimmed.length === 64) {
+    return Buffer.from(trimmed, "hex");
   }
 
-  if (keyBuf.length !== 32) {
-    throw new Error("MESSAGE_ENCRYPTION_KEY must be 32 bytes after decoding");
+  // 2) Try interpreting as base64; if it yields 32 bytes, use it.
+  try {
+    const asBase64 = Buffer.from(trimmed, "base64");
+    if (asBase64.length === 32) {
+      return asBase64;
+    }
+  } catch (_) {
+    // fall through to KDF derivation below
   }
-  return keyBuf;
+
+  // 3) Fallback: derive a 32-byte key from the string using SHA-256.
+  //    This allows using an arbitrary passphrase-like value in MESSAGE_ENCRYPTION_KEY
+  //    while always producing a fixed-size AES-256 key.
+  return crypto.createHash("sha256").update(trimmed, "utf8").digest();
 }
 
 // Encrypt plain text into a single string: enc::<ivHex>:<cipherHex>:<authTagHex>
