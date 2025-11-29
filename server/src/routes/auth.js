@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../prisma');
 const requireAuth = require('../middleware/requireAuth');
 const { LIMITS, getPlanLimits } = require('../config/limits');
+const { sendWelcomeEmail } = require('../utils/email');
 
 const router = express.Router();
 
@@ -138,6 +139,13 @@ router.post('/register', async (req, res) => {
       createdAt: newUser.createdAt,
     };
 
+    // Best-effort welcome email; failure must not break signup
+    try {
+      await sendWelcomeEmail(newUser.email, newUser.name);
+    } catch (emailErr) {
+      console.error('[auth/register] Welcome email error:', emailErr && emailErr.message ? emailErr.message : emailErr);
+    }
+
     const token = createJwtForUser(safeUser);
     setTokenCookie(res, token);
 
@@ -208,7 +216,12 @@ router.post('/login', async (req, res) => {
 
 // ---------- LOGOUT ----------
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
+  // Clear the auth cookie with the same attributes used when setting it
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  });
   res.json({ message: 'Logged out successfully' });
 });
 
@@ -375,6 +388,13 @@ router.get("/google/callback", async (req, res) => {
           // providerId: profile.sub,
         },
       });
+
+      // Send welcome email only for newly created Google users
+      try {
+        await sendWelcomeEmail(user.email, user.name);
+      } catch (emailErr) {
+        console.error('[auth/google-callback] Welcome email error:', emailErr && emailErr.message ? emailErr.message : emailErr);
+      }
     } else if (email === LIMITS.PREMIUM_TESTER_EMAIL && user.plan !== 'pro') {
       user = await prisma.user.update({ where: { id: user.id }, data: { plan: 'pro' } });
     }

@@ -4,10 +4,12 @@ const express = require('express');
 const prisma = require('../prisma');
 const { getPlanLimits } = require('../config/limits');
 const requireAuth = require('../middleware/requireAuth');
+const requireAdmin = require('../middleware/requireAdmin');
 const router = express.Router();
 
 // Protect all admin routes
 router.use(requireAuth);
+router.use(requireAdmin);
 
 // GET /api/admin/stats
 router.get('/stats', async (req, res) => {

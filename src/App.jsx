@@ -45,6 +45,31 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// Admin-only wrapper for routes
+function AdminRoute({ children }) {
+  const { user, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return (
+      <div className="asrar-fullpage-loading">
+        <div className="asrar-loading-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const email = (user.email || "").toLowerCase();
+  if (email !== "zaynzayn9696@gmail.com") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
+
 // Wrapper that keeps guests only; redirects logged-in users to dashboard
 function GuestOnlyRoute({ children }) {
   const { user, isAuthLoading } = useAuth();
@@ -134,9 +159,9 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <AdminDashboard />
-              </ProtectedRoute>
+              </AdminRoute>
             }
           />
 

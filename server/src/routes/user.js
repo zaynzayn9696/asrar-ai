@@ -291,7 +291,11 @@ router.delete('/delete', async (req, res) => {
       console.error('Avatar cleanup error:', fileErr && fileErr.message ? fileErr.message : fileErr);
     }
 
-    res.clearCookie('token');
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
     return res.json({ success: true, message: 'Account and all data deleted.' });
   } catch (err) {
     console.error('Delete account+data error:', err && err.message ? err.message : err);
