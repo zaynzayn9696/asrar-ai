@@ -547,7 +547,7 @@ function getMiniChatReply(message, isAr) {
 
 export default function HomePage() {
   // language + mood gate
-  const { user, isAuthLoading, logout } = useAuth();
+  const { user, logout } = useAuth();
   const [language, setLanguage] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("asrar-lang") || "ar";
@@ -611,20 +611,9 @@ export default function HomePage() {
     };
   }, []);
 
-  // Show loading state while checking auth
-  if (isAuthLoading) {
-    return (
-      <div className="asrar-fullpage-loading">
-        <div className="asrar-loading-spinner"></div>
-        <p>{isAr ? "جاري التحميل..." : "Loading your experience..."}</p>
-      </div>
-    );
-  }
-
   // If user is logged in, we now allow access to the public Home page as well.
   // No redirect to /dashboard here.
 
-  // Only show public homepage if not loading and not logged in
   const scrollByAmount = 320;
   const scrollLeft = () => {
     if (sliderRef.current) {
