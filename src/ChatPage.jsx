@@ -1674,8 +1674,8 @@ export default function ChatPage() {
             <div className="asrar-limit-banner">
               <p>
                 {limitUsage && typeof limitUsage.dailyLimit === "number"
-                  ? `YouΓÇÖve reached the limit for your free plan (${limitUsage.dailyLimit} messages).`
-                  : "YouΓÇÖve reached the limit for your free plan."}
+                  ? `You have reached the limit for your free plan (${limitUsage.dailyLimit} messages).`
+                  : "You have reached the limit for your free plan."}
               </p>
               <button
                 type="button"
