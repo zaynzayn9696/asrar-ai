@@ -1049,7 +1049,7 @@ export default function HomePage() {
                           onKeyDown={handleMiniChatKeyDown}
                           placeholder={
                             isAr
-                              ? "اكتب كيف كان يومك فعلاً الآن..."
+                              ? "اكتب كيف كان يومك اليوم ..."
                               : "Type how you feel today..."
                           }
                         />
