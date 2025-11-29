@@ -1654,46 +1654,6 @@ export default function ChatPage() {
                 </div>
               </div>
             ))}
-
-            {isSending && (
-              <div className="asrar-chat-row asrar-chat-row--assistant">
-                <div className="asrar-chat-bubble asrar-chat-bubble--typing">
-                  <div className="asrar-typing-content">
-                    <div className="asrar-typing-dots">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                    <span className="asrar-typing-label">
-                      {isArabicConversation ? "جارٍ التفكير…" : "Thinking…"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {(isRecording || isSendingVoice) && (
-              <div className="asrar-chat-row asrar-chat-row--assistant">
-                <div className="asrar-chat-bubble asrar-chat-bubble--typing">
-                  <div className="asrar-typing-content">
-                    <div className="asrar-typing-dots">
-                      <span></span>
-                      <span></span>
-                      <span></span>
-                    </div>
-                    <span className="asrar-typing-label">
-                      {isRecording
-                        ? isArabicConversation
-                          ? "جارٍ التسجيل…"
-                          : "Recording…"
-                        : isArabicConversation
-                        ? "جارٍ معالجة الصوت…"
-                        : "Processing voice…"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <button
@@ -1730,6 +1690,48 @@ export default function ChatPage() {
           {null}
 
           <footer className="asrar-chat-composer">
+            <div className="asrar-chat-status-row">
+              {isSending && (
+                <div className="asrar-chat-row asrar-chat-row--assistant">
+                  <div className="asrar-chat-bubble asrar-chat-bubble--typing">
+                    <div className="asrar-typing-content">
+                      <div className="asrar-typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                      <span className="asrar-typing-label">
+                        {isArabicConversation ? "جارٍ التفكير…" : "Thinking…"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(isRecording || isSendingVoice) && (
+                <div className="asrar-chat-row asrar-chat-row--assistant">
+                  <div className="asrar-chat-bubble asrar-chat-bubble--typing">
+                    <div className="asrar-typing-content">
+                      <div className="asrar-typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                      <span className="asrar-typing-label">
+                        {isRecording
+                          ? isArabicConversation
+                            ? "جارٍ التسجيل…"
+                            : "Recording…"
+                          : isArabicConversation
+                          ? "جارٍ معالجة الصوت…"
+                          : "Processing voice…"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <form className="asrar-chat-composer-inner" onSubmit={handleSend}>
               <textarea
                 ref={inputRef}
