@@ -509,7 +509,7 @@
 /* Assistant bubble */
 .asrar-chat-row--assistant .asrar-chat-bubble {
   background: radial-gradient(circle at top left, #051b30, #02040d);
-  border: 1px solid rgba(0, 240, 255, 0.7);
+ 
   color: #e8f8ff;
   box-shadow: 0 0 18px rgba(0, 240, 255, 0.28);
 }
