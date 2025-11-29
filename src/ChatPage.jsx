@@ -1671,6 +1671,29 @@ export default function ChatPage() {
                 </div>
               </div>
             )}
+
+            {(isRecording || isSendingVoice) && (
+              <div className="asrar-chat-row asrar-chat-row--assistant">
+                <div className="asrar-chat-bubble asrar-chat-bubble--typing">
+                  <div className="asrar-typing-content">
+                    <div className="asrar-typing-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                    <span className="asrar-typing-label">
+                      {isRecording
+                        ? isArabicConversation
+                          ? "جارٍ التسجيل…"
+                          : "Recording…"
+                        : isArabicConversation
+                        ? "جارٍ معالجة الصوت…"
+                        : "Processing voice…"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <button
@@ -1795,18 +1818,6 @@ export default function ChatPage() {
                 );
               })()}
             </div>
-            {(isRecording || isSendingVoice) && (
-              <div className="asrar-recording-indicator">
-                <span className="dot" />
-                {isRecording
-                  ? isAr
-                    ? "جارٍ التسجيل…"
-                    : "Recording…"
-                  : isAr
-                  ? "جارٍ معالجة الصوت…"
-                  : "Processing voice…"}
-              </div>
-            )}
           </footer>
         </div>
       </main>
