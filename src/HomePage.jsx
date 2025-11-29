@@ -1381,7 +1381,7 @@ export default function HomePage() {
               href="mailto:support@asrarai.com"
               className="asrar-contact-email"
             >
-              info@asrarai.com
+              support@asrarai.com
             </a>
           </div>
 
@@ -1396,7 +1396,7 @@ export default function HomePage() {
               href="mailto:ideas@asrarai.com?subject=Asrar%20AI%20Feedback"
               className="asrar-contact-email"
             >
-              info@asrarai.com
+              ideas@asrarai.com
             </a>
           </div>
 
@@ -1411,7 +1411,7 @@ export default function HomePage() {
               href="mailto:partners@asrarai.com?subject=Asrar%20AI%20Business"
               className="asrar-contact-email"
             >
-              info@asrarai.com
+              partners@asrarai.com
             </a>
           </div>
         </div>
