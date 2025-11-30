@@ -14,17 +14,6 @@ import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
 import AsrarHeader from "./AsrarHeader";
 
-// --- HOMEPAGE LIGHT REFACTOR PLAN -----------------------------------
-// 1) Merge or compress some mid-page explanation sections:
-//    - Consider gently merging overlapping "Emotional Engine" and "How it works" copy into one guided story strip so the scroll feels lighter.
-//    - Keep the hero as the primary emotional hook, with downstream CTAs simplified to one clear path into signup or dashboard.
-// 2) Turn the densest descriptive blocks into lighter structures (especially on desktop English):
-//    - Where paragraphs run long, turn them into 2–3 bullet points that keep the same meaning without changing any Arabic text.
-//    - For deep security / encryption explanations, keep a single reassurance sentence visible and move the details into a collapsible "Learn more" accordion.
-// 3) Componentization opportunities:
-//    - Extract repeated "why your secrets belong here" or benefits sections into a small reusable card component to reduce visual noise.
-//    - Consider splitting the companions carousel and the mini-chat demo into separate components so HomePage stays readable and easier to maintain.
-
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
   {
@@ -35,7 +24,7 @@ const CHARACTERS = [
     roleEn: "Guidance",
     roleAr: "إرشاد وحكمة",
     descriptionEn:
-      "Warm, wise, grounded. Gives life lessons, emotional stability, and gentle guidance.",
+      "Warm, wise guidance when you need a calm, grounded voice.",
     descriptionAr:
       "دافئ وحكيم ومتزن. يمنحك نصائح حياتية وتوازناً عاطفياً وتوجيهاً لطيفاً.",
   },
@@ -47,7 +36,7 @@ const CHARACTERS = [
     roleEn: "Deep Support",
     roleAr: "دعم عاطفي عميق",
     descriptionEn:
-      "Gentle, validating, reassuring. Helps with overthinking, sadness, loneliness, and stress.",
+      "Gentle, validating support for overthinking, sadness, loneliness, and stress.",
     descriptionAr:
       "لطيفة ومتفهّمة. تساعدك مع كثرة التفكير، الحزن، الوحدة، والضغط.",
   },
@@ -59,7 +48,7 @@ const CHARACTERS = [
     roleEn: "Focus & Study",
     roleAr: "تركيز ودراسة",
     descriptionEn:
-      "Structured, strategic, motivational. Helps with studying, planning, and routines.",
+      "Structured, strategic support for studying, routines, and getting unstuck.",
     descriptionAr:
       "منظم واستراتيجي ومحفّز. يساعدك في الدراسة والتخطيط والعادات اليومية.",
   },
@@ -71,7 +60,7 @@ const CHARACTERS = [
     roleEn: "Brutal Honesty",
     roleAr: "صراحة قاسية",
     descriptionEn:
-      "Unfiltered, sarcastic. Tells you the truth with good intentions, no sugar-coating.",
+      "Unfiltered honesty that tells you the truth with warmth, not cruelty.",
     descriptionAr:
       "صريح بلا مجاملة وبنوايا طيبة. يقول لك الحقيقة دون تلطيف.",
   },
@@ -83,7 +72,7 @@ const CHARACTERS = [
     roleEn: "Fun & Laughter",
     roleAr: "ضحك ومرح",
     descriptionEn:
-      "Light-hearted, witty, sarcastic. Jokes, memes, and playful energy.",
+      "Light, playful energy for jokes, memes, and a break from heaviness.",
     descriptionAr:
       "خفيفة ظل ومرحة. نكات، ميمز، وطاقة ضحك ولعب.",
   },
@@ -1080,84 +1069,147 @@ export default function HomePage() {
         </section>
   {/* EMOTIONAL ENGINE */}
         <section id="emotional-engine" className="asrar-section asrar-engine">
-          <div className="asrar-engine-inner">
-            <p className="asrar-eyebrow">
-              {isAr ? "مُحرك المشاعر من أسرار" : "ASRAR EMOTIONAL ENGINE™"}
-            </p>
-            <h2 className="asrar-engine-title">
-              {isAr
-                ? "ذكاء عاطفي حقيقي — وليس ردود ذكاء اصطناعي عشوائية."
-                : "Real emotional intelligence — not generic AI replies."}
-            </h2>
-            <p className="asrar-engine-body">
-              {isAr
-                ? "كل محادثة في أسرار تعمل عبر طبقة ذكاء عاطفي خاصة بنا مبنية فوق نماذج ذكاء اصطناعي متقدمة. هذه الطبقة تلتقط مزاجك، وتفهم نبرة كلامك وسياقك الثقافي، ثم تشكّل الرد من خلال شخصية كل واحد من رفقاء أسرار — لتشعر أن الحديث إنساني أكثر، ثابت، وفعلاً داعم."
-                : "Every conversation in Asrar is powered by our own emotional intelligence layer built on top of advanced AI models. It detects your mood, understands your tone and cultural context, and shapes the reply through the personality of each character — so it feels more human, grounded, and truly supportive."}
-            </p>
+          {isAr ? (
+            <div className="asrar-engine-inner">
+              <p className="asrar-eyebrow">
+                {"مُحرك المشاعر من أسرار"}
+              </p>
+              <h2 className="asrar-engine-title">
+                {"ذكاء عاطفي حقيقي — وليس ردود ذكاء اصطناعي عشوائية."}
+              </h2>
+              <p className="asrar-engine-body">
+                {
+                  "كل محادثة في أسرار تعمل عبر طبقة ذكاء عاطفي خاصة بنا مبنية فوق نماذج ذكاء اصطناعي متقدمة. هذه الطبقة تلتقط مزاجك، وتفهم نبرة كلامك وسياقك الثقافي، ثم تشكّل الرد من خلال شخصية كل واحد من رفقاء أسرار — لتشعر أن الحديث إنساني أكثر، ثابت، وفعلاً داعم."
+                }
+              </p>
 
-            <div className="asrar-engine-grid">
-              <article className="asrar-engine-card">
-                <h3>{isAr ? "استجابات واعية بالمشاعر" : "Emotion-Aware Responses"}</h3>
-                <p>
-                  {isAr
-                    ? "يقوم المحرك بتصنيف ما تشعر به — مثل الحزن، القلق، الوحدة، الغضب وغيرها — ويضبط نبرة وعمق الرد ليتناسب مع حالتك العاطفية."
-                    : "The engine classifies how you feel — sadness, anxiety, loneliness, anger, and more — and adapts the tone and depth of the reply to match your emotional state."}
-                </p>
-              </article>
+              <div className="asrar-engine-grid">
+                <article className="asrar-engine-card">
+                  <h3>{"استجابات واعية بالمشاعر"}</h3>
+                  <p>
+                    {
+                      "يقوم المحرك بتصنيف ما تشعر به — مثل الحزن، القلق، الوحدة، الغضب وغيرها — ويضبط نبرة وعمق الرد ليتناسب مع حالتك العاطفية."
+                    }
+                  </p>
+                </article>
 
-              <article className="asrar-engine-card">
-                <h3>{isAr ? "دعم مخصص لكل شخصية" : "Persona-Driven Support"}</h3>
-                <p>
-                  {isAr
-                    ? "هَنا، أبو زين، رشيد، نور، وفَرَح يشتركون في نفس محرك المشاعر، لكن كل واحد منهم يرد بأسلوب وصوت ومستوى توجيه مختلف."
-                    : "Hana, Abu Zain, Rashid, Nour, and Farah all share the same emotional engine, but each one responds with a different style, voice, and level of guidance."}
-                </p>
-              </article>
+                <article className="asrar-engine-card">
+                  <h3>{"دعم مخصص لكل شخصية"}</h3>
+                  <p>
+                    {
+                      "هَنا، أبو زين، رشيد، نور، وفَرَح يشتركون في نفس محرك المشاعر، لكن كل واحد منهم يرد بأسلوب وصوت ومستوى توجيه مختلف."
+                    }
+                  </p>
+                </article>
 
-              <article className="asrar-engine-card">
-                <h3>{isAr ? "مصمم خصيصاً للمنطقة العربية" : "Built for the Middle East"}</h3>
-                <p>
-                  {isAr
-                    ? "تم تصميم أسرار في الأردن مع أخذ الثقافة العربية في الحسبان، لتجمع بين الذكاء الاصطناعي الحديث والحس المحلي والاحترام والدفء — وليس مجرد نسخة من قالب غربي."
-                    : "Designed in Jordan with Arab culture in mind, Asrar blends modern AI with local nuance, respect, and warmth — not a copy-paste of a Western template."}
-                </p>
-              </article>
+                <article className="asrar-engine-card">
+                  <h3>{"مصمم خصيصاً للمنطقة العربية"}</h3>
+                  <p>
+                    {
+                      "تم تصميم أسرار في الأردن مع أخذ الثقافة العربية في الحسبان، لتجمع بين الذكاء الاصطناعي الحديث والحس المحلي والاحترام والدفء — وليس مجرد نسخة من قالب غربي."
+                    }
+                  </p>
+                </article>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="asrar-engine-inner">
+              <p className="asrar-eyebrow">ASRAR EMOTIONAL ENGINE</p>
+              <h2 className="asrar-engine-title">
+                Emotional intelligence that actually feels human.
+              </h2>
+              <p className="asrar-engine-body">
+                Asrar adds a dedicated emotional layer on top of AI so your
+                companions respond with context, care, and cultural nuance.
+              </p>
+
+              <div className="asrar-engine-grid">
+                <article className="asrar-engine-card">
+                  <div className="asrar-engine-icon">🔎</div>
+                  <h3>Reads your emotional tone</h3>
+                  <p>
+                    Picks up on mood, tone, and pace so replies land gently,
+                    not mechanically.
+                  </p>
+                </article>
+
+                <article className="asrar-engine-card">
+                  <div className="asrar-engine-icon">🧠</div>
+                  <h3>Persona-driven conversations</h3>
+                  <p>
+                    Each companion answers in a distinct voice — from deep
+                    support to honest tough love.
+                  </p>
+                </article>
+
+                <article className="asrar-engine-card">
+                  <div className="asrar-engine-icon">🌙</div>
+                  <h3>Designed for the Middle East</h3>
+                  <p>
+                    Built around the language, norms, and daily situations
+                    people here actually live.
+                  </p>
+                </article>
+              </div>
+            </div>
+          )}
         </section>
-        {/* ABOUT */}
+        <div className="asrar-section-divider" aria-hidden="true" />
+
+        {/* ABOUT / BUILT FOR OUR CULTURE */}
         <section id="about" className="asrar-section asrar-section--about">
-          <h2 className="asrar-section-title">
-            {isAr ? "من نحن" : "We Are Asrar AI"}
-          </h2>
-          <p className="asrar-section-body">
-            {isAr
-              ? 'أسرار تعني "الأسرار". وُلد هذا المشروع من فكرة أن الناس في العالم العربي يستحقون مساحة خاصة وآمنة ليفضفضوا ويكتبوا ويُسمِعوا مشاعرهم في أي وقت. الشعار الذي تراه هو بخط يدي والدي، وتذكير أن خلف كل هذه التقنية قلوب وقصص حقيقية.'
-              : 'Asrar means “secrets” in Arabic. This project was born from the idea that people in the Arab world deserve a private, culturally aware place to vent, think, and feel supported — any time of day. The logo you see is handwritten by my father, and it reminds us that behind all the tech there are real hearts and real stories.'}
-          </p>
+          {isAr ? (
+            <>
+              <h2 className="asrar-section-title">من نحن</h2>
+              <p className="asrar-section-body">
+                {
+                  'أسرار تعني "الأسرار". وُلد هذا المشروع من فكرة أن الناس في العالم العربي يستحقون مساحة خاصة وآمنة ليفضفضوا ويكتبوا ويُسمِعوا مشاعرهم في أي وقت. الشعار الذي تراه هو بخط يدي والدي، وتذكير أن خلف كل هذه التقنية قلوب وقصص حقيقية.'
+                }
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="asrar-section-title">Built for Our Culture</h2>
+              <p className="asrar-section-body">
+                Asrar means "secrets" in Arabic. It was created so people
+                across the region have a private place to say what they
+                can’t always say out loud. The logo is handwritten by my
+                father — a quiet reminder that behind all this technology
+                are real families, stories, and care.
+              </p>
+            </>
+          )}
         </section>
+        <div className="asrar-section-divider" aria-hidden="true" />
 
         {/* CHARACTERS */}
         <section id="characters" className="asrar-section asrar-characters-section">
           <div className="asrar-section-header">
+            {!isAr && (
+              <p className="asrar-eyebrow">Meet Your Companions</p>
+            )}
             <h2 className="asrar-section-title">
               {isAr ? "قلب عائلة أسرار" : "The Asrar Core Family"}
             </h2>
             <p className="asrar-section-subtitle">
               {isAr
                 ? "خمسة رفقاء، كل واحد منهم يمثل جانباً مختلفاً من احتياجك العاطفي."
-                : "Five companions, each reflecting a different side of your emotional needs."}
+                : "Five core companions, each tuned to a different emotional need — from deep support to focus, honesty, and laughter."}
             </p>
           </div>
 
           <div className="asrar-character-grid-wrapper">
             <div className="asrar-character-grid">
               {CHARACTERS.map((character) => {
-                const isLocked = ((!user || user.plan !== "pro") && character.id !== "hana");
+                const isLocked = (!user || user.plan !== "pro") && character.id !== "hana";
                 const cardClasses =
                   "asrar-character-card" + (isLocked ? " asrar-character-card--locked" : "");
                 return (
-                  <div key={character.id} className={cardClasses} id={`character-${character.id}`}>
+                  <div
+                    key={character.id}
+                    className={cardClasses}
+                    id={`character-${character.id}`}
+                  >
                     {isLocked && (
                       <span className="asrar-character-pro-pill">
                         {isAr ? "خطة برو فقط" : "Pro only"}
@@ -1201,7 +1253,7 @@ export default function HomePage() {
                         >
                           {isAr
                             ? `ابدأ المحادثة مع ${character.nameAr}`
-                            : `Talk to ${character.nameEn}`}
+                            : `Talk to ${character.nameEn.split(" ")[0]}`}
                         </button>
                       </div>
                     </div>
@@ -1222,200 +1274,343 @@ export default function HomePage() {
             />
           </div>
         </section>
+        <div className="asrar-section-divider" aria-hidden="true" />
+
+        {/* TRUST STRIP */}
+        <section className="asrar-section asrar-section--trust">
+          {isAr ? (
+            <>
+              <p className="asrar-eyebrow">
+                {"موثوق من مستخدمين أوائل من مختلف أنحاء المنطقة العربية."}
+              </p>
+              <p className="asrar-trust-body">
+                {
+                  "موثوق من مستخدمين أوائل من مختلف أنحاء المنطقة العربية. مصمّم لطريقتنا في التعبير والتفكير والشعور."
+                }
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="asrar-eyebrow">Trusted by early users</p>
+              <p className="asrar-trust-body">
+                Trusted by early users across the Middle East. Asrar is
+                designed for the way people here actually speak, think, and
+                feel.
+              </p>
+            </>
+          )}
+        </section>
+        <div className="asrar-section-divider" aria-hidden="true" />
 
         {/* SECURITY & PRIVACY / WHY */}
         <section
           id="security-privacy"
           className="asrar-section asrar-section--features"
         >
-          <h2 className="asrar-section-title">
-            {isAr ? "لماذا مكان أسرارك هنا؟" : "Why Your Secrets Belong Here"}
-          </h2>
-          <p className="asrar-section-subtitle">
-            {isAr ? "الأمان والخصوصية" : "Security & Privacy"}
-          </p>
+          {isAr ? (
+            <>
+              <h2 className="asrar-section-title">
+                {"لماذا مكان أسرارك هنا؟"}
+              </h2>
+              <p className="asrar-section-subtitle">
+                {"الأمان والخصوصية"}
+              </p>
 
-          <div className="asrar-section-body">
-            <p>
-              {isAr
-                ? "خصوصيتك أولاً دائماً. أسرار AI مبني ليكون مساحة آمنة، وليس مصنع بيانات. محادثاتك لا تُخزَّن أبداً كنص واضح؛ بل تُشفَّر على مستوى التطبيق قبل أن تلمس قاعدة البيانات."
-                : "Your privacy comes first. Asrar AI is built as a safe space, not a data farm. Your conversations are never stored in plain text — they’re encrypted at the application level before they ever touch our database."}
-            </p>
-            <p>
-              {isAr
-                ? "أنت المتحكّم دائماً: يمكنك إيقاف حفظ سجل المحادثات في أي وقت، تنزيل بياناتك، أو حذف حسابك وكل الرسائل في خطوات بسيطة. كما نطبّق حدوداً على عدد الطلبات من الحسابات والأجهزة للحد من الإساءة وحماية المنصّة للجميع."
-                : "You’re always in control: you can turn chat history off at any time, download your data, or delete your account and all messages in a few clicks. We also strictly limit how often accounts and devices can hit our servers to reduce abuse and protect the platform for everyone."}
-            </p>
-            <p>
-              {isAr
-                ? "لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
-                : "We don’t sell your data, and we don’t train our models on your private conversations."}
-            </p>
-          </div>
+              <div className="asrar-section-body">
+                <p>
+                  {
+                    "خصوصيتك أولاً دائماً. أسرار AI مبني ليكون مساحة آمنة، وليس مصنع بيانات. محادثاتك لا تُخزَّن أبداً كنص واضح؛ بل تُشفَّر على مستوى التطبيق قبل أن تلمس قاعدة البيانات."
+                  }
+                </p>
+                <p>
+                  {
+                    "أنت المتحكّم دائماً: يمكنك إيقاف حفظ سجل المحادثات في أي وقت، تنزيل بياناتك، أو حذف حسابك وكل الرسائل في خطوات بسيطة. كما نطبّق حدوداً على عدد الطلبات من الحسابات والأجهزة للحد من الإساءة وحماية المنصّة للجميع."
+                  }
+                </p>
+                <p>
+                  {
+                    "لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
+                  }
+                </p>
+              </div>
 
-          <div className="asrar-features-grid">
-            <div className="feature">
-              <div className="feature-icon">🔐</div>
-              <h3>{isAr ? "محادثات مشفّرة" : "Encrypted Conversations"}</h3>
-              <p>
-                {isAr
-                  ? "رسائلك تُشفَّر على مستوى التطبيق قبل أن تُخزَّن في قاعدة البيانات. لا توجد سجلات محادثة كنص واضح."
-                  : "Your messages are encrypted at the application level before they’re stored in our database. There are no plain-text chat logs."}
+              <div className="asrar-features-grid">
+                <div className="feature">
+                  <div className="feature-icon">🔐</div>
+                  <h3>{"محادثات مشفّرة"}</h3>
+                  <p>
+                    {
+                      "رسائلك تُشفَّر على مستوى التطبيق قبل أن تُخزَّن في قاعدة البيانات. لا توجد سجلات محادثة كنص واضح."
+                    }
+                  </p>
+                </div>
+                <div className="feature">
+                  <div className="feature-icon">🗂️</div>
+                  <h3>{"تحكّم كامل في السجل"}</h3>
+                  <p>
+                    {
+                      "يمكنك تشغيل أو إيقاف حفظ سجل المحادثات، تنزيل بياناتك، أو حذف حسابك وجميع الرسائل في أي وقت."
+                    }
+                  </p>
+                </div>
+                <div className="feature">
+                  <div className="feature-icon">🚫</div>
+                  <h3>{"بدون بيع بيانات"}</h3>
+                  <p>
+                    {
+                      "مشاعرك ليست منتجاً إعلانياً. لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
+                    }
+                  </p>
+                </div>
+                <div className="feature">
+                  <div className="feature-icon">☾</div>
+                  <h3>{"تجربة بأولوية عربية"}</h3>
+                  <p>
+                    {
+                      "من البداية مصمَّم لطريقة التعبير العربية والثقافة المحلية، وليس مجرد ترجمة لمنتج غربي."
+                    }
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="asrar-section-title">
+                Why Your Secrets Belong Here
+              </h2>
+              <p className="asrar-section-subtitle">
+                Your feelings stay yours. Asrar is built as a private,
+                encrypted space — not a data product.
               </p>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">🗂️</div>
-              <h3>{isAr ? "تحكّم كامل في السجل" : "You Control History"}</h3>
-              <p>
-                {isAr
-                  ? "يمكنك تشغيل أو إيقاف حفظ سجل المحادثات، تنزيل بياناتك، أو حذف حسابك وجميع الرسائل في أي وقت."
-                  : "You can turn chat history on or off, download your data, or delete your account and all messages at any time."}
-              </p>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">🚫</div>
-              <h3>{isAr ? "بدون بيع بيانات" : "No Data Selling or Training"}</h3>
-              <p>
-                {isAr
-                  ? "مشاعرك ليست منتجاً إعلانياً. لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
-                  : "Your feelings are not an ad product. We don’t sell your data, and we don’t train our models on your private conversations."}
-              </p>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">ا</div>
-              <h3>{isAr ? "تجربة بأولوية عربية" : "Arabic-First Experience"}</h3>
-              <p>
-                {isAr
-                  ? "من البداية مصمَّم لطريقة التعبير العربية والثقافة المحلية، وليس مجرد ترجمة لمنتج غربي."
-                  : "Built around Arabic expression and culture from day one, not just translated from a Western template."}
-              </p>
-            </div>
-          </div>
+
+              <div className="asrar-features-grid">
+                <div className="feature">
+                  <div className="feature-icon">🔐</div>
+                  <h3>Encrypted by design</h3>
+                  <p>
+                    Chats are encrypted inside our app before they ever reach
+                    the database.
+                  </p>
+                </div>
+
+                <div className="feature">
+                  <div className="feature-icon">⚙️</div>
+                  <h3>You stay in control</h3>
+                  <p>
+                    Toggle history, download your data, or delete everything
+                    in just a few clicks.
+                  </p>
+                </div>
+
+                <div className="feature">
+                  <div className="feature-icon">✋</div>
+                  <h3>No selling, no training</h3>
+                  <p>
+                    We don’t sell your data or train models on your private
+                    conversations.
+                  </p>
+                </div>
+
+                <div className="feature">
+                  <div className="feature-icon">☾</div>
+                  <h3>Made for this region</h3>
+                  <p>
+                    Designed around how people here actually talk and feel,
+                    not a translated Western product.
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
         </section>
 
-       
+        {/* HUMAN TOUCH MICRO-SECTION */}
+        <section className="asrar-section asrar-section--human-touch">
+          {isAr ? (
+            <>
+              <p className="asrar-eyebrow">
+                {"وراء كل رسالة عناية،"}
+              </p>
+              <p className="asrar-human-body">
+                {"ووراء كل ميزة إنسان."}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="asrar-eyebrow">Behind every message is care.</p>
+              <p className="asrar-human-body">
+                Behind every feature is humanity.
+              </p>
+            </>
+          )}
+        </section>
 
         {/* PRICING */}
         <section id="pricing" className="asrar-section asrar-section--pricing">
+          {!isAr && <p className="asrar-eyebrow">Simple Pricing</p>}
+          <h2 className="asrar-section-title">
+            {isAr ? "الأسعار" : "Pricing"}
+          </h2>
+
+          <div className="asrar-pricing-grid">
+            {/* FREE PLAN */}
+            <div className="pricing-card">
+              <h3>{isAr ? "مجاني" : "Free"}</h3>
+              <p className="price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
+              <ul>
+                <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
+                <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
+                <li>
+                  {isAr
+                    ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)"
+                    : "Lite Emotional Engine for short, supportive replies."}
+                </li>
+                <li>{isAr ? "دعم أساسي" : "Basic support"}</li>
+              </ul>
+              <button
+                className="asrar-btn ghost"
+                onClick={() => navigate("/dashboard")}
+              >
+                {isAr ? "ابدأ مجاناً" : "Start for free"}
+              </button>
+            </div>
+
+            {/* PRO PLAN */}
+            <div className="pricing-card pricing-card--accent">
+              <h3>{isAr ? "برو" : "Pro"}</h3>
+              <p className="price">{isAr ? "٤.٩٩$ / شهرياً" : "$4.99 / month"}</p>
+              <ul>
+                <li>
+                  {isAr
+                    ? "جميع شخصيات أسرار الخمسة"
+                    : "All 5 Asrar characters"}
+                </li>
+                <li>
+                  {isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}
+                </li>
+                <li>
+                  {isAr
+                    ? "محرك المشاعر العميق V5 (إرشاد أعمق وخطوات عملية)"
+                    : "Deep Emotional Engine V5 for longer, structured guidance."}
+                </li>
+                <li>
+                  {isAr
+                    ? "ذاكرة محادثة متقدمة ودعم ذو أولوية"
+                    : "Advanced chat memory and priority support."}
+                </li>
+                <li>
+                  {isAr
+                    ? "بدون إعلانات ووصول ذو أولوية"
+                    : "Ad-free experience with priority access."}
+                </li>
+                <li>
+                  {isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}
+                </li>
+              </ul>
+
+              <button
+                className="asrar-btn primary"
+                onClick={() => {
+                  if (user) {
+                    window.location.href = "/dashboard";
+                  } else {
+                    window.location.href = "/create-account";
+                  }
+                }}
+              >
+                {isAr ? "جرّب برو" : "Try Pro"}
+              </button>
+            </div>
+          </div>
+        </section>
+        <div className="asrar-section-divider" aria-hidden="true" />
+
+     <section
+  id="contact"
+  className="asrar-section asrar-section--contact"
+>
   <h2 className="asrar-section-title">
-    {isAr ? "الأسعار" : "Pricing"}
+    {isAr ? "تواصل معنا" : "Contact"}
   </h2>
+  <p className="asrar-section-subtitle">
+    {isAr
+      ? "إذا كان لديك أي أسئلة، مشاكل في الحساب، أو اقتراحات لتحسين أسرار AI، يسعدنا سماعك."
+      : "For support, ideas, or partnerships — we’d love to hear from you."}
+  </p>
 
-  <div className="asrar-pricing-grid">
+  <div className="asrar-contact-grid">
 
-    {/* FREE PLAN */}
-    <div className="pricing-card">
-      <h3>{isAr ? "مجاني" : "Free"}</h3>
-      <p className="price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
-      <ul>
-        <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
-        <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
-        <li>{isAr ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)" 
-                  : "Lite Emotional Engine (short supportive replies)"}
-        </li>
-        <li>{isAr ? "دعم أساسي" : "Basic support"}</li>
-      </ul>
-      <button className="asrar-btn ghost" onClick={() => navigate('/dashboard')}>
-        {isAr ? "ابدأ مجاناً" : "Start for free"}
-      </button>
+    {/* GENERAL SUPPORT */}
+    <div className="asrar-contact-card">
+    <div className="asrar-contact-icon">
+    {/* Premium Minimal Question Mark */}
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9.2" />
+      <path d="M12 16.2v.01" strokeWidth="2" />
+      <path d="M9.7 9.5a2.4 2.4 0 1 1 3.6 2.1c-.6.3-1.1.8-1.1 1.4v.2" />
+    </svg>
+  </div>
+
+      <h3>{isAr ? "الدعم العام" : "General Support"}</h3>
+      <p>
+        {isAr
+          ? "للمشاكل التقنية، استفسارات الحساب، أو الأسئلة العامة عن المنصة."
+          : "Technical issues, account questions, or anything you’re unsure about."}
+      </p>
+      <a href="mailto:support@asrarai.com" className="asrar-contact-email">
+        support@asrarai.com
+      </a>
     </div>
 
-    {/* PRO PLAN */}
-    <div className="pricing-card pricing-card--accent">
-      <h3>{isAr ? "برو" : "Pro"}</h3>
-      <p className="price">{isAr ? "٤.٩٩$ / شهرياً" : "$4.99 / month"}</p>
-      <ul>
-        <li>{isAr ? "جميع شخصيات أسرار الخمسة" : "All 5 Asrar characters"}</li>
-        <li>{isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}</li>
-        <li>{isAr ? "محرك المشاعر العميق V5 (إرشاد أعمق وخطوات عملية)" 
-                  : "Deep Emotional Engine V5 (longer, structured guidance)"}
-        </li>
-        <li>{isAr ? "ذاكرة محادثة متقدمة ودعم ذو أولوية" 
-                  : "Advanced chat memory & priority support"}
-        </li>
-        <li>{isAr ? "بدون إعلانات ووصول ذو أولوية" 
-                  : "Ad-free & priority access"}
-        </li>
-        <li>{isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}</li>
-      </ul>
 
-      <button
-        className="asrar-btn primary"
-        onClick={() => {
-          if (user) {
-            window.location.href = "/dashboard";
-          } else {
-            window.location.href = "/create-account";
-          }
-        }}
-      >
-        {isAr ? "جرّب برو" : "Try Pro"}
-      </button>
+    {/* FEEDBACK & IDEAS */}
+    <div className="asrar-contact-card">
+      <div className="asrar-contact-icon">
+    {/* Premium Spark Icon */}
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+      <line x1="12" y1="4" x2="12" y2="20" />
+      <line x1="4"  y1="12" x2="20" y2="12" />
+      <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
+      <line x1="6.5" y1="17.5" x2="17.5" y2="6.5" />
+    </svg>
+  </div>
+      <h3>{isAr ? "الاقتراحات والملاحظات" : "Feedback & Ideas"}</h3>
+      <p>
+        {isAr
+          ? "شاركنا رأيك في تجربة أسرار AI أو أي ميزات تحب أن تراها في المستقبل."
+          : "Share how Asrar feels to use and what you’d love to see next."}
+      </p>
+      <a href="mailto:ideas@asrarai.com?subject=Asrar%20AI%20Feedback" className="asrar-contact-email">
+        ideas@asrarai.com
+      </a>
+    </div>
+
+
+    {/* BUSINESS & INVESTORS */}
+    <div className="asrar-contact-card">
+    <div className="asrar-contact-icon">
+    {/* Premium Diamond Frame */}
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round">
+      <path d="M12 4 L20 12 L12 20 L4 12 Z" />
+    </svg>
+  </div>
+
+      <h3>{isAr ? "الشراكات والمستثمرون" : "Business & Investors"}</h3>
+      <p>
+        {isAr
+          ? "للاستفسارات المتعلقة بالشراكات، الإعلام، أو المستثمرين."
+          : "For partnerships, media requests, or investor conversations."}
+      </p>
+      <a href="mailto:partners@asrarai.com?subject=Asrar%20AI%20Business" className="asrar-contact-email">
+        partners@asrarai.com
+      </a>
     </div>
 
   </div>
 </section>
-
-      <section
-        id="contact"
-        className="asrar-section asrar-section--contact"
-      >
-        <h2 className="asrar-section-title">
-          {isAr ? "تواصل معنا" : "Contact"}
-        </h2>
-        <p className="asrar-section-subtitle">
-          {isAr
-            ? "إذا كان لديك أي أسئلة، مشاكل في الحساب، أو اقتراحات لتحسين أسرار AI، يسعدنا سماعك."
-            : "If you have questions, account issues, or ideas to improve Asrar AI, we’d love to hear from you."}
-        </p>
-
-        <div className="asrar-contact-grid">
-          <div className="asrar-contact-card">
-            <h3>{isAr ? "الدعم العام" : "General Support"}</h3>
-            <p>
-              {isAr
-                ? "للمشاكل التقنية، استفسارات الحساب، أو الأسئلة العامة عن المنصة."
-                : "For technical issues, account questions, or general platform support."}
-            </p>
-            <a
-              href="mailto:support@asrarai.com"
-              className="asrar-contact-email"
-            >
-              support@asrarai.com
-            </a>
-          </div>
-
-          <div className="asrar-contact-card">
-            <h3>{isAr ? "الاقتراحات والملاحظات" : "Feedback & Ideas"}</h3>
-            <p>
-              {isAr
-                ? "شاركنا رأيك في تجربة أسرار AI أو أي ميزات تحب أن تراها في المستقبل."
-                : "Share your experience with Asrar AI or features you’d like to see next."}
-            </p>
-            <a
-              href="mailto:ideas@asrarai.com?subject=Asrar%20AI%20Feedback"
-              className="asrar-contact-email"
-            >
-              ideas@asrarai.com
-            </a>
-          </div>
-
-          <div className="asrar-contact-card">
-            <h3>{isAr ? "الشراكات والمستثمرون" : "Business & Investors"}</h3>
-            <p>
-              {isAr
-                ? "للاستفسارات المتعلقة بالشراكات، الإعلام، أو المستثمرين."
-                : "For partnerships, media, or investor inquiries."}
-            </p>
-            <a
-              href="mailto:partners@asrarai.com?subject=Asrar%20AI%20Business"
-              className="asrar-contact-email"
-            >
-              partners@asrarai.com
-            </a>
-          </div>
-        </div>
-      </section>
 
       </main>
 

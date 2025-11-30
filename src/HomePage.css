@@ -810,7 +810,7 @@ body,
 
 .asrar-section {
   max-width: 1180px;
-  margin: 40px auto 56px; /* Reduced from 48px/64px to 40px/56px */
+  margin: 56px auto 80px;
   padding: 0 40px;
   text-align: center;
   scroll-margin-top: 90px;
@@ -842,9 +842,19 @@ body,
 .asrar-section-subtitle {
   font-size: 14px;
   color: var(--asrar-text-muted);
-  max-width: 560px;
+  max-width: 720px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.asrar-section-body {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.asrar-engine-body {
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 /* CHARACTERS --------------------------------------------------------- */
@@ -914,7 +924,12 @@ body,
 
 /* Guarantee mobile slider shows and remove extra spacing */
 @media (max-width: 767px) {
-  .asrar-characters-section { margin: 24px auto 28px; }
+  .asrar-section {
+    margin: 44px auto 64px;
+    padding: 0 20px;
+  }
+
+  .asrar-characters-section { margin: 36px auto 48px; }
   .asrar-characters-section .asrar-character-grid-wrapper .asrar-character-footer {
   position: static !important;
   left: auto; right: auto; bottom: auto;
@@ -1565,7 +1580,7 @@ body,
 
 .asrar-features-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   text-align: center;
 }
@@ -1582,6 +1597,24 @@ body,
   }
 }
 
+.asrar-engine-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 209, 218, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  font-size: 14px;
+  color: var(--asrar-accent);
+  background: radial-gradient(
+    circle at top,
+    rgba(24, 209, 218, 0.18),
+    transparent 70%
+  );
+}
+
 .feature {
   padding: 16px 16px 18px;
   border-radius: var(--asrar-radius-md);
@@ -1592,14 +1625,22 @@ body,
 }
 
 .feature-icon {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
-  background: var(--asrar-accent-soft);
-  display: inline-flex;
+  border: 1px solid rgba(24, 209, 218, 0.6);
+  display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin: 0 auto 8px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--asrar-accent);
+  background: radial-gradient(
+    circle at top,
+    rgba(24, 209, 218, 0.18),
+    transparent 70%
+  );
 }
 
 /* HOW IT WORKS ------------------------------------------------------- */
@@ -1753,6 +1794,24 @@ body,
   color: var(--asrar-text-muted);
 }
 
+.asrar-contact-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 209, 218, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  font-size: 14px;
+  color: var(--asrar-accent);
+  background: radial-gradient(
+    circle at top,
+    rgba(24, 209, 218, 0.18),
+    transparent 70%
+  );
+}
+
 .asrar-contact-email {
   display: inline-flex;
   align-items: center;
@@ -1765,6 +1824,64 @@ body,
 .asrar-contact-email::after {
   content: "↗";
   font-size: 11px;
+}
+
+/* TRUST STRIP -------------------------------------------------------- */
+
+.asrar-section--trust {
+  margin-top: 40px;
+  margin-bottom: 56px;
+}
+
+.asrar-trust-body {
+  max-width: 720px;
+  margin: 6px auto 0;
+  font-size: 14px;
+  color: var(--asrar-text-muted);
+}
+
+/* HUMAN TOUCH -------------------------------------------------------- */
+
+.asrar-section--human-touch {
+  margin-top: 32px;
+  margin-bottom: 48px;
+}
+
+.asrar-human-body {
+  max-width: 600px;
+  margin: 8px auto 0;
+  font-size: 14px;
+  color: var(--asrar-text-muted);
+  padding: 10px 18px;
+  border-radius: 16px;
+  background: radial-gradient(
+    circle at top,
+    rgba(24, 209, 218, 0.15),
+    rgba(3, 8, 18, 0.96)
+  );
+  box-shadow: 0 0 26px rgba(24, 209, 218, 0.22);
+}
+
+/* SECTION DIVIDERS --------------------------------------------------- */
+
+.asrar-section-divider {
+  max-width: 960px;
+  margin: 0 auto 40px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(3, 8, 18, 0),
+    rgba(24, 209, 218, 0.35),
+    rgba(3, 8, 18, 0)
+  );
+  box-shadow: 0 0 12px rgba(24, 209, 218, 0.35);
+  border-radius: 999px;
+}
+
+@media (max-width: 767px) {
+  .asrar-section-divider {
+    margin-bottom: 30px;
+  }
 }
 
 .asrar-contact-email:hover {
