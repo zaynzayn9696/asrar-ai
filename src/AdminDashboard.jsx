@@ -4,7 +4,7 @@ import "./HomePage.css";
 import "./AdminDashboard.css";
 import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 
 // Stat Card Component
@@ -138,7 +138,23 @@ export default function AdminDashboard() {
       setLoading(true);
       setError("");
       try {
-        const res = await fetch(`${API_BASE}/api/admin/stats`, { credentials: "include" });
+        const headers = {
+          Accept: "application/json",
+        };
+        try {
+          if (typeof window !== "undefined") {
+            const token = window.localStorage.getItem(TOKEN_KEY);
+            if (token) {
+              headers.Authorization = `Bearer ${token}`;
+            }
+          }
+        } catch (_) {}
+
+        const res = await fetch(`${API_BASE}/api/admin/stats`, {
+          method: "GET",
+          credentials: "include",
+          headers,
+        });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data?.error || data?.message || `Request failed: ${res.status}`);

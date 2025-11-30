@@ -23,11 +23,17 @@ console.log(
   'JWT_SECRET set?',
   !!process.env.JWT_SECRET
 );
+
+const FRONTEND_URL = process.env.FRONTEND_URL;
 const allowedOrigins = [
   "https://asrarai.com",
   "https://www.asrarai.com",
   "https://asrar-ai.vercel.app",
 ];
+
+if (FRONTEND_URL && !allowedOrigins.includes(FRONTEND_URL)) {
+  allowedOrigins.push(FRONTEND_URL);
+}
 
 app.use(
   cors({

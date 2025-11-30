@@ -8,6 +8,34 @@ const fs = require('fs');
 
 const router = express.Router();
 
+const isRenderProd =
+  process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
+
+const AUTH_COOKIE_NAME = 'token';
+
+function getAuthCookieClearOptions() {
+  if (!isRenderProd) {
+    return {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+    };
+  }
+
+  const base = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  };
+
+  const domain = process.env.COOKIE_DOMAIN || '.asrarai.com';
+  if (domain) {
+    return { ...base, domain };
+  }
+
+  return base;
+}
+
 // every chat route needs login
 router.use(requireAuth);
 
@@ -291,11 +319,7 @@ router.delete('/delete', async (req, res) => {
       console.error('Avatar cleanup error:', fileErr && fileErr.message ? fileErr.message : fileErr);
     }
 
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-    });
+    res.clearCookie(AUTH_COOKIE_NAME, getAuthCookieClearOptions());
     return res.json({ success: true, message: 'Account and all data deleted.' });
   } catch (err) {
     console.error('Delete account+data error:', err && err.message ? err.message : err);

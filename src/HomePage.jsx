@@ -14,6 +14,17 @@ import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
 import AsrarHeader from "./AsrarHeader";
 
+// --- HOMEPAGE LIGHT REFACTOR PLAN -----------------------------------
+// 1) Merge or compress some mid-page explanation sections:
+//    - Consider gently merging overlapping "Emotional Engine" and "How it works" copy into one guided story strip so the scroll feels lighter.
+//    - Keep the hero as the primary emotional hook, with downstream CTAs simplified to one clear path into signup or dashboard.
+// 2) Turn the densest descriptive blocks into lighter structures (especially on desktop English):
+//    - Where paragraphs run long, turn them into 2–3 bullet points that keep the same meaning without changing any Arabic text.
+//    - For deep security / encryption explanations, keep a single reassurance sentence visible and move the details into a collapsible "Learn more" accordion.
+// 3) Componentization opportunities:
+//    - Extract repeated "why your secrets belong here" or benefits sections into a small reusable card component to reduce visual noise.
+//    - Consider splitting the companions carousel and the mini-chat demo into separate components so HomePage stays readable and easier to maintain.
+
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
   {

@@ -12,6 +12,38 @@ const router = express.Router();
 const isRenderProd =
   process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
 
+const AUTH_COOKIE_NAME = 'token';
+
+function getAuthCookieOptions() {
+  if (!isRenderProd) {
+    return {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    };
+  }
+
+  const base = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+
+  const domain = process.env.COOKIE_DOMAIN || '.asrarai.com';
+  if (domain) {
+    return { ...base, domain };
+  }
+
+  return base;
+}
+
+function getAuthCookieClearOptions() {
+  const { maxAge, ...rest } = getAuthCookieOptions();
+  return rest;
+}
+
 function createJwtForUser(user) {
   return jwt.sign(
     {
@@ -24,12 +56,7 @@ function createJwtForUser(user) {
 }
 
 function setTokenCookie(res, token) {
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: true,          // always true in your deployed app (Render is HTTPS)
-    sameSite: "none",      // required for cross-site (Vercel -> Render)
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
 }
 
 router.get('/debug-cookie', (req, res) => {
@@ -217,11 +244,7 @@ router.post('/login', async (req, res) => {
 // ---------- LOGOUT ----------
 router.post('/logout', (req, res) => {
   // Clear the auth cookie with the same attributes used when setting it
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none',
-  });
+  res.clearCookie(AUTH_COOKIE_NAME, getAuthCookieClearOptions());
   res.json({ message: 'Logged out successfully' });
 });
 
