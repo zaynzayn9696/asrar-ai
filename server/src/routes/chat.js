@@ -112,24 +112,37 @@ async function ensureUsage(userId) {
         monthlyCount: 0,
         dailyResetAt: startOfToday(),
         monthlyResetAt: startOfMonth(),
+        lockUntil: null,
       },
     });
   }
-  const today = startOfToday();
+
+  const now = new Date();
   const month0 = startOfMonth();
-  const needsDailyReset = !usage.dailyResetAt || usage.dailyResetAt < today;
+
   const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
-  if (needsDailyReset || needsMonthlyReset) {
+  const lockExpired = usage.lockUntil && usage.lockUntil <= now;
+
+  if (needsMonthlyReset || lockExpired) {
+    const data = {};
+
+    if (needsMonthlyReset) {
+      data.monthlyCount = 0;
+      data.monthlyResetAt = month0;
+    }
+
+    if (lockExpired) {
+      data.dailyCount = 0;
+      data.lockUntil = null;
+      data.dailyResetAt = now;
+    }
+
     usage = await prisma.usage.update({
       where: { userId },
-      data: {
-        dailyCount: needsDailyReset ? 0 : usage.dailyCount,
-        monthlyCount: needsMonthlyReset ? 0 : usage.monthlyCount,
-        dailyResetAt: needsDailyReset ? today : usage.dailyResetAt,
-        monthlyResetAt: needsMonthlyReset ? month0 : usage.monthlyResetAt,
-      },
+      data,
     });
   }
+
   return usage;
 }
 
@@ -717,6 +730,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const userId = dbUser.id;
     if (!isPremiumUser && !isTester) {
       return res.status(403).json({
+        error: 'voice_premium_only',
         code: 'VOICE_PRO_ONLY',
         message: 'Voice chat is available for Pro members.',
       });
@@ -958,7 +972,11 @@ router.post('/tts', async (req, res) => {
 
     const { isTester } = getPlanLimits(dbUser.email, dbUser.plan);
     if (dbUser.plan !== 'pro' && !isTester) {
-      return res.status(403).json({ code: 'VOICE_PRO_ONLY', message: 'Voice chat is available for Pro members.' });
+      return res.status(403).json({
+        error: 'voice_premium_only',
+        code: 'VOICE_PRO_ONLY',
+        message: 'Voice chat is available for Pro members.',
+      });
     }
 
     const { text } = req.body || {};
@@ -1031,14 +1049,34 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    // Free plan daily limit enforcement (e.g., 5 messages)
-    if (!isTester && !isPremiumUser) {
-      const used = usage.dailyCount || 0;
+    const now = new Date();
+
+    if (!isTester && isFreePlanUser) {
       const limit = dailyLimit || 5;
-      if (limit > 0 && used >= limit) {
-        return res.status(403).json({
-          error: 'limit_exceeded',
+
+      if (usage.lockUntil && usage.lockUntil > now) {
+        return res.status(429).json({
+          error: 'limit_reached',
+          code: 'LIMIT_REACHED',
           message: `You have reached the limit of ${limit} messages on your current plan.`,
+          retryAt: usage.lockUntil.toISOString(),
+          usage: buildUsageSummary(dbUser, usage),
+        });
+      }
+
+      const used = usage.dailyCount || 0;
+      if (limit > 0 && used >= limit) {
+        const lockUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        usage = await prisma.usage.update({
+          where: { userId: dbUser.id },
+          data: { lockUntil },
+        });
+
+        return res.status(429).json({
+          error: 'limit_reached',
+          code: 'LIMIT_REACHED',
+          message: `You have reached the limit of ${limit} messages on your current plan.`,
+          retryAt: lockUntil.toISOString(),
           usage: buildUsageSummary(dbUser, usage),
         });
       }
@@ -1050,6 +1088,21 @@ router.post('/message', async (req, res) => {
         usage = await prisma.usage.update({
           where: { userId: dbUser.id },
           data: { monthlyCount: { increment: 1 } },
+        });
+      } else if (isFreePlanUser) {
+        const limit = dailyLimit || 5;
+        const used = usage.dailyCount || 0;
+        const newCount = used + 1;
+        const updateData = {
+          dailyCount: { increment: 1 },
+        };
+        if (limit > 0 && newCount >= limit && !usage.lockUntil) {
+          const lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          updateData.lockUntil = lockUntil;
+        }
+        usage = await prisma.usage.update({
+          where: { userId: dbUser.id },
+          data: updateData,
         });
       } else {
         usage = await prisma.usage.update({
@@ -1240,6 +1293,7 @@ router.post('/message', async (req, res) => {
       loopTag,
       anchors,
       reasonLabel,
+      dialect,
     });
 
     const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;

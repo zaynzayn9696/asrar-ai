@@ -83,25 +83,40 @@ async function ensureUsage(userId) {
   let usage = await prisma.usage.findUnique({ where: { userId } });
   if (!usage) {
     usage = await prisma.usage.create({
-      data: { userId, dailyCount: 0, monthlyCount: 0, dailyResetAt: startOfToday(), monthlyResetAt: startOfMonth() },
+      data: {
+        userId,
+        dailyCount: 0,
+        monthlyCount: 0,
+        dailyResetAt: startOfToday(),
+        monthlyResetAt: startOfMonth(),
+        lockUntil: null,
+      },
     });
   }
 
-  // Reset windows if expired
-  const today = startOfToday();
+  const now = new Date();
   const month0 = startOfMonth();
-  const needsDailyReset = !usage.dailyResetAt || usage.dailyResetAt < today;
-  const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
 
-  if (needsDailyReset || needsMonthlyReset) {
+  const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
+  const lockExpired = usage.lockUntil && usage.lockUntil <= now;
+
+  if (needsMonthlyReset || lockExpired) {
+    const data = {};
+
+    if (needsMonthlyReset) {
+      data.monthlyCount = 0;
+      data.monthlyResetAt = month0;
+    }
+
+    if (lockExpired) {
+      data.dailyCount = 0;
+      data.lockUntil = null;
+      data.dailyResetAt = now;
+    }
+
     usage = await prisma.usage.update({
       where: { userId },
-      data: {
-        dailyCount: needsDailyReset ? 0 : usage.dailyCount,
-        monthlyCount: needsMonthlyReset ? 0 : usage.monthlyCount,
-        dailyResetAt: needsDailyReset ? today : usage.dailyResetAt,
-        monthlyResetAt: needsMonthlyReset ? month0 : usage.monthlyResetAt,
-      },
+      data,
     });
   }
 

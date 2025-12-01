@@ -67,6 +67,34 @@ function decideEngineMode({ isPremiumUser, primaryEmotion, intensity, conversati
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+function getDialectGuidance(language, dialect) {
+  const lang = String(language || '').toLowerCase();
+
+  if (lang === 'en') {
+    return 'Language: reply in natural, clear English. If the user mixes Arabic/English, you may gently mirror their style.';
+  }
+
+  const key = String(dialect || 'msa').toLowerCase();
+
+  const map = {
+    msa: 'اللغة: استخدم عربية فصحى حديثة نظيفة وبسيطة، بدون تعقيد لغوي مفرط وبدون مبالغة في كتابة اللهجات. يمكنك تقريب التعبير من أسلوب المستخدم بدون ذكر اسم اللهجة.',
+    jo: 'اللغة: استخدم عربية قريبة من اللهجة الأردنية الطبيعية والبسيطة، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    sy: 'اللغة: استخدم عربية قريبة من اللهجة الشامية/السورية البسيطة، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    lb: 'اللغة: استخدم عربية قريبة من اللهجة اللبنانية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    ps: 'اللغة: استخدم عربية قريبة من اللهجة الفلسطينية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    iq: 'اللغة: استخدم عربية قريبة من اللهجة العراقية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    eg: 'اللغة: استخدم عربية قريبة من اللهجة المصرية البسيطة، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    sa: 'اللغة: استخدم عربية قريبة من اللهجة الخليجية/السعودية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    ae: 'اللغة: استخدم عربية قريبة من اللهجة الخليجية/الإماراتية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    kw: 'اللغة: استخدم عربية قريبة من اللهجة الخليجية/الكويتية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    bh: 'اللغة: استخدم عربية قريبة من اللهجة الخليجية/البحرينية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    om: 'اللغة: استخدم عربية قريبة من اللهجة الخليجية/العُمانية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+    ye: 'اللغة: استخدم عربية قريبة من اللهجة اليمنية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
+  };
+
+  return map[key] || map.msa;
+}
+
 /**
  * Classifies the user's message emotion using OpenAI and returns a structured object.
  * Falls back to a neutral default on any error or parse failure.
@@ -284,9 +312,18 @@ async function updateConversationEmotionState(conversationId, emo) {
  * @param {Emotion} params.emotion
  * @param {ConversationEmotionState|null} params.convoState
  * @param {('ar'|'en'|'mixed')} params.language
+ * @param {string} [params.dialect] // optional dialect code (e.g. msa, jo, sa, lb, sy, etc.)
+ * @param {Object} params.longTermSnapshot
+ * @param {Array} params.triggers
+ * @param {string} params.engineMode
+ * @param {string} params.loopTag
+ * @param {Array} params.anchors
+ * @param {string} params.conversationSummary
+ * @param {boolean} params.isPremiumUser
+ * @param {string} params.reasonLabel
  * @returns {string}
  */
-function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel }) {
+function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect }) {
   const isArabic = language === 'ar';
   const personaCfg = personas[personaId] || defaultPersona;
   const premiumUser = !!isPremiumUser;
@@ -303,9 +340,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       ? 'حالة المحادثة: لا توجد بيانات كافية بعد'
       : 'Conversation state: not enough data yet');
 
-  const cultural = isArabic
-    ? 'اللغة: استخدم عربية بسيطة وواضحة. يمكن التقريب من أسلوب المستخدم بدون مبالغة.'
-    : 'Language: reply in natural, clear English. If the user mixes Arabic/English, you may gently mirror their style.';
+  const cultural = getDialectGuidance(language, dialect);
 
   const safety = isArabic
     ? [
