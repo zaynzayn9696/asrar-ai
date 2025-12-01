@@ -19,6 +19,7 @@ const {
   decideEngineMode,
   updateConversationEmotionState,
   buildSystemPrompt,
+  getDialectGuidance,
 } = require('../services/emotionalEngine');
 const { detectLoopTag, deriveEmotionalReason } = require('../services/emotionalReasoning');
 const {
@@ -346,25 +347,9 @@ You always remain Farah and never fully act as another companion.`,
   },
 };
 
-function getDialectInstruction(dialect) {
-  const key = dialect || 'msa';
-  const map = {
-    msa: 'استخدم عربية فصحى بسيطة وواضحة، ويمكنك تقريب التعبير من طريقة كلام المستخدم بدون مبالغة في اللهجة وبدون ذكر اسم اللهجة.',
-    jo: 'استخدم عربية قريبة من اللهجة الأردنية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    sy: 'استخدم عربية قريبة من اللهجة الشامية/السورية البسيطة، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    lb: 'استخدم عربية قريبة من اللهجة اللبنانية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    ps: 'استخدم عربية قريبة من اللهجة الفلسطينية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    iq: 'استخدم عربية قريبة من اللهجة العراقية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    eg: 'استخدم عربية قريبة من اللهجة المصرية البسيطة، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    sa: 'استخدم عربية قريبة من اللهجة الخليجية/السعودية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    ae: 'استخدم عربية قريبة من اللهجة الخليجية/الإماراتية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    kw: 'استخدم عربية قريبة من اللهجة الخليجية/الكويتية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    bh: 'استخدم عربية قريبة من اللهجة الخليجية/البحرينية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    om: 'استخدم عربية قريبة من اللهجة الخليجية/العُمانية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-    ye: 'استخدم عربية قريبة من اللهجة اليمنية الطبيعية، بدون مبالغة في كتابة اللهجة وبدون ذكر اسم اللهجة.',
-  };
-  return map[key] || map.msa;
-}
+// NOTE: dialect guidance for text replies is provided by getDialectGuidance in the
+// emotionalEngine module. The voice route below reuses the same helper to keep
+// text and voice behavior aligned.
 
 router.get('/test', (req, res) => {
   res.json({
@@ -816,28 +801,20 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     if (!persona) {
       return res.status(400).json({ message: 'Unknown character' });
     }
-    const isArabicConversation = dialect && dialect !== 'en';
+
+    const isArabicConversation = lang === 'ar' || lang === 'mixed';
     const personaText = isArabicConversation ? persona.ar : persona.en;
 
     const voiceProfile = CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
     const toneKey = rawToneKey || voiceProfile.defaultTone || 'calm';
     const toneConfig = TONES[toneKey] || TONES.calm;
 
-    let systemIntro = isArabicConversation
-      ? `أنت رفيق في تطبيق "أسرار" للدعم العاطفي للمستخدمين في العالم العربي.
-اللغة: ${getDialectInstruction(dialect)}
-تذكر دائماً:
-- لا تقدّم تشخيصاً طبياً.
-- لا تعِد بعلاج أكيد.
-- انصح بطلب مساعدة مختصة أو طبية إذا كان هناك أفكار انتحارية أو إيذاء للنفس.
+    const dialectGuidance = getDialectGuidance(lang === 'mixed' ? 'mixed' : (lang === 'ar' ? 'ar' : 'en'), dialect);
 
-ثم طبّق التعليمات الخاصة بالشخصية التالية:
-
-${personaText}
-
-حافظ على الردود في 3–6 جمل واضحة ومباشرة، ما لم يطلب المستخدم تفصيلاً أطول.`
-      : `You are an AI companion inside an app called Asrar, supporting users from the Arab world.
-Language: reply in natural, clear English. If the user mixes Arabic/English, you can gently follow their style.
+    let systemIntro;
+    if (lang === 'en') {
+      systemIntro = `You are an AI companion inside an app called Asrar, supporting users from the Arab world.
+${dialectGuidance}
 Always remember:
 - Do NOT give medical or clinical diagnoses.
 - Do NOT promise cure.
@@ -848,6 +825,20 @@ Then strictly follow this character description and style:
 ${personaText}
 
 Keep your replies around 3–6 sentences unless the user clearly asks for more detail.`;
+    } else {
+      systemIntro = `أنت رفيق في تطبيق "أسرار" للدعم العاطفي للمستخدمين في العالم العربي.
+${dialectGuidance}
+تذكر دائماً:
+- لا تقدّم تشخيصاً طبياً.
+- لا تعِد بعلاج أكيد.
+- انصح بطلب مساعدة مختصة أو طبية إذا كان هناك أفكار انتحارية أو إيذاء للنفس.
+
+ثم طبّق التعليمات الخاصة بالشخصية التالية:
+
+${personaText}
+
+حافظ على الردود في 3–6 جمل واضحة ومباشرة، ما لم يطلب المستخدم تفصيلاً أطول.`;
+    }
 
     const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
     systemIntro += `\n\n${toneInstruction}`;
@@ -1055,28 +1046,13 @@ router.post('/message', async (req, res) => {
       const limit = dailyLimit || 5;
 
       if (usage.lockUntil && usage.lockUntil > now) {
+        const lockUntilIso = usage.lockUntil.toISOString();
+        const limitMessage = "You’ve reached your daily 5-message limit on the free plan.";
         return res.status(429).json({
           error: 'limit_reached',
           code: 'LIMIT_REACHED',
-          message: `You have reached the limit of ${limit} messages on your current plan.`,
-          retryAt: usage.lockUntil.toISOString(),
-          usage: buildUsageSummary(dbUser, usage),
-        });
-      }
-
-      const used = usage.dailyCount || 0;
-      if (limit > 0 && used >= limit) {
-        const lockUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        usage = await prisma.usage.update({
-          where: { userId: dbUser.id },
-          data: { lockUntil },
-        });
-
-        return res.status(429).json({
-          error: 'limit_reached',
-          code: 'LIMIT_REACHED',
-          message: `You have reached the limit of ${limit} messages on your current plan.`,
-          retryAt: lockUntil.toISOString(),
+          message: limitMessage,
+          retryAt: lockUntilIso,
           usage: buildUsageSummary(dbUser, usage),
         });
       }
@@ -1096,10 +1072,13 @@ router.post('/message', async (req, res) => {
         const updateData = {
           dailyCount: { increment: 1 },
         };
+
+        // On the 5th successful message, set a 24h lock but still return 200 OK.
         if (limit > 0 && newCount >= limit && !usage.lockUntil) {
           const lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
           updateData.lockUntil = lockUntil;
         }
+
         usage = await prisma.usage.update({
           where: { userId: dbUser.id },
           data: updateData,
@@ -1214,7 +1193,14 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    const languageForEngine = lang === 'mixed' ? 'mixed' : (isArabicConversation ? 'ar' : 'en');
+    let languageForEngine;
+    if (lang === 'mixed') {
+      languageForEngine = 'mixed';
+    } else if (lang === 'en') {
+      languageForEngine = 'en';
+    } else {
+      languageForEngine = 'ar';
+    }
 
     const tClassifyStart = Date.now();
     const emo = await getEmotionForMessage({

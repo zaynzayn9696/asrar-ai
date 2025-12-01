@@ -73,6 +73,8 @@ const DIALECTS = [
   { id: "bh", labelEn: "Bahraini Arabic", labelAr: "اللهجة البحرينية" },
   { id: "om", labelEn: "Omani Arabic", labelAr: "اللهجة العُمانية" },
   { id: "ye", labelEn: "Yemeni Arabic", labelAr: "اللهجة اليمنية" },
+  { id: "ma", labelEn: "Moroccan Arabic", labelAr: "الدارجة المغربية" },
+  { id: "tn", labelEn: "Tunisian Arabic", labelAr: "اللهجة التونسية" },
   { id: "en", labelEn: "English", labelAr: "اللغة الإنجليزية" },
 ];
 
