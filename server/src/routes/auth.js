@@ -89,29 +89,27 @@ async function ensureUsage(userId) {
         monthlyCount: 0,
         dailyResetAt: startOfToday(),
         monthlyResetAt: startOfMonth(),
-        lockUntil: null,
       },
     });
   }
 
-  const now = new Date();
+  const today0 = startOfToday();
   const month0 = startOfMonth();
 
+  const needsDailyReset = !usage.dailyResetAt || usage.dailyResetAt < today0;
   const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
-  const lockExpired = usage.lockUntil && usage.lockUntil <= now;
 
-  if (needsMonthlyReset || lockExpired) {
+  if (needsDailyReset || needsMonthlyReset) {
     const data = {};
+
+    if (needsDailyReset) {
+      data.dailyCount = 0;
+      data.dailyResetAt = today0;
+    }
 
     if (needsMonthlyReset) {
       data.monthlyCount = 0;
       data.monthlyResetAt = month0;
-    }
-
-    if (lockExpired) {
-      data.dailyCount = 0;
-      data.lockUntil = null;
-      data.dailyResetAt = now;
     }
 
     usage = await prisma.usage.update({

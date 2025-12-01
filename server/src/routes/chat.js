@@ -113,29 +113,27 @@ async function ensureUsage(userId) {
         monthlyCount: 0,
         dailyResetAt: startOfToday(),
         monthlyResetAt: startOfMonth(),
-        lockUntil: null,
       },
     });
   }
 
-  const now = new Date();
+  const today0 = startOfToday();
   const month0 = startOfMonth();
 
+  const needsDailyReset = !usage.dailyResetAt || usage.dailyResetAt < today0;
   const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
-  const lockExpired = usage.lockUntil && usage.lockUntil <= now;
 
-  if (needsMonthlyReset || lockExpired) {
+  if (needsDailyReset || needsMonthlyReset) {
     const data = {};
+
+    if (needsDailyReset) {
+      data.dailyCount = 0;
+      data.dailyResetAt = today0;
+    }
 
     if (needsMonthlyReset) {
       data.monthlyCount = 0;
       data.monthlyResetAt = month0;
-    }
-
-    if (lockExpired) {
-      data.dailyCount = 0;
-      data.lockUntil = null;
-      data.dailyResetAt = now;
     }
 
     usage = await prisma.usage.update({
@@ -1040,25 +1038,21 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    const now = new Date();
-
     if (!isTester && isFreePlanUser) {
       const limit = dailyLimit || 5;
+      const used = usage.dailyCount || 0;
 
-      if (usage.lockUntil && usage.lockUntil > now) {
-        const lockUntilIso = usage.lockUntil.toISOString();
-        const limitMessage = "You’ve reached your daily 5-message limit on the free plan.";
+      if (limit > 0 && used >= limit) {
         return res.status(429).json({
           error: 'limit_reached',
           code: 'LIMIT_REACHED',
-          message: limitMessage,
-          retryAt: lockUntilIso,
+          message: `You’ve reached your daily ${limit}-message limit on the free plan.`,
           usage: buildUsageSummary(dbUser, usage),
         });
       }
     }
 
-    // Accept request: increment usage immediately
+    // Accept request: increment usage immediately (after passing limit checks)
     if (!isTester) {
       if (isPremiumUser) {
         usage = await prisma.usage.update({
@@ -1066,22 +1060,9 @@ router.post('/message', async (req, res) => {
           data: { monthlyCount: { increment: 1 } },
         });
       } else if (isFreePlanUser) {
-        const limit = dailyLimit || 5;
-        const used = usage.dailyCount || 0;
-        const newCount = used + 1;
-        const updateData = {
-          dailyCount: { increment: 1 },
-        };
-
-        // On the 5th successful message, set a 24h lock but still return 200 OK.
-        if (limit > 0 && newCount >= limit && !usage.lockUntil) {
-          const lockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
-          updateData.lockUntil = lockUntil;
-        }
-
         usage = await prisma.usage.update({
           where: { userId: dbUser.id },
-          data: updateData,
+          data: { dailyCount: { increment: 1 } },
         });
       } else {
         usage = await prisma.usage.update({

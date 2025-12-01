@@ -226,8 +226,6 @@ export default function ChatPage() {
   // Free plan limit banner state
   const [limitExceeded, setLimitExceeded] = useState(false);
   const [limitUsage, setLimitUsage] = useState(null);
-  const [freeLimitRetryAt, setFreeLimitRetryAt] = useState(null);
-  const [freeLimitCountdown, setFreeLimitCountdown] = useState("");
 
   const [hasHydratedHistory, setHasHydratedHistory] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -272,111 +270,6 @@ export default function ChatPage() {
   useEffect(() => {
     setUsageInfo(user?.usage || null);
   }, [user]);
-
-  useEffect(() => {
-    if (!user) {
-      setLimitExceeded(false);
-      setFreeLimitRetryAt(null);
-      setFreeLimitCountdown("");
-      return;
-    }
-    if (typeof window === "undefined") return;
-
-    const userId = user.id;
-    if (!userId) return;
-
-    const storageKey = `asrar-free-limit-${userId}`;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) {
-        setFreeLimitRetryAt(null);
-        setFreeLimitCountdown("");
-        return;
-      }
-      const parsed = JSON.parse(raw);
-      const retryAt = parsed && typeof parsed.retryAt === "string" ? parsed.retryAt : null;
-      if (!retryAt) {
-        localStorage.removeItem(storageKey);
-        setFreeLimitRetryAt(null);
-        setFreeLimitCountdown("");
-        setLimitExceeded(false);
-        return;
-      }
-      const targetMs = new Date(retryAt).getTime();
-      const nowMs = Date.now();
-      const isPrem = !!(user.isPremium || user.plan === "premium" || user.plan === "pro");
-      if (!Number.isFinite(targetMs) || targetMs <= nowMs || isPrem) {
-        localStorage.removeItem(storageKey);
-        setFreeLimitRetryAt(null);
-        setFreeLimitCountdown("");
-        setLimitExceeded(false);
-        return;
-      }
-      setFreeLimitRetryAt(retryAt);
-      setLimitExceeded(true);
-    } catch (e) {
-      console.error("[ChatPage] Failed to load free limit lock", e);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!freeLimitRetryAt) {
-      setFreeLimitCountdown("");
-      return;
-    }
-
-    const targetMs = new Date(freeLimitRetryAt).getTime();
-    if (!Number.isFinite(targetMs)) {
-      setFreeLimitRetryAt(null);
-      setFreeLimitCountdown("");
-      setLimitExceeded(false);
-      if (user && typeof window !== "undefined") {
-        try {
-          const storageKey = `asrar-free-limit-${user.id}`;
-          localStorage.removeItem(storageKey);
-        } catch (e) {
-          console.error("[ChatPage] Failed to clear free limit lock", e);
-        }
-      }
-      return;
-    }
-
-    const updateCountdown = () => {
-      const nowMs = Date.now();
-      const diff = targetMs - nowMs;
-      if (diff <= 0) {
-        setFreeLimitRetryAt(null);
-        setFreeLimitCountdown("");
-        setLimitExceeded(false);
-        if (user && typeof window !== "undefined") {
-          try {
-            const storageKey = `asrar-free-limit-${user.id}`;
-            localStorage.removeItem(storageKey);
-          } catch (e) {
-            console.error("[ChatPage] Failed to clear free limit lock", e);
-          }
-        }
-        return;
-      }
-      const totalSec = Math.round(diff / 1000);
-      const hours = Math.floor(totalSec / 3600);
-      const minutes = Math.floor((totalSec % 3600) / 60);
-      const seconds = totalSec % 60;
-      let label = "";
-      if (hours > 0) {
-        label = isAr ? `${hours}h ${minutes}m` : `${hours}h ${minutes}m`;
-      } else if (minutes > 0) {
-        label = isAr ? `${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
-      } else {
-        label = isAr ? `${seconds}s` : `${seconds}s`;
-      }
-      setFreeLimitCountdown(label);
-    };
-
-    updateCountdown();
-    const id = setInterval(updateCountdown, 1000);
-    return () => clearInterval(id);
-  }, [freeLimitRetryAt, user, isAr]);
 
   const [reloadConversationsToken, setReloadConversationsToken] = useState(0);
 
@@ -1091,17 +984,6 @@ export default function ChatPage() {
         if (res.status === 429 && data && (data.code === 'LIMIT_REACHED' || data.error === 'limit_reached')) {
           setLimitExceeded(true);
           setLimitUsage(data.usage || null);
-          if (data.retryAt && typeof data.retryAt === 'string') {
-            setFreeLimitRetryAt(data.retryAt);
-            if (user && typeof window !== "undefined") {
-              try {
-                const storageKey = `asrar-free-limit-${user.id}`;
-                localStorage.setItem(storageKey, JSON.stringify({ retryAt: data.retryAt }));
-              } catch (e) {
-                console.error("[ChatPage] Failed to persist free limit lock", e);
-              }
-            }
-          }
           return;
         }
         if (data && data.code === "PRO_CHARACTER_LOCKED") {
@@ -1792,14 +1674,9 @@ export default function ChatPage() {
           {limitExceeded && (
             <div className="asrar-limit-banner">
               <p>
-                {limitUsage && typeof limitUsage.dailyLimit === "number"
-                  ? `You have reached the limit for your free plan (${limitUsage.dailyLimit} messages).`
-                  : "You have reached the limit for your free plan."}
-                {freeLimitCountdown
-                  ? isArabicConversation
-                    ? ` يمكنك إرسال رسالة جديدة خلال ${freeLimitCountdown}.`
-                    : ` You can send a new message in ${freeLimitCountdown}.`
-                  : ""}
+                {isArabicConversation
+                  ? "وصلت إلى حد ٥ رسائل اليوم في الخطة المجانية."
+                  : "You’ve reached your daily 5-message limit on the free plan."}
               </p>
               <button
                 type="button"
