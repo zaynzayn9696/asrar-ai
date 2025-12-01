@@ -202,6 +202,7 @@ export default function ChatPage() {
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[1];
 
   const isArabicConversation = selectedDialect !== "en";
+  const conversationLang = isArabicConversation ? "ar" : "en";
   const characterDisplayName = isAr ? character.nameAr : character.nameEn;
 
   const getName = (c) => (isAr ? c.nameAr : c.nameEn);
@@ -968,7 +969,7 @@ export default function ChatPage() {
           conversationId,
           content: trimmed,
           save: !!user?.saveHistoryEnabled,
-          lang,
+          lang: conversationLang,
           dialect: selectedDialect,
           tone: selectedTone,
         }),
@@ -1357,7 +1358,7 @@ export default function ChatPage() {
           const form = new FormData();
           form.append("audio", file);
           form.append("characterId", selectedCharacterId);
-          form.append("lang", lang);
+          form.append("lang", conversationLang);
           form.append("dialect", selectedDialect);
           form.append("tone", selectedTone);
           if (conversationId) {
