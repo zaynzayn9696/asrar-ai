@@ -60,7 +60,7 @@ router.get('/stats', async (req, res) => {
 
     // Map recent users to a compact shape with usage
     const users = recentUsers.map((u) => {
-      const { monthlyLimit } = getPlanLimits(u.email, u.plan);
+      const { dailyLimit, monthlyLimit } = getPlanLimits(u.email, u.plan);
       return {
         id: u.id,
         email: u.email,
@@ -70,6 +70,7 @@ router.get('/stats', async (req, res) => {
         createdAt: u.createdAt,
         lastLoginAt: null,
         dailyUsed: u.usage ? u.usage.dailyCount : 0,
+        dailyLimit,
         monthlyUsed: u.usage ? u.usage.monthlyCount : 0,
         monthlyLimit: monthlyLimit || 0,
       };

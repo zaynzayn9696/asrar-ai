@@ -65,7 +65,7 @@ function UsersTable({ users, selectedUser, onSelectUser, isAr }) {
               {new Date(u.createdAt).toISOString().slice(0, 10)}
             </div>
             <div className="admin-table-cell" data-label={isAr ? "الاستخدام" : "Usage"}>
-              {u.monthlyUsed ?? 0} / {u.monthlyLimit ?? 0}
+              {u.dailyUsed ?? 0} / {u.dailyLimit && u.dailyLimit > 0 ? u.dailyLimit : ""}
             </div>
           </button>
         );

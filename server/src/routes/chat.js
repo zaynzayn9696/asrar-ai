@@ -1043,10 +1043,22 @@ router.post('/message', async (req, res) => {
       const used = usage.dailyCount || 0;
 
       if (limit > 0 && used >= limit) {
+        const baseReset = usage.dailyResetAt || startOfToday();
+        const resetAtDate = new Date(baseReset);
+        resetAtDate.setDate(resetAtDate.getDate() + 1);
+        const now = new Date();
+        const resetInSeconds = Math.max(
+          0,
+          Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
+        );
+
         return res.status(429).json({
           error: 'limit_reached',
           code: 'LIMIT_REACHED',
           message: `You’ve reached your daily ${limit}-message limit on the free plan.`,
+          limitType: 'daily',
+          resetAt: resetAtDate.toISOString(),
+          resetInSeconds,
           usage: buildUsageSummary(dbUser, usage),
         });
       }

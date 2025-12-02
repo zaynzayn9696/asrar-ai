@@ -227,6 +227,7 @@ export default function ChatPage() {
   // Free plan limit banner state
   const [limitExceeded, setLimitExceeded] = useState(false);
   const [limitUsage, setLimitUsage] = useState(null);
+  const [limitResetSeconds, setLimitResetSeconds] = useState(null);
 
   const [hasHydratedHistory, setHasHydratedHistory] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -985,6 +986,11 @@ export default function ChatPage() {
         if (res.status === 429 && data && (data.code === 'LIMIT_REACHED' || data.error === 'limit_reached')) {
           setLimitExceeded(true);
           setLimitUsage(data.usage || null);
+          if (typeof data.resetInSeconds === 'number' && data.resetInSeconds >= 0) {
+            setLimitResetSeconds(data.resetInSeconds);
+          } else {
+            setLimitResetSeconds(null);
+          }
           return;
         }
         if (data && data.code === "PRO_CHARACTER_LOCKED") {
@@ -1679,6 +1685,30 @@ export default function ChatPage() {
                   ? "وصلت إلى حد ٥ رسائل اليوم في الخطة المجانية."
                   : "You’ve reached your daily 5-message limit on the free plan."}
               </p>
+              {typeof limitResetSeconds === "number" && limitResetSeconds > 0 && (() => {
+                const total = limitResetSeconds;
+                const hours = Math.floor(total / 3600);
+                const minutes = Math.floor((total % 3600) / 60);
+                let text;
+                if (hours > 0 && minutes > 0) {
+                  text = isArabicConversation
+                    ? `يمكنك إرسال رسائل جديدة بعد ${hours} ساعة و ${minutes} دقيقة، أو الترقية للمتابعة في الدردشة.`
+                    : `You can send new messages in ${hours} hours ${minutes} minutes, or upgrade to keep chatting.`;
+                } else if (hours > 0) {
+                  text = isArabicConversation
+                    ? `يمكنك إرسال رسائل جديدة بعد ${hours} ساعة، أو الترقية للمتابعة في الدردشة.`
+                    : `You can send new messages in ${hours} hours, or upgrade to keep chatting.`;
+                } else if (minutes > 0) {
+                  text = isArabicConversation
+                    ? `يمكنك إرسال رسائل جديدة بعد ${minutes} دقيقة، أو الترقية للمتابعة في الدردشة.`
+                    : `You can send new messages in ${minutes} minutes, or upgrade to keep chatting.`;
+                } else {
+                  text = isArabicConversation
+                    ? "يمكنك إرسال رسائل جديدة قريباً جداً، أو الترقية للمتابعة في الدردشة."
+                    : "You’ll be able to send new messages very soon, or upgrade to keep chatting.";
+                }
+                return <p>{text}</p>;
+              })()}
               <button
                 type="button"
                 className="asrar-upgrade-btn"
