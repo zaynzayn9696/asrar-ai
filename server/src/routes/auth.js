@@ -321,7 +321,42 @@ router.get('/me', requireAuth, async (req, res) => {
       lemonSubscriptionId: effectiveUser.lemonSubscriptionId || null,
     };
 
-    res.json({ user: { ...safeUser, usage: buildUsageSummary(safeUser, usage) } });
+    const usageSummary = buildUsageSummary(safeUser, usage);
+
+    // If the user has already reached their daily limit, expose reset timing
+    // information so the frontend can show the same banner after a refresh.
+    let dailyLimitReached = false;
+    let dailyResetAt = null;
+    let dailyResetInSeconds = null;
+
+    const { dailyLimit } = getPlanLimits(safeUser.email, safeUser.plan);
+    const used = usage?.dailyCount || 0;
+    if (dailyLimit > 0 && used >= dailyLimit) {
+      const baseReset = usage.dailyResetAt || startOfToday();
+      const resetAtDate = new Date(baseReset);
+      resetAtDate.setDate(resetAtDate.getDate() + 1);
+      const now = new Date();
+      const resetInSeconds = Math.max(
+        0,
+        Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
+      );
+
+      dailyLimitReached = true;
+      dailyResetAt = resetAtDate.toISOString();
+      dailyResetInSeconds = resetInSeconds;
+    }
+
+    res.json({
+      user: {
+        ...safeUser,
+        usage: {
+          ...usageSummary,
+          dailyLimitReached,
+          dailyResetAt,
+          dailyResetInSeconds,
+        },
+      },
+    });
   } catch (err) {
     console.error('Me error:', err);
     return res.status(500).json({ message: 'Internal server error' });

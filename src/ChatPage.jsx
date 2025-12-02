@@ -273,6 +273,30 @@ export default function ChatPage() {
     setUsageInfo(user?.usage || null);
   }, [user]);
 
+  // If the user has already hit their daily limit (e.g. 5/5) when the
+  // page loads or after a refresh, show the same limit banner and timer
+  // based on usage info from /auth/me.
+  useEffect(() => {
+    if (!usageInfo) return;
+
+    const dailyLimit = usageInfo.dailyLimit;
+    const dailyUsed = usageInfo.dailyUsed;
+
+    if (dailyLimit && dailyLimit > 0 && dailyUsed >= dailyLimit) {
+      setLimitExceeded(true);
+      setLimitUsage(usageInfo);
+
+      if (
+        typeof usageInfo.dailyResetInSeconds === "number" &&
+        usageInfo.dailyResetInSeconds >= 0
+      ) {
+        setLimitResetSeconds(usageInfo.dailyResetInSeconds);
+      } else {
+        setLimitResetSeconds(null);
+      }
+    }
+  }, [usageInfo]);
+
   const [reloadConversationsToken, setReloadConversationsToken] = useState(0);
 
   useEffect(() => {
