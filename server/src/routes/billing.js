@@ -212,7 +212,7 @@ router.post('/create-checkout', async (req, res) => {
     });
 
     const text = await lsRes.text();
-    console.log('[Billing] LemonSqueezy response', lsRes.status, text);
+    console.log('[Billing] LemonSqueezy response', lsRes.status, { length: text.length });
 
     if (!lsRes.ok) {
       return res.status(500).json({

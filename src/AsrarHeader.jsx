@@ -4,6 +4,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import defaultAvatar from "./assets/favicon.png";
 
+const DEFAULT_ADMIN_EMAIL = "zaynzayn9696@gmail.com";
+const RAW_ADMIN_EMAILS =
+  import.meta.env.VITE_ADMIN_EMAILS ||
+  import.meta.env.VITE_ADMIN_EMAIL ||
+  DEFAULT_ADMIN_EMAIL;
+
+const ADMIN_EMAILS = RAW_ADMIN_EMAILS.split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean);
+
 export default function AsrarHeader({
   lang,
   isAr,
@@ -138,7 +148,7 @@ export default function AsrarHeader({
                 {nav.history}
               </Link>
               {user?.email &&
-                user.email.toLowerCase() === "zaynzayn9696@gmail.com" && (
+                ADMIN_EMAILS.includes(user.email.toLowerCase()) && (
                   <Link to="/admin" className="asrar-dash-header-link">
                     {isAr ? "الإدارة" : "Admin"}
                   </Link>

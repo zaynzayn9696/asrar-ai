@@ -104,30 +104,36 @@ const storage = multer.diskStorage({
 const allowed = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 function fileFilter(req, file, cb) {
   try {
-    const rawMime = (file.mimetype || '').toLowerCase();
+    let mime = (file.mimetype || '').toLowerCase();
     const name = file.originalname || '';
-    const hasImagePrefix = rawMime.startsWith('image/');
     const looksLikeHeic = /\.(heic|heif)$/i.test(name);
 
     // Normalize unknown or generic mimetypes coming from iOS
-    if (!rawMime || rawMime === 'application/octet-stream' || rawMime === 'image/blob') {
-      file.mimetype = 'image/jpeg';
-    }
-
-    if ((file.mimetype || '').toLowerCase().startsWith('image/')) {
-      return cb(null, true);
+    if (!mime || mime === 'application/octet-stream' || mime === 'image/blob') {
+      if (looksLikeHeic) {
+        mime = 'image/jpeg';
+      }
     }
 
     if (looksLikeHeic) {
-      file.mimetype = 'image/jpeg';
-      return cb(null, true);
+      mime = 'image/jpeg';
     }
 
-    return cb(new Error('Only image uploads are allowed'));
-  } catch (e) {
-    // As a last resort, allow and normalize
-    file.mimetype = 'image/jpeg';
+    if (mime) {
+      file.mimetype = mime;
+    }
+
+    if (!mime || !mime.startsWith('image/')) {
+      return cb(new Error('Only image uploads are allowed'));
+    }
+
+    if (!allowed.has(mime)) {
+      return cb(new Error('Only JPEG, PNG or WEBP images are allowed'));
+    }
+
     return cb(null, true);
+  } catch (e) {
+    return cb(new Error('Only image uploads are allowed'));
   }
 }
 
@@ -135,10 +141,6 @@ const upload = multer({ storage, fileFilter, limits: { fileSize: 10 * 1024 * 102
 
 router.post('/upload-photo', upload.single('photo'), async (req, res) => {
   try {
-    console.log('[upload-photo] received', {
-      mimetype: req.file?.mimetype,
-      originalname: req.file?.originalname,
-    });
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }

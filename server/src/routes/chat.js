@@ -7,7 +7,6 @@ const express = require('express');
 const requireAuth = require('../middleware/requireAuth');
 const OpenAI = require('openai');
 const prisma = require('../prisma');
-console.log('[DEBUG] prisma in chat.js type:', typeof prisma);
 const { LIMITS, getPlanLimits } = require('../config/limits');
 const { CHARACTER_VOICES } = require('../config/characterVoices');
 const { TONES } = require('../config/tones');
@@ -308,7 +307,7 @@ You always remain Nour and never fully act as another companion.`,
 - "أبو زين" – هادئ وحكيم في الأمور الحياتية والأسرة.
 - "هَنا" – لطيفة وهادئة وتحتوي المشاعر.
 - "راشد" – للدراسة والتركيز والإنتاجية.
-- "فرح" – للضحك وكسر جو الثقل.
+- "فرح" – للضحك والمرح وتخفيف التوتر.
 
 إذا كان المستخدم يسأل عن خطط دراسة أو أنظمة إنتاجية، يمكنك أن تقول مثلاً:
 "أقدر أقول لك رأيي بصراحة، لكن راشد مركز أكثر على الدراسة والإنتاجية. تقدر تنتقل له من قسم الرفقاء." في هذه الحالات لا تضع خطة تفصيلية كاملة؛ اكتفِ برد قصير (جملة أو جملتين) مع التركيز على التوصية براشد، مع البقاء دائماً في شخصية نور فقط.`,
@@ -371,7 +370,6 @@ router.post('/conversations', async (req, res) => {
         title: req.body?.title || null,
       },
     });
-    console.log('[CONVO CREATED]', conv.id);
     return res.json({
       id: conv.id,
       characterId: conv.characterId,
@@ -391,7 +389,6 @@ router.get('/conversations', async (req, res) => {
     const characterId = req.query?.characterId;
     const where = { userId: req.user.id };
     if (characterId) where.characterId = String(characterId);
-    console.log('[DEBUG] prisma.conversation:', typeof prisma.conversation);
     const list = await prisma.conversation.findMany({
       where,
       orderBy: { updatedAt: 'desc' },
@@ -877,13 +874,11 @@ ${personaText}
             : null;
           if (!found || found.userId !== userId || found.characterId !== characterId) {
             conversation = await prisma.conversation.create({ data: { userId, characterId } });
-            console.log('[CONVO CREATED]', conversation.id);
           } else {
             conversation = found;
           }
         } else {
           conversation = await prisma.conversation.create({ data: { userId, characterId } });
-          console.log('[CONVO CREATED]', conversation.id);
         }
         cid = conversation.id;
 
@@ -1110,13 +1105,11 @@ router.post('/message', async (req, res) => {
 
       if (!found || found.userId !== userId || found.characterId !== characterId) {
         conversation = await prisma.conversation.create({ data: { userId, characterId } });
-        console.log('[CONVO CREATED]', conversation.id);
       } else {
         conversation = found;
       }
     } else {
       conversation = await prisma.conversation.create({ data: { userId, characterId } });
-      console.log('[CONVO CREATED]', conversation.id);
     }
 
     const cid = conversation.id;

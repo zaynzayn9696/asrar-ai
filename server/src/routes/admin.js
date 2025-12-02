@@ -5,6 +5,7 @@ const prisma = require('../prisma');
 const { getPlanLimits } = require('../config/limits');
 const requireAuth = require('../middleware/requireAuth');
 const requireAdmin = require('../middleware/requireAdmin');
+const { isAdminEmail } = require('../middleware/requireAdmin');
 const router = express.Router();
 
 // Protect all admin routes
@@ -15,7 +16,7 @@ router.use(requireAdmin);
 router.get('/stats', async (req, res) => {
   try {
     const email = (req.user?.email || '').toLowerCase();
-    if (email !== 'zaynzayn9696@gmail.com') {
+    if (!isAdminEmail(email)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -106,7 +107,7 @@ router.get('/stats', async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     const email = (req.user?.email || '').toLowerCase();
-    if (email !== 'zaynzayn9696@gmail.com') {
+    if (!isAdminEmail(email)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -147,7 +148,7 @@ router.get('/users', async (req, res) => {
 router.get('/user/:id', async (req, res) => {
   try {
     const email = (req.user?.email || '').toLowerCase();
-    if (email !== 'zaynzayn9696@gmail.com') {
+    if (!isAdminEmail(email)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const id = Number(req.params.id);

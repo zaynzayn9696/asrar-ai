@@ -23,6 +23,16 @@ import { AuthProvider, useAuth } from "./hooks/useAuth"; // <-- make sure path i
 import "./Global.css";
 import "./App.css";
 
+const DEFAULT_ADMIN_EMAIL = "zaynzayn9696@gmail.com";
+const RAW_ADMIN_EMAILS =
+  import.meta.env.VITE_ADMIN_EMAILS ||
+  import.meta.env.VITE_ADMIN_EMAIL ||
+  DEFAULT_ADMIN_EMAIL;
+
+const ADMIN_EMAILS = RAW_ADMIN_EMAILS.split(",")
+  .map((value) => value.trim().toLowerCase())
+  .filter(Boolean);
+
 // Wrapper that protects routes
 function ProtectedRoute({ children }) {
   const { user, isAuthLoading } = useAuth();
@@ -63,7 +73,7 @@ function AdminRoute({ children }) {
   }
 
   const email = (user.email || "").toLowerCase();
-  if (email !== "zaynzayn9696@gmail.com") {
+  if (!ADMIN_EMAILS.includes(email)) {
     return <Navigate to="/dashboard" replace />;
   }
 
