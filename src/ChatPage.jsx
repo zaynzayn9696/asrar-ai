@@ -275,25 +275,25 @@ export default function ChatPage() {
 
   // If the user has already hit their daily limit (e.g. 5/5) when the
   // page loads or after a refresh, show the same limit banner and timer
-  // based on usage info from /auth/me.
+  // based on usage info from /auth/me. Only drive the timer from usageInfo
+  // when a valid dailyResetInSeconds value is present, so we don't
+  // overwrite the timer coming from the /api/chat/message success payload.
   useEffect(() => {
     if (!usageInfo) return;
 
     const dailyLimit = usageInfo.dailyLimit;
     const dailyUsed = usageInfo.dailyUsed;
 
-    if (dailyLimit && dailyLimit > 0 && dailyUsed >= dailyLimit) {
+    if (
+      dailyLimit &&
+      dailyLimit > 0 &&
+      dailyUsed >= dailyLimit &&
+      typeof usageInfo.dailyResetInSeconds === "number" &&
+      usageInfo.dailyResetInSeconds >= 0
+    ) {
       setLimitExceeded(true);
       setLimitUsage(usageInfo);
-
-      if (
-        typeof usageInfo.dailyResetInSeconds === "number" &&
-        usageInfo.dailyResetInSeconds >= 0
-      ) {
-        setLimitResetSeconds(usageInfo.dailyResetInSeconds);
-      } else {
-        setLimitResetSeconds(null);
-      }
+      setLimitResetSeconds(usageInfo.dailyResetInSeconds);
     }
   }, [usageInfo]);
 
