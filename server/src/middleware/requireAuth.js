@@ -2,6 +2,18 @@
 const jwt = require("jsonwebtoken");
 
 function requireAuth(req, res, next) {
+  // Minimal, non-sensitive debug info about incoming auth context
+  try {
+    const cookieKeys = req.cookies ? Object.keys(req.cookies) : [];
+    const hasAuthHeader = !!req.headers.authorization;
+    console.log("[requireAuth] debug", {
+      cookieKeys,
+      hasAuthHeader,
+    });
+  } catch (_) {
+    // Swallow any logging issues to avoid affecting auth flow
+  }
+
   let token = req.cookies?.token;
 
   if (!token) {

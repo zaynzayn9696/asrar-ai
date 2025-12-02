@@ -28,7 +28,7 @@ function getAuthCookieClearOptions() {
     sameSite: 'none',
   };
 
-  const domain = process.env.COOKIE_DOMAIN || '.asrarai.com';
+  const domain = process.env.COOKIE_DOMAIN;
   if (domain) {
     return { ...base, domain };
   }

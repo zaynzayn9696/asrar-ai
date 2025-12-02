@@ -31,7 +31,7 @@ function getAuthCookieOptions() {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
-  const domain = process.env.COOKIE_DOMAIN || '.asrarai.com';
+  const domain = process.env.COOKIE_DOMAIN;
   if (domain) {
     return { ...base, domain };
   }
@@ -187,6 +187,20 @@ router.post('/register', async (req, res) => {
     }
 
     const token = createJwtForUser(safeUser);
+
+    // Minimal instrumentation of cookie settings (no secrets)
+    try {
+      const cookieOptions = getAuthCookieOptions();
+      console.log('[auth/register] setting auth cookie', {
+        cookieName: AUTH_COOKIE_NAME,
+        httpOnly: !!cookieOptions.httpOnly,
+        secure: !!cookieOptions.secure,
+        sameSite: cookieOptions.sameSite,
+        domain: cookieOptions.domain || null,
+        maxAge: cookieOptions.maxAge || null,
+      });
+    } catch (_) {}
+
     setTokenCookie(res, token);
 
     return res.status(201).json({
@@ -241,6 +255,20 @@ router.post('/login', async (req, res) => {
     const usage = await ensureUsage(user.id);
 
     const token = createJwtForUser(safeUser);
+
+    // Minimal instrumentation of cookie settings (no secrets)
+    try {
+      const cookieOptions = getAuthCookieOptions();
+      console.log('[auth/login] setting auth cookie', {
+        cookieName: AUTH_COOKIE_NAME,
+        httpOnly: !!cookieOptions.httpOnly,
+        secure: !!cookieOptions.secure,
+        sameSite: cookieOptions.sameSite,
+        domain: cookieOptions.domain || null,
+        maxAge: cookieOptions.maxAge || null,
+      });
+    } catch (_) {}
+
     setTokenCookie(res, token);
 
     return res.json({
