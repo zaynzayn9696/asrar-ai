@@ -1036,6 +1036,16 @@ export default function ChatPage() {
 
       if (data.usage) setUsageInfo(data.usage);
 
+      if (data && data.dailyLimitReached) {
+        setLimitExceeded(true);
+        setLimitUsage(data.usage || null);
+        if (typeof data.resetInSeconds === "number" && data.resetInSeconds >= 0) {
+          setLimitResetSeconds(data.resetInSeconds);
+        } else {
+          setLimitResetSeconds(null);
+        }
+      }
+
       const aiText = data.reply || (isArabicConversation
         ? `واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل.`
         : "I had a small issue connecting. Please try again in a moment.");

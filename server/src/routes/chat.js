@@ -1534,7 +1534,34 @@ router.post('/message', async (req, res) => {
       backgroundJobQueued,
     });
 
-    res.json({ reply: aiMessage, usage: buildUsageSummary(dbUser, usage) });
+    const responsePayload = {
+      reply: aiMessage,
+      usage: buildUsageSummary(dbUser, usage),
+    };
+
+    // If a free-plan user has just used their final daily message (e.g. 5/5),
+    // return a hint so the frontend can immediately show the limit banner.
+    if (!isTester && isFreePlanUser) {
+      const limit = dailyLimit || 5;
+      const usedNow = usage?.dailyCount || 0;
+      if (limit > 0 && usedNow >= limit) {
+        const baseReset = usage.dailyResetAt || startOfToday();
+        const resetAtDate = new Date(baseReset);
+        resetAtDate.setDate(resetAtDate.getDate() + 1);
+        const now = new Date();
+        const resetInSeconds = Math.max(
+          0,
+          Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
+        );
+
+        responsePayload.dailyLimitReached = true;
+        responsePayload.limitType = 'daily';
+        responsePayload.resetAt = resetAtDate.toISOString();
+        responsePayload.resetInSeconds = resetInSeconds;
+      }
+    }
+
+    res.json(responsePayload);
   } catch (err) {
     console.error('Chat completion error', err && err.message ? err.message : err);
     res.status(500).json({
