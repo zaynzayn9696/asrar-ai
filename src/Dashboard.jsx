@@ -19,42 +19,42 @@ import { createCheckoutSession } from "./api/billing";
 // --- CHARACTERS (same 5 core) -----------------------------
 const CHARACTERS = [
   {
-    id: "abu-zain",
+    id: "sheikh-al-hara",
     avatar: abuZainAvatar,
-    nameEn: "Sheikh El Hara",
+    nameEn: "Sheikh Al-Hara",
     nameAr: "شيخ الحارة",
     roleEn: "Guidance",
     roleAr: "إرشاد وحكمة",
   },
   {
-    id: "hana",
+    id: "daloua",
     avatar: hanaAvatar,
-    nameEn: "Dalloo`a",
+    nameEn: "Daloua",
     nameAr: "دلوعة",
     roleEn: "Deep Support",
     roleAr: "دعم عاطفي عميق",
   },
   {
-    id: "rashid",
+    id: "abu-mukh",
     avatar: rashidAvatar,
-    nameEn: "Abu Mo5",
+    nameEn: "Abu Mukh",
     nameAr: "أبو مخ",
     roleEn: "Focus & Study",
     roleAr: "تركيز ودراسة",
   },
   {
-    id: "nour",
+    id: "walaa",
     avatar: nourAvatar,
-    nameEn: "WalaaA",
-    nameAr: "ولااااء",
+    nameEn: "Walaa",
+    nameAr: "ولاء",
     roleEn: "Brutal Honesty",
     roleAr: "صراحة قاسية",
   },
   {
-    id: "farah",
+    id: "hiba",
     avatar: farahAvatar,
-    nameEn: "HHHeba",
-    nameAr: "هــ هبة",
+    nameEn: "Hiba",
+    nameAr: "هههبة",
     roleEn: "Fun & Laughter",
     roleAr: "ضحك ومرح",
   },
@@ -113,7 +113,7 @@ const DASHBOARD_TEXT = {
 
 // --- Simple recommendation logic (like home) ---------------
 function getCharacterRecommendationFromText(text) {
-  if (!text) return "hana";
+  if (!text) return "daloua";
   const lower = text.toLowerCase();
   const has = (words) => words.some((w) => lower.includes(w));
 
@@ -130,23 +130,23 @@ function getCharacterRecommendationFromText(text) {
       "اكتئاب",
     ])
   )
-    return "hana";
+    return "daloua";
 
   if (
     has(["study", "exam", "work", "focus", "دراسة", "امتحان", "شغل", "تركيز"])
   )
-    return "rashid";
+    return "abu-mukh";
 
   if (has(["truth", "honest", "roast", "صارحني", "بلا مجاملة", "جلد"]))
-    return "nour";
+    return "walaa";
 
   if (has(["laugh", "funny", "joke", "memes", "نكت", "ضحك", "مزح"]))
-    return "farah";
+    return "hiba";
 
   if (has(["family", "father", "mother", "parents", "زواج", "عائلة", "أب"]))
-    return "abu-zain";
+    return "sheikh-al-hara";
 
-  return "hana";
+  return "daloua";
 }
 
 function getMiniReply(message, isAr) {
@@ -254,7 +254,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (!hasPremium && selectedCharacterId !== "hana") {
+    if (!hasPremium && selectedCharacterId !== "daloua") {
       setValidationError(isAr ? "للمشتركين في الخطة المدفوعة فقط حالياً" : "For Pro users only for now");
       return;
     }
@@ -270,7 +270,7 @@ export default function Dashboard() {
   const isFreePlan = !hasPremium;
 
   const handleCharacterChange = (char) => {
-    const locked = !hasPremium && char.id !== "hana";
+    const locked = !hasPremium && char.id !== "daloua";
     if (locked) {
       setShowPremiumModal(true);
       return;

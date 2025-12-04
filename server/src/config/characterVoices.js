@@ -11,7 +11,7 @@ const CHARACTER_VOICES = {
   // Abu Zain – VERY deep, older, warm, wise male.
   // Voice choice: "onyx" – one of the deepest male-sounding voices in tts‑1,
   // which generally reads as older and calmer than the brighter options.
-  "abu-zain": {
+  "sheikh-al-hara": {
     voiceId: "onyx",
     styleDescription:
       "Very deep, older, warm and wise male. Slow, calm, reassuring tone.",
@@ -21,7 +21,7 @@ const CHARACTER_VOICES = {
   // Hana – warm, early‑40s, clearly FEMALE with soft emotional tone.
   // Voice choice: "shimmer" – expressive, clearly feminine voice that tends
   // to sound warm and emotional rather than neutral or flat.
-  hana: {
+  daloua: {
     voiceId: "shimmer",
     styleDescription:
       "Female, early 40s, warm and empathetic. Soft, expressive, emotionally present tone.",
@@ -31,7 +31,7 @@ const CHARACTER_VOICES = {
   // Rashid – educated, mid‑30s MALE, teacher‑like.
   // Voice choice: "fable" – narrative male voice that feels like a calm,
   // articulate storyteller or lecturer; good fit for a structured teacher.
-  rashid: {
+  "abu-mukh": {
     voiceId: "fable",
     styleDescription:
       "Male, mid 30s, confident and educated. Clear, structured, teacher-like storyteller tone.",
@@ -41,7 +41,7 @@ const CHARACTER_VOICES = {
   // Nour – confident, blunt, slightly rude female.
   // Voice choice: "echo" – a bit sharper and more assertive sounding, matching
   // a direct, no-nonsense personality.
-  nour: {
+  walaa: {
     voiceId: "echo",
     styleDescription:
       "Female, confident and blunt. Straight to the point with a slightly sharp tone.",
@@ -51,7 +51,7 @@ const CHARACTER_VOICES = {
   // Farah – young, energetic, smiley female.
   // Voice choice: "nova" – brighter, higher-energy voice suited for playful,
   // upbeat replies.
-  farah: {
+  hiba: {
     voiceId: "nova",
     styleDescription:
       "Female, young and energetic. Smiley, hyper, friendly tone.",

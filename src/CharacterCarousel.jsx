@@ -78,7 +78,7 @@ export default function CharacterCarousel({
   };
 
   const renderHomeCard = (character, isActive, i) => {
-    const isLocked = isFreePlan && character.id !== "hana";
+    const isLocked = isFreePlan && character.id !== "daloua";
     
     return (
     <div
@@ -136,7 +136,7 @@ export default function CharacterCarousel({
 };
 
   const renderDashboardCard = (character, isActive) => {
-    const isLocked = isFreePlan && character.id !== "hana";
+    const isLocked = isFreePlan && character.id !== "daloua";
     const cardClasses =
       "asrar-dash-char-card" +
       (isActive ? " asrar-dash-char-card--selected" : "") +

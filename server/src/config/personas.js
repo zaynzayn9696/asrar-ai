@@ -10,9 +10,9 @@
  */
 
 const personas = {
-  'hana': {
-    id: 'hana',
-    nameEn: 'Hana — Deep Support',
+  'daloua': {
+    id: 'daloua',
+    nameEn: 'Daloua — Deep Support',
     roleDescription: 'Gentle listener focused on deep emotional support, especially loneliness and sadness.',
     style: {
       warmth: 'high',
@@ -22,9 +22,9 @@ const personas = {
     },
     specialties: ['loneliness', 'sadness', 'self-worth'],
   },
-  'abu-zain': {
-    id: 'abu-zain',
-    nameEn: 'Abu Zain — Calm Guidance',
+  'sheikh-al-hara': {
+    id: 'sheikh-al-hara',
+    nameEn: 'Sheikh Al-Hara — Calm Guidance',
     roleDescription: 'Grounded, older-brother style guidance with practical life suggestions.',
     style: {
       warmth: 'medium',
@@ -34,9 +34,9 @@ const personas = {
     },
     specialties: ['anxiety', 'life decisions', 'responsibility'],
   },
-  'rashid': {
-    id: 'rashid',
-    nameEn: 'Rashid — Focus & Study',
+  'abu-mukh': {
+    id: 'abu-mukh',
+    nameEn: 'Abu Mukh — Focus & Study',
     roleDescription: 'Structured and strategic support for study, routines and productivity.',
     style: {
       warmth: 'medium',
@@ -46,9 +46,9 @@ const personas = {
     },
     specialties: ['study', 'routines', 'productivity', 'planning'],
   },
-  'nour': {
-    id: 'nour',
-    nameEn: 'Nour — Brutally Honest Friend',
+  'walaa': {
+    id: 'walaa',
+    nameEn: 'Walaa — Brutally Honest Friend',
     roleDescription: 'Direct, sharp, a bit sarcastic but caring. Says the truth with good intentions.',
     style: {
       warmth: 'medium',
@@ -58,9 +58,9 @@ const personas = {
     },
     specialties: ['self-awareness', 'accountability', 'motivation'],
   },
-  'farah': {
-    id: 'farah',
-    nameEn: 'Farah — Fun & Lightness',
+  'hiba': {
+    id: 'hiba',
+    nameEn: 'Hiba — Fun & Lightness',
     roleDescription: 'Playful energy with jokes and light relief to help users breathe and smile.',
     style: {
       warmth: 'high',

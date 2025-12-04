@@ -14,45 +14,45 @@ import nourAvatar from "./assets/nour.png";
 import farahAvatar from "./assets/farah.png";
 import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 
-// same 5 characters
+// same 5 characters (aligned with backend IDs)
 const CHARACTERS = [
   {
-    id: "abu-zain",
+    id: "sheikh-al-hara",
     avatar: abuZainAvatar,
-    nameEn: "Sheikh El Hara",
+    nameEn: "Sheikh Al-Hara",
     nameAr: "شيخ الحارة",
     roleEn: "Guidance",
     roleAr: "إرشاد وحكمة",
   },
   {
-    id: "hana",
+    id: "daloua",
     avatar: hanaAvatar,
-    nameEn: "Dalloo`a",
+    nameEn: "Daloua",
     nameAr: "دلوعة",
     roleEn: "Deep Support",
     roleAr: "دعم عاطفي عميق",
   },
   {
-    id: "rashid",
+    id: "abu-mukh",
     avatar: rashidAvatar,
-    nameEn: "Abu Mo5",
+    nameEn: "Abu Mukh",
     nameAr: "أبو مخ",
     roleEn: "Focus & Study",
     roleAr: "تركيز ودراسة",
   },
   {
-    id: "nour",
+    id: "walaa",
     avatar: nourAvatar,
-    nameEn: "WalaaA",
-    nameAr: "ولااااء",
+    nameEn: "Walaa",
+    nameAr: "ولاء",
     roleEn: "Brutal Honesty",
     roleAr: "صراحة قاسية",
   },
   {
-    id: "farah",
+    id: "hiba",
     avatar: farahAvatar,
-    nameEn: "HHHeba",
-    nameAr: "هــ هبة",
+    nameEn: "Hiba",
+    nameAr: "هههبة",
     roleEn: "Fun & Laughter",
     roleAr: "ضحك ومرح",
   },
@@ -93,19 +93,35 @@ const getInitialDial = () => {
   return "msa";
 };
 
+const LEGACY_CHARACTER_ID_MAP = {
+  "abu-zain": "sheikh-al-hara",
+  hana: "daloua",
+  rashid: "abu-mukh",
+  nour: "walaa",
+  farah: "hiba",
+};
+
 const getInitialCharacterId = () => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("asrar-selected-character") || "rashid";
+    const stored = localStorage.getItem("asrar-selected-character");
+    const migrated =
+      (stored && LEGACY_CHARACTER_ID_MAP[stored]) || stored || "abu-mukh";
+    if (stored && migrated !== stored) {
+      try {
+        localStorage.setItem("asrar-selected-character", migrated);
+      } catch (_) {}
+    }
+    return migrated;
   }
-  return "rashid";
+  return "abu-mukh";
 };
 
 const CHARACTER_DEFAULT_TONES = {
-  "abu-zain": "calm",
-  hana: "soft",
-  rashid: "energetic",
-  nour: "strict",
-  farah: "energetic",
+  "sheikh-al-hara": "calm",
+  daloua: "soft",
+  "abu-mukh": "energetic",
+  walaa: "strict",
+  hiba: "energetic",
 };
 
 const TONES_UI = [
@@ -811,7 +827,7 @@ export default function ChatPage() {
         "جدول",
       ])
     ) {
-      suggestedId = "rashid";
+      suggestedId = "abu-mukh";
     } else if (
       hasAny([
         "laugh",
@@ -829,7 +845,7 @@ export default function ChatPage() {
         "ضحكني",
       ])
     ) {
-      suggestedId = "farah";
+      suggestedId = "hiba";
     } else if (
       hasAny([
         "family",
@@ -857,7 +873,7 @@ export default function ChatPage() {
         "هدف",
       ])
     ) {
-      suggestedId = "abu-zain";
+      suggestedId = "sheikh-al-hara";
     }
 
     if (suggestedId && suggestedId !== currentCharacterId) {
@@ -919,7 +935,7 @@ export default function ChatPage() {
           content: trimmed,
           save: !!user?.saveHistoryEnabled,
           lang: conversationLang,
-          dialect: selectedDialect,
+          dialect: selectedDialect || "msa",
           tone: selectedTone,
         }),
       });

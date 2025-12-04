@@ -4,7 +4,7 @@ const toInt = (v, fallback) => {
 };
 
 const LIMITS = {
-  FREE_CHARACTER_ID: process.env.FREE_CHARACTER_ID || 'hana',
+  FREE_CHARACTER_ID: process.env.FREE_CHARACTER_ID || 'daloua',
   FREE_DAILY: toInt(process.env.FREE_DAILY, 5),
   PRO_DAILY: toInt(process.env.PRO_DAILY, 0),
   PRO_MONTHLY: toInt(process.env.PRO_MONTHLY, 3000),

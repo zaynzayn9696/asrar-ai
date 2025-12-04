@@ -17,9 +17,9 @@ import AsrarHeader from "./AsrarHeader";
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
   {
-    id: "abu-zain",
+    id: "sheikh-al-hara",
     avatar: abuZainAvatar,
-    nameEn: "Sheikh El Hara",
+    nameEn: "Sheikh Al-Hara",
     nameAr: "شيخ الحارة",
     roleEn: "Guidance",
     roleAr: "إرشاد وحكمة",
@@ -29,9 +29,9 @@ const CHARACTERS = [
       "اقعد، خلينا نحكي. أنا شفت هالحكي قبل هيك.\nالصوت الحكيم لما تكون الدنيا معقدة ومحتاج حد عنده خبرة.",
   },
   {
-    id: "hana",
+    id: "daloua",
     avatar: hanaAvatar,
-    nameEn: "Dalloo`a",
+    nameEn: "Daloua",
     nameAr: "دلوعة",
     roleEn: "Deep Support",
     roleAr: "دعم عاطفي عميق",
@@ -41,9 +41,9 @@ const CHARACTERS = [
       "يلا حبيبي، قلي كل شي. أنا هون، بفهم عليك.\nلما تكون تايه بأفكارك، حاسس بالوحدة، أو محتاج حد يسمعك فعلاً.",
   },
   {
-    id: "rashid",
+    id: "abu-mukh",
     avatar: rashidAvatar,
-    nameEn: "Abu Mo5",
+    nameEn: "Abu Mukh",
     nameAr: "أبو مخ",
     roleEn: "Focus & Study",
     roleAr: "تركيز ودراسة",
@@ -53,10 +53,10 @@ const CHARACTERS = [
       "خلص. افتح الكتاب. يلا نشتغل صح.\nصاحبك اللي بنظملك حياتك وبخليك تخلص شغلك بدون هبل.",
   },
   {
-    id: "nour",
+    id: "walaa",
     avatar: nourAvatar,
-    nameEn: "WalaaA",
-    nameAr: "ولااااء",
+    nameEn: "Walaa",
+    nameAr: "ولاء",
     roleEn: "Brutal Honesty",
     roleAr: "صراحة قاسية",
     descriptionEn:
@@ -65,10 +65,10 @@ const CHARACTERS = [
       "ولا شو؟ انت عارف شو لازم تعمل، بطّل لف ودوران.\nالحقيقة اللي ما بدك تسمعها بس محتاجها—مباشرة، بلا سكر زيادة.",
   },
   {
-    id: "farah",
+    id: "hiba",
     avatar: farahAvatar,
-    nameEn: "HHHeba",
-    nameAr: "هــ هبة",
+    nameEn: "Hiba",
+    nameAr: "هههبة",
     roleEn: "Fun & Laughter",
     roleAr: "ضحك ومرح",
     descriptionEn:
@@ -182,7 +182,7 @@ function getCharacterRecommendation(message) {
       "غضب",
     ])
   ) {
-    return "hana";
+    return "daloua";
   }
   if (
     hasAny([
@@ -241,7 +241,7 @@ function getCharacterRecommendation(message) {
       "مش مركز",
     ])
   ) {
-    return "rashid";
+    return "abu-mukh";
   }
   if (
     hasAny([
@@ -299,7 +299,7 @@ function getCharacterRecommendation(message) {
       "جلد",
     ])
   ) {
-    return "nour";
+    return "walaa";
   }
   if (
     hasAny([
@@ -329,7 +329,7 @@ function getCharacterRecommendation(message) {
       "ميمز",
     ])
   ) {
-    return "farah";
+    return "hiba";
   }
   if (
     hasAny([
@@ -362,7 +362,7 @@ function getCharacterRecommendation(message) {
       "خطوبة",
     ])
   ) {
-    return "abu-zain";
+    return "sheikh-al-hara";
   }
   if (
     hasAny([
@@ -380,11 +380,11 @@ function getCharacterRecommendation(message) {
       "منهك",
     ])
   ) {
-    return "abu-zain";
+    return "sheikh-al-hara";
   }
 
   // default soft landing
-  return "hana";
+  return "daloua";
 }
 
 function getMiniChatReply(message, isAr) {
