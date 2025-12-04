@@ -489,10 +489,30 @@
 .asrar-chat-row {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   justify-content: center;
   box-sizing: border-box;
+  padding: 0 10%;
+}
+.asrar-chat-row {
+  padding: 0 0; /* remove massive side padding */
+  justify-content: center;
+}
+.asrar-chat-row {
+  max-width: var(--asrar-chat-width);
+  margin: 0 auto;
+  width: 100%;
+}
+/* Desktop specific adjustments */
+@media (min-width: 901px) {
+  .asrar-chat-row--user .asrar-chat-bubble {
+    margin-right: 15%;
+  }
+  
+  .asrar-chat-row--assistant .asrar-chat-bubble {
+    margin-left: 15%;
+  }
 }
 
 .asrar-chat-row--assistant {
@@ -504,15 +524,13 @@
 }
 
 .asrar-chat-row--assistant .asrar-chat-bubble {
-  margin-left: 1rem;
+  margin-left: 0;
   margin-right: auto;
-  animation: asrar-chat-drop-assistant 0.26s cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
 }
 
 .asrar-chat-row--user .asrar-chat-bubble {
   margin-left: auto;
-  margin-right: 1rem;
-  animation: asrar-chat-drop-user 0.26s cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+  margin-right: 0;
 }
 
 .asrar-chat-row--system {
@@ -564,19 +582,10 @@
   white-space: pre-line;
   unicode-bidi: plaintext;
   text-align: start;
-  margin: 8px 0;
+  margin: 6px 0;
 }
 
 /* Bubble horizontal alignment rules */
-.asrar-chat-row--assistant .asrar-chat-bubble {
-  margin-left: 1rem;
-  margin-right: auto;
-}
-
-.asrar-chat-row--user .asrar-chat-bubble {
-  margin-left: auto;
-  margin-right: 1rem;
-}
 
 /* Assistant bubble */
 .asrar-chat-row--assistant .asrar-chat-bubble {
@@ -1297,7 +1306,7 @@
 
 /* === FIX USER BUBBLE RIGHT PADDING === */
 .asrar-chat-row--user {
-  padding-right: 1.5rem; /* <- adjust to taste */
+ padding-right: 0 !important;
 }
 
 @media (max-width: 900px) {

@@ -10,6 +10,7 @@ const prisma = require('../prisma');
 const { LIMITS, getPlanLimits } = require('../config/limits');
 const { CHARACTER_VOICES } = require('../config/characterVoices');
 const { TONES } = require('../config/tones');
+const { transcribeAudio, generateVoiceReply } = require('../services/voiceService');
 const {
   runEmotionalEngine,
   selectModelForResponse,
@@ -20,7 +21,6 @@ const {
   buildSystemPrompt,
   getDialectGuidance,
 } = require('../services/emotionalEngine');
-const { detectLoopTag, deriveEmotionalReason } = require('../services/emotionalReasoning');
 const {
   logEmotionalTimelineEvent,
   updateUserEmotionProfile,
@@ -746,7 +746,8 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
   }
 });
 
-// Voice chat: accepts audio, transcribes to text, runs normal chat, returns TTS (base64)
+// Voice chat: accepts audio, transcribes to text, runs the emotional engine,
+// and returns a TTS reply as base64 audio. This route is Pro-only.
 router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -755,13 +756,11 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         .json({ message: 'OPENAI_API_KEY is not configured on the server' });
     }
 
-    // Load user and usage
     const dbUser = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!dbUser) {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Pro-only gate for voice (tester bypass)
     const { dailyLimit, monthlyLimit, freeCharacterId, isTester } = getPlanLimits(
       dbUser.email,
       dbUser.plan
@@ -770,6 +769,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro'
     );
     const userId = dbUser.id;
+
+    // Keep voice as a Pro-only feature (with tester bypass).
     if (!isPremiumUser && !isTester) {
       return res.status(403).json({
         error: 'voice_premium_only',
@@ -780,6 +781,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     let usage = await ensureUsage(dbUser.id);
 
+    // Premium users: enforce monthly quota for voice.
     if (!isTester && isPremiumUser) {
       const used = usage.monthlyCount || 0;
       const limit = monthlyLimit || 3000;
@@ -802,26 +804,20 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       return res.status(400).json({ message: 'No audio uploaded' });
     }
 
-    // Transcribe with OpenAI
-    const transcribeModel = process.env.OPENAI_TRANSCRIBE_MODEL || 'whisper-1';
-    const transcript = await openai.audio.transcriptions.create({
-      model: transcribeModel,
-      file: fs.createReadStream(req.file.path),
-    });
-
-    const userText =
-      (transcript && (transcript.text || transcript?.data?.text) || '').trim();
+    // 1) Speech-to-text
+    const userText = await transcribeAudio(req.file);
     if (!userText) {
       return res.status(400).json({ message: 'Failed to transcribe audio' });
     }
 
-    // Parse metadata from multipart fields
+    // 2) Parse metadata from multipart fields
     const characterId = req.body?.characterId || 'hana';
     const lang = req.body?.lang || 'en';
     const dialect = req.body?.dialect || 'msa';
     const rawToneKey = req.body?.tone;
     const bodyConversationId = req.body?.conversationId;
     const saveFlag = req.body?.save;
+
     let incomingMessages = [];
     if (req.body?.messages) {
       try {
@@ -830,7 +826,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       } catch (_) {}
     }
 
-    // Character gating for free plan (should not trigger due to Pro-only, but keep safety)
+    // Character gating for free plan (defensive; should be Pro-only in practice).
     if (dbUser.plan === 'free' && characterId !== freeCharacterId && !isTester) {
       return res.status(403).json({
         code: 'PRO_CHARACTER_LOCKED',
@@ -841,7 +837,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       });
     }
 
-    // Increment usage immediately (premium: monthly only, free: daily only)
+    // Increment usage immediately for a successful voice request.
     if (!isTester) {
       if (isPremiumUser) {
         usage = await prisma.usage.update({
@@ -863,79 +859,180 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     const isArabicConversation = lang === 'ar' || lang === 'mixed';
     const personaText = isArabicConversation ? persona.ar : persona.en;
+    const languageForEngine =
+      lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en';
 
-    const voiceProfile =
-      CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
-    const toneKey = rawToneKey || voiceProfile.defaultTone || 'calm';
-    const toneConfig = TONES[toneKey] || TONES.calm;
-
-    const dialectGuidance = getDialectGuidance(
-      lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en',
-      dialect
-    );
-
-    let systemIntro;
-    if (lang === 'en') {
-      systemIntro = `You are an AI companion inside an app called Asrar, supporting users from the Arab world.
-${dialectGuidance}
-Always remember:
-- Do NOT give medical or clinical diagnoses.
-- Do NOT promise cure.
-- Encourage seeking professional or medical help if there are suicidal or self‑harm thoughts.
-
-Then strictly follow this character description and style:
-
-${personaText}
-
-Keep your replies around 3–6 sentences unless the user clearly asks for more detail.`;
-    } else {
-      systemIntro = `أنت رفيق في تطبيق "أسرار" للدعم العاطفي للمستخدمين في العالم العربي.
-${dialectGuidance}
-تذكر دائماً:
-- لا تقدّم تشخيصاً طبياً.
-- لا تعِد بعلاج أكيد.
-- انصح بطلب مساعدة مختصة أو طبية إذا كان هناك أفكار انتحارية أو إيذاء للنفس.`;
+    // 3) Resolve existing conversation if present. For voice we do not
+    // create new conversations, to avoid altering chat history semantics.
+    let cid = null;
+    if (bodyConversationId && Number.isFinite(Number(bodyConversationId))) {
+      const existing = await prisma.conversation.findFirst({
+        where: { id: Number(bodyConversationId), userId },
+      });
+      if (existing) {
+        cid = existing.id;
+      }
     }
 
-    const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
-    systemIntro += `\n\n${toneInstruction}`;
-
-    const openAIMessages = [];
-    openAIMessages.push({ role: 'system', content: systemIntro });
-    for (const m of incomingMessages) {
-      if (!m || typeof m.text !== 'string') continue;
-      const text = m.text.trim();
-      if (!text) continue;
-      if (m.from === 'user') {
-        openAIMessages.push({ role: 'user', content: text });
-      } else if (m.from === 'ai') {
-        openAIMessages.push({ role: 'assistant', content: text });
+    // 4) Build history for the emotional engine (exclude duplicate last user turn).
+    let history = Array.isArray(incomingMessages)
+      ? incomingMessages.slice()
+      : [];
+    if (history.length && typeof userText === 'string') {
+      const last = history[history.length - 1];
+      if (last && typeof last.text === 'string') {
+        const lastText = String(last.text || '').trim();
+        if (last.from === 'user' && lastText === userText) {
+          history.pop();
+        }
       }
+    }
+
+    const recentMessagesForEngine = history
+      .map((m) => {
+        if (!m || typeof m.text !== 'string') return null;
+        const text = m.text.trim();
+        if (!text) return null;
+        return {
+          role: m.from === 'ai' ? 'assistant' : 'user',
+          content: text,
+        };
+      })
+      .filter(Boolean);
+
+    // 5) Emotional engine -> system prompt + routing metadata.
+    const engineResult = await runEmotionalEngine({
+      userMessage: userText,
+      recentMessages: recentMessagesForEngine,
+      personaId: characterId,
+      personaText,
+      language: languageForEngine,
+      conversationId: cid,
+      userId,
+    });
+
+    const {
+      emo,
+      convoState,
+      systemPrompt,
+      flowState,
+      longTermSnapshot,
+      triggers,
+      severityLevel,
+      personaCfg,
+    } = engineResult;
+
+    const engineMode = decideEngineMode({
+      isPremiumUser: isPremiumUser || isTester,
+      primaryEmotion: emo.primaryEmotion,
+      intensity: emo.intensity,
+      conversationLength: recentMessagesForEngine.length,
+    });
+
+    const systemMessage = systemPrompt;
+    const recentContext = recentMessagesForEngine.slice(-MAX_CONTEXT_MESSAGES);
+    const openAIMessages = [];
+    openAIMessages.push({ role: 'system', content: systemMessage });
+
+    const limitedContext =
+      Array.isArray(recentContext) && recentContext.length > FAST_CONTEXT_MESSAGES
+        ? recentContext.slice(-FAST_CONTEXT_MESSAGES)
+        : recentContext;
+    if (Array.isArray(limitedContext) && limitedContext.length) {
+      openAIMessages.push(...limitedContext);
     }
     openAIMessages.push({ role: 'user', content: userText });
 
-    const voiceCompletionModel =
-      isPremiumUser || isTester
-        ? process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o'
-        : process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
+    const routedModel = selectModelForResponse({
+      emotion: emo,
+      convoState: flowState || { currentState: 'NEUTRAL' },
+      engineMode,
+      isPremiumUser: isPremiumUser || isTester,
+    });
 
+    const tOpenAIStart = Date.now();
     const completion = await openai.chat.completions.create({
-      model: voiceCompletionModel,
+      model: routedModel,
       messages: openAIMessages,
       temperature: 0.8,
     });
+    const openAiMs = Date.now() - tOpenAIStart;
 
-    const aiMessage = completion.choices?.[0]?.message?.content?.trim();
-    if (!aiMessage) {
+    const rawReply = completion.choices?.[0]?.message?.content?.trim();
+    if (!rawReply) {
       return res
         .status(500)
         .json({ message: 'No response from language model.' });
     }
 
+    let aiMessage = rawReply;
+    let orchestrateMs = 0;
+    try {
+      const tOrchStart = Date.now();
+      aiMessage = await orchestrateResponse({
+        rawReply,
+        persona: personaText,
+        emotion: emo,
+        convoState: flowState || { currentState: 'NEUTRAL' },
+        longTermSnapshot,
+        triggers,
+        language: languageForEngine,
+        severityLevel: severityLevel || 'CASUAL',
+        personaCfg: personaCfg || null,
+        engineMode,
+        isPremiumUser: isPremiumUser || isTester,
+      });
+      orchestrateMs = Date.now() - tOrchStart;
+      if (typeof aiMessage !== 'string' || !aiMessage.trim()) {
+        aiMessage = rawReply;
+      }
+    } catch (_) {
+      aiMessage = rawReply;
+    }
+
+    const voiceProfile =
+      CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
+    const toneKey = rawToneKey || voiceProfile.defaultTone || 'calm';
+
+    // 6) Text-to-speech for the final reply text.
+    const ttsResult = await generateVoiceReply(aiMessage, {
+      characterId,
+      format: 'mp3',
+    });
+
+    if (!ttsResult) {
+      // Fallback: return text-only reply if TTS fails.
+      const fallback = {
+        type: 'text',
+        text: aiMessage,
+        meta: { character: characterId, tone: toneKey },
+        userText,
+        assistantText: aiMessage,
+        audioBase64: null,
+        usage: buildUsageSummary(dbUser, usage),
+      };
+      return res.json(fallback);
+    }
+
+    console.log('[VoiceRoute][Response]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationId: cid == null ? 'null' : String(cid),
+      engineMode,
+      isPremiumUser: !!isPremiumUser,
+      openAiMs,
+      orchestrateMs,
+      ttsVoice: ttsResult.voiceId,
+    });
+
     const responsePayload = {
+      type: 'voice',
+      audio: ttsResult.base64,
+      text: aiMessage,
+      meta: { character: characterId, tone: toneKey },
       userText,
       assistantText: aiMessage,
-      audioBase64: null,
+      audioBase64: ttsResult.base64,
+      audioMimeType: ttsResult.mimeType,
       usage: buildUsageSummary(dbUser, usage),
     };
 

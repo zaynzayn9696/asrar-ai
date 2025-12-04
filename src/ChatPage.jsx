@@ -1410,6 +1410,8 @@ export default function ChatPage() {
           const audioBase64 =
             data && typeof data === "object" && typeof data.audioBase64 === "string"
               ? data.audioBase64
+              : data && typeof data === "object" && typeof data.audio === "string"
+              ? data.audio
               : null;
 
           setMessages((prev) => {
@@ -1436,6 +1438,19 @@ export default function ChatPage() {
             };
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
+
+          // Best-effort auto-play for fresh AI voice replies.
+          if (audioBase64) {
+            try {
+              const playbackMime =
+                data && typeof data.audioMimeType === "string"
+                  ? data.audioMimeType
+                  : "audio/mpeg";
+              const src = `data:${playbackMime};base64,${audioBase64}`;
+              const autoAudio = new Audio(src);
+              autoAudio.play().catch(() => {});
+            } catch (_) {}
+          }
         } catch (err) {
           console.error("Voice send error", err);
         } finally {
