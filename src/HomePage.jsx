@@ -1065,7 +1065,7 @@ export default function HomePage() {
             {isAr ? (
               <div className="asrar-engine-inner">
                 <h2 className="asrar-section-title">
-                  {"طبقة الذكاء العاطفي"}
+                  {"طبقة الذكاء العاطفي V6"}
                 </h2>
                 <p className="asrar-section-subtitle">
                   {"ذكاء اصطناعي يفهم المشاعر، وليس فقط اللغة."}
@@ -1103,7 +1103,7 @@ export default function HomePage() {
             ) : (
               <div className="asrar-engine-inner">
                 <h2 className="asrar-section-title">
-                  The Emotional Intelligence Layer
+                  Deep Emotional Engine V6
                 </h2>
                 <p className="asrar-section-subtitle">
                   AI that understands emotion, not just language.
