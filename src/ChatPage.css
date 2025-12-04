@@ -463,8 +463,14 @@
   margin: 0 auto 0.35rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.25rem;
+}
+
+.asrar-chat-status-row .asrar-chat-row {
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .asrar-chat-messages::-webkit-scrollbar {
