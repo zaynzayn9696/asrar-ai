@@ -415,7 +415,7 @@ export default function Dashboard() {
                   key={char.id}
                   className={`asrar-companion-card ${
                     selectedCharacterId === char.id ? "asrar-companion-card--selected" : ""
-                  } ${!hasPremium && char.id !== "hana" ? "asrar-companion-card--locked" : ""}`}
+                  } ${!hasPremium && char.id !== "daloua" ? "asrar-companion-card--locked" : ""}`}
                   onClick={() => handleCharacterChange(char)}
                 >
                   <img
@@ -431,7 +431,7 @@ export default function Dashboard() {
                       {isAr ? char.roleAr : char.roleEn}
                     </p>
                   </div>
-                  {!hasPremium && char.id !== "hana" && (
+                  {!hasPremium && char.id !== "daloua" && (
                     <div className="asrar-companion-pro-badge">PRO</div>
                   )}
                 </div>
@@ -461,7 +461,7 @@ export default function Dashboard() {
                       <div
                         className={`asrar-companion-card ${
                           selectedCharacterId === char.id ? "asrar-companion-card--selected" : ""
-                        } ${!hasPremium && char.id !== "hana" ? "asrar-companion-card--locked" : ""}`}
+                        } ${!hasPremium && char.id !== "daloua" ? "asrar-companion-card--locked" : ""}`}
                         onClick={() => handleCharacterChange(char)}
                       >
                         <img
@@ -477,7 +477,7 @@ export default function Dashboard() {
                             {isAr ? char.roleAr : char.roleEn}
                           </p>
                         </div>
-                        {!hasPremium && char.id !== "hana" && (
+                        {!hasPremium && char.id !== "daloua" && (
                           <div className="asrar-companion-pro-badge">PRO</div>
                         )}
                       </div>
