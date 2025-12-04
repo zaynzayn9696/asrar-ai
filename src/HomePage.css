@@ -708,8 +708,9 @@ body,
   position: relative;
   overflow: hidden;
   transform-origin: center top;
-  animation: asrar-mood-breathe 18s ease-in-out infinite;
-  will-change: transform, box-shadow;
+  /* Keep this card static on the home hero – no breathing animation */
+  animation: none;
+  will-change: auto;
   min-height: auto;
   max-height: none;
 }
@@ -725,7 +726,8 @@ body,
   mix-blend-mode: screen;
   filter: blur(18px);
   pointer-events: none;
-  animation: asrar-mood-parallax 26s ease-in-out infinite;
+  /* Static glow background – no parallax motion */
+  animation: none;
 }
 
 /* Header */
