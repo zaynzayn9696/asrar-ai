@@ -1,37 +1,25 @@
 // server/src/services/voiceService.js
-// Helper utilities for STT (transcription) and TTS (voice replies)
-
 const OpenAI = require("openai");
 const fs = require("fs");
 const { CHARACTER_VOICES } = require("../config/characterVoices");
 
 /**
- * IMPORTANT:
- * We create TWO OpenAI clients:
- *
- * 1) STT client → uses whatever OPENAI_API_KEY you already use
- * 2) TTS client → FORCED to use https://api.openai.com/v1
- *
- * This fixes the 404 "Invalid URL (POST /v1/audio/speech)" issue,
- * because your environment (Render) was overriding baseURL and
- * your TTS calls were accidentally hitting your own server instead of OpenAI.
+ * Dedicated TTS client (must always use api.openai.com!)
+ * STT uses the normal SDK, but TTS must NOT use any baseURL override.
  */
-
-// ---------- STT CLIENT (Whisper) ----------
-const openaiSTT = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  // baseURL intentionally NOT overridden
-});
-
-// ---------- TTS CLIENT (FORCED REAL OPENAI ENDPOINT) ----------
 const openaiTTS = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,             // same key, or override with OPENAI_TTS_API_KEY
-  baseURL: "https://api.openai.com/v1",           // <- THIS FIXES THE 404 FOREVER
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.openai.com/v1"
 });
 
 /**
- * TRANSCRIBE (Whisper)
+ * Default OpenAI client for Whisper (STT)
  */
+const openaiSTT = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+/** STT (transcription) */
 async function transcribeAudio(input) {
   if (!process.env.OPENAI_API_KEY) return "";
 
@@ -39,50 +27,43 @@ async function transcribeAudio(input) {
 
   let filePath = null;
   if (typeof input === "string") filePath = input;
-  else if (input && typeof input.path === "string") filePath = input.path;
+  else if (input && input.path) filePath = input.path;
 
   if (!filePath) return "";
 
   try {
     const stream = fs.createReadStream(filePath);
+
     const resp = await openaiSTT.audio.transcriptions.create({
       model,
-      file: stream,
+      file: stream
     });
 
-    const text =
-      (resp && (resp.text || resp.data?.text) || "").trim();
-
-    return text;
-  } catch (err) {
-    console.error("[voiceService] STT error:", err?.message || err);
+    return (resp.text || resp.data?.text || "").trim();
+  } catch (_) {
     return "";
   }
 }
 
-/**
- * TTS (OpenAI Audio Speech)
- */
-async function generateVoiceReply(text, options = {}) {
+/** TTS (voice output) */
+async function generateVoiceReply(text, { characterId, format } = {}) {
   if (!process.env.OPENAI_API_KEY) return null;
 
   const safeText = String(text || "").trim();
   if (!safeText) return null;
 
-  const { characterId, format } = options;
   const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-audio-preview";
-  const outputFormat = format || process.env.OPENAI_TTS_FORMAT || "mp3";
+  const outputFormat = format || "mp3";
 
   const profile = CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
-  const voiceId = profile.voiceId || process.env.OPENAI_TTS_VOICE || "alloy";
+  const voiceId = profile.voiceId || "alloy";
 
   try {
-    // IMPORTANT: Use openaiTTS, not openaiSTT
     const response = await openaiTTS.audio.speech.create({
       model,
       voice: voiceId,
       input: safeText,
-      format: outputFormat,
+      format: outputFormat
     });
 
     const arrayBuffer = await response.arrayBuffer();
@@ -91,20 +72,17 @@ async function generateVoiceReply(text, options = {}) {
 
     let mimeType = "audio/mpeg";
     if (outputFormat === "wav") mimeType = "audio/wav";
-    else if (outputFormat === "ogg") mimeType = "audio/ogg";
-    else if (outputFormat === "flac") mimeType = "audio/flac";
+    if (outputFormat === "ogg") mimeType = "audio/ogg";
+    if (outputFormat === "flac") mimeType = "audio/flac";
 
     return { base64, buffer, mimeType, voiceId };
   } catch (err) {
-    console.error(
-      "[voiceService] generateVoiceReply error",
-      err?.response?.data || err?.message || err
-    );
+    console.error("[voiceService] generateVoiceReply error", err.message || err);
     return null;
   }
 }
 
 module.exports = {
   transcribeAudio,
-  generateVoiceReply,
+  generateVoiceReply
 };
