@@ -97,8 +97,8 @@ async function generateVoiceReply(text, options = {}) {
 
   const { characterId, format } = options;
 
-  // Model & format
-  const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-audio-preview";
+  // Model & format (use tts-1 by default, which is supported on /v1/audio/speech)
+  const model = process.env.OPENAI_TTS_MODEL || "tts-1";
   const outputFormat = format || process.env.OPENAI_TTS_FORMAT || "mp3";
 
   // Voice selection from CHARACTER_VOICES
@@ -125,10 +125,14 @@ async function generateVoiceReply(text, options = {}) {
 
     return { base64, buffer, mimeType, voiceId };
   } catch (err) {
-    console.error(
-      "[voiceService] generateVoiceReply error",
-      err?.message || err
-    );
+    console.error("[voiceService] generateVoiceReply error", err?.message || err);
+    try {
+      console.error("[voiceService] generateVoiceReply error detail", {
+        status: err?.status,
+        code: err?.code,
+        type: err?.type,
+      });
+    } catch (_) {}
     return null;
   }
 }
