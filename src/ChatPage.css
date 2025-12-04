@@ -259,7 +259,7 @@
 }
 
 .asrar-conv-item {
-  padding: 0.55rem 0.6rem;
+  padding: 0.8rem 0.6rem;
   border-radius: 12px;
   cursor: pointer;
   margin-bottom: 0.25rem;
@@ -269,6 +269,11 @@
     border-color 0.12s ease,
     transform 0.08s ease;
   border: 1px solid transparent;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .asrar-conv-item:hover {
@@ -286,41 +291,55 @@
 }
 
 .asrar-conv-title {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #f5fbff;
+  text-align: center;
+  width: 100%;
+  font-family: "Tajawal", sans-serif;
+  margin-bottom: 0.15rem;
 }
 
 .asrar-conv-preview {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: rgba(203, 220, 255, 0.92);
-  margin-top: 2px;
+  margin-top: 0.15rem;
+  text-align: center;
+  width: 100%;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+  font-family: "Tajawal", sans-serif;
+  font-weight: 400;
+  opacity: 0.9;
 }
 
 .asrar-conv-title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 0.4rem;
+  width: 100%;
+  position: relative;
 }
 
 .asrar-conv-delete-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   border: none;
   background: transparent;
   color: rgba(182, 199, 230, 0.9);
   cursor: pointer;
   padding: 0;
-  margin-left: 0.25rem;
   width: 20px;
   height: 20px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   line-height: 1;
   transition:
     color 0.15s ease,
@@ -415,9 +434,10 @@
 
 /* Clean premium typography */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap');
 
 .asrar-chat-header-title {
-  font-family: "Tajawal", "Cinzel", serif;
+  font-family: "Cinzel", serif;
   font-size: 1.3rem;
   letter-spacing: 0.05em;
   text-transform: none;
