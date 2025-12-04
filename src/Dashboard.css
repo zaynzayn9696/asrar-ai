@@ -1952,23 +1952,6 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
 }
 
 /* Character card - match dashboard companion cards */
-.asrar-dash-char-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 10px 14px;
-  border-radius: 20px;
-  background: radial-gradient(circle at top left, rgba(24, 209, 218, 0.12), rgba(3, 10, 18, 0.95));
-  border: 1px solid rgba(24, 209, 218, 0.2);
-  box-shadow: 0 0 32px rgba(24, 209, 218, 0.2), inset 0 0 20px rgba(24, 209, 218, 0.04);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  height: auto;
-  max-width: 600px;
-  margin: 0 auto;
-  overflow: visible;
-  position: relative;
-}
 
 .asrar-dash-char-card:hover {
   transform: translateY(-4px);
@@ -1977,13 +1960,6 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
 }
 
 /* Avatar wrap - centered */
-.asrar-dash-char-avatar-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 10px;
-}
 
 /* Avatar - match dashboard size */
 .asrar-dash-char-avatar {
@@ -2002,18 +1978,6 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
   margin: 0 auto;
 }
 
-/* Text section - centered */
-.asrar-dash-char-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 4px;
-  width: 100%;
-  flex: 0 0 auto;
-  min-height: auto;
-  margin-top: 10px;
-}
 
 .asrar-dash-char-name {
   font-size: 16px;
@@ -2034,11 +1998,76 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
   margin-bottom: 2px;
 }
 
-.asrar-history-snippet {
-  font-size: 0.78rem;
-  color: #9bb0c6;
+/* HISTORY CARDS — NEW WORLD-CLASS VERSION */
+.asrar-dash-char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2.2rem; /* cleaner spacing */
+  padding: 1rem 0 3rem;
+}
+
+.asrar-dash-char-card {
+  background: radial-gradient(circle at top, rgba(0, 240, 255, 0.12), rgba(3, 10, 24, 0.92));
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 22px;
+  padding: 1.4rem 1.2rem 1.6rem;
   text-align: center;
-  margin-top: 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.12);
+}
+
+.asrar-dash-char-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 32px rgba(0, 240, 255, 0.22);
+  border-color: rgba(0, 240, 255, 0.45);
+}
+
+.asrar-dash-char-avatar-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+}
+
+.asrar-dash-char-avatar {
+  width: 100%;
+  max-width: 260px;
+  border-radius: 16px;
+  display: block;
+}
+
+.asrar-dash-char-text {
+  margin-top: 0.3rem;
+}
+
+.asrar-dash-char-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e8f8ff;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.04em;
+}
+
+.asrar-dash-char-role {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #00eaff;
+  margin-bottom: 0.8rem;
+  opacity: 0.9;
+}
+
+/* LAST MESSAGE SNIPPET — tidy, elegant */
+.asrar-history-snippet {
+  font-size: 0.82rem;
+  color: rgba(200, 225, 255, 0.88);
+  line-height: 1.55;
+  max-width: 260px;
+  margin: 0 auto;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* show max 3 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Tablet responsive */

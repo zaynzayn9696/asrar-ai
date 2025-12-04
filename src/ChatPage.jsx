@@ -1428,14 +1428,15 @@ export default function ChatPage() {
               audioBase64: userAudioBase64 || null,
               audioMimeType: mime,
             };
-            const aiVoiceMessage = {
-              id: lastId + 2,
-              from: "ai",
-              text: aiText,
-              createdAt: nowIso,
-              audioBase64,
-              audioMimeType: "audio/mpeg",
-            };
+           const aiVoiceMessage = {
+  id: lastId + 2,
+  from: "ai",
+  text: "",  // ← DO NOT SHOW TEXT FOR VOICE REPLIES
+  createdAt: nowIso,
+  audioBase64: audioBase64 || null,
+  audioMimeType: data.audioMimeType || "audio/mpeg",
+  type: "voice",
+};
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
 
@@ -1596,7 +1597,7 @@ export default function ChatPage() {
               >
                      
                 <div className="asrar-chat-bubble">
-                  {msg.audioBase64 ? (
+                 {msg.audioBase64 && msg.from === "ai" ? (
                     <VoiceMessageBubble
                       audioBase64={msg.audioBase64}
                       from={msg.from}
