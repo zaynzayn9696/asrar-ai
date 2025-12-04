@@ -1002,8 +1002,8 @@ export default function HomePage() {
               <div className="asrar-mood-capsule-question">
                 <h2 className="asrar-mood-capsule-title">
                   {isAr
-                    ? "كيف تشعر فعلاً؟"
-                    : "How do you really want to feel today?"}
+                    ? "كيف شعورك اليوم ؟"
+                    : "How do you really feel today?"}
                 </h2>
                 <p className="asrar-mood-capsule-subtitle">
                   {isAr
@@ -1399,7 +1399,6 @@ export default function HomePage() {
 
         {/* PRICING */}
         <section id="pricing" className="asrar-section asrar-section--pricing">
-          {!isAr && <p className="asrar-eyebrow">Simple Pricing</p>}
           <h2 className="asrar-section-title">
             {isAr ? "الأسعار" : "Pricing"}
           </h2>
