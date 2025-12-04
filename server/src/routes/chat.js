@@ -954,6 +954,16 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 router.post('/message', async (req, res) => {
   try {
     const tRouteStart = Date.now();
+    let classifyMs = 0;
+    let snapshotMs = 0;
+    let triggersMs = 0;
+    let phase4Ms = 0;
+    let stateUpdateMs = 0;
+    let stateReadMs = 0;
+    let engineTotalMs = 0;
+    let openAiMs = 0;
+    let orchestrateMs = 0;
+    let dbSaveMs = 0;
 
     if (!process.env.OPENAI_API_KEY) {
       return res
@@ -1144,6 +1154,14 @@ router.post('/message', async (req, res) => {
 
     const engineTimings = engineResult.timings || {};
 
+    classifyMs = engineTimings.classifyMs ?? 0;
+    snapshotMs = engineTimings.snapshotMs ?? 0;
+    triggersMs = engineTimings.triggersMs ?? 0;
+    phase4Ms = engineTimings.phase4Ms ?? 0;
+    stateUpdateMs = engineTimings.stateUpdateMs ?? 0;
+    stateReadMs = engineTimings.stateReadMs ?? 0;
+    engineTotalMs = engineTimings.totalMs ?? 0;
+
     const engineMode = decideEngineMode({
       isPremiumUser: isPremiumUser || isTester,
       primaryEmotion: emo.primaryEmotion,
@@ -1179,7 +1197,7 @@ router.post('/message', async (req, res) => {
       messages: openAIMessages,
       temperature: 0.8,
     });
-    const openAiMs = Date.now() - tOpenAIStart;
+    openAiMs = Date.now() - tOpenAIStart;
 
     const rawReply = completion.choices?.[0]?.message?.content?.trim();
     if (!rawReply) {
@@ -1189,7 +1207,7 @@ router.post('/message', async (req, res) => {
     }
 
     let aiMessage = rawReply;
-    let orchestrateMs = 0;
+    orchestrateMs = 0;
 
     try {
       const tOrchStart = Date.now();
@@ -1319,6 +1337,7 @@ router.post('/message', async (req, res) => {
 
     if (shouldSave) {
       try {
+        const tDbStart = Date.now();
         const rows = await prisma.$transaction([
           prisma.message.create({
             data: {
@@ -1343,6 +1362,7 @@ router.post('/message', async (req, res) => {
             data: { updatedAt: new Date() },
           }),
         ]);
+        dbSaveMs = Date.now() - tDbStart;
         userRow = rows[0];
 
         console.log(
@@ -1487,12 +1507,12 @@ router.post('/message', async (req, res) => {
       conversationId: cid == null ? 'null' : String(cid),
       engineMode,
       isPremiumUser: !!isPremiumUser,
-      classifyMs: engineTimings.classifyMs || 0,
-      snapshotMs: engineTimings.snapshotMs || 0,
-      triggersMs: engineTimings.triggersMs || 0,
-      phase4Ms: engineTimings.phase4Ms || 0,
-      stateUpdateMs: engineTimings.stateUpdateMs || 0,
-      stateReadMs: engineTimings.stateReadMs || 0,
+      classifyMs,
+      snapshotMs,
+      triggersMs,
+      phase4Ms,
+      stateUpdateMs,
+      stateReadMs,
       orchestrateMs,
       openAiMs,
       dbSaveMs,
@@ -1503,13 +1523,13 @@ router.post('/message', async (req, res) => {
     console.log('[ChatTiming]', {
       userId: userId == null ? 'null' : String(userId),
       conversationId: cid == null ? 'null' : String(cid),
-      classifyMs: engineTimings.classifyMs || 0,
-      engineTotalMs: engineTimings.totalMs || 0,
-      snapshotMs: engineTimings.snapshotMs || 0,
-      triggersMs: engineTimings.triggersMs || 0,
-      phase4Ms: engineTimings.phase4Ms || 0,
-      stateUpdateMs: engineTimings.stateUpdateMs || 0,
-      stateReadMs: engineTimings.stateReadMs || 0,
+      classifyMs,
+      engineTotalMs,
+      snapshotMs,
+      triggersMs,
+      phase4Ms,
+      stateUpdateMs,
+      stateReadMs,
       openAiMs,
       orchestrateMs,
       dbSaveMs,
