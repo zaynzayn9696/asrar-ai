@@ -487,6 +487,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  text-align: center;
+  align-items: center;
 }
 
 .asrar-dash-mini-bubble {
@@ -724,6 +726,7 @@
   font-size: 0.78rem;
   color: #9bb0c6;
   text-align: center;
+  width: 100%;
 }
 
 .asrar-history-empty {
