@@ -563,9 +563,9 @@ export default function HomePage() {
   const [miniChatUserText, setMiniChatUserText] = useState("");
   const [miniChatReply, setMiniChatReply] = useState(null);
   const [selectedCharacterId, setSelectedCharacterId] = useState(
-    CHARACTERS[2].id // Start with Rashid (index 2) selected by default
+    CHARACTERS[0].id // Start with Sheikh Al-Hara (index 0) selected by default
   );
-  const [companionCarouselIndex, setCompanionCarouselIndex] = useState(1); // Start at Hana (index 1)
+  const [companionCarouselIndex, setCompanionCarouselIndex] = useState(0); // Start at Sheikh Al-Hara (index 0)
 
   const miniChatInputRef = useRef(null);
   const sliderTouchStartXRef = useRef(null);
@@ -721,32 +721,20 @@ export default function HomePage() {
     setCompanionCarouselIndex(index);
   };
 
-  const handleCharacterPrev = () => {
-    setCurrentCharacterIndex((prev) =>
-      prev === 0 ? CHARACTERS.length - 1 : prev - 1
-    );
-  };
-
-  const handleCharacterNext = () => {
-    setCurrentCharacterIndex((prev) =>
-      prev === CHARACTERS.length - 1 ? 0 : prev + 1
-    );
-  };
-
-  const handleCharacterTouchStart = (event) => {
+  const handleHeroTouchStart = (event) => {
     if (!event.touches || event.touches.length !== 1) return;
     const touch = event.touches[0];
     sliderTouchStartXRef.current = touch.clientX;
     sliderTouchDeltaXRef.current = 0;
   };
 
-  const handleCharacterTouchMove = (event) => {
+  const handleHeroTouchMove = (event) => {
     if (sliderTouchStartXRef.current == null || !event.touches) return;
     const touch = event.touches[0];
     sliderTouchDeltaXRef.current = touch.clientX - sliderTouchStartXRef.current;
   };
 
-  const handleCharacterTouchEnd = () => {
+  const handleHeroTouchEnd = () => {
     const deltaX = sliderTouchDeltaXRef.current;
     sliderTouchStartXRef.current = null;
     sliderTouchDeltaXRef.current = 0;
@@ -755,9 +743,9 @@ export default function HomePage() {
     if (Math.abs(deltaX) < threshold) return;
 
     if (deltaX < 0) {
-      handleCharacterNext();
+      goToNextCompanion();
     } else {
-      handleCharacterPrev();
+      goToPrevCompanion();
     }
   };
 
@@ -1175,7 +1163,12 @@ export default function HomePage() {
               </button>
 
               <div className="asrar-companions-viewport">
-                <div className="asrar-companion-hero-track">
+                <div
+                  className="asrar-companion-hero-track"
+                  onTouchStart={handleHeroTouchStart}
+                  onTouchMove={handleHeroTouchMove}
+                  onTouchEnd={handleHeroTouchEnd}
+                >
                   {CHARACTERS.map((companion, index) => {
                     const isActive = index === companionCarouselIndex;
 
@@ -1195,19 +1188,36 @@ export default function HomePage() {
                           <p className="asrar-companion-hero-description">
                             {isAr ? companion.descriptionAr : companion.descriptionEn}
                           </p>
-                          <a
-                            href={user ? "/dashboard" : "/create-account"}
-                            className="asrar-companion-hero-cta"
-                            onClick={() => {
-                              if (typeof window !== "undefined") {
-                                try {
-                                  localStorage.setItem("asrar-selected-character", companion.id);
-                                } catch (_) {}
-                              }
-                            }}
-                          >
-                            {isAr ? `ابدأ مع ${isAr ? companion.nameAr : companion.nameEn}` : `Talk to ${companion.nameEn}`}
-                          </a>
+                          {user ? (
+                            <Link
+                              to="/dashboard"
+                              state={{ characterId: companion.id }}
+                              className="asrar-companion-hero-cta"
+                              onClick={() => {
+                                if (typeof window !== "undefined") {
+                                  try {
+                                    localStorage.setItem(
+                                      "asrar-selected-character",
+                                      companion.id
+                                    );
+                                  } catch (_) {}
+                                }
+                              }}
+                            >
+                              {isAr
+                                ? `ابدأ مع ${isAr ? companion.nameAr : companion.nameEn}`
+                                : `Talk to ${companion.nameEn}`}
+                            </Link>
+                          ) : (
+                            <Link
+                              to="/create-account"
+                              className="asrar-companion-hero-cta"
+                            >
+                              {isAr
+                                ? `ابدأ مع ${isAr ? companion.nameAr : companion.nameEn}`
+                                : `Talk to ${companion.nameEn}`}
+                            </Link>
+                          )}
                         </div>
 
                         {/* Right: Character Visual */}

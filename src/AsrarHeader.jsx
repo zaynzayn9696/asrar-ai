@@ -55,7 +55,7 @@ export default function AsrarHeader({
         history: "سجل المحادثة",
         chat: "المحادثة",
         settings: "الإعدادات",
-        billing: "الفوترة والاشتراك",
+        billing: "الفاتورة و الاشتراكات",
         logout: "تسجيل الخروج",
       }
     : {

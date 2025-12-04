@@ -10,7 +10,7 @@ import rashidAvatar from "./assets/rashid_2.png";
 import nourAvatar from "./assets/nour_2.png";
 import farahAvatar from "./assets/farah_2.png";
 
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import AsrarHeader from "./AsrarHeader";
 import { useAuth } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
@@ -169,19 +169,80 @@ function getMiniReply(message, isAr) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, setUser, isAuthLoading, logout } = useAuth();
+  const location = useLocation();
+
+  // Determine initial selected character from route state or localStorage
+  let initialSelectedId = CHARACTERS[0].id;
+  const routeCharId =
+    location && location.state && location.state.characterId;
+  if (routeCharId && CHARACTERS.some((c) => c.id === routeCharId)) {
+    initialSelectedId = routeCharId;
+  } else if (typeof window !== "undefined") {
+    try {
+      const stored = window.localStorage.getItem("asrar-selected-character");
+      if (stored && CHARACTERS.some((c) => c.id === stored)) {
+        initialSelectedId = stored;
+      }
+    } catch (_) {}
+  }
 
   const [lang, setLang] = useState(getInitialLang);
   const [selectedCharacterId, setSelectedCharacterId] = useState(
-    CHARACTERS[0].id
+    initialSelectedId
   );
   const [selectedDialect, setSelectedDialect] = useState("");
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [billingSuccess, setBillingSuccess] = useState(false);
-  const [sliderIndex, setSliderIndex] = useState(0);
+  const [sliderIndex, setSliderIndex] = useState(() => {
+    const idx = CHARACTERS.findIndex((c) => c.id === initialSelectedId);
+    return idx >= 0 ? idx : 0;
+  });
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
   const [validationError, setValidationError] = useState("");
+
+  const sliderTouchStartXRef = useRef(null);
+  const sliderTouchDeltaXRef = useRef(0);
+
+  const goToSliderIndex = (nextIndex) => {
+    const maxIndex = CHARACTERS.length - 1;
+    const clamped = Math.max(0, Math.min(maxIndex, nextIndex));
+    setSliderIndex(clamped);
+    const char = CHARACTERS[clamped];
+    if (char && char.id !== selectedCharacterId) {
+      setSelectedCharacterId(char.id);
+    }
+  };
+
+  const handleSliderTouchStart = (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    sliderTouchStartXRef.current = touch.clientX;
+    sliderTouchDeltaXRef.current = 0;
+  };
+
+  const handleSliderTouchMove = (event) => {
+    if (sliderTouchStartXRef.current == null || !event.touches) return;
+    const touch = event.touches[0];
+    sliderTouchDeltaXRef.current =
+      touch.clientX - sliderTouchStartXRef.current;
+  };
+
+  const handleSliderTouchEnd = () => {
+    const deltaX = sliderTouchDeltaXRef.current;
+    sliderTouchStartXRef.current = null;
+    sliderTouchDeltaXRef.current = 0;
+
+    const threshold = 40;
+    if (Math.abs(deltaX) < threshold) return;
+
+    if (deltaX < 0) {
+      goToSliderIndex(sliderIndex + 1);
+    } else {
+      goToSliderIndex(sliderIndex - 1);
+    }
+  };
 
   const isAr = lang === "ar";
   const t = DASHBOARD_TEXT[isAr ? "ar" : "en"];
@@ -444,7 +505,7 @@ export default function Dashboard() {
             <div className="asrar-companions-slider-wrapper">
               <button
                 className="asrar-slider-arrow asrar-slider-arrow-prev"
-                onClick={() => setSliderIndex(Math.max(0, sliderIndex - 1))}
+                onClick={() => goToSliderIndex(sliderIndex - 1)}
                 disabled={sliderIndex === 0}
               >
                 ‹
@@ -455,6 +516,9 @@ export default function Dashboard() {
                   style={{
                     transform: `translateX(${-sliderIndex * 100}%)`,
                   }}
+                  onTouchStart={handleSliderTouchStart}
+                  onTouchMove={handleSliderTouchMove}
+                  onTouchEnd={handleSliderTouchEnd}
                 >
                   {CHARACTERS.map((char) => (
                     <div key={char.id} className="asrar-companions-slider-item">
@@ -487,7 +551,7 @@ export default function Dashboard() {
               </div>
               <button
                 className="asrar-slider-arrow asrar-slider-arrow-next"
-                onClick={() => setSliderIndex(Math.min(CHARACTERS.length - 1, sliderIndex + 1))}
+                onClick={() => goToSliderIndex(sliderIndex + 1)}
                 disabled={sliderIndex === CHARACTERS.length - 1}
               >
                 ›
