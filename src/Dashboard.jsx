@@ -37,7 +37,7 @@ const CHARACTERS = [
   {
     id: "abu-mukh",
     avatar: rashidAvatar,
-    nameEn: "Abu Mukh",
+    nameEn: "Abu Mo5",
     nameAr: "أبو مخ",
     roleEn: "Focus & Study",
     roleAr: "تركيز ودراسة",
@@ -45,15 +45,15 @@ const CHARACTERS = [
   {
     id: "walaa",
     avatar: nourAvatar,
-    nameEn: "Walaa",
-    nameAr: "ولاء",
+    nameEn: "Walaaa",
+    nameAr: "ولاااء",
     roleEn: "Brutal Honesty",
     roleAr: "صراحة قاسية",
   },
   {
     id: "hiba",
     avatar: farahAvatar,
-    nameEn: "Hiba",
+    nameEn: "HHHiba",
     nameAr: "هههبة",
     roleEn: "Fun & Laughter",
     roleAr: "ضحك ومرح",

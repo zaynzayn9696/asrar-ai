@@ -627,7 +627,15 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const dialect = req.body?.dialect || 'msa';
     const rawToneKey = req.body?.tone;
     const bodyConversationId = req.body?.conversationId;
-    const saveFlag = req.body?.save;
+    const saveFlag = req.body?.save !== false && req.body?.save !== 'false';
+
+    console.log(
+      '[Diagnostic] Incoming Request: route="/api/chat/voice" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
+      dialect,
+      characterId,
+      saveFlag,
+      typeof userText === 'string' ? userText.length : 0
+    );
 
     let incomingMessages = [];
     if (req.body?.messages) {
@@ -895,9 +903,17 @@ router.post('/message', async (req, res) => {
     const dialect = body.dialect || 'msa';
     const rawToneKey = body.tone;
     const bodyConversationId = body.conversationId;
-    const saveFlag = body.save;
+    const saveFlag = body.save !== false;
     const userText =
       typeof body.content === 'string' ? body.content.trim() : '';
+
+    console.log(
+      '[Diagnostic] Incoming Request: route="/api/chat/message" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
+      dialect,
+      characterId,
+      saveFlag,
+      typeof userText === 'string' ? userText.length : 0
+    );
 
     if (!userText) {
       return res.status(400).json({ message: 'content is required' });
@@ -1203,7 +1219,15 @@ router.post('/message', async (req, res) => {
     const shouldSave =
       !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
 
+    console.log(
+      '[Diagnostic] Attempting to Save? ShouldSave=%s, CID=%s, UserID=%s',
+      shouldSave,
+      cid == null ? 'null' : String(cid),
+      userId == null ? 'null' : String(userId)
+    );
+
     let userRow = null;
+
     if (shouldSave) {
       try {
         const rows = await prisma.$transaction([
@@ -1231,6 +1255,10 @@ router.post('/message', async (req, res) => {
           }),
         ]);
         userRow = rows[0];
+        console.log(
+          '[Diagnostic] Message Saved Successfully: ID=%s',
+          userRow && userRow.id != null ? String(userRow.id) : 'null'
+        );
       } catch (err) {
         console.error(
           'Message persistence error',

@@ -506,7 +506,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       ]
     : [];
 
-  return [
+  const systemPrompt = [
     header,
     cultural,
     '',
@@ -537,6 +537,18 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     ...(premiumToolkitBlock.length ? [''] : []),
     ...premiumToolkitBlock,
   ].join('\n');
+
+  console.log(
+    '[Diagnostic] Dialect Guidance: "%s"',
+    dialect == null ? 'null' : String(dialect)
+  );
+  try {
+    const snippet =
+      typeof systemPrompt === 'string' ? systemPrompt.substring(0, 200) : '';
+    console.log('[Diagnostic] Final System Prompt Snippet:', `${snippet}...`);
+  } catch (_) {}
+
+  return systemPrompt;
 }
 
 /**
