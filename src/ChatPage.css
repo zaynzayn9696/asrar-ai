@@ -526,6 +526,7 @@
 .asrar-chat-row--assistant .asrar-chat-bubble {
   margin-left: 0;
   margin-right: auto;
+  margin:0px auto;
 }
 
 .asrar-chat-row--user .asrar-chat-bubble {
