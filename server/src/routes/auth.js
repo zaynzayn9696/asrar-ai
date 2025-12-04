@@ -78,6 +78,8 @@ function startOfMonth() {
   return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
 }
 
+// Mirror chat.js semantics: dailyResetAt is an unlock timestamp for the
+// free-plan 24h window, not "start of today".
 async function ensureUsage(userId) {
   // Make sure a Usage row exists
   let usage = await prisma.usage.findUnique({ where: { userId } });
@@ -88,26 +90,22 @@ async function ensureUsage(userId) {
         userId,
         dailyCount: 0,
         monthlyCount: 0,
-        dailyResetAt: now,
+        dailyResetAt: null,
         monthlyResetAt: startOfMonth(),
       },
     });
   }
 
-  const dayWindowStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const month0 = startOfMonth();
-
-  const needsDailyReset =
-    !usage.dailyResetAt || usage.dailyResetAt < dayWindowStart;
-  const needsMonthlyReset =
-    !usage.monthlyResetAt || usage.monthlyResetAt < month0;
+  const needsDailyReset = !!usage.dailyResetAt && usage.dailyResetAt <= now;
+  const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
 
   if (needsDailyReset || needsMonthlyReset) {
     const data = {};
 
     if (needsDailyReset) {
       data.dailyCount = 0;
-      data.dailyResetAt = now;
+      data.dailyResetAt = null;
     }
 
     if (needsMonthlyReset) {
@@ -127,6 +125,7 @@ async function ensureUsage(userId) {
 function buildUsageSummary(user, usage) {
   const { dailyLimit, monthlyLimit } = getPlanLimits(user.email, user.plan);
   const dailyRemaining = Math.max(0, dailyLimit - (usage?.dailyCount || 0));
+  const dailyResetInSeconds = usage?.dailyResetAt ? Math.floor((usage.dailyResetAt - new Date()) / 1000) : null;
   const monthlyRemaining = Math.max(
     0,
     (monthlyLimit || 0) - (usage?.monthlyCount || 0)
@@ -335,10 +334,10 @@ router.get('/me', requireAuth, async (req, res) => {
     const { dailyLimit } = getPlanLimits(safeUser.email, safeUser.plan);
     const used = usage?.dailyCount || 0;
     if (dailyLimit > 0 && used >= dailyLimit) {
-      const baseReset = usage.dailyResetAt || startOfToday();
-      const resetAtDate = new Date(baseReset);
-      resetAtDate.setDate(resetAtDate.getDate() + 1);
       const now = new Date();
+      const resetAtDate = usage.dailyResetAt
+        ? new Date(usage.dailyResetAt)
+        : new Date(now.getTime() + 24 * 60 * 60 * 1000);
       const resetInSeconds = Math.max(
         0,
         Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)

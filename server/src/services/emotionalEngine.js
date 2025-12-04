@@ -96,18 +96,21 @@ function getDialectGuidance(language, dialect) {
   };
 
   const base = map[key] || map.msa;
+  const strictLine = 'IMPORTANT: You must speak strictly in this chosen Arabic dialect in all Arabic parts of your reply. Do NOT switch back to Modern Standard Arabic (MSA) except when quoting exact formal text (e.g. Quran verses, official statements, or names).';
 
   if (lang === 'mixed') {
     return (
       base +
-      '\nإذا استخدمتَ الإنجليزية في جزء من الرد، فلتكن إنجليزية طبيعية، لكن في المقاطع العربية التزم تماماً بهذه اللهجة المحددة، ولا ترجع للعربية الفصحى المحايدة.'
+      '\nإذا استخدمتَ الإنجليزية في جزء من الرد، فلتكن إنجليزية طبيعية، لكن في المقاطع العربية التزم تماماً بهذه اللهجة المحددة، ولا ترجع للعربية الفصحى المحايدة.' +
+      `\n${strictLine}`
     );
   }
 
   // lang === 'ar'
   return (
     base +
-    '\nتذكّر: لا تستخدم العربية الفصحى القياسية في الجمل العادية ما أمكن، بل اجعل إجابتك بالعربية دائماً بهذه اللهجة.'
+    '\nتذكّر: لا تستخدم العربية الفصحى القياسية في الجمل العادية ما أمكن، بل اجعل إجابتك بالعربية دائماً بهذه اللهجة.' +
+    `\n${strictLine}`
   );
 }
 
@@ -118,6 +121,7 @@ function getDialectGuidance(language, dialect) {
  * @param {string} params.userMessage
  * @param {Array<{role: 'user'|'assistant', content: string}>} params.recentMessages
  * @param {('ar'|'en'|'mixed')} params.language
+ * @param {string} [params.dialect]
  * @returns {Promise<Emotion>}
  */
 async function classifyEmotion({ userMessage, recentMessages = [], language = 'en' }) {
@@ -565,9 +569,10 @@ function selectModelForResponse({ emotion, convoState, engineMode, isPremiumUser
  * @param {('ar'|'en'|'mixed')} params.language
  * @param {number|undefined|null} params.conversationId
  * @param {number} params.userId
+ * @param {string} params.dialect
  * @returns {Promise<{ emo: Emotion, convoState: ConversationEmotionState|null, systemPrompt: string }>}
  */
-async function runEmotionalEngine({ userMessage, recentMessages, personaId, personaText, language, conversationId, userId }) {
+async function runEmotionalEngine({ userMessage, recentMessages, personaId, personaText, language, conversationId, userId, dialect }) {
   try {
     const tStart = Date.now();
 
@@ -616,6 +621,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       language,
       longTermSnapshot,
       triggers,
+      dialect,
     });
 
     // Phase 4: memory-aware additive block (short + long-term kernel)
@@ -670,7 +676,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       emo: fallbackEmotion,
       severityLevel: 'CASUAL',
       convoState: null,
-      systemPrompt: buildSystemPrompt({ personaText, personaId: personaId || 'default', emotion: fallbackEmotion, convoState: null, language }),
+      systemPrompt: buildSystemPrompt({ personaText, personaId: personaId || 'default', emotion: fallbackEmotion, convoState: null, language, dialect }),
       flowState: { currentState: 'NEUTRAL' },
       longTermSnapshot: null,
       triggers: [],

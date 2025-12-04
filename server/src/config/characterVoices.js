@@ -8,7 +8,7 @@
 const DEFAULT_VOICE_ID = process.env.OPENAI_TTS_VOICE || "alloy";
 
 const CHARACTER_VOICES = {
-  // Abu Zain – VERY deep, older, warm, wise male.
+  // Sheikh Al-Hara – VERY deep, older, warm, wise male.
   // Voice choice: "onyx" – one of the deepest male-sounding voices in tts‑1,
   // which generally reads as older and calmer than the brighter options.
   "sheikh-al-hara": {
@@ -18,43 +18,43 @@ const CHARACTER_VOICES = {
     defaultTone: "calm",
   },
 
-  // Hana – warm, early‑40s, clearly FEMALE with soft emotional tone.
-  // Voice choice: "shimmer" – expressive, clearly feminine voice that tends
+  // Daloua – soft, mid‑20s FEMALE with warm emotional tone.
+  // Voice choice: "shimmer" – expressive, feminine-leaning voice that tends
   // to sound warm and emotional rather than neutral or flat.
   daloua: {
     voiceId: "shimmer",
     styleDescription:
-      "Female, early 40s, warm and empathetic. Soft, expressive, emotionally present tone.",
+      "Female, mid 20s, warm and empathetic. Soft, expressive, emotionally present tone.",
     defaultTone: "soft",
   },
 
-  // Rashid – educated, mid‑30s MALE, teacher‑like.
+  // Abu Mukh – educated, mid‑20s MALE, teacher‑like.
   // Voice choice: "fable" – narrative male voice that feels like a calm,
   // articulate storyteller or lecturer; good fit for a structured teacher.
   "abu-mukh": {
     voiceId: "fable",
     styleDescription:
-      "Male, mid 30s, confident and educated. Clear, structured, teacher-like storyteller tone.",
+      "Male, mid 20s, confident and educated. Clear, structured, teacher-like storyteller tone.",
     defaultTone: "energetic",
   },
 
-  // Nour – confident, blunt, slightly rude female.
-  // Voice choice: "echo" – a bit sharper and more assertive sounding, matching
-  // a direct, no-nonsense personality.
+  // Walaa – confident, blunt FEMALE in her mid‑30s.
+  // Voice choice: "nova" – brighter, higher-energy voice that still supports
+  // a direct, no-nonsense personality when combined with her persona.
   walaa: {
-    voiceId: "echo",
+    voiceId: "nova",
     styleDescription:
-      "Female, confident and blunt. Straight to the point with a slightly sharp tone.",
+      "Female, mid 30s, confident and blunt. Straight to the point with a slightly sharper, more mature tone.",
     defaultTone: "strict",
   },
 
-  // Farah – young, energetic, smiley female.
-  // Voice choice: "nova" – brighter, higher-energy voice suited for playful,
-  // upbeat replies.
+  // Hiba – young, energetic, Gen‑Z female.
+  // Voice choice: "alloy" – bright, friendly default voice; combined with
+  // persona it reads as high-energy, playful, early‑20s.
   hiba: {
-    voiceId: "nova",
+    voiceId: "alloy",
     styleDescription:
-      "Female, young and energetic. Smiley, hyper, friendly tone.",
+      "Female, early 20s, young and energetic. Smiley, hyper, friendly tone.",
     defaultTone: "energetic",
   },
 

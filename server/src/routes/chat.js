@@ -105,26 +105,22 @@ async function ensureUsage(userId) {
         userId,
         dailyCount: 0,
         monthlyCount: 0,
-        dailyResetAt: now,
+        dailyResetAt: null,
         monthlyResetAt: startOfMonth(),
       },
     });
   }
 
-  const dayWindowStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const month0 = startOfMonth();
-
-  const needsDailyReset =
-    !usage.dailyResetAt || usage.dailyResetAt < dayWindowStart;
-  const needsMonthlyReset =
-    !usage.monthlyResetAt || usage.monthlyResetAt < month0;
+  const needsDailyReset = !!usage.dailyResetAt && usage.dailyResetAt <= now;
+  const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
 
   if (needsDailyReset || needsMonthlyReset) {
     const data = {};
 
     if (needsDailyReset) {
       data.dailyCount = 0;
-      data.dailyResetAt = now;
+      data.dailyResetAt = null; // clear the lock; next limit hit will start a fresh 24h window
     }
 
     if (needsMonthlyReset) {
@@ -555,14 +551,28 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         });
       }
     } else if (!isTester && isFreePlanUser) {
-      // Free users: enforce daily quota for voice based on plan limits.
+      // Free users: enforce daily quota for voice based on a strict 24h window
+      // that starts when the user first hits the limit.
       const used = usage.dailyCount || 0;
       const limit = dailyLimit || 5;
       if (limit > 0 && used >= limit) {
-        const baseReset = usage.dailyResetAt || startOfToday();
-        const resetAtDate = new Date(baseReset);
-        resetAtDate.setDate(resetAtDate.getDate() + 1);
         const now = new Date();
+        let resetAtDate;
+
+        if (usage.dailyResetAt && usage.dailyResetAt > now) {
+          // Existing lock window: reuse it so the countdown stays consistent
+          resetAtDate = new Date(usage.dailyResetAt);
+        } else {
+          // First time hitting the limit (or stale/old value): start a fresh 24h window
+          resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          try {
+            usage = await prisma.usage.update({
+              where: { userId: dbUser.id },
+              data: { dailyResetAt: resetAtDate },
+            });
+          } catch (_) {}
+        }
+
         const resetInSeconds = Math.max(
           0,
           Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
@@ -1343,10 +1353,21 @@ router.post('/message', async (req, res) => {
       const limit = dailyLimit || 5;
       const usedNow = usage?.dailyCount || 0;
       if (limit > 0 && usedNow >= limit) {
-        const baseReset = usage.dailyResetAt || startOfToday();
-        const resetAtDate = new Date(baseReset);
-        resetAtDate.setDate(resetAtDate.getDate() + 1);
         const now = new Date();
+        let resetAtDate;
+
+        if (usage.dailyResetAt && usage.dailyResetAt > now) {
+          resetAtDate = new Date(usage.dailyResetAt);
+        } else {
+          resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          try {
+            usage = await prisma.usage.update({
+              where: { userId },
+              data: { dailyResetAt: resetAtDate },
+            });
+          } catch (_) {}
+        }
+
         const resetInSeconds = Math.max(
           0,
           Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
@@ -1366,6 +1387,179 @@ router.post('/message', async (req, res) => {
       message: 'Failed to generate reply.',
     });
   }
+  const bgEmotion = emo;
+  const bgMessageId = userRow.id;
+
+  setImmediate(async () => {
+    const tBgStart = Date.now();
+    try {
+      try {
+        await prisma.messageEmotion.create({
+          data: {
+            messageId: bgMessageId,
+            primaryEmotion: bgEmotion.primaryEmotion,
+            intensity: bgEmotion.intensity,
+            confidence: bgEmotion.confidence,
+            cultureTag: bgEmotion.cultureTag,
+            notes: bgEmotion.notes || null,
+          },
+        });
+      } catch (err) {
+        console.error(
+          '[EmoEngine][Background] MessageEmotion error',
+          err && err.message ? err.message : err
+        );
+      }
+
+      try {
+        await recordMemoryEvent({
+          userId: bgUserId,
+          conversationId: bgConversationId,
+          messageId: bgMessageId,
+          characterId: bgCharacterId,
+          emotion: bgEmotion,
+          topics: Array.isArray(bgEmotion.topics)
+            ? bgEmotion.topics
+            : [],
+          secondaryEmotion: bgEmotion.secondaryEmotion || null,
+          emotionVector: bgEmotion.emotionVector || null,
+          detectorVersion: bgEmotion.detectorVersion || null,
+          isKernelRelevant: true,
+        });
+      } catch (err) {
+        console.error(
+          '[EmoEngine][Background] MemoryKernel error',
+          err && err.message ? err.message : err
+        );
+      }
+
+      try {
+        await updateConversationEmotionState(bgConversationId, bgEmotion);
+      } catch (err) {
+        console.error(
+          '[EmoEngine][Background] ConversationEmotionState error',
+          err && err.message ? err.message : err
+        );
+      }
+
+      try {
+        await logEmotionalTimelineEvent({
+          userId: bgUserId,
+          conversationId: bgConversationId,
+          emotion: bgEmotion,
+        });
+      } catch (err) {
+        console.error(
+          '[EmoEngine][Background] Timeline error',
+          err && err.message ? err.message : err
+        );
+      }
+
+      try {
+        await logTriggerEventsForMessage({
+          userId: bgUserId,
+          conversationId: bgConversationId,
+          messageId: bgMessageId,
+          messageText: userText,
+          emotion: bgEmotion,
+        });
+      } catch (err) {
+        console.error(
+          '[EmoEngine][Background] TriggerEvents error',
+          err && err.message ? err.message : err
+        );
+      }
+
+      try {
+        await updateUserEmotionProfile({ userId: bgUserId });
+      } catch (err) {
+        console.error(
+          '[EmoEngine][Background] UserEmotionProfile error',
+          err && err.message ? err.message : err
+        );
+      }
+
+      try {
+        await updateEmotionalPatterns({ userId: bgUserId });
+      } catch (err) {
+        console.error(
+          '[EmoEngine][Background] Patterns error',
+          err && err.message ? err.message : err
+        );
+      }
+
+      const bgMs = Date.now() - tBgStart;
+      console.log('[EmoEngine][Background]', {
+        userId: bgUserId == null ? 'null' : String(bgUserId),
+        conversationId: bgConversationId == null ? 'null' : String(bgConversationId),
+        engineMode: bgEngineMode,
+        isPremiumUser: !!isPremiumUser,
+        durationMs: bgMs,
+      });
+    } catch (err) {
+      console.error(
+        '[EmoEngine][Background] Unhandled error',
+        err && err.message ? err.message : err
+      );
+    }
+  });
+}
+
+console.log('[EmoEngine][Response]', {
+  userId: userId == null ? 'null' : String(userId),
+  conversationId: cid == null ? 'null' : String(cid),
+  engineMode,
+  isPremiumUser: !!isPremiumUser,
+  classifyMs: 0,
+  orchestrateMs,
+  openAiMs,
+  backgroundJobQueued,
 });
+
+const responsePayload = {
+  reply: aiMessage,
+  usage: buildUsageSummary(dbUser, usage),
+};
+
+// If a free-plan user has just used their final daily message (e.g. 5/5),
+// return a hint so the frontend can immediately show the limit banner.
+if (!isTester && isFreePlanUser) {
+  const limit = dailyLimit || 5;
+  const usedNow = usage?.dailyCount || 0;
+  if (limit > 0 && usedNow >= limit) {
+    const now = new Date();
+    let resetAtDate;
+
+    if (usage.dailyResetAt && usage.dailyResetAt > now) {
+      resetAtDate = new Date(usage.dailyResetAt);
+    } else {
+      resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      try {
+        usage = await prisma.usage.update({
+          where: { userId },
+          data: { dailyResetAt: resetAtDate },
+        });
+      } catch (_) {}
+    }
+
+    const resetInSeconds = Math.max(
+      0,
+      Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
+    );
+
+    responsePayload.dailyLimitReached = true;
+    responsePayload.limitType = 'daily';
+    responsePayload.resetAt = resetAtDate.toISOString();
+    responsePayload.resetInSeconds = resetInSeconds;
+  }
+}
+
+return res.json(responsePayload);
+} catch (err) {
+  console.error('Chat completion error', err && err.message ? err.message : err);
+  return res.status(500).json({
+    message: 'Failed to generate reply.',
+  });
+}
 
 module.exports = router;
