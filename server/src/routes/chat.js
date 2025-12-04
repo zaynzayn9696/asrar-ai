@@ -53,49 +53,19 @@ function startOfToday() {
   return d;
 }
 
-// Audio upload config for voice route
-const uploadsRoot = path.resolve(__dirname, '..', '..', 'uploads');
-const voiceDir = path.join(uploadsRoot, 'voice');
-try {
-  fs.mkdirSync(voiceDir, { recursive: true });
-} catch (_) {}
-
-const allowedAudio = new Set([
-  'audio/webm',
-  'audio/ogg',
-  'audio/mpeg',
-  'audio/wav',
-  // Mobile Safari / iOS and some Android recorders
-  'audio/mp4',
-  'audio/aac',
-]);
-
-const audioStorage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    cb(null, voiceDir);
-  },
-  filename: function (_req, file, cb) {
-    const ext = path.extname(file.originalname).toLowerCase() || '.webm';
-    const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '');
-    const name = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${base}${ext}`;
-    cb(null, name);
-  },
-});
-
-function audioFilter(_req, file, cb) {
-  const raw = file.mimetype || '';
-  const base = raw.split(';')[0].trim();
-  if (!allowedAudio.has(base)) {
-    return cb(new Error('Unsupported audio type'));
-  }
-  cb(null, true);
-}
-
 function startOfMonth() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
 }
 
+/**
+ * Usage semantics:
+ * - dailyCount: number of free messages/voice requests used in the current 24h lock window.
+ * - dailyResetAt: timestamp when the current 24h window unlocks.
+ *   * null => not currently locked.
+ *   * > now => locked until that instant.
+ *   * <= now => window expired; we reset counts and clear the lock.
+ */
 async function ensureUsage(userId) {
   let usage = await prisma.usage.findUnique({ where: { userId } });
   const now = new Date();
@@ -158,7 +128,7 @@ function buildUsageSummary(user, usage) {
 // CHARACTER PERSONAS (Updated: MENA Style, Authentic Dialects)
 // ----------------------------------------------------------------------
 const CHARACTER_PERSONAS = {
-  // 1. Sheikh Al-Hara (Wisdom/Guidance) - Replaces Abu Zain
+  // 1. Sheikh Al-Hara (Wisdom/Guidance)
   'sheikh-al-hara': {
     en: `You are "Sheikh Al-Hara" (The Neighborhood Wise Man).
 - You are not a religious scholar, but a man of deep life experience and street wisdom.
@@ -178,7 +148,7 @@ const CHARACTER_PERSONAS = {
 - إذا احتاجوا ضحك: "الوقت ده للجد، لو عايز تهزر روح لـ هبة."`
   },
 
-  // 2. Daloua (Deep Emotional Support) - Replaces Hana
+  // 2. Daloua (Deep Emotional Support)
   'daloua': {
     en: `You are "Daloua" (The Gentle Soul).
 - You are the safe harbor. The friend who brings tea and listens for hours without judging.
@@ -197,7 +167,7 @@ const CHARACTER_PERSONAS = {
 - إذا احتاجوا "كلمتين في العضم" (قسوة): "أنا ما يجيلي قلب أقسى عليك. ولاء هي اللي بتعرف تعطي الكلمة كاش."`
   },
 
-  // 3. Abu Mukh (Focus & Study) - Replaces Rashid
+  // 3. Abu Mukh (Focus & Study)
   'abu-mukh': {
     en: `You are "Abu Mukh" (The Brain).
 - The academic grinder. Glasses on, obsessed with "Mustaqbal" (Future) and efficiency.
@@ -216,7 +186,7 @@ const CHARACTER_PERSONAS = {
 - إذا بدأوا بالمزاح: "قاعدين نضيع وقت. الهزار عند هبة. هنذاكر ولا نقوم؟"`
   },
 
-  // 4. Walaa (Brutal Honesty) - Replaces Nour
+  // 4. Walaa (Brutal Honesty)
   'walaa': {
     en: `You are "Walaa" (The Blunt Truth).
 - The friend who doesn't fake it. She looks you in the eye and tells you what you NEED to hear.
@@ -235,7 +205,7 @@ const CHARACTER_PERSONAS = {
 - إذا طلبوا جداول دراسة: "قوم ذاكر وبلاش دلع، الموضوع مش كيمياء. لو عايز حد يمسك ايدك روح لـ أبو مخ."`
   },
 
-  // 5. Hiba (Fun & Chaos) - Replaces Farah
+  // 5. Hiba (Fun & Chaos)
   'hiba': {
     en: `You are "Hiba" (The Chaotic Fun).
 - High energy, memes, "Khalas enough drama!". The friend who distracts you from doom.
@@ -253,9 +223,9 @@ const CHARACTER_PERSONAS = {
   }
 };
 
-// NOTE: dialect guidance for text replies is provided by getDialectGuidance in the
-// emotionalEngine module. The voice route below reuses the same helper to keep
-// text and voice behavior aligned.
+// ----------------------------------------------------------------------
+// ROUTES
+// ----------------------------------------------------------------------
 
 router.get('/test', (req, res) => {
   res.json({
@@ -425,6 +395,7 @@ router.delete('/conversations/:conversationId', async (req, res) => {
   }
 });
 
+// Delete all conversations/messages/emotional state for this user
 router.delete('/delete-all', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -502,9 +473,55 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
   }
 });
 
+// ------------------------- VOICE ROUTE ------------------------------
+
+// Audio upload config for voice route
+const uploadsRoot = path.resolve(__dirname, '..', '..', 'uploads');
+const voiceDir = path.join(uploadsRoot, 'voice');
+try {
+  fs.mkdirSync(voiceDir, { recursive: true });
+} catch (_) {}
+
+const allowedAudio = new Set([
+  'audio/webm',
+  'audio/ogg',
+  'audio/mpeg',
+  'audio/wav',
+  // Mobile Safari / iOS and some Android recorders
+  'audio/mp4',
+  'audio/aac',
+]);
+
+const audioStorage = multer.diskStorage({
+  destination: function (_req, _file, cb) {
+    cb(null, voiceDir);
+  },
+  filename: function (_req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase() || '.webm';
+    const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '');
+    const name = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${base}${ext}`;
+    cb(null, name);
+  },
+});
+
+function audioFilter(_req, file, cb) {
+  const raw = file.mimetype || '';
+  const base = raw.split(';')[0].trim();
+  if (!allowedAudio.has(base)) {
+    return cb(new Error('Unsupported audio type'));
+  }
+  cb(null, true);
+}
+
+const uploadAudio = multer({
+  storage: audioStorage,
+  fileFilter: audioFilter,
+  limits: { fileSize: 20 * 1024 * 1024 }, // ~20MB
+});
+
 // Voice chat: accepts audio, transcribes to text, runs the emotional engine,
-// and returns a TTS reply as base64 audio.
-// Voice chat is now available to all authenticated users (free + premium).
+// and returns a TTS reply as base64 audio. Voice chat is available to all
+// authenticated users (free + premium), but still enforces usage limits.
 router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -528,8 +545,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const isFreePlanUser = !isPremiumUser && !isTester;
     const userId = dbUser.id;
 
-    // Voice chat is available to all authenticated users (free + premium).
-    // Do not change any other premium gating or limits here.
+    // Ensure usage row exists and reset any expired daily/monthly windows.
     let usage = await ensureUsage(dbUser.id);
 
     // Premium users: enforce monthly quota for voice.
@@ -606,7 +622,6 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     }
 
     // 2) Parse metadata from multipart fields
-    // NOTE: Default character updated from 'hana' to 'daloua'
     const characterId = req.body?.characterId || 'daloua';
     const lang = req.body?.lang || 'en';
     const dialect = req.body?.dialect || 'msa';
@@ -668,6 +683,16 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         cid = existing.id;
       }
     }
+    if (!cid) {
+      const conv = await prisma.conversation.create({
+        data: {
+          userId,
+          characterId,
+          title: null,
+        },
+      });
+      cid = conv.id;
+    }
 
     // 4) Build history for the emotional engine
     let history = Array.isArray(incomingMessages)
@@ -696,14 +721,13 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       .filter(Boolean);
 
     // 5) Emotional engine -> system prompt + routing metadata.
-    // CRITICAL FIX: Passed 'dialect' to the engine
     const engineResult = await runEmotionalEngine({
       userMessage: userText,
       recentMessages: recentMessagesForEngine,
       personaId: characterId,
       personaText,
       language: languageForEngine,
-      dialect, // <--- ADDED HERE
+      dialect,
       conversationId: cid,
       userId,
     });
@@ -727,6 +751,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     });
 
     const systemMessage = systemPrompt;
+
     const recentContext = recentMessagesForEngine.slice(-MAX_CONTEXT_MESSAGES);
     const openAIMessages = [];
     openAIMessages.push({ role: 'system', content: systemMessage });
@@ -838,7 +863,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
   }
 });
 
-// Main text chat route: /api/chat/message
+// ------------------------- TEXT CHAT ROUTE ------------------------------
+
 router.post('/message', async (req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -864,7 +890,6 @@ router.post('/message', async (req, res) => {
 
     const body = req.body || {};
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
-    // Default to 'daloua' (the gentle emotional support) if none provided
     const characterId = body.characterId || 'daloua';
     const lang = body.lang || 'en';
     const dialect = body.dialect || 'msa';
@@ -880,7 +905,7 @@ router.post('/message', async (req, res) => {
 
     let usage = await ensureUsage(userId);
 
-    // Quota gating: premium monthly, free daily
+    // Quota gating: premium monthly, free daily (24h window)
     if (!isTester && isPremiumUser) {
       const used = usage.monthlyCount || 0;
       const limit = monthlyLimit || 3000;
@@ -901,10 +926,21 @@ router.post('/message', async (req, res) => {
       const used = usage.dailyCount || 0;
       const limit = dailyLimit || 5;
       if (limit > 0 && used >= limit) {
-        const baseReset = usage.dailyResetAt || startOfToday();
-        const resetAtDate = new Date(baseReset);
-        resetAtDate.setDate(resetAtDate.getDate() + 1);
         const now = new Date();
+        let resetAtDate;
+
+        if (usage.dailyResetAt && usage.dailyResetAt > now) {
+          resetAtDate = new Date(usage.dailyResetAt);
+        } else {
+          resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          try {
+            usage = await prisma.usage.update({
+              where: { userId },
+              data: { dailyResetAt: resetAtDate },
+            });
+          } catch (_) {}
+        }
+
         const resetInSeconds = Math.max(
           0,
           Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
@@ -982,14 +1018,13 @@ router.post('/message', async (req, res) => {
       .filter(Boolean);
 
     // Emotional engine
-    // CRITICAL FIX: Passed 'dialect' to the engine
     const engineResult = await runEmotionalEngine({
       userMessage: userText,
       recentMessages: recentMessagesForEngine,
       personaId: characterId,
       personaText,
       language: languageForEngine,
-      dialect, // <--- ADDED HERE
+      dialect,
       conversationId: cid,
       userId,
     });
@@ -1074,8 +1109,7 @@ router.post('/message', async (req, res) => {
       aiMessage = rawReply;
     }
 
-    // Phase 4: character-based routing without blocking access.
-    // For free users, only the main unlocked companion (e.g. Daloua) gives full responses.
+    // Phase 4: character-based routing for free users
     if (isFreePlanUser && characterId !== freeCharacterId) {
       if (!isArabicConversation) {
         const briefLines = [];
@@ -1119,8 +1153,7 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    // Premium users: if Daloua is being used heavily for non-support topics like study/productivity,
-    // softly suggest switching to Abu Mukh instead.
+    // Premium users: gently suggest Abu Mukh if Daloua is being used for study/productivity
     if (isPremiumUser && characterId === 'daloua' && !isArabicConversation) {
       const lower = userText.toLowerCase();
       const studyKeywords = [
@@ -1387,179 +1420,6 @@ router.post('/message', async (req, res) => {
       message: 'Failed to generate reply.',
     });
   }
-  const bgEmotion = emo;
-  const bgMessageId = userRow.id;
-
-  setImmediate(async () => {
-    const tBgStart = Date.now();
-    try {
-      try {
-        await prisma.messageEmotion.create({
-          data: {
-            messageId: bgMessageId,
-            primaryEmotion: bgEmotion.primaryEmotion,
-            intensity: bgEmotion.intensity,
-            confidence: bgEmotion.confidence,
-            cultureTag: bgEmotion.cultureTag,
-            notes: bgEmotion.notes || null,
-          },
-        });
-      } catch (err) {
-        console.error(
-          '[EmoEngine][Background] MessageEmotion error',
-          err && err.message ? err.message : err
-        );
-      }
-
-      try {
-        await recordMemoryEvent({
-          userId: bgUserId,
-          conversationId: bgConversationId,
-          messageId: bgMessageId,
-          characterId: bgCharacterId,
-          emotion: bgEmotion,
-          topics: Array.isArray(bgEmotion.topics)
-            ? bgEmotion.topics
-            : [],
-          secondaryEmotion: bgEmotion.secondaryEmotion || null,
-          emotionVector: bgEmotion.emotionVector || null,
-          detectorVersion: bgEmotion.detectorVersion || null,
-          isKernelRelevant: true,
-        });
-      } catch (err) {
-        console.error(
-          '[EmoEngine][Background] MemoryKernel error',
-          err && err.message ? err.message : err
-        );
-      }
-
-      try {
-        await updateConversationEmotionState(bgConversationId, bgEmotion);
-      } catch (err) {
-        console.error(
-          '[EmoEngine][Background] ConversationEmotionState error',
-          err && err.message ? err.message : err
-        );
-      }
-
-      try {
-        await logEmotionalTimelineEvent({
-          userId: bgUserId,
-          conversationId: bgConversationId,
-          emotion: bgEmotion,
-        });
-      } catch (err) {
-        console.error(
-          '[EmoEngine][Background] Timeline error',
-          err && err.message ? err.message : err
-        );
-      }
-
-      try {
-        await logTriggerEventsForMessage({
-          userId: bgUserId,
-          conversationId: bgConversationId,
-          messageId: bgMessageId,
-          messageText: userText,
-          emotion: bgEmotion,
-        });
-      } catch (err) {
-        console.error(
-          '[EmoEngine][Background] TriggerEvents error',
-          err && err.message ? err.message : err
-        );
-      }
-
-      try {
-        await updateUserEmotionProfile({ userId: bgUserId });
-      } catch (err) {
-        console.error(
-          '[EmoEngine][Background] UserEmotionProfile error',
-          err && err.message ? err.message : err
-        );
-      }
-
-      try {
-        await updateEmotionalPatterns({ userId: bgUserId });
-      } catch (err) {
-        console.error(
-          '[EmoEngine][Background] Patterns error',
-          err && err.message ? err.message : err
-        );
-      }
-
-      const bgMs = Date.now() - tBgStart;
-      console.log('[EmoEngine][Background]', {
-        userId: bgUserId == null ? 'null' : String(bgUserId),
-        conversationId: bgConversationId == null ? 'null' : String(bgConversationId),
-        engineMode: bgEngineMode,
-        isPremiumUser: !!isPremiumUser,
-        durationMs: bgMs,
-      });
-    } catch (err) {
-      console.error(
-        '[EmoEngine][Background] Unhandled error',
-        err && err.message ? err.message : err
-      );
-    }
-  });
-}
-
-console.log('[EmoEngine][Response]', {
-  userId: userId == null ? 'null' : String(userId),
-  conversationId: cid == null ? 'null' : String(cid),
-  engineMode,
-  isPremiumUser: !!isPremiumUser,
-  classifyMs: 0,
-  orchestrateMs,
-  openAiMs,
-  backgroundJobQueued,
 });
-
-const responsePayload = {
-  reply: aiMessage,
-  usage: buildUsageSummary(dbUser, usage),
-};
-
-// If a free-plan user has just used their final daily message (e.g. 5/5),
-// return a hint so the frontend can immediately show the limit banner.
-if (!isTester && isFreePlanUser) {
-  const limit = dailyLimit || 5;
-  const usedNow = usage?.dailyCount || 0;
-  if (limit > 0 && usedNow >= limit) {
-    const now = new Date();
-    let resetAtDate;
-
-    if (usage.dailyResetAt && usage.dailyResetAt > now) {
-      resetAtDate = new Date(usage.dailyResetAt);
-    } else {
-      resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      try {
-        usage = await prisma.usage.update({
-          where: { userId },
-          data: { dailyResetAt: resetAtDate },
-        });
-      } catch (_) {}
-    }
-
-    const resetInSeconds = Math.max(
-      0,
-      Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
-    );
-
-    responsePayload.dailyLimitReached = true;
-    responsePayload.limitType = 'daily';
-    responsePayload.resetAt = resetAtDate.toISOString();
-    responsePayload.resetInSeconds = resetInSeconds;
-  }
-}
-
-return res.json(responsePayload);
-} catch (err) {
-  console.error('Chat completion error', err && err.message ? err.message : err);
-  return res.status(500).json({
-    message: 'Failed to generate reply.',
-  });
-}
 
 module.exports = router;
