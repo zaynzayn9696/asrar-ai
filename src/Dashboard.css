@@ -71,34 +71,72 @@
   width: 100%;
   margin: 0 0 1.9rem;
   z-index: 30;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
+  padding: 0.8rem 1.5rem;
   padding-top: calc(0.4rem + env(safe-area-inset-top, 0px));
-  padding-bottom: 0.4rem;
   background: rgba(5, 8, 11, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* Adjust layout for medium screens */
+@media (min-width: 768px) {
+  .asrar-dash-header {
+    padding: 0.8rem 2rem;
+  }
+  
+  .asrar-dash-logo-wrap {
+    position: absolute;
+    left: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+  }
+  
+  .asrar-dash-header-right {
+    margin-left: auto;
+  }
+}
+
+/* Desktop layout */
+@media (min-width: 1024px) {
+  .asrar-dash-logo-wrap {
+    position: static;
+    transform: none;
+    margin-right: auto;
+  }
+  
+  .asrar-dash-header {
+    justify-content: flex-start;
+    gap: 2rem;
+  }
+  
+  .asrar-dash-header-right {
+    margin-left: 0;
+  }
+}
+
 .asrar-dash-header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-left: 0.5rem;
+  display: contents; /* Allow children to participate in grid layout */
 }
 
 .asrar-header-mobile-slot {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  grid-column: 1;
+  padding-left: 0.5rem;
 }
 
 .asrar-dash-logo-wrap {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  justify-content: center;
   text-decoration: none;
   color: inherit;
-   background: none;
+  background: none;
   border: none;
+  grid-column: 2;
+  justify-self: center;
 }
 
 /* bigger logo */
@@ -157,8 +195,10 @@
 .asrar-dash-header-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.8rem;
-  margin-right: 0.5rem;
+  grid-column: 3;
+  padding-right: 0.5rem;
 }
 
 /* Auth buttons group in header (Login / Create Account, etc.) */
@@ -351,50 +391,32 @@
   z-index: 2;
 }
 
-/* PANEL */
-.asrar-dash-panel {
-  border-radius: 26px;
-  border: 1px solid rgba(0, 240, 255, 0.18);
-  background: radial-gradient(
-    circle at top left,
-    #061627 0,
-    #02050d 42%,
-    #01030a 100%
-  );
-  padding: 2.2rem 2.1rem 2.1rem;
-  box-shadow:
-    0 0 0 1px rgba(0, 240, 255, 0.04),
-    0 28px 90px rgba(0, 0, 0, 0.96),
-    0 0 40px rgba(0, 240, 255, 0.22);
-  opacity: 0;
-  transform: translateY(18px);
+/* COMPANIONS SECTION */
+.asrar-companions-section {
+  max-width: 1180px;
+  margin: 12px auto 40px;
+  padding: 0 40px;
   animation: asrar-dash-fade-up 0.7s ease-out forwards;
 }
 
-/* TITLES */
-.asrar-dash-eyebrow {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: #8bb8ff;
-  margin-bottom: 0.4rem;
+.asrar-companions-header {
   text-align: center;
+  margin-bottom: 28px;
 }
 
-.asrar-dash-title {
-  font-size: 1.8rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  margin-bottom: 0.3rem;
-  text-align: center;
+.asrar-companions-title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #f5f7fb;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.01em;
 }
 
-.asrar-dash-subtitle {
-  font-size: 0.9rem;
-  color: #a6b7c7;
-  max-width: 34rem;
-  margin: 0 auto 1.6rem;
-  text-align: center;
+.asrar-companions-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #a0a9b8;
 }
 
 /* MINI MOOD CHAT ------------------------------------------------ */
@@ -529,72 +551,165 @@
     0 10px 24px rgba(0, 0, 0, 0.85);
 }
 
-/* CHARACTERS ----------------------------------------------------- */
-.asrar-dash-characters {
-  margin-bottom: 2.5rem;
-  max-width: 1180px;
-  margin-left: auto;
-  margin-right: auto;
+/* DESKTOP GRID */
+.asrar-companions-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-.asrar-dash-char-grid {
+/* SLIDER WRAPPER */
+.asrar-companions-slider-wrapper {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.9rem;
-  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
-.asrar-dash-char-card {
-  border-radius: var(--asrar-radius-md);
-  padding: 22px 20px;
-  background: radial-gradient(circle at top, #0f1925 0, #05070c 65%);
-  border: 1px solid var(--asrar-border-subtle);
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.85);
-  text-align: center;
+.asrar-companions-slider {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.asrar-companions-slider-track {
+  display: flex;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.asrar-companions-slider-item {
+  flex: 0 0 100%;
+  padding:0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.asrar-slider-arrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 209, 218, 0.3);
+  background: rgba(3, 10, 18, 0.8);
+  color: #18d1da;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.asrar-slider-arrow:hover:not(:disabled) {
+  border-color: #18d1da;
+  box-shadow: 0 0 16px rgba(24, 209, 218, 0.4);
+}
+
+.asrar-slider-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* COMPANION CARD */
+.asrar-companion-card {
+  height: auto;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 20px;
+  background: radial-gradient(circle at top left,
+              rgba(24, 209, 218, 0.12),
+              rgba(3, 10, 18, 0.95));
+  border: 1px solid rgba(24, 209, 218, 0.2);
+  box-shadow: 0 0 32px rgba(24, 209, 218, 0.2),
+              inset 0 0 20px rgba(24, 209, 218, 0.04);
+  backdrop-filter: blur(10px);
+  padding: 8px 10px 14px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  min-height: 280px; /* Reduced height to remove extra space */
+  gap: 14px;
+  transition: all 0.3s ease;
   cursor: pointer;
-  flex: 0 1 180px;
-  max-width: 220px;
-  position: relative; /* For absolute positioning of Pro pill */
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
-    border-color 0.2s ease, background 0.2s ease;
+  overflow: visible;
+  position: relative;
 }
 
-.asrar-dash-char-card:hover:not(.asrar-dash-char-card--selected) {
-  transform: translateY(-2px);
-  border-color: var(--asrar-accent-soft);
-  box-shadow: 0 0 18px rgba(24, 209, 218, 0.25);
+.asrar-companion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 48px rgba(24, 209, 218, 0.35),
+              inset 0 0 20px rgba(24, 209, 218, 0.04);
+  border-color: rgba(24, 209, 218, 0.4);
 }
 
-.asrar-dash-char-card--selected {
-  border-color: var(--asrar-accent);
-  box-shadow: 0 0 26px rgba(24, 209, 218, 0.9);
-  background: radial-gradient(circle at top, #152234 0, #05070c 70%);
+.asrar-companion-card:hover .asrar-companion-card-image {
+  transform: scale(1.02);
 }
 
-/* Styles for locked (Pro-only) cards */
-.asrar-dash-char-card--locked {
+.asrar-companion-card--selected {
+  border-color: rgba(24, 209, 218, 0.6);
+  box-shadow: 0 0 48px rgba(24, 209, 218, 0.4),
+              inset 0 0 20px rgba(24, 209, 218, 0.08);
+}
+
+.asrar-companion-card--locked {
   opacity: 0.6;
   filter: saturate(0.7);
-  cursor: pointer;
 }
 
-.asrar-dash-char-card--locked.asrar-dash-char-card--selected {
-  opacity: 0.75;
-  filter: saturate(0.8);
+.asrar-companion-card-image {
+  width: 100%;
+  height: auto;
+  max-height: 65vh;
+  aspect-ratio: 3 / 4;
+  border-radius: 16px;
+  object-fit: contain;
+  object-position: center;
+  box-shadow: 0 0 24px rgba(24, 209, 218, 0.3);
+  transition: transform 0.3s ease;
+  display: block;
+  margin: 0 auto;
 }
 
-/* Pro pill badge */
-.asrar-char-pro-pill {
+.asrar-companion-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 0 auto;
+  min-height: auto;
+  align-items: center;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.asrar-companion-card-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f5f7fb;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.01em;
+}
+
+.asrar-companion-card-role {
+  margin: 0;
+  font-size: 11px;
+  color: #18d1da;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.asrar-companion-pro-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
   padding: 4px 8px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
   background: rgba(0, 240, 255, 0.18);
@@ -602,45 +717,6 @@
   color: #e8f8ff;
   backdrop-filter: blur(8px);
   z-index: 2;
-}
-
-.asrar-dash-char-avatar-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.asrar-dash-char-avatar {
-  width: 90px;
-  height: 140px;
-  border-radius: 999px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 18px rgba(0, 240, 255, 0.75));
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.asrar-dash-char-text {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  margin-top: 5px;
-  /* Removed flex-grow to prevent extra space */
-}
-
-.asrar-dash-char-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f5fbff;
-  margin-bottom: 0.25rem;
-  margin-top: 0;
-}
-
-.asrar-dash-char-role {
-  font-size: 0.85rem;
-  color: #8ea2ba;
-  margin-top: 0;
 }
 
 .asrar-history-snippet {
@@ -664,97 +740,504 @@
   margin-bottom: 1.4rem;
 }
 
-/* Desktop layout for dashboard character strip (match homepage companions row) */
-@media (min-width: 1024px) {
-  /* Center the whole strip inside the panel */
-  .asrar-dashboard-page .asrar-dash-characters {
-    max-width: 1180px;
-    margin: 0 auto 1.8rem;
-  }
+/* RESPONSIVE DESIGN */
 
+/* RESPONSIVE */
+
+/* Tablet (768px - 1199px) */
+@media (max-width: 1199px) {
+  .asrar-companions-section {
+    padding: 0 24px;
+    margin: 12px auto 32px;
+  }
   
-
-  /* Use a 5-column grid like the homepage, no horizontal scroll */
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slider {
-    max-width: 1100px;
-    margin: 22px auto 8px;
-    padding: 0;
+  .asrar-start-card {
+    margin: 32px auto 60px;
+    padding: 20px 24px;
   }
-
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-track {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 18px;
-    transform: none !important;
+  
+  .asrar-start-card-inner {
+    flex-direction: column;
+    gap: 14px;
+    align-items: stretch;
   }
-
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slide {
-    flex: 0 0 auto;
-    padding: 0;
-    display: block;
+  
+  .asrar-dialect-label {
+    width: 100%;
   }
-
-  /* Hide arrows and dots on desktop; keep them for mobile */
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-arrow,
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-dots {
-    display: none;
+  
+  .asrar-dialect-select {
+    width: 100%;
+    min-width: auto;
   }
-
-   /* Make the character cards visually bigger on desktop */
-  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-card {
-    min-height: 320px; /* Larger on desktop but not too tall */
-    padding: 20px 20px;
-    max-width: 240px;
+  
+  .asrar-btn-start-primary {
+    width: 100% !important;
   }
-
-  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-avatar {
-    width: 120px; /* Larger portrait */
-    height: 180px;
-    margin-top: 15px;
-    margin-bottom: 15px;
-  }
-
-  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-name {
-    font-size: 18px; /* Larger text */
-    margin-top: 0;
-    margin-bottom: 8px;
-  }
-
-  .asrar-dashboard-page .asrar-dash-characters .asrar-dash-char-role {
-    font-size: 14px;
-    margin-top: 0;
+  
+  .asrar-companions-slider-wrapper {
+    padding: 0 8px;
   }
 }
 
-/* Tablet layout: keep cards visible and nicely wrapped (768px–1024px) */
-@media (min-width: 768px) and (max-width: 1023.98px) {
-  .asrar-dashboard-page .asrar-dash-characters {
-    max-width: 900px;
-    margin: 0 auto 1.6rem;
+/* Medium screens (900px - 1199px) */
+@media (max-width: 1199px) and (min-width: 900px) {
+  .asrar-companions-section {
+    padding: 0 16px;
+    margin: 12px auto 24px;
   }
-
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slider {
-    max-width: 100%;
-    margin: 18px auto 8px;
+  
+  .asrar-companions-header {
+    margin-bottom: 20px;
+  }
+  
+  .asrar-companions-slider-wrapper {
+    gap: 10px;
     padding: 0;
-  }
-
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-track {
-    display: flex;
-    flex-wrap: wrap;
     justify-content: center;
-    gap: 16px 24px;       /* vertical, horizontal */
-    transform: none !important;   /* stop slider from shifting cards off-screen */
+  }
+  
+  .asrar-slider-arrow {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  
+  .asrar-companion-card {
+    max-width: 80%;
+    padding: 10px 12px 14px;
   }
 
-  .asrar-dashboard-page .asrar-dash-characters .asrar-character-slide {
-    flex: 0 1 170px;      /* allow 2 rows if needed */
-    padding: 0;
-    display: block;
+  .asrar-companion-card-image {
+    max-height: 60vh;
+    object-fit: contain;
+  }
+  
+  .asrar-companion-card-content {
+    gap: 3px;
+  }
+  
+  .asrar-companion-card-name {
+    font-size: 14px;
+  }
+  
+  .asrar-companion-card-role {
+    font-size: 10px;
+    margin-bottom: 0px;
+  }
+  
+  .asrar-start-card {
+    margin: 24px auto 48px;
+    padding: 16px 20px;
+  }
+  
+  .asrar-start-card-inner {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .asrar-dialect-label {
+    font-size: 11px;
+  }
+  
+  .asrar-dialect-select {
+    font-size: 12px;
+    padding: 9px 12px;
+    padding-right: 28px;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .asrar-btn-start-primary {
+    width: 100% !important;
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+  }
+  
+  .asrar-validation-error {
+    font-size: 12px;
+    margin-top: 10px;
   }
 }
 
-/* FOOTER: DIALECT + BUTTON -------------------------------------- */
+/* Small tablets / landscape phones (600px - 899px) */
+@media (max-width: 899px) and (min-width: 600px) {
+  .asrar-companions-section {
+    padding: 0 16px;
+    margin: 12px auto 24px;
+  }
+  
+  .asrar-companions-header {
+    margin-bottom: 20px;
+  }
+  
+  .asrar-companions-title {
+    font-size: 22px;
+  }
+  
+  .asrar-companions-subtitle {
+    font-size: 13px;
+  }
+  
+  .asrar-companions-slider-wrapper {
+    gap: 10px;
+    padding: 0;
+    justify-content: center;
+  }
+  
+  .asrar-slider-arrow {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  
+  .asrar-companion-card {
+    max-width: 90%;
+    padding: 10px 10px 14px;
+  }
+
+  .asrar-companion-card-image {
+    max-height: 55vh;
+    object-fit: contain;
+  }
+  
+  .asrar-companion-card-content {
+    gap: 3px;
+  }
+  
+  .asrar-companion-card-name {
+    font-size: 14px;
+  }
+  
+  .asrar-companion-card-role {
+    font-size: 10px;
+    margin-bottom: 0px;
+  }
+  
+  .asrar-start-card {
+    margin: 24px auto 48px;
+    padding: 16px 20px;
+  }
+  
+  .asrar-start-card-inner {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .asrar-dialect-label {
+    font-size: 11px;
+  }
+  
+  .asrar-dialect-select {
+    font-size: 12px;
+    padding: 9px 12px;
+    padding-right: 28px;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .asrar-btn-start-primary {
+    width: 100% !important;
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+  }
+  
+  .asrar-validation-error {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+}
+
+/* Phones (430px - 599px) */
+@media (max-width: 599px) and (min-width: 430px) {
+  .asrar-companions-section {
+    padding: 0 16px;
+    margin: 12px auto 24px;
+  }
+  
+  .asrar-companions-header {
+    margin-bottom: 20px;
+  }
+  
+  .asrar-companions-title {
+    font-size: 22px;
+  }
+  
+  .asrar-companions-subtitle {
+    font-size: 13px;
+  }
+  
+  .asrar-companions-slider-wrapper {
+    gap: 8px;
+    padding: 0;
+    justify-content: center;
+  }
+  
+  .asrar-slider-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  
+  .asrar-companion-card {
+    max-width: 100%;
+    padding: 8px 10px 12px;
+  }
+
+  .asrar-companion-card-image {
+    max-height: 55vh;
+    object-fit: contain;
+  }
+  
+  .asrar-companion-card-name {
+    font-size: 13px;
+  }
+  
+  .asrar-companion-card-role {
+    font-size: 10px;
+    margin-bottom: 0px;
+  }
+  
+  .asrar-start-card {
+    margin: 24px auto 48px;
+    padding: 16px 20px;
+  }
+  
+  .asrar-start-card-inner {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .asrar-dialect-label {
+    font-size: 11px;
+  }
+  
+  .asrar-dialect-select {
+    font-size: 12px;
+    padding: 9px 12px;
+    padding-right: 28px;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .asrar-btn-start-primary {
+    width: 100% !important;
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+  }
+  
+  .asrar-validation-error {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+}
+
+/* Extra small mobile (< 430px) */
+@media (max-width: 429px) {
+  .asrar-companions-section {
+    padding: 0 12px;
+    margin: 12px auto 20px;
+  }
+  
+  .asrar-companions-header {
+    margin-bottom: 16px;
+  }
+  
+  .asrar-companions-title {
+    font-size: 20px;
+  }
+  
+  .asrar-companions-subtitle {
+    font-size: 12px;
+  }
+  
+  .asrar-companions-slider-wrapper {
+    gap: 8px;
+    padding: 0;
+    justify-content: center;
+  }
+  
+  .asrar-slider-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  
+  .asrar-companion-card {
+    max-width: 100%;
+    padding: 6px 8px 10px;
+    border-radius: 14px;
+  }
+
+  .asrar-companion-card-image {
+    max-height: 50vh;
+    object-fit: contain;
+    border-radius: 12px;
+  }
+  
+  .asrar-companion-card-name {
+    font-size: 12px;
+  }
+  
+  .asrar-companion-card-role {
+    font-size: 9px;
+    margin-bottom: 0px;
+  }
+  
+  .asrar-start-card {
+    padding: 14px 16px;
+    margin: 20px auto 40px;
+  }
+  
+  .asrar-start-card-inner {
+    gap: 10px;
+  }
+  
+  .asrar-dialect-label {
+    font-size: 10px;
+  }
+  
+  .asrar-dialect-select {
+    font-size: 12px;
+    padding: 9px 12px;
+    padding-right: 28px;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .asrar-btn-start-primary {
+    width: 100% !important;
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+  }
+  
+  .asrar-validation-error {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+}
+
+/* START CARD */
+.asrar-start-card {
+  max-width: 1180px;
+  margin: 40px auto 80px;
+  padding: 24px 32px;
+  border-radius: 20px;
+  background: radial-gradient(circle at top left,
+              rgba(24, 209, 218, 0.08),
+              rgba(3, 10, 18, 0.92));
+  border: 1px solid rgba(24, 209, 218, 0.2);
+  box-shadow: 0 0 32px rgba(24, 209, 218, 0.15),
+              inset 0 0 20px rgba(24, 209, 218, 0.04);
+  backdrop-filter: blur(10px);
+  animation: asrar-dash-fade-up 0.7s ease-out forwards;
+  animation-delay: 0.1s;
+}
+
+.asrar-start-card-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.asrar-dialect-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #a0a9b8;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.asrar-dialect-select {
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 209, 218, 0.3);
+  background: radial-gradient(circle at top,
+              rgba(3, 12, 18, 0.8),
+              rgba(3, 8, 14, 0.95));
+  color: #f5f7fb;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  padding-right: 32px;
+  background-image: linear-gradient(45deg, transparent 50%, #18d1da 50%),
+                    linear-gradient(135deg, #18d1da 50%, transparent 50%);
+  background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+  flex: 1;
+  min-width: 200px;
+}
+
+.asrar-dialect-select:hover {
+  border-color: #18d1da;
+  box-shadow: 0 0 12px rgba(24, 209, 218, 0.2);
+}
+
+.asrar-dialect-select option {
+  background: #030b0f;
+  color: #f5f7fb;
+}
+
+/* START PRIMARY BUTTON */
+.asrar-btn-start-primary {
+  padding: 11px 32px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #11c6d0 0%, #3be7ff 50%, #00e2d6 100%) !important;
+  color: #020408 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 0 24px rgba(17, 198, 208, 0.6) !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.asrar-btn-start-primary:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 0 40px rgba(17, 198, 208, 0.9) !important;
+}
+
+.asrar-btn-start-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+.asrar-btn-start-primary:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  box-shadow: 0 0 12px rgba(17, 198, 208, 0.2) !important;
+}
+
+.asrar-validation-error {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #ff6b6b;
+  animation: asrar-shake 0.4s ease;
+}
+
+@keyframes asrar-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* FOOTER: DIALECT + BUTTON (OLD - KEPT FOR COMPATIBILITY) */
 .asrar-dash-footer-row {
   display: flex;
   flex-direction: column;      /* stack them vertically */
@@ -813,6 +1296,60 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
   background: #050816;
 }
 
+/* BUTTON UTILITIES */
+.asrar-btn {
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.asrar-btn-primary {
+  background: linear-gradient(135deg, #11c6d0, #3be7ff);
+  color: #020408;
+  box-shadow: 0 0 20px rgba(17, 198, 208, 0.9);
+}
+
+.asrar-btn-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 32px rgba(17, 198, 208, 1);
+}
+
+.asrar-btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.asrar-btn-secondary {
+  background: linear-gradient(135deg, #18d1da, #0fa8b3);
+  color: #020408;
+  box-shadow: 0 0 16px rgba(24, 209, 218, 0.4);
+}
+
+.asrar-btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(24, 209, 218, 0.6);
+}
+
+.asrar-btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #a0a9b8;
+}
+
+.asrar-btn-ghost:hover {
+  border-color: #18d1da;
+  color: #18d1da;
+  background: rgba(24, 209, 218, 0.08);
+}
+
 .asrar-dash-start-button {
   flex: 0 0 auto;
   min-width: 200px;
@@ -824,15 +1361,13 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
   text-transform: uppercase;
   letter-spacing: 0.12em;
   align-self: center;   
-background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
+  background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
   color: #050313;
   cursor: pointer;
-
   transition:
     transform 0.12s ease,
     box-shadow 0.16s ease,
     filter 0.12s ease;
-    
 }
 
 .asrar-dash-start-button:hover {
@@ -985,12 +1520,7 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
     padding-top: 0;
   }
 
-  .asrar-dash-main,
-  .asrar-dash-content,
-  .asrar-settings-main,
-  .asrar-billing-main {
-    margin-top: calc(72px + env(safe-area-inset-top, 0px));
-  }
+ 
 
   .asrar-chat-page .asrar-chat-layout {
     margin-top: calc(70px + env(safe-area-inset-top, 0px));
@@ -1129,7 +1659,7 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    padding-left: 0.9rem;
+    padding-left: 0.4rem;
     padding-right: 0.9rem;
   }
 
@@ -1350,4 +1880,310 @@ background: linear-gradient( 135deg, #2cf6ff 0%, #1acbe8 45%, #fff 100% );
   color: #9bb0c6;
   font-weight: 500;
   text-align: center;
+}
+
+.asrar-companions-section {
+  padding-top: 0px !important;
+}
+
+/* === CHAT HISTORY PAGE FIXES ============================================ */
+
+.asrar-history-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.asrar-history-panel {
+  text-align: center;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  width: 100%;
+  padding-top:0px;
+}
+
+.asrar-dash-eyebrow {
+  text-align: center;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(180, 214, 244, 0.9);
+  margin-bottom: 0.8rem;
+}
+
+.asrar-dash-title {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #e8f8ff;
+  margin: 0 0 1rem;
+  letter-spacing: -0.01em;
+}
+
+.asrar-dash-subtitle {
+  text-align: center;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  color: #9bb0c6;
+  line-height: 1.6;
+}
+
+/* Character grid - same as dashboard */
+.asrar-dash-characters {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.asrar-dash-char-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  place-items: center;
+}
+
+/* Character card - match dashboard companion cards */
+.asrar-dash-char-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 10px 14px;
+  border-radius: 20px;
+  background: radial-gradient(circle at top left, rgba(24, 209, 218, 0.12), rgba(3, 10, 18, 0.95));
+  border: 1px solid rgba(24, 209, 218, 0.2);
+  box-shadow: 0 0 32px rgba(24, 209, 218, 0.2), inset 0 0 20px rgba(24, 209, 218, 0.04);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: auto;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow: visible;
+  position: relative;
+}
+
+.asrar-dash-char-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 48px rgba(24, 209, 218, 0.35), inset 0 0 20px rgba(24, 209, 218, 0.04);
+  border-color: rgba(24, 209, 218, 0.4);
+}
+
+/* Avatar wrap - centered */
+.asrar-dash-char-avatar-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Avatar - match dashboard size */
+.asrar-dash-char-avatar {
+  width: 100%;
+  height: auto;
+  max-height: 65vh;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 16px;
+  border: 1px solid rgba(24, 209, 218, 0.35);
+  padding: 8px;
+  background: radial-gradient(circle at center, rgba(0, 244, 255, 0.12), rgba(3, 8, 16, 0.98));
+  box-shadow: 0 0 24px rgba(24, 209, 218, 0.3);
+  display: block;
+  margin: 0 auto;
+}
+
+/* Text section - centered */
+.asrar-dash-char-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  width: 100%;
+  flex: 0 0 auto;
+  min-height: auto;
+  margin-top: 10px;
+}
+
+.asrar-dash-char-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f5f7fb;
+  margin: 0;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.01em;
+}
+
+.asrar-dash-char-role {
+  font-size: 11px;
+  color: #18d1da;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  margin: 0;
+  margin-bottom: 2px;
+}
+
+.asrar-history-snippet {
+  font-size: 0.78rem;
+  color: #9bb0c6;
+  text-align: center;
+  margin-top: 0.4rem;
+}
+
+/* Tablet responsive */
+@media (max-width: 1199px) {
+  .asrar-dash-char-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 899px) {
+  .asrar-history-panel {
+    padding: 30px 16px;
+  }
+
+  .asrar-dash-title {
+    font-size: 1.5rem;
+  }
+
+  .asrar-dash-char-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .asrar-dash-char-card {
+    padding: 8px 10px 12px;
+  }
+
+  .asrar-dash-char-avatar {
+    max-height: 55vh;
+  }
+
+  .asrar-dash-char-name {
+    font-size: 14px;
+  }
+
+  .asrar-dash-char-role {
+    font-size: 10px;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 599px) {
+  .asrar-history-panel {
+    padding: 24px 16px;
+  }
+
+  .asrar-dash-title {
+    font-size: 1.2rem;
+  }
+
+  .asrar-dash-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .asrar-dash-char-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .asrar-dash-char-card {
+    padding: 8px 10px 12px;
+    max-width: 100%;
+  }
+
+  .asrar-dash-char-avatar {
+    max-height: 50vh;
+  }
+
+  .asrar-dash-char-name {
+    font-size: 13px;
+  }
+
+  .asrar-dash-char-role {
+    font-size: 10px;
+  }
+}
+
+/* === CHAT HISTORY LAYOUT FIX ===================================== */
+/* Center cards even if there is only one history item */
+
+.asrar-dash-characters {
+  width: 100%;
+  display: flex;
+  justify-content: center;   /* center the whole grid */
+}
+
+.asrar-dash-char-grid {
+  /* switch from CSS grid to flex so items always center */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 18px;
+
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Tablet: just tighten the gap a bit */
+@media (max-width: 1199px) {
+  .asrar-dash-char-grid {
+    gap: 14px;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 899px) {
+  .asrar-dash-char-grid {
+    gap: 12px;
+  }
+}
+
+/* Mobile: single-column feel but still centered */
+@media (max-width: 599px) {
+  .asrar-dash-char-grid {
+    gap: 12px;
+  }
+}
+/* === CHAT HISTORY CARD SIZE TWEAK ================================ */
+/* Make history character cards smaller & tidy */
+
+.asrar-history-page .asrar-dash-char-card {
+  max-width: 220px;          /* shrink the card */
+  width: 100%;
+  padding: 10px 12px 14px;
+}
+
+.asrar-history-page .asrar-dash-char-avatar {
+  max-height: 320px;         /* keep image from towering */
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+}
+
+/* Slightly smaller on mobile so it still feels elegant */
+@media (max-width: 599px) {
+  .asrar-history-page .asrar-dash-char-card {
+    max-width: 220px;
+  }
+
+  .asrar-history-page .asrar-dash-char-avatar {
+    max-height: 280px;
+  }
 }

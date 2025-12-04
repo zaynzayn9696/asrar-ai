@@ -6,11 +6,11 @@ import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
 import { useAuth } from "./hooks/useAuth";
 
-import abuZainAvatar from "./assets/abu_zain.png";
-import hanaAvatar from "./assets/hana.png";
-import rashidAvatar from "./assets/rashid.png";
-import nourAvatar from "./assets/nour.png";
-import farahAvatar from "./assets/farah.png";
+import abuZainAvatar from "./assets/abu_zain_2.png";
+import hanaAvatar from "./assets/hana_2.png";
+import rashidAvatar from "./assets/rashid_2.png";
+import nourAvatar from "./assets/nour_2.png";
+import farahAvatar from "./assets/farah_2.png";
 
 const CHARACTERS = [
   {

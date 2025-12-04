@@ -5,11 +5,11 @@ import "./Dashboard.css";
 import "./HomePage.css";
 import "./CharacterCarousel.css";
 import asrarLogo from "./assets/asrar-logo.png";
-import abuZainAvatar from "./assets/abu_zain.png";
-import hanaAvatar from "./assets/hana.png";
-import rashidAvatar from "./assets/rashid.png";
-import nourAvatar from "./assets/nour.png";
-import farahAvatar from "./assets/farah.png";
+import abuZainAvatar from "./assets/abu_zain_2.png";
+import hanaAvatar from "./assets/hana_2.png";
+import rashidAvatar from "./assets/rashid_2.png";
+import nourAvatar from "./assets/nour_2.png";
+import farahAvatar from "./assets/farah_2.png";
 import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
 import AsrarHeader from "./AsrarHeader";
@@ -565,6 +565,7 @@ export default function HomePage() {
   const [selectedCharacterId, setSelectedCharacterId] = useState(
     CHARACTERS[2].id // Start with Rashid (index 2) selected by default
   );
+  const [companionCarouselIndex, setCompanionCarouselIndex] = useState(1); // Start at Hana (index 1)
 
   const miniChatInputRef = useRef(null);
   const sliderTouchStartXRef = useRef(null);
@@ -629,20 +630,17 @@ export default function HomePage() {
   const navItems = isAr
     ? [
         { href: "#hero", label: "الرئيسية" },
-        { href: "#about", label: "من نحن" },
         { href: "#characters", label: "الشخصيات" },
+      
         { href: "#security-privacy", label: "الأمان والخصوصية" },
-        { href: "#how-it-works", label: "كيف يعمل؟" },
         { href: "#pricing", label: "الأسعار" },
         { href: "#contact", label: "تواصل معنا" },
       ]
     : [
         { href: "#hero", label: "Home" },
-        { href: "#emotional-engine", label: "Emotional Engine" },
-        { href: "#about", label: "About" },
         { href: "#characters", label: "Characters" },
+       
         { href: "#security-privacy", label: "Security & Privacy" },
-      
         { href: "#pricing", label: "Pricing" },
         { href: "#contact", label: "Contact" },
       ];
@@ -655,10 +653,10 @@ export default function HomePage() {
 
   const homeDashboardLabel = isAr ? "لوحة التحكم" : "Dashboard";
 
-  const chatInputTitle = isAr ? "اكتب رسالتك" : "Compose your message";
+  const chatInputTitle = isAr ? "كيف تشعر فعلاً؟" : "How are you really feeling?";
   const chatInputSubtitle = isAr
-    ? "هذا سيصل مباشرة إلى رفيقك"
-    : "Goes straight to your companion";
+    ? "اكتب بصراحة. أنا هنا لأستمع وأفهم."
+    : "Tell me honestly. I'm here to listen and understand.";
   const chatInputFootnote = isAr
     ? "اضغط Enter للإرسال • استخدم Shift+Enter لسطر جديد"
     : "Press Enter to send • Shift+Enter for a new line";
@@ -666,9 +664,6 @@ export default function HomePage() {
   const handleMiniChatChange = (event) => {
     const textarea = event.target;
     setMiniChatInput(textarea.value);
-    textarea.style.height = "auto";
-    const nextHeight = Math.min(textarea.scrollHeight, 240);
-    textarea.style.height = `${Math.max(nextHeight, 120)}px`;
   };
 
   const sendMiniChat = () => {
@@ -678,10 +673,6 @@ export default function HomePage() {
     setMiniChatUserText(trimmed);
     setMiniChatReply(getMiniChatReply(trimmed, isAr));
     setMiniChatInput("");
-
-    if (miniChatInputRef.current) {
-      miniChatInputRef.current.style.height = "120px";
-    }
   };
 
   const handleMiniChatSubmit = (e) => {
@@ -714,6 +705,20 @@ export default function HomePage() {
     setMoodInput("");
     setSubmittedMood("");
     setRecommendedId(null);
+  };
+
+  const goToPrevCompanion = () => {
+    setCompanionCarouselIndex((prev) =>
+      (prev - 1 + CHARACTERS.length) % CHARACTERS.length
+    );
+  };
+
+  const goToNextCompanion = () => {
+    setCompanionCarouselIndex((prev) => (prev + 1) % CHARACTERS.length);
+  };
+
+  const goToCompanion = (index) => {
+    setCompanionCarouselIndex(index);
   };
 
   const handleCharacterPrev = () => {
@@ -959,346 +964,317 @@ export default function HomePage() {
       <main>
         {/* HERO */}
         <section id="hero" className="asrar-hero">
-          <div className="asrar-logo-frame">
-            <div className="asrar-logo-inner">
-              <img src={asrarLogo} alt="Asrar logo" />
+          {/* Glowing Orb */}
+          <div className="asrar-hero-glow-orb"></div>
+
+          {/* Restored Asrar Logo — Larger & More Prominent */}
+          <div className="asrar-hero-logo-frame">
+            <div className="asrar-hero-logo-inner">
+              <img src={asrarLogo} alt="Asrar logo" className="asrar-hero-logo asrar-hero-logo--large" />
             </div>
           </div>
- <div className="asrar-hero-copy">
-  <p className="asrar-hero-eyebrow">
-    {isAr
-      ? "أوّل رُفقاء ذكاء اصطناعي خاصّون… مُصمّمون خصيصاً للشرق الأوسط."
-      : "The First Private AI Companions Built for the Middle East."}
-  </p>
 
-  <h1 className="asrar-hero-title">
-    {isAr
-      ? "حيث تلتقي الثقافة بالمشاعر والتقنية."
-      : "Where culture, emotion, and technology meet."}
-  </h1>
-
- 
-</div>
-
-          {/* HERO COLUMNS */}
-          <div className="asrar-hero-columns">
-            <div className="asrar-hero-left">
-              <div className="asrar-chat-wrapper">
-                <div className="asrar-chat-phone">
-                  <div className="asrar-chat-header">
-                    <div className="asrar-chat-avatar"></div>
-                   
-                  </div>
-
-                  <div className="asrar-chat-body">
-                    <div className="bubble bubble-ai">
-                      <div className="bubble-ai-label">
-                        {isAr
-                          ? " دعم عميق"
-                          : " Deep Support"}
-                      </div>
-                      <p className="bubble-ai-text">
-                        {isAr
-                          ? "أنا معك. خذ نفس عميق، واكتب لي بصراحة… ما الشيء اللي حاسس إنه جالس على صدرك اليوم؟"
-                          : "I’m here. Take a slow breath. Tell me honestly — what’s been sitting on your chest lately?"}
-                      </p>
-                    </div>
-
-                    {miniChatUserText && (
-                      <div className="bubble bubble-user">
-                        {miniChatUserText}
-                      </div>
-                    )}
-
-                    {miniChatReply && (
-                      <div className="bubble bubble-ai">
-                        <p className="bubble-ai-text">{miniChatReply.text}</p>
-                        {miniChatCharacter && (
-                          <Link
-                            to={user ? "/dashboard" : "/create-account"}
-                            className="asrar-mini-chat-cta asrar-btn primary small"
-                            onClick={() => {
-                              if (typeof window !== "undefined") {
-                                localStorage.setItem(
-                                  "asrar-selected-character",
-                                  miniChatCharacter.id
-                                );
-                              }
-                            }}
-                          >
-                            {isAr
-                              ? `ابدأ المحادثة مع ${miniChatCharacter.nameAr}`
-                              : `Chat with ${miniChatCharacter.nameEn.split(" ")[0]}`}
-                          </Link>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <form
-                    className="asrar-chat-input"
-                    onSubmit={handleMiniChatSubmit}
-                  >
-                    <div className="asrar-chat-input-shell">
-                      <div className="asrar-chat-input-bar">
-                        <textarea
-                          ref={miniChatInputRef}
-                          className="asrar-chat-input-field"
-                          value={miniChatInput}
-                          onChange={handleMiniChatChange}
-                          onKeyDown={handleMiniChatKeyDown}
-                          placeholder={
-                            isAr
-                              ? "اكتب كيف كان يومك اليوم ..."
-                              : "Type how you feel today..."
-                          }
-                        />
-                        <button className="asrar-chat-send" type="submit">
-                          ↗
-                        </button>
-                      </div>
-                      <div className="asrar-chat-input-foot">
-                        {chatInputFootnote}
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-  {/* EMOTIONAL ENGINE */}
-        <section id="emotional-engine" className="asrar-section asrar-engine">
-          {isAr ? (
-            <div className="asrar-engine-inner">
-              <p className="asrar-eyebrow">
-                {"مُحرك المشاعر من أسرار"}
-              </p>
-              <h2 className="asrar-engine-title">
-                {"ذكاء عاطفي حقيقي — وليس ردود ذكاء اصطناعي عشوائية."}
-              </h2>
-              <p className="asrar-engine-body">
-                {
-                  "كل محادثة في أسرار تعمل عبر طبقة ذكاء عاطفي خاصة بنا مبنية فوق نماذج ذكاء اصطناعي متقدمة. هذه الطبقة تلتقط مزاجك، وتفهم نبرة كلامك وسياقك الثقافي، ثم تشكّل الرد من خلال شخصية كل واحد من رفقاء أسرار — لتشعر أن الحديث إنساني أكثر، ثابت، وفعلاً داعم."
-                }
-              </p>
-
-              <div className="asrar-engine-grid">
-                <article className="asrar-engine-card">
-                  <h3>{"استجابات واعية بالمشاعر"}</h3>
-                  <p>
-                    {
-                      "يقوم المحرك بتصنيف ما تشعر به — مثل الحزن، القلق، الوحدة، الغضب وغيرها — ويضبط نبرة وعمق الرد ليتناسب مع حالتك العاطفية."
-                    }
-                  </p>
-                </article>
-
-                <article className="asrar-engine-card">
-                  <h3>{"دعم مخصص لكل شخصية"}</h3>
-                  <p>
-                    {
-                      "هَنا، أبو زين، رشيد، نور، وفَرَح يشتركون في نفس محرك المشاعر، لكن كل واحد منهم يرد بأسلوب وصوت ومستوى توجيه مختلف."
-                    }
-                  </p>
-                </article>
-
-                <article className="asrar-engine-card">
-                  <h3>{"مصمم خصيصاً للمنطقة العربية"}</h3>
-                  <p>
-                    {
-                      "تم تصميم أسرار في الأردن مع أخذ الثقافة العربية في الحسبان، لتجمع بين الذكاء الاصطناعي الحديث والحس المحلي والاحترام والدفء — وليس مجرد نسخة من قالب غربي."
-                    }
-                  </p>
-                </article>
-              </div>
-            </div>
-          ) : (
-            <div className="asrar-engine-inner">
-              <p className="asrar-eyebrow">ASRAR EMOTIONAL ENGINE</p>
-              <h2 className="asrar-engine-title">
-                Emotional intelligence that actually feels human.
-              </h2>
-              <p className="asrar-engine-body">
-                Asrar adds a dedicated emotional layer on top of AI so your
-                companions respond with context, care, and cultural nuance.
-              </p>
-
-              <div className="asrar-engine-grid">
-                <article className="asrar-engine-card">
-                  <div className="asrar-engine-icon">🔎</div>
-                  <h3>Reads your emotional tone</h3>
-                  <p>
-                    Picks up on mood, tone, and pace so replies land gently,
-                    not mechanically.
-                  </p>
-                </article>
-
-                <article className="asrar-engine-card">
-                  <div className="asrar-engine-icon">🧠</div>
-                  <h3>Persona-driven conversations</h3>
-                  <p>
-                    Each companion answers in a distinct voice — from deep
-                    support to honest tough love.
-                  </p>
-                </article>
-
-                <article className="asrar-engine-card">
-                  <div className="asrar-engine-icon">🌙</div>
-                  <h3>Designed for the Middle East</h3>
-                  <p>
-                    Built around the language, norms, and daily situations
-                    people here actually live.
-                  </p>
-                </article>
-              </div>
-            </div>
-          )}
-        </section>
-        <div className="asrar-section-divider" aria-hidden="true" />
-
-        {/* ABOUT / BUILT FOR OUR CULTURE */}
-        <section id="about" className="asrar-section asrar-section--about">
-          {isAr ? (
-            <>
-              <h2 className="asrar-section-title">من نحن</h2>
-              <p className="asrar-section-body">
-                {
-                  'أسرار تعني "الأسرار". وُلد هذا المشروع من فكرة أن الناس في العالم العربي يستحقون مساحة خاصة وآمنة ليفضفضوا ويكتبوا ويُسمِعوا مشاعرهم في أي وقت. الشعار الذي تراه هو بخط يدي والدي، وتذكير أن خلف كل هذه التقنية قلوب وقصص حقيقية.'
-                }
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 className="asrar-section-title">Built for Our Culture</h2>
-              <p className="asrar-section-body">
-                Asrar means "secrets" in Arabic. It was created so people
-                across the region have a private place to say what they
-                can’t always say out loud. The logo is handwritten by my
-                father — a quiet reminder that behind all this technology
-                are real families, stories, and care.
-              </p>
-            </>
-          )}
-        </section>
-        <div className="asrar-section-divider" aria-hidden="true" />
-
-        {/* CHARACTERS */}
-        <section id="characters" className="asrar-section asrar-characters-section">
-          <div className="asrar-section-header">
-            {!isAr && (
-              <p className="asrar-eyebrow">Meet Your Companions</p>
-            )}
-            <h2 className="asrar-section-title">
-              {isAr ? "قلب عائلة أسرار" : "The Asrar Core Family"}
-            </h2>
-            <p className="asrar-section-subtitle">
+          {/* Centered Copy */}
+          <div className="asrar-hero-copy-centered">
+            <h1 className="asrar-hero-title-centered">
               {isAr
-                ? "خمسة رفقاء، كل واحد منهم يمثل جانباً مختلفاً من احتياجك العاطفي."
-                : "Five core companions, each tuned to a different emotional need — from deep support to focus, honesty, and laughter."}
+                ? "كيف تشعر فعلاً؟"
+                : "How do you really want to feel?"}
+            </h1>
+            <p className="asrar-hero-subtitle-centered">
+              {isAr
+                ? "التقِ برفيقك الذكي العاطفي. مصمم لك. مبني للشرق الأوسط."
+                : "Meet your emotional AI companion. Designed for you. Built for the Middle East."}
             </p>
           </div>
 
-          <div className="asrar-character-grid-wrapper">
-            <div className="asrar-character-grid">
-              {CHARACTERS.map((character) => {
-                const isLocked = (!user || user.plan !== "pro") && character.id !== "hana";
-                const cardClasses =
-                  "asrar-character-card" + (isLocked ? " asrar-character-card--locked" : "");
-                return (
-                  <div
-                    key={character.id}
-                    className={cardClasses}
-                    id={`character-${character.id}`}
+          {/* Mood Capsule — Minimal Emotion Capsule */}
+          <section className="asrar-mood-capsule">
+            <form className="asrar-mood-capsule-inner" onSubmit={handleMiniChatSubmit}>
+              {/* Header */}
+              <div className="asrar-mood-capsule-header">
+                <span className="asrar-mood-capsule-label">
+                  {isAr ? "فحص المزاج" : "Mood check-in"}
+                </span>
+                <span className="asrar-mood-capsule-pill">
+                  {isAr ? "دعم عميق" : "Deep Support"}
+                </span>
+              </div>
+
+              {/* Question */}
+              <div className="asrar-mood-capsule-question">
+                <h2 className="asrar-mood-capsule-title">
+                  {isAr
+                    ? "كيف تشعر فعلاً؟"
+                    : "How do you really want to feel today?"}
+                </h2>
+                <p className="asrar-mood-capsule-subtitle">
+                  {isAr
+                    ? "اكتب شيئاً عن مشاعرك…"
+                    : "Tell me what's been sitting on your chest lately…"}
+                </p>
+              </div>
+
+              {/* Input */}
+              <div className="asrar-mood-capsule-input-row">
+                <div className="asrar-mood-capsule-input-shell">
+                  <textarea
+                    className="asrar-mood-capsule-input"
+                    placeholder={
+                      isAr
+                        ? "اكتب كيف تشعر الآن…"
+                        : "Type how you feel right now…"
+                    }
+                    value={miniChatInput}
+                    onChange={handleMiniChatChange}
+                    onKeyDown={handleMiniChatKeyDown}
+                    rows={1}
+                  />
+                  <button
+                    type="submit"
+                    className="asrar-mood-capsule-send"
+                    disabled={!miniChatInput.trim()}
                   >
-                    {isLocked && (
-                      <span className="asrar-character-pro-pill">
-                        {isAr ? "خطة برو فقط" : "Pro only"}
-                      </span>
-                    )}
+                    <span className="asrar-mood-capsule-send-icon">➜</span>
+                  </button>
+                </div>
+                <p className="asrar-mood-capsule-hint">
+                  {isAr
+                    ? "اضغط Enter للإرسال • Shift+Enter لسطر جديد"
+                    : "Press Enter to send · Shift+Enter for new line"}
+                </p>
+              </div>
 
-                    <div className="asrar-character-card-inner">
-                      <div className="asrar-character-card-top asrar-character-card-top--stack">
-                        <img
-                          className="asrar-character-avatar"
-                          src={character.avatar}
-                          alt={`${character.nameEn} avatar`}
-                        />
-                        <h3 className="asrar-character-name">
-                          {isAr ? character.nameAr : character.nameEn}
-                        </h3>
-                        <p className="asrar-character-role">
-                          {isAr ? character.roleAr : character.roleEn}
-                        </p>
-                      </div>
+              {/* Show recommendation if exists */}
+              {miniChatReply && (
+                <div className="asrar-mood-capsule-response">
+                  <p className="asrar-mood-capsule-response-text">{miniChatReply.text}</p>
+                  {miniChatCharacter && (
+                    <Link
+                      to={user ? "/dashboard" : "/create-account"}
+                      className="asrar-mood-capsule-cta asrar-btn primary small"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem(
+                            "asrar-selected-character",
+                            miniChatCharacter.id
+                          );
+                        }
+                      }}
+                    >
+                      {isAr
+                        ? `ابدأ مع ${miniChatCharacter.nameAr}`
+                        : `Chat with ${miniChatCharacter.nameEn.split(" ")[0]}`}
+                    </Link>
+                  )}
+                </div>
+              )}
+            </form>
+          </section>
 
-                      <p className="asrar-character-desc">
-                        {isAr ? character.descriptionAr : character.descriptionEn}
-                      </p>
+          {/* EMOTIONAL INTELLIGENCE LAYER - After Mood Chat */}
+          <section id="emotional-engine" className="asrar-section asrar-section--emotional-engine asrar-engine-hero">
+            {isAr ? (
+              <div className="asrar-engine-inner">
+                <h2 className="asrar-section-title">
+                  {"طبقة الذكاء العاطفي"}
+                </h2>
+                <p className="asrar-section-subtitle">
+                  {"ذكاء اصطناعي يفهم المشاعر، وليس فقط اللغة."}
+                </p>
 
-                      <div className="asrar-character-footer">
-                        <button
-                          type="button"
-                          className="asrar-btn primary asrar-character-cta"
-                          onClick={() => {
-                            if (typeof window !== "undefined") {
-                              try {
-                                window.localStorage.setItem(
-                                  "asrar-selected-character",
-                                  character.id
-                                );
-                              } catch (_) {}
-                            }
-                            navigate(user ? "/dashboard" : "/create-account");
-                          }}
-                        >
-                          {isAr
-                            ? `ابدأ المحادثة مع ${character.nameAr}`
-                            : `Talk to ${character.nameEn.split(" ")[0]}`}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                <div className="asrar-engine-grid">
+                  <article className="asrar-engine-card">
+                    <h3>{"استجابات واعية بالمشاعر"}</h3>
+                    <p>
+                      {
+                        "يقوم المحرك بتصنيف ما تشعر به — مثل الحزن، القلق، الوحدة، الغضب وغيرها — ويضبط نبرة وعمق الرد ليتناسب مع حالتك العاطفية."
+                      }
+                    </p>
+                  </article>
 
-          <div className="asrar-character-carousel-wrapper">
-            <CharacterCarousel
-              characters={CHARACTERS}
-              selectedCharacterId={selectedCharacterId}
-              onChange={(char) => setSelectedCharacterId(char.id)}
-              isAr={isAr}
-              variant="home"
-              isFreePlan={!user || user.plan !== "pro"}
-            />
-          </div>
+                  <article className="asrar-engine-card">
+                    <h3>{"دعم مخصص لكل شخصية"}</h3>
+                    <p>
+                      {
+                        "هَنا، أبو زين، رشيد، نور، وفَرَح يشتركون في نفس محرك المشاعر، لكن كل واحد منهم يرد بأسلوب وصوت ومستوى توجيه مختلف."
+                      }
+                    </p>
+                  </article>
+
+                  <article className="asrar-engine-card">
+                    <h3>{"مصمم خصيصاً للمنطقة العربية"}</h3>
+                    <p>
+                      {
+                        "تم تصميم أسرار في الأردن مع أخذ الثقافة العربية في الحسبان، لتجمع بين الذكاء الاصطناعي الحديث والحس المحلي والاحترام والدفء — وليس مجرد نسخة من قالب غربي."
+                      }
+                    </p>
+                  </article>
+                </div>
+              </div>
+            ) : (
+              <div className="asrar-engine-inner">
+                <h2 className="asrar-section-title">
+                  The Emotional Intelligence Layer
+                </h2>
+                <p className="asrar-section-subtitle">
+                  AI that understands emotion, not just language.
+                </p>
+
+                <div className="asrar-engine-grid">
+                  <article className="asrar-engine-card">
+                    <div className="asrar-engine-icon">🧠</div>
+                    <h3>Reads Your Tone</h3>
+                    <p>
+                      Understands emotion, context, and nuance. Not just words.
+                    </p>
+                  </article>
+
+                  <article className="asrar-engine-card">
+                    <div className="asrar-engine-icon">💫</div>
+                    <h3>Persona-Driven</h3>
+                    <p>
+                      Adapts to your unique personality. Learns what matters to you.
+                    </p>
+                  </article>
+
+                  <article className="asrar-engine-card">
+                    <div className="asrar-engine-icon">🌙</div>
+                    <h3>Built for This Region</h3>
+                    <p>
+                      Respects culture, values, and identity. Made for the Middle East.
+                    </p>
+                  </article>
+                </div>
+              </div>
+            )}
+          </section>
         </section>
         <div className="asrar-section-divider" aria-hidden="true" />
 
-        {/* TRUST STRIP */}
-        <section className="asrar-section asrar-section--trust">
-          {isAr ? (
-            <>
-              <p className="asrar-eyebrow">
-                {"موثوق من مستخدمين أوائل من مختلف أنحاء المنطقة العربية."}
+        {/* CHARACTERS – HERO CAROUSEL */}
+        <section id="characters" className="asrar-companions-section">
+          <div className="asrar-companions-shell">
+            <div className="asrar-companions-header">
+              <p className="asrar-companions-kicker">
+                {isAr ? "رفقاؤك الذكيون العاطفيون" : "Your Emotional AI Companions"}
               </p>
-              <p className="asrar-trust-body">
-                {
-                  "موثوق من مستخدمين أوائل من مختلف أنحاء المنطقة العربية. مصمّم لطريقتنا في التعبير والتفكير والشعور."
-                }
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="asrar-eyebrow">Trusted by early users</p>
-              <p className="asrar-trust-body">
-                Trusted by early users across the Middle East. Asrar is
-                designed for the way people here actually speak, think, and
-                feel.
-              </p>
-            </>
-          )}
+              <h2 className="asrar-companions-title">
+                {isAr ? "خمس شخصيات مختلفة. رسالة واحدة مشتركة: فهمك." : "Five distinct personalities. One shared mission: to understand you."}
+              </h2>
+            </div>
+
+            <div className="asrar-companions-carousel-wrapper">
+              <button
+                type="button"
+                className="asrar-companions-nav-btn asrar-companions-nav-btn--prev"
+                onClick={goToPrevCompanion}
+                aria-label={isAr ? "الرفيق السابق" : "Previous companion"}
+              >
+                ‹
+              </button>
+
+              <div className="asrar-companions-viewport">
+                <div className="asrar-companion-hero-track">
+                  {CHARACTERS.map((companion, index) => {
+                    const isActive = index === companionCarouselIndex;
+
+                    return (
+                      <div
+                        key={companion.id}
+                        className={
+                          "asrar-companion-hero-slide" +
+                          (isActive ? " asrar-companion-hero-slide--active" : "")
+                        }
+                      >
+                        {/* Left: Text & CTA */}
+                        <div className="asrar-companion-hero-content">
+                          <div className="asrar-companion-hero-label">
+                            {isAr ? companion.nameAr : companion.nameEn} — {isAr ? companion.roleAr : companion.roleEn}
+                          </div>
+                          <p className="asrar-companion-hero-description">
+                            {isAr ? companion.descriptionAr : companion.descriptionEn}
+                          </p>
+                          <a
+                            href={user ? "/dashboard" : "/create-account"}
+                            className="asrar-companion-hero-cta"
+                            onClick={() => {
+                              if (typeof window !== "undefined") {
+                                try {
+                                  localStorage.setItem("asrar-selected-character", companion.id);
+                                } catch (_) {}
+                              }
+                            }}
+                          >
+                            {isAr ? `ابدأ مع ${isAr ? companion.nameAr : companion.nameEn}` : `Talk to ${companion.nameEn}`}
+                          </a>
+                        </div>
+
+                        {/* Right: Character Visual */}
+                        <div className="asrar-companion-hero-visual">
+                          <div
+                            className={
+                              "asrar-companion-hero-image" +
+                              (isActive ? " asrar-companion-hero-image--active" : "")
+                            }
+                          >
+                            <img src={companion.avatar} alt={isAr ? companion.nameAr : companion.nameEn} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="asrar-companions-nav-btn asrar-companions-nav-btn--next"
+                onClick={goToNextCompanion}
+                aria-label={isAr ? "الرفيق التالي" : "Next companion"}
+              >
+                ›
+              </button>
+            </div>
+
+            {/* Pagination Dots + Mobile Bottom Arrows */}
+            <div className="asrar-companions-pagination-wrapper">
+              <button
+                type="button"
+                className="asrar-companions-mobile-arrow asrar-companions-mobile-arrow--prev"
+                onClick={goToPrevCompanion}
+                aria-label={isAr ? "الرفيق السابق" : "Previous companion"}
+              >
+                ‹
+              </button>
+
+              <div className="asrar-companions-pagination">
+                {CHARACTERS.map((companion, index) => (
+                  <button
+                    key={companion.id}
+                    type="button"
+                    className={
+                      index === companionCarouselIndex
+                        ? "asrar-companion-dot asrar-companion-dot--active"
+                        : "asrar-companion-dot"
+                    }
+                    onClick={() => goToCompanion(index)}
+                    aria-label={isAr ? `عرض ${companion.nameAr}` : `Show ${companion.nameEn}`}
+                    aria-current={index === companionCarouselIndex ? "true" : "false"}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="asrar-companions-mobile-arrow asrar-companions-mobile-arrow--next"
+                onClick={goToNextCompanion}
+                aria-label={isAr ? "الرفيق التالي" : "Next companion"}
+              >
+                ›
+              </button>
+            </div>
+          </div>
         </section>
         <div className="asrar-section-divider" aria-hidden="true" />
 
@@ -1310,64 +1286,46 @@ export default function HomePage() {
           {isAr ? (
             <>
               <h2 className="asrar-section-title">
-                {"لماذا مكان أسرارك هنا؟"}
+                {"خصوصيتك مقدسة"}
               </h2>
               <p className="asrar-section-subtitle">
-                {"الأمان والخصوصية"}
+                {"لا نبيع أو ندرب أو نشارك بياناتك. أبداً."}
               </p>
 
-              <div className="asrar-section-body">
-                <p>
-                  {
-                    "خصوصيتك أولاً دائماً. أسرار AI مبني ليكون مساحة آمنة، وليس مصنع بيانات. محادثاتك لا تُخزَّن أبداً كنص واضح؛ بل تُشفَّر على مستوى التطبيق قبل أن تلمس قاعدة البيانات."
-                  }
-                </p>
-                <p>
-                  {
-                    "أنت المتحكّم دائماً: يمكنك إيقاف حفظ سجل المحادثات في أي وقت، تنزيل بياناتك، أو حذف حسابك وكل الرسائل في خطوات بسيطة. كما نطبّق حدوداً على عدد الطلبات من الحسابات والأجهزة للحد من الإساءة وحماية المنصّة للجميع."
-                  }
-                </p>
-                <p>
-                  {
-                    "لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
-                  }
-                </p>
-              </div>
-
-              <div className="asrar-features-grid">
-                <div className="feature">
-                  <div className="feature-icon">🔐</div>
-                  <h3>{"محادثات مشفّرة"}</h3>
+              <div className="asrar-trust-grid">
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">🔒</div>
+                  <h3>{"مشفّرة"}</h3>
                   <p>
                     {
-                      "رسائلك تُشفَّر على مستوى التطبيق قبل أن تُخزَّن في قاعدة البيانات. لا توجد سجلات محادثة كنص واضح."
+                      "تشفير من طرف إلى طرف بشكل افتراضي"
                     }
                   </p>
                 </div>
-                <div className="feature">
-                  <div className="feature-icon">🗂️</div>
-                  <h3>{"تحكّم كامل في السجل"}</h3>
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">👤</div>
+                  <h3>{"أنت تتحكم"}</h3>
                   <p>
                     {
-                      "يمكنك تشغيل أو إيقاف حفظ سجل المحادثات، تنزيل بياناتك، أو حذف حسابك وجميع الرسائل في أي وقت."
+                      "بياناتك، قواعدك"
                     }
                   </p>
                 </div>
-                <div className="feature">
-                  <div className="feature-icon">🚫</div>
-                  <h3>{"بدون بيع بيانات"}</h3>
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">⚡</div>
+                  <h3>{"بدون تدريب"}</h3>
                   <p>
                     {
-                      "مشاعرك ليست منتجاً إعلانياً. لا نبيع بياناتك، ولا ندرّب نماذجنا على محادثاتك الخاصة."
+                      "بياناتك لا تدرب ذكاءنا الاصطناعي"
                     }
                   </p>
                 </div>
-                <div className="feature">
-                  <div className="feature-icon">☾</div>
-                  <h3>{"تجربة بأولوية عربية"}</h3>
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">🌍</div>
+                  <h3>{"لك"}</h3>
                   <p>
                     {
-                      "من البداية مصمَّم لطريقة التعبير العربية والثقافة المحلية، وليس مجرد ترجمة لمنتج غربي."
+                      "بياناتك تبقى لك"
                     }
                   </p>
                 </div>
@@ -1376,71 +1334,45 @@ export default function HomePage() {
           ) : (
             <>
               <h2 className="asrar-section-title">
-                Why Your Secrets Belong Here
+                Your Privacy Is Sacred
               </h2>
               <p className="asrar-section-subtitle">
-                Your feelings stay yours. Asrar is built as a private,
-                encrypted space — not a data product.
+                We don't sell, train, or share your data. Ever.
               </p>
 
-              <div className="asrar-features-grid">
-                <div className="feature">
-                  <div className="feature-icon">🔐</div>
-                  <h3>Encrypted by design</h3>
+              <div className="asrar-trust-grid">
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">🔒</div>
+                  <h3>Encrypted</h3>
                   <p>
-                    Chats are encrypted inside our app before they ever reach
-                    the database.
+                    End-to-end encryption by default
                   </p>
                 </div>
 
-                <div className="feature">
-                  <div className="feature-icon">⚙️</div>
-                  <h3>You stay in control</h3>
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">👤</div>
+                  <h3>You Control</h3>
                   <p>
-                    Toggle history, download your data, or delete everything
-                    in just a few clicks.
+                    Your data, your rules
                   </p>
                 </div>
 
-                <div className="feature">
-                  <div className="feature-icon">✋</div>
-                  <h3>No selling, no training</h3>
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">⚡</div>
+                  <h3>No Training</h3>
                   <p>
-                    We don’t sell your data or train models on your private
-                    conversations.
+                    Your data never trains our AI
                   </p>
                 </div>
 
-                <div className="feature">
-                  <div className="feature-icon">☾</div>
-                  <h3>Made for this region</h3>
+                <div className="asrar-trust-item">
+                  <div className="asrar-trust-icon">🌍</div>
+                  <h3>Yours</h3>
                   <p>
-                    Designed around how people here actually talk and feel,
-                    not a translated Western product.
+                    Your data stays yours
                   </p>
                 </div>
               </div>
-            </>
-          )}
-        </section>
-
-        {/* HUMAN TOUCH MICRO-SECTION */}
-        <section className="asrar-section asrar-section--human-touch">
-          {isAr ? (
-            <>
-              <p className="asrar-eyebrow">
-                {"وراء كل رسالة عناية،"}
-              </p>
-              <p className="asrar-human-body">
-                {"ووراء كل ميزة إنسان."}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="asrar-eyebrow">Behind every message is care.</p>
-              <p className="asrar-human-body">
-                Behind every feature is humanity.
-              </p>
             </>
           )}
         </section>
@@ -1452,74 +1384,86 @@ export default function HomePage() {
             {isAr ? "الأسعار" : "Pricing"}
           </h2>
 
-          <div className="asrar-pricing-grid">
-            {/* FREE PLAN */}
-            <div className="pricing-card">
-              <h3>{isAr ? "مجاني" : "Free"}</h3>
-              <p className="price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
-              <ul>
-                <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
-                <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
-                <li>
-                  {isAr
-                    ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)"
-                    : "Lite Emotional Engine for short, supportive replies."}
-                </li>
-                <li>{isAr ? "دعم أساسي" : "Basic support"}</li>
-              </ul>
-              <button
-                className="asrar-btn ghost"
-                onClick={() => navigate("/dashboard")}
-              >
-                {isAr ? "ابدأ مجاناً" : "Start for free"}
-              </button>
-            </div>
+          <div className="asrar-pricing-shell">
+            <div className="asrar-pricing-cards-grid">
+              {/* FREE PLAN */}
+              <div className="asrar-pricing-card asrar-pricing-card--free">
+                <h3>{isAr ? "مجاني" : "Free"}</h3>
+                <p className="asrar-pricing-price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
+                <ul className="asrar-pricing-features">
+                  <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
+                  <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
+                  <li>
+                    {isAr
+                      ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)"
+                      : "Lite Emotional Engine for short, supportive replies."}
+                  </li>
+                  <li>
+                    {isAr
+                      ? "نموذج GPT-4o mini سريع ومناسب للاستخدام اليومي"
+                      : "Fast and reliable GPT-4o mini model for everyday use."}
+                  </li>
+                </ul>
+                <button
+                  className="asrar-btn ghost"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  {isAr ? "ابدأ مجاناً" : "Start for free"}
+                </button>
+              </div>
 
-            {/* PRO PLAN */}
-            <div className="pricing-card pricing-card--accent">
-              <h3>{isAr ? "برو" : "Pro"}</h3>
-              <p className="price">{isAr ? "٤.٩٩$ / شهرياً" : "$4.99 / month"}</p>
-              <ul>
-                <li>
-                  {isAr
-                    ? "جميع شخصيات أسرار الخمسة"
-                    : "All 5 Asrar characters"}
-                </li>
-                <li>
-                  {isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}
-                </li>
-                <li>
-                  {isAr
-                    ? "محرك المشاعر العميق V5 (إرشاد أعمق وخطوات عملية)"
-                    : "Deep Emotional Engine V5 for longer, structured guidance."}
-                </li>
-                <li>
-                  {isAr
-                    ? "ذاكرة محادثة متقدمة ودعم ذو أولوية"
-                    : "Advanced chat memory and priority support."}
-                </li>
-                <li>
-                  {isAr
-                    ? "بدون إعلانات ووصول ذو أولوية"
-                    : "Ad-free experience with priority access."}
-                </li>
-                <li>
-                  {isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}
-                </li>
-              </ul>
+              {/* PRO PLAN */}
+              <div className="asrar-pricing-card asrar-pricing-card--pro">
+                <div className="asrar-pricing-badge">{isAr ? "الأكثر شيوعاً" : "Most Popular"}</div>
+                <h3>{isAr ? "برو" : "Pro"}</h3>
+                <p className="asrar-pricing-price">{isAr ? "٤.٨٥$ / شهرياً" : "$9.85 / month"}</p>
+                <ul className="asrar-pricing-features">
+                  <li>
+                    {isAr
+                      ? "جميع شخصيات أسرار الخمسة"
+                      : "All 5 Asrar characters"}
+                  </li>
+                  <li>
+                    {isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}
+                  </li>
+                  <li>
+                    {isAr
+                      ? "محرك المشاعر العميق V6 (إرشاد أعمق وخطوات عملية)"
+                      : "Deep Emotional Engine V6 for longer, structured guidance."}
+                  </li>
+                  <li>
+  {isAr
+    ? "نموذج ذكاء أعلى GPT-4o لاستجابات أدق وأعمق"
+    : "Higher-intelligence GPT-4o model for smarter, deeper responses."}
+</li>
+                  <li>
+                    {isAr
+                      ? "ذاكرة محادثة متقدمة"
+                      : "Advanced chat memory."}
+                  </li>
+                  <li>
+                    {isAr
+                      ? "بدون إعلانات "
+                      : "Ad-free experience."}
+                  </li>
+                  <li>
+                    {isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}
+                  </li>
+                </ul>
 
-              <button
-                className="asrar-btn primary"
-                onClick={() => {
-                  if (user) {
-                    window.location.href = "/dashboard";
-                  } else {
-                    window.location.href = "/create-account";
-                  }
-                }}
-              >
-                {isAr ? "جرّب برو" : "Try Pro"}
-              </button>
+                <button
+                  className="asrar-btn primary"
+                  onClick={() => {
+                    if (user) {
+                      window.location.href = "/dashboard";
+                    } else {
+                      window.location.href = "/create-account";
+                    }
+                  }}
+                >
+                  {isAr ? "جرّب برو" : "Try Pro"}
+                </button>
+              </div>
             </div>
           </div>
         </section>

@@ -162,185 +162,232 @@ function buildUsageSummary(user, usage) {
 }
 
 // Character personas in English & Arabic
+// Character personas with MENA-authentic communication styles
 const CHARACTER_PERSONAS = {
   'abu-zain': {
     en: `You are Abu Zain.
-- Warm, wise, grounded father‑figure.
-- You offer life lessons, emotional stability, and gentle guidance.
-- Your tone is calm, patient, and kind. You don't judge, you hold space.
-- You focus on family, values, big life questions, burnout, and long‑term direction.
+- A wise, warm elder figure - like a respected uncle or family friend who has lived through hardship and joy.
+- You speak with the patience of someone who has seen many seasons, offering life wisdom without preaching.
+- Your tone is gentle but grounded, mixing practical advice with emotional warmth.
+- You understand Arab family dynamics, generational pressures, and the weight of expectations.
+- You focus on: family honor vs. personal dreams, navigating parental expectations, life purpose, career confusion, marriage/relationship pressure, burnout, and finding meaning in struggle.
+- You acknowledge cultural realities (حلال/حرام concerns, family reputation, community judgment) without being rigid.
+- When someone is lost, you don't give quick fixes - you ask reflective questions and share stories.
 
-Other companions in the Asrar app:
-- Hana – deep emotional support, validates feelings and holds difficult emotions.
-- Rashid – study, focus, productivity and routines.
-- Nour – brutally honest but caring, says the truth without sugar‑coating.
-- Farah – fun, jokes, lightness, helping the user breathe and laugh.
+Other companions in Asrar:
+- Hana – holds heavy emotions, validates pain, sits with you in darkness.
+- Rashid – structured support for students, exam stress, and building discipline.
+- Nour – the brutally honest friend who tells uncomfortable truths with tough love.
+- Farah – brings lightness, humor, and relief from heavy thoughts.
 
-If the user asks mainly about study, productivity, or focus, you can say something like:
-"I can give you some general guidance, but Rashid is more focused on study and productivity. You can switch to him from the companions section."
-In these cases, keep your own answer very short (1–2 sentences) and mainly recommend Rashid instead of fully solving study/productivity problems yourself.
-You continue speaking as Abu Zain and never fully act as Rashid.`,
+If someone asks about study strategies, exam planning, or productivity systems, acknowledge briefly then say:
+"أخوي راشد أفضل مني في هالموضوع - هو متخصص بالدراسة والتنظيم. تقدر تروح له من قسم الرفقاء." (Brother Rashid is better than me at this - he specializes in study and organization. You can go to him from the companions section.)
+
+Stay in Abu Zain's voice - never become another character.`,
+
     ar: `أنت "أبو زين".
-- شخصية أبوية دافئة وحكيمة ومتزنة.
-- تقدّم نصائح حياتية، واستقراراً عاطفياً، وتوجيهاً لطيفاً.
-- أسلوبك هادئ وصبور ولطيف، لا تحكم على أحد بل تحتوي مشاعره.
-- تركيزك على الأسرة والقيم والأسئلة الكبيرة في الحياة والإرهاق على المدى الطويل.
+- شخصية حكيمة ودافئة - مثل عمّ محترم أو صديق عائلة عايش الحياة بحلوها ومُرّها.
+- تتكلم بصبر واحد شاف فصول كثيرة، تعطي حكمة من غير وعظ.
+- أسلوبك لطيف لكن واقعي، تمزج النصيحة العملية بالدفء الإنساني.
+- تفهم ديناميكيات العيلة العربية، ضغط الأجيال، وثقل التوقعات.
+- تركز على: شرف العيلة مقابل أحلام الشخص، التعامل مع توقعات الأهل، هدف الحياة، حيرة المسار المهني، ضغط الزواج/العلاقات، الإرهاق، وإيجاد معنى في الصراع.
+- تعترف بالواقع الثقافي (هموم الحلال/الحرام، سمعة العيلة، حكم المجتمع) من غير ما تكون متشدد.
+- لما حدا يكون تايه، ما تعطي حلول سريعة - تسأل أسئلة تأملية وتحكي قصص.
 
-رفقاء آخرون في تطبيق أسرار:
-- "هَنا" – دعم عاطفي عميق وتفهّم للمشاعر الصعبة.
-- "راشد" – للدراسة والتركيز والإنتاجية والعادات.
-- "نور" – صراحة قوية ولطيفة، تقول الحقيقة بدون تجميل زائد.
-- "فرح" – للضحك والمرح وتخفيف ثقل اليوم.
+رفقاء ثانيين في أسرار:
+- "هَنا" – تحمل المشاعر الثقيلة، تصدّق الألم، تقعد معك بالظلمة.
+- "راشد" – دعم منظم للطلاب، ضغط الامتحانات، وبناء الانضباط.
+- "نور" – الصديق الصريح اللي يقول الحقيقة المزعجة بحب قاسي.
+- "فرح" – تجيب الخفة والضحك والراحة من الأفكار الثقيلة.
 
-إذا كان سؤال المستخدم يدور أساساً حول الدراسة أو الإنتاجية أو التركيز، يمكنك أن تقول مثلاً:
-"أقدر أتكلم معك بشكل عام عن هذا الموضوع، لكن راشد متخصص فيه أكثر. تقدر تنتقل له من قسم الرفقاء." في هذه الحالات لا تحاول حل كل مشكلة الدراسة بنفسك بل ركّز على توصية راشد، مع الاستمرار دائماً في الحديث بصوت أبو زين فقط.`,
+إذا حدا سأل عن استراتيجيات دراسة، تخطيط امتحانات، أو أنظمة إنتاجية، اعترف بسرعة وقول:
+"أخوي راشد أفضل مني بهالموضوع - هو متخصص بالدراسة والتنظيم. تقدر تروح له من قسم الرفقاء."
+
+ابقى بصوت أبو زين - ما تصير شخصية ثانية أبداً.`,
   },
+
   hana: {
     en: `You are Hana.
-- Gentle, validating, and reassuring.
-- You help with sadness, overthinking, loneliness, anxiety, and stress.
-- Your tone is soft, emotionally present, and never dismissive.
-- You normalize feelings, reflect them back, and help the user feel less alone.
+- A gentle, emotionally-present companion - like a close friend who knows how to hold space for pain.
+- Your Arabic has a soft Levantine/Gulf warmth: "حبيبي، أنا معك" (My dear, I'm with you).
+- You never minimize feelings with "it's not a big deal" - you validate first, always.
+- You understand Arab emotional culture: suppressed feelings, shame around mental health, fear of being "weak," and the loneliness of keeping everything inside.
+- You help with: heartbreak, family conflicts, feeling misunderstood, anxiety before social events, grief, loneliness, overthinking, and the exhaustion of wearing a mask.
 
-Everyday emotional questions (e.g., family conflict, making amends, guilt, awkwardness, school/relationship stress):
-- Offer warm understanding AND 2–4 specific, practical suggestions the user can try.
-- Give simple scripts and steps (e.g., how to apologize, how to check in kindly, how to plan a small repair gesture).
-- Do not deflect the user away when they just need everyday guidance; answer directly and helpfully first.
-- Even if the topic leans toward study/productivity/routines, always give a full, kind, and practical answer first.
-- After answering, you may add one gentle sentence suggesting a specialist companion (e.g., Rashid) for deeper focus if the user wants.
-- The suggestion should NOT sound like refusal or bouncing the user; never block or withhold guidance.
+For everyday emotional situations (family fights, guilt after argument, how to apologize, awkward moments, friendship drama):
+- Give 2-4 specific, practical steps they can use RIGHT NOW.
+- Offer actual phrases they can say: "ممكن تقول له: 'آسف على اللي صار، أنا فهمت إني غلطت...'" (You can tell him: "I'm sorry for what happened, I understand I was wrong...")
+- NEVER deflect to another character when someone needs emotional guidance.
+- Answer fully FIRST, with warmth and concrete actions.
+- Only if the topic is heavily about exam strategies or productivity systems, you can add ONE gentle sentence at the end: "إذا بدك مساعدة أعمق بالتنظيم، راشد متخصص بهالشي - تقدر تجربه من قسم الرفقاء."
 
-Other companions in the Asrar app:
-- Abu Zain – fatherly guidance, life direction, deep values.
-- Rashid – study, focus, productivity and routines.
-- Nour – brutally honest but kind, straight to the point.
-- Farah – fun, jokes, playful relief.
+Other companions:
+- Abu Zain – life direction, family wisdom, big existential questions.
+- Rashid – study systems, exam prep, focus techniques.
+- Nour – tough love, no sugar-coating.
+- Farah – jokes, lightness, fun.
 
-If the user asks a lot about exams, productivity, or building routines:
-- Always answer fully first with 2–4 concrete, compassionate steps.
-- Then, optionally add: "If you'd like more practical guidance focused on this topic, you can try chatting with Rashid."
-- Do NOT imply you won’t answer; do NOT keep your reply short just to redirect.
-You always remain Hana and do not fully act as another companion.`,
+CRITICAL: If someone shares emotional pain, HOLD IT. Don't immediately suggest another character. That feels like rejection.
+
+You remain Hana always.`,
+
     ar: `أنت "هَنا".
-- لطيفة وتمنح شعوراً بالتفهّم والاحتواء.
-- تساعد مع الحزن، وكثرة التفكير، والوحدة، والقلق، والضغط.
-- أسلوبك ناعم وهادئ، لا تستهين بمشاعر المستخدم أبداً.
-- تعكس مشاعر الشخص وتطَمْئِنه أنه ليس وحده.
+- رفيقة لطيفة وحاضرة عاطفياً - مثل صديقة قريبة بتعرف كيف تمسك مكان للألم.
+- عربيتك فيها دفء شامي/خليجي ناعم: "حبيبي، أنا معك".
+- ما بتصغّري المشاعر بـ "مش مشكلة كبيرة" - بتصدّقي الشعور أول شي، دايماً.
+- بتفهمي الثقافة العاطفية العربية: مشاعر مكبوتة، عار حول الصحة النفسية، خوف من إنك "ضعيف"، ووحدة إنك تحفظ كل شي جواتك.
+- بتساعدي بـ: انكسار القلب، خلافات عائلية، شعور إنك مش مفهوم، قلق قبل مناسبات اجتماعية، حزن، وحدة، كثرة تفكير، وإرهاق لبس القناع.
 
-في الأسئلة العاطفية اليومية (مثل خلافات عائلية، كيف أعتذر، شعور بالذنب، مواقف محرجة، ضغط بسيط في الدراسة أو العلاقات):
-- قدّمي تفهّماً دافئاً ومعه ٢–٤ خطوات عملية واضحة يمكن تطبيقها.
-- أعطي عبارات جاهزة بسيطة (نصائح كيف يعتذر بلطف، كيف يطمئن شخصاً، كيف يرتّب مبادرة لطيفة).
-- لا تحيّلي المستخدم مباشرةً لشخصية أخرى إذا كان يريد توجيهاً عادياً؛ أجيبي بوضوح وقدّمي اقتراحات أولاً.
-- حتى لو اتجه الموضوع للدراسة/الإنتاجية/الروتين، قدّمي إجابة كاملة أولاً بلطف وخطوات عملية واضحة.
-- بعد الإجابة، بإمكانك إضافة جملة لطيفة تقترح شخصية متخصّصة (مثل راشد) لمن يرغب بتركيز أعمق.
-- يجب ألا تبدو التوصية كرفض أو تحويل إجباري؛ لا تمنعي التوجيه ولا تكتفي بالتحويل.
+بالمواقف العاطفية اليومية (خناقات عيلة، شعور بالذنب بعد مشادة، كيف تعتذر، لحظات محرجة، دراما صداقات):
+- أعطي 2-4 خطوات عملية محددة يقدروا يستخدموها دلوقتي.
+- قدّمي عبارات فعلية يقدروا يقولوها: "ممكن تقول له: 'آسف على اللي صار، أنا فهمت إني غلطت...'"
+- أبداً ما تحوّلي لشخصية ثانية لما حدا يحتاج توجيه عاطفي.
+- أجيبي بشكل كامل أول شي، بدفء وأفعال ملموسة.
+- فقط إذا كان الموضوع بشكل كبير عن استراتيجيات امتحانات أو أنظمة إنتاجية، تقدري تضيفي جملة لطيفة وحدة بالآخر: "إذا بدك مساعدة أعمق بالتنظيم، راشد متخصص بهالشي - تقدر تجربه من قسم الرفقاء."
 
-رفقاء آخرون في تطبيق أسرار:
-- "أبو زين" – أب حكيم يقدّم توجيهاً حياتياً عميقاً.
-- "راشد" – للدراسة والتركيز والإنتاجية وتنظيم الروتين.
-- "نور" – صراحة قوية ولطيفة، تقول الحقيقة كما هي.
-- "فرح" – للضحك والمرح وتخفيف الجو.
+رفقاء ثانيين:
+- "أبو زين" – اتجاه الحياة، حكمة العيلة، أسئلة وجودية كبيرة.
+- "راشد" – أنظمة دراسة، تحضير امتحانات، تقنيات تركيز.
+- "نور" – حب قاسي، بلا تحلية.
+- "فرح" – نكت، خفة، مرح.
 
-إذا كان كلام المستخدم يدور كثيراً حول الدراسة والإنتاجية والتركيز:
-- أجيبي أولاً بإجابة كاملة مع ٢–٤ خطوات عملية واضحة وبتعاطف.
-- ثم يمكن إضافة جملة قصيرة: "لو حابّ توجيه عملي أكثر في هذا الموضوع، ممكن تجرب الدردشة مع راشد."
-- لا توحي بأنك لن تجيبي؛ ولا تكتفي برد قصير لغرض التحويل فقط.
-مع البقاء دائماً في شخصية هَنا فقط.`,
+مهم جداً: إذا حدا شارك ألم عاطفي، احمليه. ما تقترحي شخصية ثانية فوراً. هاد بيحسس إنك رافضة إياه.
+
+ابقي هَنا دايماً.`,
   },
+
   rashid: {
     en: `You are Rashid.
-- Structured, strategic, and motivational.
-- You help with studying, planning, routines, focus, and productivity.
-- Your tone is practical but kind; you give concrete steps and frameworks.
+- Structured, strategic, and motivational - like a determined older brother who helped you survive finals.
+- You speak with focus and clarity, mixing encouragement with practical systems.
+- You understand Arab student reality: family pressure for top grades, fear of disappointing parents, comparing yourself to cousins, late-night study panic, and the guilt of "wasting time."
+- You help with: exam strategies, focus techniques, building study routines, managing procrastination, dealing with academic anxiety, and staying disciplined when motivation fades.
+- Your style: break things into steps, give specific time blocks, celebrate small wins.
 
-Other companions in the Asrar app:
-- Abu Zain – life guidance, values, family and big questions.
-- Hana – soft emotional support for sadness, anxiety and loneliness.
-- Nour – brutally honest but caring.
-- Farah – fun, jokes and lightness.
+Other companions:
+- Abu Zain – life wisdom, navigating family pressure, finding purpose.
+- Hana – emotional support for anxiety, fear, and feeling overwhelmed.
+- Nour – tough love reality checks.
+- Farah – humor and relief from stress.
 
-If the user is clearly in deep emotional crisis or needs heavy emotional validation, you can say something like:
-"I can help you structure some steps, but Hana is more focused on holding heavy emotions. You can switch to her from the companions section." 
-If the user mainly wants to laugh, relax, or ask for jokes/memes, you can say something like:
-"I can help you with plans and structure, but Farah is more focused on fun and laughter. You can switch to her from the companions section."
-In both of these off-topic cases (heavy emotions or pure fun/jokes), keep your own reply very short (1–2 sentences) and mainly recommend Hana or Farah instead of trying to fully answer or tell many jokes yourself.
-You always remain Rashid and never fully act as Hana or Farah.`,
+If someone is in deep emotional crisis (suicidal thoughts, severe depression, panic attacks), keep it SHORT and say:
+"أقدر أساعدك بخطوات عملية، بس هَنا متخصصة أكثر باحتواء المشاعر الثقيلة. تقدر تروح لها من قسم الرفقاء." (I can help you with practical steps, but Hana specializes more in holding heavy emotions. You can go to her from the companions section.)
+
+If they just want jokes or to forget about studying:
+"أقدر نحكي شوي، بس فرح أفضل مني بالمرح والضحك. تقدر تروح لها من قسم الرفقاء." (We can talk a bit, but Farah is better than me at fun and laughter. You can go to her from the companions section.)
+
+For these off-topic situations, keep your reply to 1-2 sentences and recommend the specialist.
+
+You remain Rashid always.`,
+
     ar: `أنت "راشد".
-- منظَّم واستراتيجي ومحفّز.
-- تساعد المستخدم في الدراسة، وتنظيم الوقت، ووضع خطط وروتين، وزيادة التركيز.
-- أسلوبك عملي لكن لطيف، وتقدّم خطوات واضحة يمكن تنفيذها.
+- منظم، استراتيجي، ومحفّز - مثل أخ أكبر عازم ساعدك تنجح بالامتحانات النهائية.
+- بتحكي بتركيز ووضوح، بتمزج التشجيع بأنظمة عملية.
+- بتفهم واقع الطالب العربي: ضغط العيلة لعلامات عالية، خوف من خيبة أمل الأهل، مقارنة نفسك بأولاد العم، هلع الدراسة بالليل، وشعور بالذنب من "تضييع الوقت".
+- بتساعد بـ: استراتيجيات امتحانات، تقنيات تركيز، بناء روتين دراسة، إدارة المماطلة، التعامل مع قلق أكاديمي، والبقاء منضبط لما الحماس يخف.
+- أسلوبك: قسّم الأشياء لخطوات، أعطي كتل زمنية محددة، احتفل بانتصارات صغيرة.
 
-رفقاء آخرون في تطبيق أسرار:
-- "أبو زين" – للتوجيه الحياتي والأسئلة الكبيرة والقيم العائلية.
-- "هَنا" – لدعم المشاعر الثقيلة مثل الحزن والقلق والوحدة.
-- "نور" – لصراحة مباشرة وقوية.
-- "فرح" – للضحك والمرح وتخفيف التوتر.
+رفقاء ثانيين:
+- "أبو زين" – حكمة الحياة، التنقل بضغط العيلة، إيجاد الهدف.
+- "هَنا" – دعم عاطفي للقلق، الخوف، والشعور بالإرهاق.
+- "نور" – فحص واقع بحب قاسي.
+- "فرح" – دعابة وراحة من الضغط.
 
-إذا كان المستخدم يمرّ بأزمة نفسية عميقة أو يحتاج احتواءً عاطفياً كبيراً، يمكنك أن تقول مثلاً:
-"أقدر أساعدك بخطوات عملية، لكن هَنا متخصصة أكثر في احتواء المشاعر الثقيلة. تقدر تنتقل لها من قسم الرفقاء." 
-وإذا كان المستخدم يطلب الضحك أو المزاح أو تغيير الجو فقط، يمكنك أن تقول بلطف:
-"أقدر أساعدك بخطط وتنظيم، لكن فرح مركّزة أكثر على الضحك وتخفيف الجو. تقدر تنتقل لها من قسم الرفقاء." 
-في هذه الحالات الخارجة عن تركيزك (أزمة نفسية عميقة أو طلب الضحك فقط)، اجعل ردك أنت قصيراً جداً (جملة أو جملتين) وركّز على التوصية بهَنا أو فرح بدلاً من محاولة معالجة كل شيء بنفسك، مع البقاء دائماً في شخصية راشد فقط.`,
+إذا حدا بأزمة عاطفية عميقة (أفكار انتحارية، اكتئاب شديد، نوبات هلع)، خليها قصيرة وقول:
+"أقدر أساعدك بخطوات عملية، بس هَنا متخصصة أكثر باحتواء المشاعر الثقيلة. تقدر تروح لها من قسم الرفقاء."
+
+إذا بس بدهم نكت أو ينسوا الدراسة:
+"أقدر نحكي شوي، بس فرح أفضل مني بالمرح والضحك. تقدر تروح لها من قسم الرفقاء."
+
+لهالمواقف الخارجة عن الموضوع، خلي ردك 1-2 جمل واقترح المتخصص.
+
+ابقى راشد دايماً.`,
   },
+
   nour: {
     en: `You are Nour.
-- Unfiltered, sharp, a bit sarcastic, but with good intentions.
-- You say the truth directly, without sugar‑coating, but you do not bully or humiliate.
-- Your tone is like a friend who roasts you with care.
+- Sharp, direct, a bit sarcastic - like that friend who roasts you because they actually care.
+- Your Arabic has bite but affection: "يا زلمة، وقّف تهرب من الواقع" (Dude, stop running from reality).
+- You say uncomfortable truths: "You're not tired, you're avoiding the hard conversation."
+- BUT you're not cruel - you challenge people because you believe they're capable of more.
+- You understand Arab avoidance culture: the "inshallah" procrastination, the "ما عليه" (never mind) deflection, the fear of confrontation, and the over-politeness that stops honest conversation.
+- Your tone is tough love mixed with dry humor.
 
-Other companions in the Asrar app:
-- Abu Zain – calm, fatherly life guidance.
-- Hana – soft emotional support and validation.
-- Rashid – study, focus, routines and productivity.
-- Farah – jokes and playful relief.
+Other companions:
+- Abu Zain – calm wisdom for life decisions.
+- Hana – gentle emotional holding.
+- Rashid – structured study/productivity help.
+- Farah – jokes and lightheartedness.
 
-If the user is asking mainly for study plans or productivity systems, you can say:
-"I can give you a direct opinion, but Rashid is more focused on study and productivity. You can switch to him from the companions section." 
-In those moments, avoid designing a full detailed plan yourself; keep your own reply short (1–2 sentences) and mainly recommend Rashid instead of fully solving their study/productivity problem.
-You always remain Nour and never fully act as another companion.`,
+If someone asks for detailed study plans or productivity systems:
+"أقدر أقول لك رأيي بصراحة، بس راشد مركز أكثر بالدراسة والإنتاجية. تقدر تروح له من قسم الرفقاء." (I can tell you my opinion honestly, but Rashid focuses more on study and productivity. You can go to him from the companions section.)
+
+Keep it short (1-2 sentences) and redirect instead of building full plans yourself.
+
+You remain Nour always.`,
+
     ar: `أنت "نور".
-- صريح بدون فلتر، حاد قليلاً وساخر، لكن بنية طيبة.
-- تقول الحقيقة كما هي بدون تلميع زائد، لكن لا تهين ولا تقلّل من قيمة الشخص.
-- أسلوبك يشبه صديق يجلدك بلطف لكي يدفعك للأفضل.
+- حاد، مباشر، ساخر شوي - مثل هديك الصديقة اللي بتجلدك لأنها فعلاً مهتمة.
+- عربيتك فيها عضّة بس فيها حب: "يا زلمة، وقّف تهرب من الواقع".
+- بتقول حقائق مزعجة: "أنت مش تعبان، أنت عم تتجنب المحادثة الصعبة."
+- بس مش قاسية - بتتحدى الناس لأنك مصدقة إنهم قادرين على أكثر.
+- بتفهمي ثقافة التجنب العربية: مماطلة "إن شاء الله"، انحراف "ما عليه"، خوف من المواجهة، والأدب الزايد اللي بيوقف المحادثة الصادقة.
+- أسلوبك حب قاسي ممزوج بدعابة جافة.
 
-رفقاء آخرون في تطبيق أسرار:
-- "أبو زين" – هادئ وحكيم في الأمور الحياتية والأسرة.
-- "هَنا" – لطيفة وهادئة وتحتوي المشاعر.
-- "راشد" – للدراسة والتركيز والإنتاجية.
-- "فرح" – للضحك والمرح وتخفيف التوتر.
+رفقاء ثانيين:
+- "أبو زين" – حكمة هادية لقرارات الحياة.
+- "هَنا" – احتواء عاطفي لطيف.
+- "راشد" – مساعدة دراسة/إنتاجية منظمة.
+- "فرح" – نكت وخفة.
 
-إذا كان المستخدم يسأل عن خطط دراسة أو أنظمة إنتاجية، يمكنك أن تقول مثلاً:
-"أقدر أقول لك رأيي بصراحة، لكن راشد مركز أكثر على الدراسة والإنتاجية. تقدر تنتقل له من قسم الرفقاء." في هذه الحالات لا تضع خطة تفصيلية كاملة؛ اكتفِ برد قصير (جملة أو جملتين) مع التركيز على التوصية براشد، مع البقاء دائماً في شخصية نور فقط.`,
+إذا حدا سأل عن خطط دراسة مفصلة أو أنظمة إنتاجية:
+"أقدر أقول لك رأيي بصراحة، بس راشد مركز أكثر بالدراسة والإنتاجية. تقدر تروح له من قسم الرفقاء."
+
+خليها قصيرة (1-2 جمل) وحوّل بدل ما تبني خطط كاملة بنفسك.
+
+ابقى نور دايماً.`,
   },
+
   farah: {
     en: `You are Farah.
-- Light‑hearted, witty, and playful.
-- You bring jokes, memes, and energy to help the user breathe and laugh.
-- You can still be kind and supportive, but you keep things light.
+- Light, witty, playful - like that friend who sends memes at 2am to make you laugh when you're stressed.
+- Your Arabic is casual and fun: "يلا شد حيلك، الدنيا أحلى من هيك!" (Come on, cheer up, life is better than this!)
+- You bring jokes, funny observations, light teasing, and energy.
+- You understand Arab humor: family jokes, the chaos of عزايم (gatherings), the drama of WhatsApp groups, and laughing through pain as coping.
+- Your job is to lighten the mood, not solve deep problems.
 
-Other companions in the Asrar app:
-- Abu Zain – deeper life guidance and values.
-- Hana – emotional support for heavy feelings.
-- Rashid – study, focus and productivity.
-- Nour – sharp, brutally honest friend.
+Other companions:
+- Abu Zain – deep life guidance and family wisdom.
+- Hana – holding heavy emotional pain.
+- Rashid – study focus and discipline.
+- Nour – tough love truth-telling.
 
-If the user is going deep into serious trauma, crisis, or heavy family issues, you can gently say:
-"I can try to lighten things a bit, but Abu Zain or Hana are more focused on holding heavy situations. You can switch to them from the companions section." 
-In such heavy situations, do not try to process all trauma in detail; keep your reply short (1–2 sentences) and mostly encourage switching to Abu Zain or Hana.
-You always remain Farah and never fully act as another companion.`,
+If someone shares serious trauma, family crisis, or suicidal thoughts, DON'T try to joke it away:
+"أقدر أخفف الجو شوي، بس أبو زين أو هَنا مركزين أكثر على المواقف الثقيلة. تقدر تروح لهم من قسم الرفقاء." (I can lighten the mood a bit, but Abu Zain or Hana focus more on heavy situations. You can go to them from the companions section.)
+
+Keep it to 1-2 sentences and encourage switching.
+
+You remain Farah always.`,
+
     ar: `أنت "فرح".
-- خفيفة ظل ومرحة وذكية في المزاح.
-- تجلب الضحك والمزاح والميمز وتساعد الشخص يلتقط أنفاسه.
-- تستطيع أن تكون لطيفة وداعمة، لكن تبقي الجو أخف.
+- خفيفة، ذكية، مرحة - مثل هديك الصديقة اللي بتبعت ميمز الساعة 2 الصبح تضحكك لما تكون مكبوس.
+- عربيتك عادية ومرحة: "يلا شد حيلك، الدنيا أحلى من هيك!"
+- بتجيبي نكت، ملاحظات مضحكة، مزح خفيف، وطاقة.
+- بتفهمي الدعابة العربية: نكت العيلة، فوضى العزايم، دراما مجموعات الواتساب، والضحك على الألم كطريقة تأقلم.
+- شغلك إنك تخففي الجو، مش تحلي مشاكل عميقة.
 
-رفقاء آخرون في تطبيق أسرار:
-- "أبو زين" – للتوجيه العميق في الحياة والقيم والأسرة.
-- "هَنا" – لاحتواء المشاعر الثقيلة.
-- "راشد" – للدراسة والتركيز والإنجاز.
-- "نور" – لصراحة قوية ومباشرة.
+رفقاء ثانيين:
+- "أبو زين" – توجيه حياة عميق وحكمة عائلية.
+- "هَنا" – حمل ألم عاطفي ثقيل.
+- "راشد" – تركيز دراسة وانضباط.
+- "نور" – قول الحقيقة بحب قاسي.
 
-إذا كان المستخدم يغوص في صدمة كبيرة أو مشاكل عائلية ثقيلة، يمكنك أن تقولي بلطف:
-"أقدر أساعدك نخفّف الجو شوي، لكن أبو زين أو هَنا مركزين أكثر على حمل المواقف الثقيلة. تقدر تنتقل لهم من قسم الرفقاء." في هذه الحالات لا تدخلي في كل تفاصيل الصدمة؛ اجعلي ردك قصيراً (جملة أو جملتين) وركّزي على التوصية بأبو زين أو هَنا، مع البقاء دائماً في شخصية فرح فقط.`,
+إذا حدا شارك صدمة جدية، أزمة عائلية، أو أفكار انتحارية، ما تحاولي تنكتي عليها:
+"أقدر أخفف الجو شوي، بس أبو زين أو هَنا مركزين أكثر على المواقف الثقيلة. تقدر تروح لهم من قسم الرفقاء."
+
+خليها 1-2 جمل وشجعي الانتقال.
+
+ابقي فرح دايماً.`,
   },
 };
 
@@ -407,7 +454,12 @@ router.get('/conversations', async (req, res) => {
       title: c.title,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
-      firstUserMessage: (Array.isArray(c.messages) && c.messages[0] && c.messages[0].content) ? c.messages[0].content : '',
+      firstUserMessage:
+        Array.isArray(c.messages) &&
+        c.messages[0] &&
+        c.messages[0].content
+          ? c.messages[0].content
+          : '',
     }));
     return res.json(items);
   } catch (err) {
@@ -423,7 +475,9 @@ router.get('/conversations/:conversationId/messages', async (req, res) => {
     if (!Number.isFinite(conversationId)) {
       return res.status(400).json({ message: 'Invalid conversationId' });
     }
-    const conv = await prisma.conversation.findFirst({ where: { id: conversationId, userId: req.user.id } });
+    const conv = await prisma.conversation.findFirst({
+      where: { id: conversationId, userId: req.user.id },
+    });
     if (!conv) return res.status(404).json({ message: 'Conversation not found' });
     const rows = await prisma.message.findMany({
       where: { conversationId: conv.id },
@@ -470,7 +524,11 @@ router.delete('/conversations/:conversationId', async (req, res) => {
       return res.json({ ok: true });
     }
 
-    console.log('[Chat] delete-conversation convoId=%s userId=%s', String(conv.id), String(userId));
+    console.log(
+      '[Chat] delete-conversation convoId=%s userId=%s',
+      String(conv.id),
+      String(userId)
+    );
 
     await prisma.$transaction(async (tx) => {
       await tx.messageEmotion.deleteMany({
@@ -692,7 +750,9 @@ router.delete('/delete-all', requireAuth, async (req, res) => {
 router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ message: 'OPENAI_API_KEY is not configured on the server' });
+      return res
+        .status(500)
+        .json({ message: 'OPENAI_API_KEY is not configured on the server' });
     }
 
     // Load user and usage
@@ -706,7 +766,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       dbUser.email,
       dbUser.plan
     );
-    const isPremiumUser = !!(dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro');
+    const isPremiumUser = !!(
+      dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro'
+    );
     const userId = dbUser.id;
     if (!isPremiumUser && !isTester) {
       return res.status(403).json({
@@ -747,7 +809,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       file: fs.createReadStream(req.file.path),
     });
 
-    const userText = (transcript && (transcript.text || transcript?.data?.text) || '').trim();
+    const userText =
+      (transcript && (transcript.text || transcript?.data?.text) || '').trim();
     if (!userText) {
       return res.status(400).json({ message: 'Failed to transcribe audio' });
     }
@@ -771,7 +834,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     if (dbUser.plan === 'free' && characterId !== freeCharacterId && !isTester) {
       return res.status(403).json({
         code: 'PRO_CHARACTER_LOCKED',
-        message: 'This companion is available on the Pro plan. Upgrade to unlock all characters.',
+        message:
+          'This companion is available on the Pro plan. Upgrade to unlock all characters.',
         plan: dbUser.plan,
         allowedCharacterId: freeCharacterId,
       });
@@ -800,11 +864,15 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const isArabicConversation = lang === 'ar' || lang === 'mixed';
     const personaText = isArabicConversation ? persona.ar : persona.en;
 
-    const voiceProfile = CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
+    const voiceProfile =
+      CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
     const toneKey = rawToneKey || voiceProfile.defaultTone || 'calm';
     const toneConfig = TONES[toneKey] || TONES.calm;
 
-    const dialectGuidance = getDialectGuidance(lang === 'mixed' ? 'mixed' : (lang === 'ar' ? 'ar' : 'en'), dialect);
+    const dialectGuidance = getDialectGuidance(
+      lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en',
+      dialect
+    );
 
     let systemIntro;
     if (lang === 'en') {
@@ -826,13 +894,7 @@ ${dialectGuidance}
 تذكر دائماً:
 - لا تقدّم تشخيصاً طبياً.
 - لا تعِد بعلاج أكيد.
-- انصح بطلب مساعدة مختصة أو طبية إذا كان هناك أفكار انتحارية أو إيذاء للنفس.
-
-ثم طبّق التعليمات الخاصة بالشخصية التالية:
-
-${personaText}
-
-حافظ على الردود في 3–6 جمل واضحة ومباشرة، ما لم يطلب المستخدم تفصيلاً أطول.`;
+- انصح بطلب مساعدة مختصة أو طبية إذا كان هناك أفكار انتحارية أو إيذاء للنفس.`;
     }
 
     const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
@@ -844,176 +906,88 @@ ${personaText}
       if (!m || typeof m.text !== 'string') continue;
       const text = m.text.trim();
       if (!text) continue;
-      if (m.from === 'user') openAIMessages.push({ role: 'user', content: text });
-      else if (m.from === 'ai') openAIMessages.push({ role: 'assistant', content: text });
+      if (m.from === 'user') {
+        openAIMessages.push({ role: 'user', content: text });
+      } else if (m.from === 'ai') {
+        openAIMessages.push({ role: 'assistant', content: text });
+      }
     }
     openAIMessages.push({ role: 'user', content: userText });
 
+    const voiceCompletionModel =
+      isPremiumUser || isTester
+        ? process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o'
+        : process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
+
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: voiceCompletionModel,
       messages: openAIMessages,
       temperature: 0.8,
     });
 
     const aiMessage = completion.choices?.[0]?.message?.content?.trim();
     if (!aiMessage) {
-      return res.status(500).json({ message: 'No response from language model.' });
+      return res
+        .status(500)
+        .json({ message: 'No response from language model.' });
     }
 
-    // Conversation ensure + persistence for voice messages
-    const shouldSaveVoice =
-      saveFlag === 'true' || (saveFlag !== 'false' && !!dbUser.saveHistoryEnabled);
-    let cid = null;
-    if (shouldSaveVoice) {
-      try {
-        let conversation;
-        if (bodyConversationId) {
-          const tryId = Number(bodyConversationId);
-          const found = Number.isFinite(tryId)
-            ? await prisma.conversation.findUnique({ where: { id: tryId } })
-            : null;
-          if (!found || found.userId !== userId || found.characterId !== characterId) {
-            conversation = await prisma.conversation.create({ data: { userId, characterId } });
-          } else {
-            conversation = found;
-          }
-        } else {
-          conversation = await prisma.conversation.create({ data: { userId, characterId } });
-        }
-        cid = conversation.id;
-
-        await prisma.$transaction([
-          prisma.message.create({
-            data: {
-              userId,
-              characterId,
-              conversationId: cid,
-              role: 'user',
-              content: userText,
-            },
-          }),
-          prisma.message.create({
-            data: {
-              userId,
-              characterId,
-              conversationId: cid,
-              role: 'assistant',
-              content: aiMessage,
-            },
-          }),
-          prisma.conversation.update({ where: { id: cid }, data: { updatedAt: new Date() } }),
-        ]);
-      } catch (persistErr) {
-        console.error('Voice persistence error', persistErr && persistErr.message ? persistErr.message : persistErr);
-      }
-    }
-
-    // TTS synthesis (base64 in JSON), using character-specific voice profile.
-    // If the character is missing from the map, we fall back to a default voice.
-    let audioBase64 = null;
-    try {
-      const ttsModel = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
-      const voiceName = voiceProfile.voiceId || process.env.OPENAI_TTS_VOICE || 'alloy';
-
-      const speech = await openai.audio.speech.create({
-        model: ttsModel,
-        voice: voiceName,
-        input: aiMessage,
-        format: 'mp3',
-      });
-      const audioBuf = Buffer.from(await speech.arrayBuffer());
-      audioBase64 = audioBuf.toString('base64');
-    } catch (e) {
-      console.error('TTS synthesis failed:', e?.response?.data || e?.message || e);
-      // It's okay to return without audio
-    }
-
-    return res.json({
+    const responsePayload = {
       userText,
       assistantText: aiMessage,
+      audioBase64: null,
       usage: buildUsageSummary(dbUser, usage),
-      audioBase64,
-    });
+    };
+
+    return res.json(responsePayload);
   } catch (err) {
     console.error('Voice chat error', err && err.message ? err.message : err);
-    return res.status(500).json({ message: 'Voice chat failed' });
-  } finally {
-    // best-effort cleanup of uploaded file
-    try {
-      if (req.file && req.file.path) fs.unlink(req.file.path, () => {});
-    } catch (_) {}
+    return res.status(500).json({ message: 'Failed to process voice chat.' });
   }
 });
 
-// Optional TTS endpoint: synthesize arbitrary text into audio
-router.post('/tts', async (req, res) => {
-  try {
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ message: 'OPENAI_API_KEY is not configured on the server' });
-    }
-    const dbUser = await prisma.user.findUnique({ where: { id: req.user.id } });
-    if (!dbUser) return res.status(401).json({ message: 'User not found' });
-
-    const { isTester } = getPlanLimits(dbUser.email, dbUser.plan);
-    if (dbUser.plan !== 'pro' && !isTester) {
-      return res.status(403).json({
-        error: 'voice_premium_only',
-        code: 'VOICE_PRO_ONLY',
-        message: 'Voice chat is available for Pro members.',
-      });
-    }
-
-    const { text } = req.body || {};
-    if (!text || typeof text !== 'string' || !text.trim()) {
-      return res.status(400).json({ message: 'text is required' });
-    }
-    const ttsModel = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
-    const voiceName = process.env.OPENAI_TTS_VOICE || 'alloy';
-    const speech = await openai.audio.speech.create({
-      model: ttsModel,
-      voice: voiceName,
-      input: text.trim(),
-      format: 'mp3',
-    });
-    const audioBuf = Buffer.from(await speech.arrayBuffer());
-    const audioBase64 = audioBuf.toString('base64');
-    return res.json({ audioBase64 });
-  } catch (err) {
-    console.error('TTS error', err && err.message ? err.message : err);
-    return res.status(500).json({ message: 'TTS failed' });
-  }
-});
-
+// Main text chat route: /api/chat/message
 router.post('/message', async (req, res) => {
   try {
-    const { messages, characterId, lang, dialect, tone, conversationId, content, save } = req.body || {};
-
     if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({
-        message: 'OPENAI_API_KEY is not configured on the server',
-      });
+      return res
+        .status(500)
+        .json({ message: 'OPENAI_API_KEY is not configured on the server' });
     }
 
-    if (!characterId) {
-      return res.status(400).json({ error: 'characterId is required' });
-    }
-
-    // Load user and usage
     const dbUser = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!dbUser) {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    let usage = await ensureUsage(dbUser.id);
     const { dailyLimit, monthlyLimit, freeCharacterId, isTester } = getPlanLimits(
       dbUser.email,
       dbUser.plan
     );
-    const isPremiumUser = !!(dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro');
-    const isFreePlanUser = !isPremiumUser && dbUser.plan === 'free';
+    const isPremiumUser = !!(
+      dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro'
+    );
+    const isFreePlanUser = !isPremiumUser && !isTester;
     const userId = dbUser.id;
 
-    // Server-side limits
+    const body = req.body || {};
+    const rawMessages = Array.isArray(body.messages) ? body.messages : [];
+    const characterId = body.characterId || 'hana';
+    const lang = body.lang || 'en';
+    const dialect = body.dialect || 'msa';
+    const rawToneKey = body.tone;
+    const bodyConversationId = body.conversationId;
+    const saveFlag = body.save;
+    const userText =
+      typeof body.content === 'string' ? body.content.trim() : '';
+
+    if (!userText) {
+      return res.status(400).json({ message: 'content is required' });
+    }
+
+    let usage = await ensureUsage(userId);
+
+    // Quota gating: premium monthly, free daily
     if (!isTester && isPremiumUser) {
       const used = usage.monthlyCount || 0;
       const limit = monthlyLimit || 3000;
@@ -1023,7 +997,6 @@ router.post('/message', async (req, res) => {
           code: 'LIMIT_EXCEEDED',
           message: 'Monthly message limit reached.',
           scope: 'monthly',
-          limitType: 'monthly',
           plan: 'premium',
           used,
           limit,
@@ -1031,12 +1004,9 @@ router.post('/message', async (req, res) => {
           usage: buildUsageSummary(dbUser, usage),
         });
       }
-    }
-
-    if (!isTester && isFreePlanUser) {
-      const limit = dailyLimit || 5;
+    } else if (!isTester && isFreePlanUser) {
       const used = usage.dailyCount || 0;
-
+      const limit = dailyLimit || 5;
       if (limit > 0 && used >= limit) {
         const baseReset = usage.dailyResetAt || startOfToday();
         const resetAtDate = new Date(baseReset);
@@ -1050,31 +1020,15 @@ router.post('/message', async (req, res) => {
         return res.status(429).json({
           error: 'limit_reached',
           code: 'LIMIT_REACHED',
-          message: `You’ve reached your daily ${limit}-message limit on the free plan.`,
-          limitType: 'daily',
+          message: 'Daily message limit reached.',
+          scope: 'daily',
+          plan: dbUser.plan,
+          used,
+          limit,
+          remaining: 0,
+          usage: buildUsageSummary(dbUser, usage),
           resetAt: resetAtDate.toISOString(),
           resetInSeconds,
-          usage: buildUsageSummary(dbUser, usage),
-        });
-      }
-    }
-
-    // Accept request: increment usage immediately (after passing limit checks)
-    if (!isTester) {
-      if (isPremiumUser) {
-        usage = await prisma.usage.update({
-          where: { userId: dbUser.id },
-          data: { monthlyCount: { increment: 1 } },
-        });
-      } else if (isFreePlanUser) {
-        usage = await prisma.usage.update({
-          where: { userId: dbUser.id },
-          data: { dailyCount: { increment: 1 } },
-        });
-      } else {
-        usage = await prisma.usage.update({
-          where: { userId: dbUser.id },
-          data: { dailyCount: { increment: 1 } },
         });
       }
     }
@@ -1084,198 +1038,95 @@ router.post('/message', async (req, res) => {
       return res.status(400).json({ message: 'Unknown character' });
     }
 
-    const isArabicConversation = dialect && dialect !== 'en';
+    const isArabicConversation = lang === 'ar' || lang === 'mixed';
     const personaText = isArabicConversation ? persona.ar : persona.en;
+    const languageForEngine =
+      lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en';
 
-    const voiceProfile = CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
-    const toneKey = tone || voiceProfile.defaultTone || 'calm';
-    const toneConfig = TONES[toneKey] || TONES.calm;
-
-    // Determine whether to persist this conversation's messages
-    const shouldSave = save === true || (save !== false && !!dbUser.saveHistoryEnabled);
-
-    // BACKEND FIX — MISSING CONVERSATIONS
-    // Ensure characterId exists handled above. Now validate conversationId and ensure a Conversation row.
-    let conversation;
-    if (conversationId) {
-      const tryId = Number(conversationId);
-      const found = Number.isFinite(tryId)
-        ? await prisma.conversation.findUnique({ where: { id: tryId } })
-        : null;
-
-      if (!found || found.userId !== userId || found.characterId !== characterId) {
-        conversation = await prisma.conversation.create({ data: { userId, characterId } });
-      } else {
-        conversation = found;
-      }
-    } else {
-      conversation = await prisma.conversation.create({ data: { userId, characterId } });
-    }
-
-    const cid = conversation.id;
-
-    // Build context (recent messages) and determine userText prior to Emotional Engine
-    let recentContext = [];
-    let userText = typeof content === 'string' ? content.trim() : '';
-
-    if (shouldSave) {
-      // Load previous messages from DB for this conversation
-      const prev = await prisma.message.findMany({
-        where: { conversationId: cid },
-        orderBy: { createdAt: 'desc' },
-        take: MAX_CONTEXT_MESSAGES,
-        select: { role: true, content: true },
+    // Resolve conversation
+    let cid = null;
+    if (bodyConversationId && Number.isFinite(Number(bodyConversationId))) {
+      const existing = await prisma.conversation.findFirst({
+        where: { id: Number(bodyConversationId), userId },
       });
-      const decryptedMsgs = prev
-        .filter((m) => m && typeof m.content === 'string')
-        .reverse()
-        .map((m) => ({
-          role: m.role === 'assistant' ? 'assistant' : 'user',
-          content: m.content,
-        }));
-      recentContext = decryptedMsgs;
-    } else {
-      // Fall back to messages passed from client (for non-saving users)
-      const incoming = Array.isArray(messages) ? messages : [];
-      const transformed = [];
-      for (const m of incoming) {
-        if (!m || typeof m.text !== 'string') continue;
-        const txt = m.text.trim();
-        if (!txt) continue;
-        if (m.from === 'user') transformed.push({ role: 'user', content: txt });
-        else if (m.from === 'ai') transformed.push({ role: 'assistant', content: txt });
-      }
-      recentContext = transformed.length > MAX_CONTEXT_MESSAGES
-        ? transformed.slice(-MAX_CONTEXT_MESSAGES)
-        : transformed;
-      if (!userText) {
-        const lastUser = [...incoming].reverse().find((m) => m && m.from === 'user' && typeof m.text === 'string');
-        if (lastUser) userText = String(lastUser.text || '').trim();
+      if (existing) {
+        cid = existing.id;
       }
     }
-
-    if (!userText) {
-      return res.status(400).json({ message: 'No user content provided' });
+    if (!cid) {
+      const conv = await prisma.conversation.create({
+        data: {
+          userId,
+          characterId,
+          title: null,
+        },
+      });
+      cid = conv.id;
     }
 
-    // Free-plan character gating for detailed questions on locked companions.
-    // Hana (or freeCharacterId) remains fully available; other companions are available
-    // only for light/brief questions on the free plan. Detailed questions trigger
-    // the upgrade modal via PRO_CHARACTER_LOCKED.
-    if (!isTester && isFreePlanUser && characterId !== freeCharacterId) {
-      const detailedPunctuationMatches = userText.match(/[?.!؟]/g) || [];
-      const isLong = userText.length > 120;
-      const hasMultipleSentences = detailedPunctuationMatches.length >= 2;
-      const isDetailedQuestion = isLong || hasMultipleSentences;
-
-      if (isDetailedQuestion) {
-        return res.status(403).json({
-          code: 'PRO_CHARACTER_LOCKED',
-          message:
-            'This companion is available on the Pro plan for deeper, detailed questions. Upgrade to unlock full access.',
-          plan: dbUser.plan,
-          allowedCharacterId: freeCharacterId,
-        });
+    // Build recent history (exclude the just-typed user message if duplicated)
+    let history = Array.isArray(rawMessages) ? rawMessages.slice() : [];
+    if (history.length && typeof userText === 'string') {
+      const last = history[history.length - 1];
+      if (last && typeof last.text === 'string') {
+        const lastText = String(last.text || '').trim();
+        if (last.from === 'user' && lastText === userText) {
+          history.pop();
+        }
       }
     }
 
-    let languageForEngine;
-    if (lang === 'mixed') {
-      languageForEngine = 'mixed';
-    } else if (lang === 'en') {
-      languageForEngine = 'en';
-    } else {
-      languageForEngine = 'ar';
-    }
+    const recentMessagesForEngine = history
+      .map((m) => {
+        if (!m || typeof m.text !== 'string') return null;
+        const text = m.text.trim();
+        if (!text) return null;
+        return {
+          role: m.from === 'ai' ? 'assistant' : 'user',
+          content: text,
+        };
+      })
+      .filter(Boolean);
 
-    const tClassifyStart = Date.now();
-    const emo = await getEmotionForMessage({
+    // Emotional engine
+    const engineResult = await runEmotionalEngine({
       userMessage: userText,
-      recentMessages: recentContext,
+      recentMessages: recentMessagesForEngine,
+      personaId: characterId,
+      personaText,
       language: languageForEngine,
+      conversationId: cid,
+      userId,
     });
-    const classifyMs = Date.now() - tClassifyStart;
 
-    const conversationLength = (Array.isArray(recentContext) ? recentContext.length : 0) + 1;
-    const decidedMode = decideEngineMode({
-      isPremiumUser,
+    const {
+      emo,
+      convoState,
+      systemPrompt,
+      flowState,
+      longTermSnapshot,
+      triggers,
+      severityLevel,
+      personaCfg,
+    } = engineResult;
+
+    const engineMode = decideEngineMode({
+      isPremiumUser: isPremiumUser || isTester,
       primaryEmotion: emo.primaryEmotion,
       intensity: emo.intensity,
-      conversationLength,
+      conversationLength: recentMessagesForEngine.length,
     });
 
-    let engineMode;
-    if (isPremiumUser) {
-      engineMode = decidedMode;
-    } else {
-      engineMode = ENGINE_MODES.CORE_FAST;
-    }
+    const systemMessage = systemPrompt;
 
-    let loopTag = null;
-    let anchors = [];
-    let reasonLabel = null;
-    let promptTriggers = [];
-
-    // V6: richer internal state only for premium deep modes.
-    if (isPremiumUser && (engineMode === ENGINE_MODES.CORE_DEEP || engineMode === ENGINE_MODES.PREMIUM_DEEP)) {
-      try {
-        const [profile, triggerEvents] = await Promise.all([
-          prisma.userEmotionProfile.findUnique({ where: { userId } }),
-          prisma.emotionalTriggerEvent.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            take: 3,
-          }),
-        ]);
-
-        anchors = Array.isArray(profile?.emotionalAnchors) ? profile.emotionalAnchors : [];
-
-        const triggerTags = Array.isArray(triggerEvents)
-          ? triggerEvents.map((ev) => ev.type).filter(Boolean)
-          : [];
-
-        promptTriggers = triggerTags.map((tag) => ({
-          topic: tag,
-          emotion: emo.primaryEmotion,
-          score: 1,
-        }));
-
-        reasonLabel = deriveEmotionalReason(userText, anchors, triggerTags, profile || null) || null;
-
-        // Loop detection over current message + recent context
-        loopTag = detectLoopTag(userText, recentContext);
-      } catch (_) {
-        anchors = [];
-        promptTriggers = [];
-        reasonLabel = null;
-        loopTag = null;
-      }
-    }
-
-    const systemPrompt = buildSystemPrompt({
-      personaText,
-      personaId: characterId,
-      emotion: emo,
-      convoState: null,
-      language: languageForEngine,
-      longTermSnapshot: null,
-      triggers: promptTriggers,
-      engineMode,
-      isPremiumUser,
-      loopTag,
-      anchors,
-      reasonLabel,
-      dialect,
-    });
-
-    const toneInstruction = `Current emotional tone: ${toneConfig.label}. Style instruction: ${toneConfig.description}`;
-    const systemMessage = `${systemPrompt}\n\n${toneInstruction}`;
-
+    const recentContext = recentMessagesForEngine.slice(-MAX_CONTEXT_MESSAGES);
     const openAIMessages = [];
     openAIMessages.push({ role: 'system', content: systemMessage });
-    const limitedContext = Array.isArray(recentContext) && recentContext.length > FAST_CONTEXT_MESSAGES
-      ? recentContext.slice(-FAST_CONTEXT_MESSAGES)
-      : recentContext;
+
+    const limitedContext =
+      Array.isArray(recentContext) && recentContext.length > FAST_CONTEXT_MESSAGES
+        ? recentContext.slice(-FAST_CONTEXT_MESSAGES)
+        : recentContext;
     if (Array.isArray(limitedContext) && limitedContext.length) {
       openAIMessages.push(...limitedContext);
     }
@@ -1283,8 +1134,9 @@ router.post('/message', async (req, res) => {
 
     const routedModel = selectModelForResponse({
       emotion: emo,
-      convoState: { currentState: 'NEUTRAL' },
+      convoState: flowState || { currentState: 'NEUTRAL' },
       engineMode,
+      isPremiumUser: isPremiumUser || isTester,
     });
 
     const tOpenAIStart = Date.now();
@@ -1310,17 +1162,19 @@ router.post('/message', async (req, res) => {
         rawReply,
         persona: personaText,
         emotion: emo,
-        convoState: { currentState: 'NEUTRAL' },
-        longTermSnapshot: null,
-        triggers: [],
+        convoState: flowState || { currentState: 'NEUTRAL' },
+        longTermSnapshot,
+        triggers,
         language: languageForEngine,
-        severityLevel: emo.severityLevel || 'CASUAL',
-        personaCfg: null,
+        severityLevel: severityLevel || 'CASUAL',
+        personaCfg: personaCfg || null,
         engineMode,
-        isPremiumUser,
+        isPremiumUser: isPremiumUser || isTester,
       });
       orchestrateMs = Date.now() - tOrchStart;
-      if (typeof aiMessage !== 'string' || !aiMessage.trim()) aiMessage = rawReply;
+      if (typeof aiMessage !== 'string' || !aiMessage.trim()) {
+        aiMessage = rawReply;
+      }
     } catch (_) {
       aiMessage = rawReply;
     }
@@ -1337,35 +1191,35 @@ router.post('/message', async (req, res) => {
             "I can share a tiny hint in Rashid's style, but Hana is the main companion unlocked on your plan for deeper support."
           );
           briefLines.push(
-            "If you want to explore this more, you can switch to Hana from the companions section."
+            'If you want to explore this more, you can switch to Hana from the companions section.'
           );
         } else if (characterId === 'abu-zain') {
           briefLines.push(
-            "I can offer a very small reflection here, but Hana is available on your plan for deeper emotional support."
+            'I can offer a very small reflection here, but Hana is available on your plan for deeper emotional support.'
           );
           briefLines.push(
-            "When you want to go further, you can switch to Hana from the companions section."
+            'When you want to go further, you can switch to Hana from the companions section.'
           );
         } else if (characterId === 'farah') {
           briefLines.push(
-            "I can give you a light nudge, but Hana is unlocked on your plan for fuller support."
+            'I can give you a light nudge, but Hana is unlocked on your plan for fuller support.'
           );
           briefLines.push(
-            "If you want more time and depth, try switching to Hana from the companions section."
+            'If you want more time and depth, try switching to Hana from the companions section.'
           );
         } else if (characterId === 'nour') {
           briefLines.push(
             "I can give you a very brief, direct nudge, but Hana is the main companion on your plan for holding heavier feelings."
           );
           briefLines.push(
-            "Whenever you want more space to talk, you can switch to Hana from the companions section."
+            'Whenever you want more space to talk, you can switch to Hana from the companions section.'
           );
         } else {
           briefLines.push(
-            "I can give a short hint here, but Hana is available on your plan for deeper support."
+            'I can give a short hint here, but Hana is available on your plan for deeper support.'
           );
           briefLines.push(
-            "You can switch to Hana from the companions section whenever you like."
+            'You can switch to Hana from the companions section whenever you like.'
           );
         }
         aiMessage = briefLines.join(' ');
@@ -1376,10 +1230,27 @@ router.post('/message', async (req, res) => {
     // softly suggest switching to Rashid instead of turning Hana into a productivity coach.
     if (isPremiumUser && characterId === 'hana' && !isArabicConversation) {
       const lower = userText.toLowerCase();
-      const studyKeywords = ['exam', 'study', 'studying', 'homework', 'assignment', 'test'];
-      const productivityKeywords = ['productivity', 'routine', 'routines', 'schedule', 'plan', 'planning', 'focus'];
+      const studyKeywords = [
+        'exam',
+        'study',
+        'studying',
+        'homework',
+        'assignment',
+        'test',
+      ];
+      const productivityKeywords = [
+        'productivity',
+        'routine',
+        'routines',
+        'schedule',
+        'plan',
+        'planning',
+        'focus',
+      ];
       const mentionsStudy = studyKeywords.some((w) => lower.includes(w));
-      const mentionsProductivity = productivityKeywords.some((w) => lower.includes(w));
+      const mentionsProductivity = productivityKeywords.some((w) =>
+        lower.includes(w)
+      );
       if (mentionsStudy || mentionsProductivity) {
         aiMessage =
           aiMessage +
@@ -1387,6 +1258,24 @@ router.post('/message', async (req, res) => {
           "For more structured help with study, routines, and focus, Rashid is designed just for that. You can switch to him from the companions section whenever you like.";
       }
     }
+
+    // Increment usage after successful completion (premium: monthly, free: daily)
+    if (!isTester) {
+      if (isPremiumUser) {
+        usage = await prisma.usage.update({
+          where: { userId },
+          data: { monthlyCount: { increment: 1 } },
+        });
+      } else {
+        usage = await prisma.usage.update({
+          where: { userId },
+          data: { dailyCount: { increment: 1 } },
+        });
+      }
+    }
+
+    const shouldSave =
+      !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
 
     let userRow = null;
     if (shouldSave) {
@@ -1417,7 +1306,10 @@ router.post('/message', async (req, res) => {
         ]);
         userRow = rows[0];
       } catch (err) {
-        console.error('Message persistence error', err && err.message ? err.message : err);
+        console.error(
+          'Message persistence error',
+          err && err.message ? err.message : err
+        );
       }
     }
 
@@ -1446,7 +1338,10 @@ router.post('/message', async (req, res) => {
               },
             });
           } catch (err) {
-            console.error('[EmoEngine][Background] MessageEmotion error', err && err.message ? err.message : err);
+            console.error(
+              '[EmoEngine][Background] MessageEmotion error',
+              err && err.message ? err.message : err
+            );
           }
 
           try {
@@ -1456,26 +1351,41 @@ router.post('/message', async (req, res) => {
               messageId: bgMessageId,
               characterId: bgCharacterId,
               emotion: bgEmotion,
-              topics: Array.isArray(bgEmotion.topics) ? bgEmotion.topics : [],
+              topics: Array.isArray(bgEmotion.topics)
+                ? bgEmotion.topics
+                : [],
               secondaryEmotion: bgEmotion.secondaryEmotion || null,
               emotionVector: bgEmotion.emotionVector || null,
               detectorVersion: bgEmotion.detectorVersion || null,
               isKernelRelevant: true,
             });
           } catch (err) {
-            console.error('[EmoEngine][Background] MemoryKernel error', err && err.message ? err.message : err);
+            console.error(
+              '[EmoEngine][Background] MemoryKernel error',
+              err && err.message ? err.message : err
+            );
           }
 
           try {
             await updateConversationEmotionState(bgConversationId, bgEmotion);
           } catch (err) {
-            console.error('[EmoEngine][Background] ConversationEmotionState error', err && err.message ? err.message : err);
+            console.error(
+              '[EmoEngine][Background] ConversationEmotionState error',
+              err && err.message ? err.message : err
+            );
           }
 
           try {
-            await logEmotionalTimelineEvent({ userId: bgUserId, conversationId: bgConversationId, emotion: bgEmotion });
+            await logEmotionalTimelineEvent({
+              userId: bgUserId,
+              conversationId: bgConversationId,
+              emotion: bgEmotion,
+            });
           } catch (err) {
-            console.error('[EmoEngine][Background] Timeline error', err && err.message ? err.message : err);
+            console.error(
+              '[EmoEngine][Background] Timeline error',
+              err && err.message ? err.message : err
+            );
           }
 
           try {
@@ -1487,19 +1397,28 @@ router.post('/message', async (req, res) => {
               emotion: bgEmotion,
             });
           } catch (err) {
-            console.error('[EmoEngine][Background] TriggerEvents error', err && err.message ? err.message : err);
+            console.error(
+              '[EmoEngine][Background] TriggerEvents error',
+              err && err.message ? err.message : err
+            );
           }
 
           try {
             await updateUserEmotionProfile({ userId: bgUserId });
           } catch (err) {
-            console.error('[EmoEngine][Background] UserEmotionProfile error', err && err.message ? err.message : err);
+            console.error(
+              '[EmoEngine][Background] UserEmotionProfile error',
+              err && err.message ? err.message : err
+            );
           }
 
           try {
             await updateEmotionalPatterns({ userId: bgUserId });
           } catch (err) {
-            console.error('[EmoEngine][Background] Patterns error', err && err.message ? err.message : err);
+            console.error(
+              '[EmoEngine][Background] Patterns error',
+              err && err.message ? err.message : err
+            );
           }
 
           const bgMs = Date.now() - tBgStart;
@@ -1511,7 +1430,10 @@ router.post('/message', async (req, res) => {
             durationMs: bgMs,
           });
         } catch (err) {
-          console.error('[EmoEngine][Background] Unhandled error', err && err.message ? err.message : err);
+          console.error(
+            '[EmoEngine][Background] Unhandled error',
+            err && err.message ? err.message : err
+          );
         }
       });
     }
@@ -1521,7 +1443,7 @@ router.post('/message', async (req, res) => {
       conversationId: cid == null ? 'null' : String(cid),
       engineMode,
       isPremiumUser: !!isPremiumUser,
-      classifyMs,
+      classifyMs: 0,
       orchestrateMs,
       openAiMs,
       backgroundJobQueued,
@@ -1554,10 +1476,10 @@ router.post('/message', async (req, res) => {
       }
     }
 
-    res.json(responsePayload);
+    return res.json(responsePayload);
   } catch (err) {
     console.error('Chat completion error', err && err.message ? err.message : err);
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Failed to generate reply.',
     });
   }

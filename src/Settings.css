@@ -5,10 +5,18 @@
 .asrar-settings-main {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .asrar-settings-panel {
   margin-top: 0.4rem;
+  text-align: center;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* GRID OF PROFILE + SECURITY CARDS */
@@ -17,6 +25,9 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.4rem;
   margin-top: 1.8rem;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* CARDS */

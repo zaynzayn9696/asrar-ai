@@ -2,8 +2,24 @@
 :root {
   /* Tweak this number if you want narrower/wider chat later.
      On desktop we cap at 1040px but shrink when viewport or sidebar space is tight. */
-  --asrar-chat-width: min(1040px, calc(100vw - 260px - 4rem));
+  --asrar-chat-width: min(1040px, calc(100vw - 300px)); /* max width with more side padding */
+  --chat-side-padding: 2rem; /* Added for consistent side padding */
 }
+
+@media (max-width: 1200px) {
+  :root {
+    --asrar-chat-width: min(900px, calc(100vw - 100px));
+    --chat-side-padding: 1.5rem;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --asrar-chat-width: calc(100% - 2rem);
+    --chat-side-padding: 1rem; /* More padding on mobile */
+  }
+}
+
 .asrar-chat-page {
   display: flex;
   flex-direction: column;
@@ -17,6 +33,9 @@
     min-height: 100vh;
     min-height: 100dvh;
   }
+  .asrar-dash-page.asrar-chat-page {
+    overflow-y: hidden; /* mobile: window doesn't scroll, inner chat does */
+  }
 }
 
 /* If ChatPage is rendered inside the dashboard shell */
@@ -27,6 +46,7 @@
   min-height: 100vh;
   overflow-x: hidden;
 }
+
 .asrar-chat-page .asrar-dash-header {
   position: fixed;
   top: 0;
@@ -66,7 +86,7 @@
   z-index: 71;
   width: min(320px, 84vw);
   height: 100%;
-  padding: 1.2rem 1rem 1.6rem;
+  padding: 1.8rem 1rem 1.6rem; /* extra top padding for breathing room */
   background: radial-gradient(circle at top left, #081429 0, #02040b 75%);
   border-right: 1px solid rgba(0, 240, 255, 0.2);
   box-shadow: 24px 0 50px rgba(0, 0, 0, 0.85);
@@ -144,6 +164,7 @@
   padding-left: 0;
   padding-right: 0;              /* avoid extra gap on the right */
   box-sizing: border-box;
+  overflow-y: visible;
 }
 
 /* On mobile, single-column layout */
@@ -158,13 +179,16 @@
 }
 
 /* ============ SIDEBAR (CONVERSATIONS) ============ */
-
 .asrar-chat-sidebar {
-  background: #05080b;              /* match header */
+  /* remove solid panel feeling */
+  background: transparent;
   border-radius: 0;
+
+  /* keep subtle neon divider only */
   border-right: 1px solid rgba(0, 244, 255, 0.18);
+
   position: fixed;
-  top: 72px;                        /* directly under header */
+  top: 72px;
   left: 0;
   width: 260px;
   height: calc(100vh - 72px);
@@ -323,19 +347,42 @@
   flex-direction: column;
   position: relative;                      /* anchor scroll button inside chat area */
   box-sizing: border-box;
+  z-index: 0;
 }
+
+.asrar-chat-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%);
+  background-size: 60px 60px;
+  background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
+  filter: blur(1px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.asrar-chat-main::after {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .asrar-chat-main {
     margin-left: 0;
-    height: calc(100vh - 72px);
+    height: calc(100vh - 72px); /* same fixed stage as desktop under header */
     padding-bottom: 0.5rem;
   }
 }
 
 /* ---- Header (Hana — Deep Support) ---- */
-
+/* ---- Header (Hana — Deep Support) ---- */
 .asrar-chat-header-strip {
-  padding: 0 0 0.75rem;
+  padding: 0.75rem 0 1rem;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -345,56 +392,69 @@
 
 .asrar-chat-header-main {
   width: 100%;
-  max-width: var(--asrar-chat-width); /* same width as chat column */
+  max-width: var(--asrar-chat-width);
   margin: 0 auto;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 30% 0%, #061a2d 0, #02040c 100%);
-  border: 1px solid rgba(0, 240, 255, 0.35);
-  box-shadow:
-    0 0 0 1px rgba(0, 240, 255, 0.06),
-    0 14px 32px rgba(0, 0, 0, 0.9);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
+  position: relative;
+  overflow: visible;
 }
 
+/* remove old glow */
+.asrar-chat-header-main::before {
+  display: none;
+}
+
+/* Clean premium typography */
 .asrar-chat-header-title {
-  font-size: 1rem;
+  font-family: "Cinzel", serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   font-weight: 600;
   color: #e8f8ff;
+  margin: 0 0 0.25rem;
 }
 
 .asrar-chat-header-sub {
   font-size: 0.82rem;
   color: #9fb1c3;
+  max-width: var(--asrar-chat-width);
+  margin: 0;
 }
 
-/* Full width on mobile */
+/* No extra pill anymore */
+.asrar-chat-header-meta-pill {
+  display: none;
+}
+
+/* Keep header visible and centered on mobile */
 @media (max-width: 900px) {
   .asrar-chat-header-main {
-    width: 100%;
     max-width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding: 0 1rem;
   }
 
   .asrar-chat-header-strip {
-    display: none;
+    padding-top: 0.5rem;
+    padding-bottom: 0.75rem;
+    display: flex;
   }
 }
-
 /* ---- Messages scroll area (single scroll region inside chat column) ---- */
 .asrar-chat-messages {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  overflow-x: hidden;
-  width: 100%;
-  max-width: var(--asrar-chat-width); /* constrain width on large screens */
-  margin: 0 auto;                     /* center within chat main */
-  padding: 1.5rem 0 1rem;             /* vertical breathing space */
-  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;      /* <-- make it grow to fill space */
+  overflow-y: auto;    /* scroll if there are many messages */
+  max-height: none;
+  padding: 0 var(--chat-side-padding) 2rem; /* Add side padding to messages container */
 }
 
 .asrar-chat-status-row {
@@ -405,10 +465,6 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
-}
-
-.asrar-chat-status-row .asrar-chat-row {
-  justify-content: flex-start;
 }
 
 .asrar-chat-messages::-webkit-scrollbar {
@@ -436,6 +492,7 @@
   gap: 12px;
   width: 100%;
   justify-content: center;
+  box-sizing: border-box;
 }
 
 .asrar-chat-row--assistant {
@@ -446,6 +503,17 @@
   width: 100%;
 }
 
+.asrar-chat-row--assistant .asrar-chat-bubble {
+  margin-left: 1rem;
+  margin-right: auto;
+  animation: asrar-chat-drop-assistant 0.26s cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+}
+
+.asrar-chat-row--user .asrar-chat-bubble {
+  margin-left: auto;
+  margin-right: 1rem;
+  animation: asrar-chat-drop-user 0.26s cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+}
 
 .asrar-chat-row--system {
   justify-content: center;
@@ -485,10 +553,10 @@
 /* Bubble */
 .asrar-chat-bubble {
   border-radius: 16px;
-  padding: 0.7rem 0.9rem;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  max-width: 70%;
+  padding: 1rem 1.25rem;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  max-width: 80%;
   display: block;
   width: fit-content;
   word-break: normal;
@@ -501,13 +569,13 @@
 
 /* Bubble horizontal alignment rules */
 .asrar-chat-row--assistant .asrar-chat-bubble {
-  margin-left: 0;
+  margin-left: 1rem;
   margin-right: auto;
 }
 
 .asrar-chat-row--user .asrar-chat-bubble {
   margin-left: auto;
-  margin-right: 0;
+  margin-right: 1rem;
 }
 
 /* Assistant bubble */
@@ -520,10 +588,12 @@
 
 /* User bubble */
 .asrar-chat-row--user .asrar-chat-bubble {
-  background: radial-gradient(circle at top right, #ff3ba8, #260522);
-  border: 1px solid rgba(255, 147, 223, 0.9);
-  color: #ffeaff;
-  box-shadow: 0 0 18px rgba(255, 120, 220, 0.45);
+  background: radial-gradient(circle at top right, #041322, #02040d);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  color: #e8f8ff;
+  box-shadow:
+    0 0 16px rgba(0, 240, 255, 0.2),
+    0 0 8px rgba(0, 240, 255, 0.12);
 }
 
 /* System bubble */
@@ -547,10 +617,23 @@
     width: 100%;
     max-width: 100%;
     padding: 1rem 1rem 0.25rem 1rem;
+    box-sizing: border-box;
   }
 
-  .asrar-chat-bubble {
-    max-width: 95%;
+  .asrar-chat-dock,
+  .asrar-chat-status-row,
+  .asrar-chat-footer-meta {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .asrar-chat-composer-inner {
+    width: 60%;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 
@@ -605,6 +688,28 @@
   }
 }
 
+@keyframes asrar-chat-drop-assistant {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes asrar-chat-drop-user {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) translateX(4px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) scale(1);
+  }
+}
+
 .asrar-typing-label {
   font-size: 0.78rem;
   color: #c9d6ff;
@@ -615,43 +720,77 @@
 /* ============ COMPOSER (INPUT + BUTTONS) ============ */
 
 .asrar-chat-composer {
-  padding: 0.75rem 0 0;
+  padding: 4px 0 6px;
   background: transparent;
   border: none;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  z-index: 55;
 }
 
-.asrar-chat-composer-inner {
+.asrar-chat-dock {
   width: 100%;
   max-width: var(--asrar-chat-width);
   margin: 0 auto;
-  padding: 10px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* was 8px */
+}
+
+.asrar-chat-composer-inner {
+  width: 60%;
+  padding: 6px 12px; /* was 10px 16px */
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   box-sizing: border-box;
-  border-radius: 999px;
-  background: rgba(4, 16, 32, 0.9);
-  border: 1px solid rgba(0, 244, 255, 0.32);
+  border-radius: 24px;
+  background: radial-gradient(circle at top, rgba(24, 209, 218, 0.1), rgba(4, 16, 32, 0.92));
+  border: 1px solid rgba(24, 209, 218, 0.3);
   box-shadow:
-    0 0 0 1px rgba(0, 244, 255, 0.08),
-    0 14px 32px rgba(0, 0, 0, 0.9);
+    0 0 0 1px rgba(24, 209, 218, 0.1),
+    0 16px 48px rgba(0, 0, 0, 0.7),
+    0 0 32px rgba(24, 209, 218, 0.12),
+    inset 0 0 16px rgba(24, 209, 218, 0.03);
+  transition: all 0.3s ease;
+}
+
+.asrar-chat-composer-inner:focus-within {
+  padding: 7px 14px; /* smaller change on focus */
+  border-color: rgba(24, 209, 218, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(24, 209, 218, 0.15),
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    0 0 48px rgba(24, 209, 218, 0.2),
+    inset 0 0 20px rgba(24, 209, 218, 0.05);
 }
 
 /* Chat input area */
 .asrar-chat-input {
   flex: 1;
-  max-height: 12em;
+  min-height: 1.5em;
+  max-height: 120px;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
 }
 
 .asrar-chat-input::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+}
+
+.asrar-chat-input::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.asrar-chat-input::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.3);
+  border-radius: 3px;
+}
+
+.asrar-chat-input::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.5);
 }
 
 /* We reuse asrar-room-input-field as the base textarea class */
@@ -661,11 +800,18 @@
   background: transparent;
   box-shadow: none;
   border-radius: 999px;
-  padding: 4px 4px;
+  padding: 6px 8px;
   font-size: 0.85rem;
   color: #e8f8ff;
   outline: none;
   resize: none;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .asrar-chat-input.asrar-room-input-field::placeholder {
@@ -795,7 +941,7 @@
 .asrar-chat-footer-meta {
   width: 100%;
   max-width: var(--asrar-chat-width);
-  margin: 0.35rem auto 0.5rem;
+  margin: 0.2rem auto 0.4rem;
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -835,72 +981,8 @@
   .asrar-chat-footer-meta {
     width: 100%;
     max-width: 100%;
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-
-/* Floating scroll-to-bottom button (appears when user scrolls up) */
-.asrar-scroll-bottom {
-  /* Desktop: visually align with bottom-right of centered chat column */
-  position: fixed;
-  left: 50%;
-  bottom: 5.4rem;
-  transform: translateX(calc(var(--asrar-chat-width) / 2 - 2.6rem));
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 240, 255, 0.55);
-  background: radial-gradient(
-    circle at top,
-    rgba(0, 240, 255, 0.28),
-    rgba(3, 10, 24, 0.96)
-  );
-  color: #e8f8ff;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow:
-    0 0 0 1px rgba(0, 240, 255, 0.24),
-    0 14px 30px rgba(0, 0, 0, 0.9),
-    0 0 20px rgba(0, 240, 255, 0.55);
-  z-index: 80;
-  opacity: 0;
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.asrar-scroll-bottom--visible {
-  display: inline-flex;
-  opacity: 1;
-}
-
-.asrar-scroll-bottom:hover {
-  transform:
-    translateX(calc(var(--asrar-chat-width) / 2 - 2.6rem))
-    translateY(-1px);
-  box-shadow:
-    0 0 0 1px rgba(0, 240, 255, 0.3),
-    0 18px 36px rgba(0, 0, 0, 0.95),
-    0 0 26px rgba(0, 240, 255, 0.75);
-}
-
-@media (max-width: 900px) {
-  .asrar-scroll-bottom {
-    position: fixed;
-    left: auto;
-    right: 1.2rem;
-    bottom: 5.4rem;
-    width: 34px;
-    height: 34px;
-    transform: none;
-  }
-
-  .asrar-scroll-bottom:hover {
-    transform: translateY(-1px);
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 }
 
@@ -1106,97 +1188,258 @@
     overflow-y: visible;
   }
 
-  /* Under the fixed header, space for sidebar + centered chat column */
   .asrar-chat-layout {
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     padding-top: 72px; /* header height */
-    padding-left: calc(260px + 2rem); /* sidebar width + gutter */
-    padding-right: 2rem;
+    padding-left: 260px; /* exactly sidebar width; no extra gap */
+    padding-right: 0;
     box-sizing: border-box;
   }
 
-  /* Sidebar: fixed to the left edge, directly under the header */
   .asrar-chat-sidebar {
     position: fixed;
-    top: 72px; /* exactly under the header */
-    left: 0;   /* flush with viewport left edge */
+    top: 72px;
+    left: 0;
     width: 260px;
     height: calc(100vh - 72px);
     display: flex;
     flex-direction: column;
   }
 
-  /* The list inside the sidebar scrolls independently */
   .asrar-conversation-list {
     flex: 1;
     overflow-y: auto;
   }
 
-  /* Main chat column lives to the right of the fixed sidebar and is centered */
   .asrar-chat-main {
     display: flex;
     flex-direction: column;
     position: relative;
-    width: 100%;
-    max-width: var(--asrar-chat-width);
-    margin: 0 auto 3rem;
-    min-height: calc(100vh - 72px);
-  }
+    width: calc(100vw - 260px); /* fill all space to the right of sidebar */
+    max-width: none;
+    margin: 0;
 
-  /* On desktop, let the page/body own the vertical scroll instead of this container */
-  .asrar-chat-messages {
-    flex: 0 0 auto;
-    overflow-y: visible;
+    height: calc(100vh - 72px);   /* fixed stage under 72px header */
+    padding-bottom: 1.5rem;       /* small breathing room only */
+    flex: 1 1 auto;
+    overflow-y: auto;
     max-height: none;
   }
 
+  /* chat bar stays stuck to bottom of viewport, centered under chat width */
   .asrar-chat-composer {
-    position: sticky;
-    bottom: 0;
-    z-index: 90;
-    padding-top: 0.75rem;
-    padding-bottom: 0.9rem;
-    background: linear-gradient(
-      to bottom,
-      rgba(2, 4, 11, 0),
-      rgba(2, 4, 11, 0.96)
-    );
-    backdrop-filter: blur(10px);
+    position: static;
+    left: auto;
+    transform: none;
+    bottom: auto;
+    width: 100%;
+    z-index: 55;
+    padding-top: 6px;
+    padding-bottom: 10px;
+    background: transparent;
+    backdrop-filter: none;
   }
+.asrar-chat-sidebar-head {
+  padding: 0 0 0.4rem;
+  margin-bottom: 0.3rem;
 }
 
+.asrar-chat-sidebar-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(160, 196, 230, 0.9);
+}
 
-@media (min-width: 901px) {
-  /* Give extra space so last messages are not hidden behind the fixed bar */
-  .asrar-chat-main {
-    padding-bottom: 7.5rem; /* roughly composer height */
-  }
+.asrar-chat-sidebar-helper {
+  font-size: 0.74rem;
+  color: rgba(130, 158, 194, 0.75);
+}
 
-  .asrar-chat-composer {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 0;
-    width: 100%;
-    z-index: 95;
-    padding-top: 0.6rem;
-    padding-bottom: 0.9rem;
-    background: linear-gradient(
-      to bottom,
-      rgba(2, 4, 11, 0),
-      rgba(2, 4, 11, 0.96)
-    );
-    backdrop-filter: blur(10px);
-  }
-
-  /* Keep content centered to the chat width */
   .asrar-chat-composer-inner,
   .asrar-chat-footer-meta {
     max-width: var(--asrar-chat-width);
     margin-left: auto;
     margin-right: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .asrar-chat-composer-inner {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 14px; /* slimmer pill on mobile */
+  }
+
+  .asrar-mic-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .asrar-chat-composer .asrar-send-btn {
+    padding: 0.4rem 0.95rem;
+    font-size: 0.88rem;
+  }
+}
+.asrar-chat-composer {
+  max-width: var(--asrar-chat-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+.asrar-chat-messages {
+  padding-bottom: 0 !important;
+}
+
+/* === FIX USER BUBBLE RIGHT PADDING === */
+.asrar-chat-row--user {
+  padding-right: 1.5rem; /* <- adjust to taste */
+}
+
+@media (max-width: 900px) {
+  .asrar-chat-row--user {
+    padding-right: 1rem; /* smaller on mobile */
+  }
+}
+.asrar-chat-main {
+  position: relative;
+}
+.asrar-chat-messages {
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Ensure the chat main is the anchor for scroll button */
+.asrar-chat-main {
+  position: relative !important;
+}
+
+/* Prevent page scrolling — messages scroll only (desktop only) */
+@media (min-width: 901px) {
+  .asrar-chat-messages {
+    overflow-y: auto !important;
+    position: relative !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* === FIX USER BUBBLE SIDE SPACING (clean version) === */
+.asrar-chat-row--user {
+  padding-right: 1.2rem !important;
+}
+@media (max-width: 900px) {
+  .asrar-chat-row--user {
+    padding-right: 0.8rem !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .asrar-chat-page .asrar-chat-layout {
+    margin-top: 0px;
+  }
+
+  /* Allow the whole page to scroll on mobile (no extra inner scroll bar) */
+  .asrar-dash-page.asrar-chat-page {
+    overflow-y: auto;
+  }
+
+  .asrar-chat-main {
+    height: auto;
+    min-height: calc(100vh - 72px);
+  }
+
+  .asrar-chat-messages {
+    max-height: none;
+    overflow-y: visible;
+    padding-bottom: 200px !important; /* Increased padding to ensure space for last message */
+    margin-bottom: 20px; /* Extra margin to prevent any cutoff */
+  }
+  
+  /* Ensure the last message has extra space below it */
+  .asrar-chat-messages > .asrar-chat-row:last-child {
+    margin-bottom: 60px;
+  }
+
+  /* Mobile: fixed, full-width, compact composer pinned to viewport bottom */
+  .asrar-chat-composer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    background: rgba(3, 10, 24, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 0.35rem 0.75rem 0.8rem;
+    z-index: 200;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3); /* Add shadow to make the input area distinct */
+  }
+
+  .asrar-chat-dock {
+    max-width: 100%;
+  }
+
+  /* Mobile scroll-to-bottom button */
+  .asrar-scroll-bottom {
+    bottom: 150px !important; /* Force override any other bottom value */
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    z-index: 1000 !important; /* Ensure it's above other elements */
+    opacity: 0; /* Hidden by default */
+    transform: translateX(-50%) scale(0.8); /* Start slightly smaller */
+    pointer-events: none; /* Disable clicks when hidden */
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .asrar-scroll-bottom--visible {
+    opacity: 1; /* Show when scrolled up */
+    transform: translateX(-50%) scale(1); /* Scale up when visible */
+    pointer-events: auto; /* Enable clicks when visible */
+  }
+}
+
+/* Scroll-to-bottom button */
+.asrar-scroll-bottom {
+  position: fixed;
+  left: 50%;
+  bottom: 180px;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 30, 30, 0.9);
+  z-index: 1000; /* Ensure it's above other elements */
+  border: 1px solid rgba(0, 255, 200, 0.4);
+  color: #00ffcc;
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.asrar-scroll-bottom--visible {
+  opacity: 1;
+}
+
+.asrar-scroll-bottom:hover {
+  background: rgba(0, 40, 40, 0.95);
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 901px) {
+  .asrar-scroll-bottom {
+    left: calc(50% + 130px); /* Center in the chat area accounting for sidebar */
   }
 }

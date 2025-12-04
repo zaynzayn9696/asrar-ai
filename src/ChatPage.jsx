@@ -465,96 +465,16 @@ export default function ChatPage() {
     };
   }, [user]);
 
-  const handleMessagesScroll = () => {
-    const el = messagesContainerRef.current;
-    if (!el) return;
-    const isDesktop =
-      typeof window !== "undefined" && window.innerWidth > 900;
+ 
 
-    if (isDesktop) {
-      const rect = el.getBoundingClientRect();
-      const distanceFromBottom = rect.bottom - window.innerHeight;
-      const threshold = 200;
-      const shouldShow = distanceFromBottom > threshold;
-      setShowScrollToBottom((prev) =>
-        prev !== shouldShow ? shouldShow : prev
-      );
-      return;
-    }
-
-    const distanceFromBottom =
-      el.scrollHeight - el.scrollTop - el.clientHeight;
-    const threshold = 200;
-    const shouldShow = distanceFromBottom > threshold;
-    setShowScrollToBottom((prev) =>
-      prev !== shouldShow ? shouldShow : prev
-    );
-  };
-
-  const handleScrollToBottomClick = () => {
-    const el = messagesContainerRef.current;
-    if (!el) return;
-
-    const isDesktop =
-      typeof window !== "undefined" && window.innerWidth > 900;
-
-    if (isDesktop) {
-      try {
-        const rect = el.getBoundingClientRect();
-        const currentY =
-          (window.scrollY || window.pageYOffset || 0);
-        const targetBottom = currentY + rect.bottom - window.innerHeight;
-        const docEl = document.documentElement || document.body;
-        const maxScroll =
-          (docEl.scrollHeight || 0) - window.innerHeight;
-        const finalY = Math.max(0, Math.min(targetBottom + 8, maxScroll));
-        window.scrollTo({ top: finalY, behavior: "smooth" });
-      } catch (_) {
-        // fallback: jump close to page bottom
-        window.scrollTo(0, document.body.scrollHeight);
-      }
-    } else {
-      try {
-        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-      } catch (_) {
-        el.scrollTop = el.scrollHeight;
-      }
-    }
-
-    setShowScrollToBottom(false);
-  };
+  
 
   // Auto-scroll to bottom on initial thread load / character switch
   useEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
 
-    const isDesktop =
-      typeof window !== "undefined" && window.innerWidth > 900;
-
-    if (isDesktop) {
-      try {
-        const rect = el.getBoundingClientRect();
-        const currentY =
-          (window.scrollY || window.pageYOffset || 0);
-        const targetBottom = currentY + rect.bottom - window.innerHeight;
-        const docEl = document.documentElement || document.body;
-        const maxScroll =
-          (docEl.scrollHeight || 0) - window.innerHeight;
-        const finalY = Math.max(0, Math.min(targetBottom + 8, maxScroll));
-        window.scrollTo({ top: finalY, behavior: "auto" });
-      } catch (_) {
-        window.scrollTo(0, document.body.scrollHeight);
-      }
-    } else {
-      try {
-        el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
-      } catch (_) {
-        el.scrollTop = el.scrollHeight;
-      }
-    }
-
-    setShowScrollToBottom(false);
+    el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
   }, [selectedCharacterId]);
 
   // Auto-scroll new messages only when user is already near the bottom
@@ -562,70 +482,59 @@ export default function ChatPage() {
     const el = messagesContainerRef.current;
     if (!el) return;
 
-    const isDesktop =
-      typeof window !== "undefined" && window.innerWidth > 900;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const threshold = 80; // px from bottom
 
-    if (isDesktop) {
-      const rect = el.getBoundingClientRect();
-      const distanceFromBottom = rect.bottom - window.innerHeight;
-      const threshold = 80;
-      if (distanceFromBottom <= threshold) {
-        try {
-          const currentY =
-            (window.scrollY || window.pageYOffset || 0);
-          const targetBottom = currentY + rect.bottom - window.innerHeight;
-          const docEl = document.documentElement || document.body;
-          const maxScroll =
-            (docEl.scrollHeight || 0) - window.innerHeight;
-          const finalY = Math.max(0, Math.min(targetBottom + 8, maxScroll));
-          window.scrollTo({ top: finalY, behavior: "auto" });
-        } catch (_) {
-          window.scrollTo(0, document.body.scrollHeight);
-        }
-        setShowScrollToBottom(false);
-      }
-    } else {
-      const distanceFromBottom =
-        el.scrollHeight - el.scrollTop - el.clientHeight;
-      const threshold = 80;
-      if (distanceFromBottom <= threshold) {
-        try {
-          el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
-        } catch (_) {
-          el.scrollTop = el.scrollHeight;
-        }
-        setShowScrollToBottom(false);
-      }
+    if (distanceFromBottom <= threshold) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
     }
   }, [messages]);
 
-  // Desktop: update scroll-to-bottom visibility on window scroll
+  const handleScrollToBottomClick = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    
+    // For mobile, we need to use window.scrollTo since the page scrolls
+    if (window.innerWidth <= 900) {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    } else {
+      // For desktop, scroll the messages container
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    }
+    
+    setShowScrollToBottom(false);
+  };
+
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+
+    let distanceFromBottom, threshold = 40;
+    
+    if (window.innerWidth <= 900) {
+      // For mobile, check window scroll position
+      const { scrollY, innerHeight } = window;
+      const { scrollHeight } = document.documentElement;
+      distanceFromBottom = scrollHeight - (scrollY + innerHeight);
+    } else {
+      // For desktop, check container scroll position
+      const { scrollHeight, scrollTop, clientHeight } = el;
+      distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    }
+    
+    // Only show the button if we're scrolled up past the threshold
+    setShowScrollToBottom(distanceFromBottom > threshold);
+  };
+  
+  // Add scroll event listener for mobile
   useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const onScroll = () => {
-      const el = messagesContainerRef.current;
-      if (!el) return;
-
-      const isDesktop = window.innerWidth > 900;
-      if (!isDesktop) return;
-
-      const rect = el.getBoundingClientRect();
-      const distanceFromBottom = rect.bottom - window.innerHeight;
-      const threshold = 200;
-      const shouldShow = distanceFromBottom > threshold;
-      setShowScrollToBottom((prev) =>
-        prev !== shouldShow ? shouldShow : prev
-      );
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    // run once on mount to set initial state
-    onScroll();
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-    };
+    if (window.innerWidth <= 900) {
+      window.addEventListener('scroll', handleMessagesScroll);
+      return () => window.removeEventListener('scroll', handleMessagesScroll);
+    }
   }, []);
 
   // Auto-expand textarea up to ~3 lines, then scroll internally
@@ -1643,21 +1552,22 @@ export default function ChatPage() {
       {/* MAIN */}
       <main className="asrar-chat-layout">
         <aside className="asrar-chat-sidebar">{renderSidebarContent()}</aside>
+        
         <div className="asrar-chat-main">
-          <header className="asrar-chat-header-strip">
-            <div className="asrar-chat-header-main">
-              <h1 className="asrar-chat-header-title">
-                {getName(character)} - {getRole(character)}
-              </h1>
-            </div>
-            {null}
-          </header>
-
           <div
             className="asrar-chat-messages"
             ref={messagesContainerRef}
             onScroll={handleMessagesScroll}
           >
+            <header className="asrar-chat-header-strip">
+              <div className={`asrar-chat-header-main asrar-chat-header-main--${selectedCharacterId}`}>
+                <h1 className="asrar-chat-header-title">
+                  {getName(character)} - {getRole(character)}
+                </h1>
+              </div>
+              {null}
+            </header>
+
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -1669,6 +1579,7 @@ export default function ChatPage() {
                     : "system"
                 }`}
               >
+                     
                 <div className="asrar-chat-bubble">
                   {msg.audioBase64 ? (
                     <VoiceMessageBubble
@@ -1756,7 +1667,8 @@ export default function ChatPage() {
           {null}
 
           <footer className="asrar-chat-composer">
-            <div className="asrar-chat-status-row">
+            <div className="asrar-chat-dock">
+              <div className="asrar-chat-status-row">
               {isSending && (
                 <div className="asrar-chat-row asrar-chat-row--assistant">
                   <div className="asrar-chat-bubble asrar-chat-bubble--typing">
@@ -1876,7 +1788,7 @@ export default function ChatPage() {
                 const userMsgs = messages.filter((m) => m.from === "user").length;
                 const used = usedFromUsage ?? userMsgs;
                 const counterText = `${used} / ${limit}`;
-                const modelText = "gpt-4o-mini";
+                const modelText = isPrem ? "gpt-4o" : "gpt-4o-mini";
                 return (
                   <div className="asrar-chat-header-pill">
                     {isAr
@@ -1885,6 +1797,7 @@ export default function ChatPage() {
                   </div>
                 );
               })()}
+            </div>
             </div>
           </footer>
         </div>

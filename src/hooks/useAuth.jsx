@@ -18,10 +18,29 @@ export function AuthProvider({ children }) {
   // Load current user from /api/auth/me using the cookie
   useEffect(() => {
     const loadUser = async () => {
-      try {
-        const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const isDev = import.meta.env.DEV;
+      const isLocalhost = ["localhost", "127.0.0.1"].includes(
+        window.location.hostname
+      );
+      const devBypass =
+        isDev &&
+        isLocalhost &&
+        import.meta.env.VITE_ASRAR_DEV_BYPASS_AUTH === "true";
 
-        // Always call /api/auth/me to allow cookie-based auth to work even if localStorage token is missing
+      if (devBypass) {
+        setUser({
+          id: "dev-user-id",
+          email: "dev@asrar.local",
+          name: "Dev User",
+        });
+        setIsAuthLoading(false);
+        console.info("[DEV AUTH] Bypass activated — fake user injected.");
+        return;
+      }
+
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
         const headers = {
           Accept: "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -31,12 +50,11 @@ export function AuthProvider({ children }) {
 
         const res = await fetch(`${API_BASE}/api/auth/me?_=${Date.now()}`, {
           method: "GET",
-          credentials: "include", // send cookies
+          credentials: "include",
           headers,
           cache: "no-store",
         });
 
-        // Safely parse JSON (handle empty body like 304)
         let data = null;
         try {
           const text = await res.text();
@@ -49,7 +67,6 @@ export function AuthProvider({ children }) {
           const u = data?.user ?? data ?? null;
           setUser(u);
         } else if (res.status === 304) {
-          // Keep existing user if any; do not crash on empty body
           setUser((prev) => prev ?? null);
         } else if (res.status === 401) {
           setUser(null);

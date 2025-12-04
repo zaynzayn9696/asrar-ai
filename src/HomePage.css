@@ -131,7 +131,7 @@ body,
 
 /* Offset main content so it doesn't sit under the fixed header + nav */
 .asrar-page > main {
-  padding-top: 90px; /* Reduced from 120px to 90px */
+  padding-top: 70px; /* Reduced from 120px to 90px */
 }
 
 /* LANGUAGE + BUTTONS -------------------------------------------------- */
@@ -352,7 +352,7 @@ body,
   
   /* Adjust main content spacing for mobile */
   .asrar-page > main {
-    padding-top: 72px; /* Reduced from 90px for mobile */
+    padding-top: 64px; /* Reduced from 90px for mobile */
   }
   
   /* Adjust hero spacing for mobile */
@@ -478,32 +478,88 @@ body,
 /* HERO --------------------------------------------------------------- */
 
 .asrar-hero {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 32px 40px 40px; /* Reduced top padding from 64px to 32px */
+  width: 100%;
+  padding: 24px 40px 40px;
   text-align: center;
   scroll-margin-top: 90px;
   opacity: 0;
   transform: translateY(18px);
   animation: asrar-fade-up 0.7s ease-out forwards;
+  background: linear-gradient(180deg, #030507 0%, #020305 50%, #010203 100%);
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Subtle teal glow at top, very low opacity */
+.asrar-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at top center, rgba(0, 150, 160, 0.06), transparent 60%);
+  z-index: 0;
+}
+
+/* Soft digital rain animation */
+.asrar-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    transparent 100%
+  ),
+  linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 100%
+  );
+  background-size: 100% 80px, 100% 100%;
+  animation: asrar-rain 20s linear infinite;  /* slower = smoother */
+  opacity: 0.06;
+  z-index: 0;
+}
+
+/* Make sure actual content is above the animation */
+.asrar-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes asrar-subtle-rain {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 0 80px, 0 100%;
+  }
 }
 
 .asrar-logo-frame {
-  display: inline-flex;
-  margin-bottom: 20px; /* Reduced from 24px to 20px */
-}
-
-.asrar-logo-inner {
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  border: none;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
 }
 
 .asrar-logo-inner img {
-  display: block;
-  height: 320px;
+  height: 85px;
   width: auto;
+  display: block;
+  filter: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+.asrar-logo-frame::before {
+  content: none !important;
 }
 
 .asrar-hero-eyebrow {
@@ -526,6 +582,10 @@ body,
   margin: 0 0 22px;
   font-size: 14px;
   color: var(--asrar-accent);
+}
+
+.asrar-hero-copy-centered {
+  display: none;
 }
 
 .asrar-hero-columns {
@@ -590,28 +650,322 @@ body,
   right: 0;
 }
 
-/* MOOD GATE ---------------------------------------------------------- */
+/* === Mood Capsule Hero Widget (Brand New Design) ===================================== */
 
-.asrar-mood-card {
+.asrar-mood-capsule {
+  display: flex;
+  justify-content: center;
+  margin: 30px auto -26px;
+  padding: 0 16px;
+}
+
+.asrar-mood-capsule-inner {
+  max-width: 560px;
   width: 100%;
-  max-width: 640px;
-  margin: 28px auto 16px;
-  background: radial-gradient(circle at top, #0f1d29 0, #060810 62%);
-  border-radius: 20px;
-  padding: 22px 22px 20px;
+  border-radius: 28px;
+  padding: 32px 36px;
+  border: 1px solid rgba(0, 244, 255, 0.45);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(0, 244, 255, 0.18), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(92, 76, 255, 0.12), transparent 60%),
+    rgba(3, 8, 18, 0.96);
+  box-shadow:
+    0 0 0 1px rgba(0, 244, 255, 0.09),
+    0 26px 70px rgba(0, 0, 0, 0.95),
+    0 0 42px rgba(0, 244, 255, 0.26);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  transform-origin: center top;
+  animation: asrar-mood-breathe 18s ease-in-out infinite;
+  will-change: transform, box-shadow;
+  min-height: auto;
+  max-height: none;
+}
+
+.asrar-mood-capsule-inner::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(24, 209, 218, 0.22), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(165, 92, 255, 0.18), transparent 60%);
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  filter: blur(18px);
+  pointer-events: none;
+  animation: asrar-mood-parallax 26s ease-in-out infinite;
+}
+
+/* Header */
+
+.asrar-mood-capsule-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(188, 215, 230, 0.7);
+}
+
+.asrar-mood-capsule-label {
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.asrar-mood-capsule-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
   border: 1px solid rgba(24, 209, 218, 0.35);
-  overflow: visible; /* prevent clipping of the textarea */
+  background: rgba(3, 28, 38, 0.8);
+  font-size: 9px;
+  font-weight: 500;
+}
+
+/* Question area */
+
+.asrar-mood-capsule-question {
+  text-align: center;
+}
+
+.asrar-mood-capsule-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #f7fbff;
+  letter-spacing: -0.01em;
+}
+
+.asrar-mood-capsule-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(188, 215, 230, 0.65);
+  line-height: 1.5;
+}
+
+/* Input */
+
+.asrar-mood-capsule-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asrar-mood-capsule-input-shell {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  border-radius: 16px;
+  background: rgba(3, 12, 18, 0.6);
+  border: 1px solid rgba(24, 209, 218, 0.2);
+  box-shadow:
+    inset 0 0 12px rgba(24, 209, 218, 0.06),
+    0 0 16px rgba(24, 209, 218, 0.08);
+  padding-right: 56px;
+}
+
+.asrar-mood-capsule-input {
+  flex: 1;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 12px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #f5fbff;
+  font-family: inherit;
+  height: 64px;
+  max-height: 80px;
+  overflow-y: auto;
+  min-height: 64px;
+}
+
+.asrar-mood-capsule-input::placeholder {
+  color: rgba(170, 200, 220, 0.55);
+}
+
+.asrar-mood-capsule-send {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #18d1da, #0fa8b3);
+  box-shadow:
+    0 0 16px rgba(24, 209, 218, 0.4),
+    0 0 40px rgba(24, 209, 218, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, opacity 0.15s ease-out;
+  color: #021015;
+  font-weight: 600;
+}
+
+.asrar-mood-capsule-send:hover:not(:disabled) {
+  transform: translateY(-50%) scale(1.08);
+  box-shadow:
+    0 0 24px rgba(24, 209, 218, 0.6),
+    0 0 60px rgba(24, 209, 218, 0.3);
+}
+
+.asrar-mood-capsule-send:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: 0 0 12px rgba(24, 209, 218, 0.15);
+}
+
+.asrar-mood-capsule-send-icon {
+  display: block;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Hint */
+
+.asrar-mood-capsule-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(160, 188, 210, 0.55);
+  letter-spacing: 0.02em;
+}
+
+/* Response */
+
+.asrar-mood-capsule-response {
+  background: rgba(24, 209, 218, 0.06);
+  border: 1px solid rgba(24, 209, 218, 0.15);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+  align-items: center;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.asrar-mood-capsule-response-text {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #f5f7fb;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.asrar-mood-capsule-cta {
+  align-self: center;
+  padding: 8px 16px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Emotional Engine in Hero */
+
+.asrar-engine-hero {
+  width: 100%;
+  margin: 48px 0 40px 0;
+  padding: 0 40px;
+  background: transparent;
+  border: none;
+}
+
+.asrar-engine-hero .asrar-engine-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.asrar-engine-hero .asrar-section-title {
+  margin-bottom: 12px;
+  font-size: 32px;
+}
+
+.asrar-engine-hero .asrar-section-subtitle {
+  margin-bottom: 32px;
+  font-size: 15px;
+}
+
+.asrar-engine-hero .asrar-engine-grid {
+  gap: 20px;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .asrar-engine-hero {
+    padding: 0 20px;
+  }
+
+  .asrar-engine-hero .asrar-section-title {
+    font-size: 24px;
+  }
+
+  .asrar-mood-capsule {
+    margin: 40px auto 56px;
+  }
+
+  .asrar-mood-capsule-inner {
+    max-width: 100%;
+    border-radius: 24px;
+    padding: 24px 20px;
+    gap: 20px;
+  }
+
+  .asrar-mood-capsule-title {
+    font-size: 18px;
+  }
+
+  .asrar-mood-capsule-subtitle {
+    font-size: 12px;
+  }
+
+  .asrar-mood-capsule-input-shell {
+    padding-right: 50px;
+  }
+
+  .asrar-mood-capsule-input {
+    font-size: 13px;
+    padding: 11px 14px;
+    min-height: 44px;
+  }
+
+  .asrar-mood-capsule-send {
+    width: 36px;
+    height: 36px;
+    right: 3px;
+  }
+
+  .asrar-mood-capsule-send-icon {
+    font-size: 14px;
+  }
 }
 
 .asrar-mood-title {
-  font-size: 18px;
-  margin: 0 0 6px;
+  font-size: 22px;
+  margin: 0 0 8px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .asrar-mood-intro {
-  margin: 0 0 14px;
-  font-size: 13px;
+  margin: 0 0 18px;
+  font-size: 14px;
   color: var(--asrar-text-muted);
+  line-height: 1.6;
 }
 
 .asrar-mood-form textarea {
@@ -634,15 +988,22 @@ body,
 /* Dedicated mood input to avoid clipped height in the mini chat widget */
 .asrar-mood-input {
   width: 100%;
-  min-height: 90px;
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(24, 209, 218, 0.08) 0%,
+    rgba(3, 10, 24, 0.95) 100%
+  );
+  border: 1.5px solid rgba(24, 209, 218, 0.5);
+  box-shadow: 
+    inset 0 0 20px rgba(24, 209, 218, 0.08),
+    0 0 20px rgba(24, 209, 218, 0.15);
+  min-height: 100px;
   max-height: 160px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 244, 255, 0.35);
-  background: rgba(3, 10, 24, 0.98);
+  padding: 14px 16px;
+  border-radius: 20px;
   color: #f5fbff;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 0.9rem;
+  line-height: 1.5;
   resize: vertical;
   overflow-y: auto;
   box-sizing: border-box;
@@ -816,7 +1177,19 @@ body,
   scroll-margin-top: 90px;
   opacity: 0;
   transform: translateY(18px);
-  animation: asrar-fade-up 0.7s ease-out forwards;
+  animation: asrar-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  overflow: visible;
+}
+
+.asrar-section::before {
+  content: "";
+  position: absolute;
+  inset: -40px 12%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+  animation: asrar-section-glow 1.2s ease-out forwards;
 }
 
 .asrar-section-title {
@@ -866,10 +1239,14 @@ body,
   max-width: 1100px;
   margin: 0 auto;
   align-items: stretch;
+  position: relative;
+  z-index: 1;
 }
 
 .asrar-characters-section .asrar-character-grid-wrapper {
   display: block;
+  position: relative;
+  z-index: 1;
 }
 
 .asrar-characters-section .asrar-character-carousel-wrapper {
@@ -880,6 +1257,23 @@ body,
   position: relative;
   padding-top: 8px;
   padding-bottom: 8px;
+}
+
+.asrar-characters-section::before {
+  content: "";
+  position: absolute;
+  inset: -40px 0 -60px 0;
+  background-image: 
+    linear-gradient(45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%);
+  background-size: 60px 60px;
+  background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
+  filter: blur(1px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
 }
 
 /* Grid cards: stabilize CTA alignment with 3-row layout and static footer */
@@ -958,18 +1352,30 @@ body,
 
 .asrar-characters-section .asrar-character-card {
   position: relative;
-  background: radial-gradient(circle at top, #0b151f 0, #05070c 70%);
-  border: 1px solid var(--asrar-border-subtle);
-  border-radius: var(--asrar-radius-lg);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+  background: radial-gradient(circle at top, #0d1a27 0%, #05070c 75%);
+  border: 2px solid rgba(24, 209, 218, 0.4);
+  border-radius: 32px;
+  box-shadow: 
+    0 24px 80px rgba(0, 0, 0, 0.95),
+    0 0 30px rgba(24, 209, 218, 0.25);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  height: auto; /* allow stretch in flex rows */
-  align-self: stretch; /* ensure equal height per row in flex-wrap */
-  min-height: 380px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
-    border-color 0.2s ease, background 0.2s ease;
+  height: auto;
+  align-self: stretch;
+  min-height: 420px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+  overflow: hidden;
+  clip-path: polygon(
+    0 24px,
+    24px 0,
+    calc(100% - 24px) 0,
+    100% 24px,
+    100% calc(100% - 24px),
+    calc(100% - 24px) 100%,
+    24px 100%,
+    0 calc(100% - 24px)
+  );
 }
 
 .asrar-characters-section .asrar-character-card::before {
@@ -988,9 +1394,11 @@ body,
 }
 
 .asrar-characters-section .asrar-character-card:hover {
-  transform: translateY(-3px);
-  border-color: var(--asrar-accent-soft);
-  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.95), 0 0 16px rgba(24, 209, 218, 0.22);
+  transform: translateY(-8px);
+  border-color: rgba(24, 209, 218, 0.8);
+  box-shadow: 
+    0 40px 120px rgba(0, 0, 0, 0.95),
+    0 0 50px rgba(24, 209, 218, 0.5);
 }
 
 @media (min-width: 1024px) {
@@ -1006,13 +1414,13 @@ body,
 .asrar-characters-section .asrar-character-card-inner {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px 16px 16px;
+  gap: 16px;
+  padding: 24px 20px 16px;
   height: 100%;
   min-height: 100%;
   position: relative;
   z-index: 1;
-  padding-bottom: 64px; /* reserve pinned footer space */
+  padding-bottom: 80px;
 }
 
 @media (min-width: 1024px) {
@@ -1023,24 +1431,50 @@ body,
 
 .asrar-characters-section .asrar-character-footer {
   margin-top: auto;
-  padding-top: 10px;
+  padding-top: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
 }
 
 .asrar-characters-section .asrar-character-cta {
   font-size: 12px;
-  padding: 10px 22px;
+  padding: 12px 28px;
   margin-bottom: 0;
   font-family: inherit;
   font-weight: 600;
   letter-spacing: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(24, 209, 218, 0.25), rgba(24, 209, 218, 0.15));
+  border: 1.5px solid rgba(24, 209, 218, 0.5);
+  color: #f5fbff;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 280px;
+}
+
+.asrar-characters-section .asrar-character-cta::before {
+  content: "💬";
+  margin-right: 6px;
+  font-size: 13px;
+}
+
+.asrar-characters-section .asrar-character-cta:hover {
+  background: linear-gradient(135deg, rgba(24, 209, 218, 0.4), rgba(24, 209, 218, 0.25));
+  border-color: rgba(24, 209, 218, 0.8);
+  box-shadow: 0 0 24px rgba(24, 209, 218, 0.4), inset 0 0 16px rgba(24, 209, 218, 0.1);
+  transform: translateY(-2px);
+}
+
+.asrar-characters-section .asrar-character-cta:active {
+  transform: translateY(0);
 }
 
 @media (min-width: 1024px) {
@@ -1097,28 +1531,32 @@ body,
 }
 
 .asrar-characters-section .asrar-character-avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 14px;
+  width: 120px;
+  height: 120px;
+  border-radius: 20px;
   object-fit: contain;
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.15), transparent 60%),
-    radial-gradient(circle at bottom, rgba(24, 209, 218, 0.12), transparent 70%),
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.2), transparent 50%),
+    radial-gradient(circle at bottom, rgba(24, 209, 218, 0.15), transparent 60%),
     #050b13;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
-  filter: drop-shadow(0 0 10px rgba(24, 209, 218, 0.2));
-  transition: filter 0.25s ease;
+  border: 1.5px solid rgba(24, 209, 218, 0.4);
+  box-shadow: 
+    0 0 24px rgba(24, 209, 218, 0.3),
+    0 16px 48px rgba(0, 0, 0, 0.7);
+  filter: drop-shadow(0 0 12px rgba(24, 209, 218, 0.25));
+  transition: filter 0.25s ease, transform 0.25s ease;
 }
 
 .asrar-characters-section .asrar-character-card:hover .asrar-character-avatar {
-  filter: drop-shadow(0 0 14px rgba(24, 209, 218, 0.35));
+  filter: drop-shadow(0 0 20px rgba(24, 209, 218, 0.5));
+  transform: scale(1.05);
 }
 
 @media (min-width: 1024px) {
   .asrar-characters-section .asrar-character-avatar {
-    width: 139px;
-    height: 139px;
+    width: 180px;
+    height: 180px;
+    border-radius: 24px;
   }
 }
 
@@ -1131,20 +1569,22 @@ body,
 
 .asrar-characters-section .asrar-character-name {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .asrar-characters-section .asrar-character-role {
-  margin: 2px 0 0;
-  font-size: 13px;
+  margin: 4px 0 0;
+  font-size: 14px;
   color: var(--asrar-accent);
+  font-weight: 500;
 }
 
 .asrar-characters-section .asrar-character-desc {
-  
   color: var(--asrar-text-muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.6;
   text-align: center;
   word-break: normal;
   overflow-wrap: break-word;
@@ -1186,8 +1626,8 @@ body,
 
 @media (min-width: 1024px) {
   .asrar-characters-section .asrar-character-cta {
-    font-size: 12px;
-    padding: 12px 26px;
+    font-size: 13px;
+    padding: 12px 28px;
   }
   .asrar-characters-section .asrar-character-card-top--stack {
     min-height: 199px;
@@ -1517,6 +1957,54 @@ body,
     display: flex;
   }
 }
+ 
+@keyframes asrar-mood-breathe {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 0 40px rgba(24, 209, 218, 0.15),
+      inset 0 0 30px rgba(24, 209, 218, 0.04);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow:
+      0 0 52px rgba(24, 209, 218, 0.24),
+      inset 0 0 40px rgba(24, 209, 218, 0.08);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 0 40px rgba(24, 209, 218, 0.15),
+      inset 0 0 30px rgba(24, 209, 218, 0.04);
+  }
+}
+
+@keyframes asrar-mood-parallax {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4px, -6px, 0) scale(1.02);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes asrar-section-glow {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0.45;
+    transform: translateY(0);
+  }
+}
 
 @keyframes asrar-fade-up {
   0% {
@@ -1578,22 +2066,48 @@ body,
   margin-top: 18px;
 }
 
+.asrar-section--features .asrar-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+@media (max-width: 950px) {
+  .asrar-section--features .asrar-trust-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 650px) {
+  .asrar-section--features .asrar-trust-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 .asrar-features-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
   text-align: center;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 @media (max-width: 950px) {
   .asrar-features-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
   }
 }
 
 @media (max-width: 650px) {
   .asrar-features-grid {
     grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 }
 
@@ -1622,6 +2136,41 @@ body,
   border: 1px solid var(--asrar-border-subtle);
   box-shadow: 0 18px 55px rgba(0, 0, 0, 0.85);
   font-size: 13px;
+}
+
+.asrar-trust-item {
+  padding: 24px 20px;
+  border-radius: 20px;
+  background: radial-gradient(circle at top, rgba(24, 209, 218, 0.08) 0%, rgba(5, 8, 11, 0.95) 70%);
+  border: 1px solid rgba(24, 209, 218, 0.25);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.asrar-trust-item:hover {
+  border-color: rgba(24, 209, 218, 0.5);
+  box-shadow: 0 0 30px rgba(24, 209, 218, 0.2), inset 0 0 30px rgba(24, 209, 218, 0.05);
+  transform: translateY(-4px);
+}
+
+.asrar-trust-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.asrar-trust-item h3 {
+  font-size: 16px;
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: #f5f7fb;
+}
+
+.asrar-trust-item p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(160, 169, 184, 0.85);
+  margin: 0;
 }
 
 .feature-icon {
@@ -1683,14 +2232,14 @@ body,
 /* PRICING ------------------------------------------------------------ */
 
 .asrar-section--pricing .asrar-pricing-grid {
-  margin-top: 22px;
+  margin-top: 72px;
 }
 
 .asrar-pricing-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 280px));
-  justify-content: center;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 20px;
+  align-items: stretch;
 }
 
 /* Stack pricing cards vertically on mobile */
@@ -1706,15 +2255,12 @@ body,
 }
 
 .pricing-card {
-  text-align: center;
-  padding: 22px 24px 24px;
-  border-radius: var(--asrar-radius-lg);
-  background: radial-gradient(circle at top, #0b151f 0, #05070c 70%);
-  border: 1px solid var(--asrar-border-subtle);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
-  font-size: 13px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
-    border-color 0.2s ease, background 0.2s ease;
+  padding: 20px 22px 22px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(6, 16, 26, 0.96), rgba(4, 8, 16, 0.98));
+  border: 1px solid rgba(120, 155, 190, 0.4);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.9);
 }
 
 .pricing-card--accent {
@@ -2419,7 +2965,7 @@ border: none;
 /* Row: textarea + send button */
 .asrar-mood-bar {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -2439,6 +2985,14 @@ border: none;
   resize: vertical;
   overflow-y: auto;
   box-sizing: border-box;
+    flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  resize: none;           /* no drag-resize in any direction */
+  overflow-x: hidden;
+  word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .asrar-mood-input::placeholder {
@@ -2592,22 +3146,1268 @@ border: none;
 
 .asrar-engine-card {
   text-align: center;
-  padding: 1.2rem 1.2rem 1.3rem;
-  border-radius: var(--asrar-radius-md);
-  background: radial-gradient(circle at top, #0b151f 0, #05070c 65%);
-  border: 1px solid var(--asrar-border-subtle);
-  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.85);
+  padding: 28px;
+  border-radius: 20px;
+  background: radial-gradient(circle at top, #0b1620 0%, #05070c 70%);
+  border: 1px solid rgba(24, 209, 218, 0.25);
+  transition: all 0.3s ease;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.asrar-engine-card:hover {
+  border-color: rgba(24, 209, 218, 0.5);
+  box-shadow: 
+    0 16px 60px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(24, 209, 218, 0.2);
+  transform: translateY(-2px);
 }
 
 .asrar-engine-card h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
-  color: #e8f8ff;
+  font-size: 18px;
+  margin: 0 0 12px;
+  color: var(--asrar-accent);
+  font-weight: 600;
 }
 
 .asrar-engine-card p {
-  margin: 0;
   font-size: 14px;
+  line-height: 1.6;
   color: var(--asrar-text-muted);
-  line-height: 1.55;
+  margin: 0;
+}
+
+.asrar-engine-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 8px rgba(24, 209, 218, 0.3));
+}
+
+.feature {
+  background: radial-gradient(circle at top, #0b1620 0%, #05070c 70%);
+  border: 1px solid rgba(24, 209, 218, 0.2);
+  border-radius: 20px;
+  padding: 28px;
+  transition: all 0.3s ease;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.feature:hover {
+  border-color: rgba(24, 209, 218, 0.5);
+  box-shadow: 
+    0 16px 60px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(24, 209, 218, 0.2);
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 0 10px rgba(24, 209, 218, 0.3));
+}
+
+.feature h3 {
+  font-size: 17px;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.feature p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--asrar-text-muted);
+  margin: 0;
+}
+
+/* PRICING ------------------------------------------------------------ */
+
+.pricing-card {
+  background: radial-gradient(circle at top, #0b1620 0%, #05070c 70%);
+  border: 1.5px solid rgba(24, 209, 218, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  transition: all 0.3s ease;
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.8);
+}
+
+.pricing-card:hover {
+  border-color: rgba(24, 209, 218, 0.4);
+  box-shadow: 
+    0 20px 80px rgba(0, 0, 0, 0.9),
+    0 0 24px rgba(24, 209, 218, 0.15);
+  transform: translateY(-4px);
+}
+
+.pricing-card h3 {
+  font-size: 22px;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+.pricing-card .price {
+  font-size: 28px;
+  margin: 0 0 24px;
+  color: var(--asrar-accent);
+  font-weight: 700;
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.pricing-card li {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--asrar-text-muted);
+  margin-bottom: 10px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.pricing-card li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--asrar-accent);
+  font-weight: 700;
+}
+
+.pricing-card--accent {
+  transform: translateY(-2px);
+  border-color: rgba(24, 209, 218, 0.75);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 1),
+    0 0 28px rgba(24, 209, 218, 0.55);
+}
+
+.pricing-card--accent:hover {
+  border-color: rgba(24, 209, 218, 0.7);
+  box-shadow: 
+    0 24px 100px rgba(0, 0, 0, 0.9),
+    0 0 40px rgba(24, 209, 218, 0.35);
+}
+
+/* ============ MINIMAL LUXURY PRICING ============ */
+
+.asrar-pricing-shell {
+  max-width: 860px;
+  margin: 24px auto 0;
+  padding: 24px 28px 28px;
+  background:
+    radial-gradient(circle at top, rgba(24, 209, 218, 0.15), transparent 60%),
+    rgba(4, 9, 16, 0.96);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.95),
+    0 0 26px rgba(24, 209, 218, 0.25);
+}
+
+.asrar-pricing-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 32px;
+  align-items: center;
+}
+
+/* Base card styling */
+.asrar-pricing-card {
+  text-align: center;
+  padding: 40px 32px;
+  border-radius: 24px;
+  background: rgba(5, 12, 24, 0.7);
+  border: 1px solid rgba(24, 209, 218, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* Free card — slightly smaller, subtle */
+.asrar-pricing-card--free {
+  background: rgba(5, 12, 24, 0.6);
+  border-color: rgba(24, 209, 218, 0.12);
+}
+
+.asrar-pricing-card--free:hover {
+  border-color: rgba(24, 209, 218, 0.25);
+  box-shadow: 0 12px 48px rgba(24, 209, 218, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Pro card — visually dominant, lifted */
+.asrar-pricing-card--pro {
+  background: radial-gradient(circle at top, rgba(24, 209, 218, 0.08), rgba(5, 12, 24, 0.75));
+  border-color: rgba(24, 209, 218, 0.28);
+  box-shadow: 
+    0 12px 48px rgba(24, 209, 218, 0.12),
+    0 0 60px rgba(24, 209, 218, 0.06);
+  padding: 48px 40px;
+}
+
+.asrar-pricing-card--pro:hover {
+  border-color: rgba(24, 209, 218, 0.4);
+  box-shadow: 
+    0 16px 64px rgba(24, 209, 218, 0.18),
+    0 0 80px rgba(24, 209, 218, 0.1);
+  transform: translateY(-4px);
+}
+
+/* Badge */
+.asrar-pricing-badge {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--asrar-accent);
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 209, 218, 0.35);
+  background: rgba(24, 209, 218, 0.06);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+/* Title */
+.asrar-pricing-card h3 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: #f5f7fb;
+  letter-spacing: -0.01em;
+}
+
+/* Price */
+.asrar-pricing-price {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--asrar-accent);
+  margin: 0 0 32px;
+  letter-spacing: -0.02em;
+}
+
+/* Features */
+.asrar-pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.asrar-pricing-features li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--asrar-text-muted);
+  position: relative;
+  padding-left: 24px;
+}
+
+.asrar-pricing-features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--asrar-accent);
+  font-weight: 700;
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+/* Button */
+.asrar-pricing-card .asrar-btn {
+  width: 100%;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .asrar-pricing-shell {
+    padding: 40px 24px;
+  }
+
+  .asrar-pricing-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .asrar-pricing-card {
+    padding: 36px 28px;
+  }
+
+  .asrar-pricing-card--pro {
+    padding: 40px 28px;
+  }
+
+  .asrar-pricing-price {
+    font-size: 32px;
+  }
+
+  .asrar-pricing-features li {
+    font-size: 13px;
+  }
+}
+
+/* CONTACT ------------------------------------------------------------- */
+
+.asrar-contact-card {
+  background: radial-gradient(circle at top, #0b1620 0%, #05070c 70%);
+  border: 1px solid rgba(24, 209, 218, 0.2);
+  border-radius: 20px;
+  padding: 28px;
+  transition: all 0.3s ease;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+.asrar-contact-card:hover {
+  border-color: rgba(24, 209, 218, 0.5);
+  box-shadow: 
+    0 16px 60px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(24, 209, 218, 0.2);
+  transform: translateY(-2px);
+}
+
+.asrar-contact-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: var(--asrar-accent);
+  filter: drop-shadow(0 0 10px rgba(24, 209, 218, 0.3));
+}
+
+.asrar-contact-card h3 {
+  font-size: 17px;
+  margin: 0 0 10px;
+  font-weight: 600;
+}
+
+.asrar-contact-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--asrar-text-muted);
+  margin: 0 0 12px;
+}
+
+.asrar-contact-email {
+  color: var(--asrar-accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.asrar-contact-email:hover {
+  text-decoration: underline;
+}
+.asrar-hero-logo-inner img {
+  display: block;
+  height: 280px;
+  width: auto;
+  transform: translateY(0) scale(1);
+  filter: drop-shadow(0 0 14px rgba(24, 209, 218, 0.55));
+  animation: asrar-hero-logo-pulse 16s ease-in-out infinite;
+}
+
+@keyframes asrar-hero-logo-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    filter: drop-shadow(0 0 14px rgba(24, 209, 218, 0.55));
+  }
+  50% {
+    transform: translateY(-3px) scale(1.02);
+    filter: drop-shadow(0 0 28px rgba(24, 209, 218, 0.95));
+  }
+}
+
+/* ===== PREMIUM COMPANION HERO CAROUSEL ===== */
+
+.asrar-companions-section {
+  position: relative;
+  padding: 60px 40px;
+  scroll-margin-top: 90px;
+}
+
+.asrar-companions-section::before {
+  content: "";
+  position: absolute;
+  inset: -40px 0 -60px 0;
+  background-image: 
+    linear-gradient(45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%);
+  background-size: 60px 60px;
+  background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
+  filter: blur(1px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.asrar-companions-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3.5rem 3rem;
+  border-radius: 32px;
+  background: rgba(5, 8, 11, 0.6);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    inset 0 1px 20px rgba(24, 209, 218, 0.08);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.asrar-companions-shell::before {
+  display: none;
+}
+
+.asrar-companions-header {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.asrar-companions-kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(180, 214, 244, 0.9);
+  margin: 0 0 0.8rem;
+}
+
+.asrar-companions-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e8f8ff;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.asrar-companions-carousel-wrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.asrar-companions-viewport {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  height: 380px;
+}
+
+.asrar-companion-hero-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.asrar-companion-hero-slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3.5rem;
+  padding: 3rem 3.5rem;
+  border-radius: 28px;
+  background: rgba(5, 12, 20, 0.5);
+  border: 1px solid rgba(24, 209, 218, 0.2);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 16px rgba(24, 209, 218, 0.06);
+  opacity: 0;
+  transform: translateX(16px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 360ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform 360ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              box-shadow 360ms ease;
+}
+
+.asrar-companion-hero-slide--active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  pointer-events: auto;
+  z-index: 10;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.75),
+    inset 0 1px 20px rgba(24, 209, 218, 0.1);
+}
+
+.asrar-companion-hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;      /* center horizontally */
+  text-align: center;       /* center text */
+}
+
+.asrar-companion-hero-label {
+  font-size: 0.85rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #e8f8ff;
+  opacity: 0.9;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+
+.asrar-companion-hero-description {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #c3d4f1;
+  margin: 0;
+    margin-top: 0.25rem;
+  margin-bottom: 1rem;   /* space before the button */
+}
+
+.asrar-companion-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.75rem 2rem;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #00f4ff, #7c4dff);
+  color: #02050b;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 12px 28px rgba(0, 0, 0, 0.95),
+    0 0 24px rgba(124, 77, 255, 0.4);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+  cursor: pointer;
+    margin: 0 auto; 
+      margin-top: 0.25rem; 
+}
+
+.asrar-companion-hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 16px 34px rgba(0, 0, 0, 0.98),
+    0 0 30px rgba(124, 77, 255, 0.55);
+}
+
+.asrar-companion-hero-visual {
+  flex: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+
+.asrar-companion-hero-visual::before {
+  display: none;
+}
+
+.asrar-companion-hero-image {
+  width: 240px;
+  height: 260px;
+  max-width: 100%;
+  border-radius: 18px;
+  overflow: hidden;             /* crop left/right */
+  background: transparent;
+  box-shadow: 0 0 30px rgba(24, 209, 218, 0.4);
+}
+
+.asrar-companion-hero-image--active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  box-shadow: 0 0 40px rgba(24, 209, 218, 0.45);
+}
+
+.asrar-companion-hero-image::before {
+display:none;
+}
+
+.asrar-companion-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;            /* fill frame, no black bars */
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+@media (max-width: 600px) {
+  .asrar-companion-hero-image {
+    width: 200px;
+    height: 220px;
+  }
+}
+.asrar-companions-nav-btn {
+  position: relative;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 209, 218, 0.5);
+  background: radial-gradient(circle at top, rgba(24, 209, 218, 0.22), rgba(5, 10, 20, 0.96));
+  color: #e8f8ff;
+  font-size: 1.4rem;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(24, 209, 218, 0.16),
+    0 10px 26px rgba(0, 0, 0, 0.9);
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  flex-shrink: 0;
+}
+
+.asrar-companions-nav-btn:hover {
+  transform: translateY(-2px);
+  background: radial-gradient(circle at top, rgba(24, 209, 218, 0.35), rgba(5, 10, 20, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(24, 209, 218, 0.24),
+    0 14px 34px rgba(0, 0, 0, 0.96);
+}
+
+.asrar-companions-pagination-wrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.asrar-companions-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.asrar-companion-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(90, 116, 150, 0.7);
+  cursor: pointer;
+  transition: width 200ms ease, background 200ms ease, box-shadow 200ms ease;
+}
+
+.asrar-companion-dot:hover {
+  background: rgba(90, 116, 150, 0.9);
+}
+
+.asrar-companion-dot--active {
+  width: 24px;
+  background: linear-gradient(90deg, #00f4ff, #7c4dff);
+  box-shadow: 0 0 12px rgba(124, 77, 255, 0.6);
+}
+
+.asrar-companions-mobile-arrow {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(24, 209, 218, 0.5);
+  background: radial-gradient(circle at top, rgba(24, 209, 218, 0.22), rgba(5, 10, 20, 0.96));
+  color: #e8f8ff;
+  font-size: 1.2rem;
+  font-weight: 300;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(24, 209, 218, 0.16),
+    0 10px 26px rgba(0, 0, 0, 0.9);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+/* Mobile responsive */
+@media (max-width: 900px) {
+  .asrar-companions-section {
+    padding: 40px 20px;
+  }
+
+  .asrar-companions-shell {
+    padding: 2.5rem 1.5rem;
+    border-radius: 24px;
+  }
+
+  .asrar-companions-title {
+    font-size: 1.2rem;
+  }
+
+  .asrar-companions-carousel-wrapper {
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .asrar-companions-nav-btn--prev,
+  .asrar-companions-nav-btn--next {
+    display: none;
+  }
+
+  .asrar-companions-viewport {
+    height: auto;
+    min-height: auto;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .asrar-companion-hero-track {
+    position: relative;
+    height: auto;
+  }
+
+  .asrar-companion-hero-slide {
+    position: static;
+    flex-direction: column-reverse;
+    gap: 1.5rem;
+    padding: 1.5rem 1.5rem 2rem;
+    height: auto;
+    inset: auto;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    display: none;
+    border-radius: 20px;
+  }
+
+  .asrar-companion-hero-slide--active {
+    display: flex;
+  }
+
+  .asrar-companion-hero-slide--peek-prev,
+  .asrar-companion-hero-slide--peek-next {
+    display: none;
+  }
+
+  .asrar-companion-hero-visual {
+    width: 100%;
+    height: auto;
+    max-height: 280px;
+  }
+
+  .asrar-companion-hero-visual::before {
+    display: none;
+  }
+
+  .asrar-companion-hero-image-frame {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    transform: perspective(1200px) rotateY(0) rotateX(0);
+  }
+
+  .asrar-companion-hero-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 280px;
+  }
+
+  .asrar-companion-hero-image img {
+    width: 100%;
+    height: auto;
+    max-height: 280px;
+  }
+
+  .asrar-companion-hero-content {
+    width: 100%;
+  }
+
+  .asrar-companions-nav-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  /* Mobile bottom arrows */
+  .asrar-companions-mobile-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .asrar-companions-mobile-arrow:hover {
+    transform: translateY(-2px);
+    background: radial-gradient(circle at top, rgba(24, 209, 218, 0.35), rgba(5, 10, 20, 0.98));
+    box-shadow:
+      0 0 0 1px rgba(24, 209, 218, 0.24),
+      0 14px 34px rgba(0, 0, 0, 0.96);
+  }
+
+  .asrar-companions-pagination-wrapper {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .asrar-companions-section {
+    padding: 30px 16px;
+  }
+
+  .asrar-companions-shell {
+    padding: 1.5rem 1rem;
+  }
+
+  .asrar-companions-kicker {
+    font-size: 0.75rem;
+  }
+
+  .asrar-companions-title {
+    font-size: 1rem;
+  }
+
+  .asrar-companion-hero-label {
+    font-size: 0.8rem;
+  }
+
+  .asrar-companion-hero-description {
+    font-size: 0.9rem;
+  }
+
+  .asrar-companion-hero-cta {
+    padding: 0.65rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+
+@media (max-width: 900px) {
+  .asrar-companion-hero-image,
+  .asrar-companion-hero-image img {
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 600px) {
+  .asrar-companion-hero-image,
+  .asrar-companion-hero-image img {
+    max-height: 190px;
+  }
+}
+
+.asrar-characters-section .asrar-character-text {
+  align-items: center;
+  text-align: center;
+}
+
+.asrar-characters-section .asrar-character-footer {
+  justify-content: center;
+}
+
+
+.asrar-companions-section::before {
+  display: none;
+}
+
+.asrar-companions-shell {
+  background: transparent;        /* let the main page background show */
+  box-shadow: none;               /* remove big shadow block */
+  border: none;
+  padding: 3rem 0;                /* keep some vertical breathing room */
+}
+
+/* 2) Show full character artwork (no cropping) */
+.asrar-companion-hero-visual {
+  justify-content: center;
+  align-items: center;
+}
+
+/* Wrapper around the image */
+.asrar-companion-hero-image {
+  width: auto;
+  height: auto;
+  max-width: 320px;
+  max-height: 320px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  overflow: visible;              /* don’t clip top/bottom */
+  box-shadow: 0 0 32px rgba(24, 209, 218, 0.45); /* soft glow only */
+}
+
+/* Kill any extra frame/glow we added earlier */
+.asrar-companion-hero-image::before {
+  display: none;
+}
+
+/* Actual <img> – keep full proportions, no cut */
+.asrar-companion-hero-image img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;            /* show entire image */
+  border: none;
+  padding: 0;
+  background: transparent;
+  display: block;
+}
+
+/* Mobile tweaks – slightly smaller but still full image */
+@media (max-width: 900px) {
+  .asrar-companion-hero-image {
+    max-width: 260px;
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 600px) {
+  .asrar-companion-hero-image {
+    max-width: 220px;
+    max-height: 220px;
+  }
+}
+
+/* === FINAL COMPANION HERO CLEANUP ================================== */
+
+/* Let the main page background + grid show through */
+.asrar-companions-section {
+  background: transparent;
+}
+
+/* Keep the grid as the main background (no extra dark overlay) */
+.asrar-companions-section::before {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Remove big rounded “card” behind the carousel */
+.asrar-companions-shell {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 40px 0 32px;
+}
+
+/* Remove heavy border around each hero slide, keep only a soft glow */
+.asrar-companion-hero-slide {
+  border: none !important;
+  background: radial-gradient(
+    circle at top,
+    rgba(24, 209, 218, 0.08),
+    transparent 70%
+  ) !important;
+  box-shadow: none !important;
+}
+
+/* Center text and keep spacing consistent on all slides */
+.asrar-companion-hero-content {
+  align-items: center;
+  text-align: center;
+  gap: 0.9rem;
+}
+
+.asrar-companion-hero-label {
+  margin-bottom: 0.25rem;
+}
+
+.asrar-companion-hero-description {
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+   /* keeps different characters aligned */
+}
+
+/* IMAGE SIZING – DESKTOP + TABLET (no tiny stamps) */
+.asrar-companion-hero-visual {
+  justify-content: center;
+  align-items: center;
+}
+
+.asrar-companion-hero-image {
+  width: 320px;
+  max-width: 100%;
+  height: auto;
+  max-height: 360px;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  overflow: visible;
+  box-shadow: 0 0 32px rgba(24, 209, 218, 0.45);
+}
+
+.asrar-companion-hero-image::before {
+  display: none;
+}
+
+.asrar-companion-hero-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain; /* show full character */
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+/* Tablet / small laptop – keep image big but adapt */
+@media (max-width: 1100px) and (min-width: 768px) {
+  .asrar-companion-hero-slide {
+    gap: 2rem;
+    padding-bottom:0px;
+  }
+
+  .asrar-companion-hero-image {
+    width: 260px;
+    max-height: 320px;
+  }
+}
+
+/* Mobile – keep the good layout, just cap size slightly */
+@media (max-width: 767px) {
+  .asrar-companion-hero-slide {
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+
+  .asrar-companion-hero-image {
+    width: 220px;
+    max-height: 260px;
+  }
+}
+/* === COMPANIONS – MOBILE POLISH ==================================== */
+@media (max-width: 767px) {
+  /* Make character bigger on mobile */
+  .asrar-companion-hero-image {
+    width: 260px;
+    max-width: 80vw;
+    height: 280px;
+    max-height: 280px;
+    position: relative;
+  }
+
+  /* Fill the frame + crop any black bar (like Rashid’s bottom) */
+  .asrar-companion-hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;           /* no more tiny image / black bottom */
+    object-position: top center; /* keep head/upper body in view */
+    border-radius: 14px;
+  }
+
+  /* Soft glowing floor under every character so they feel anchored */
+  .asrar-companion-hero-image::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -18px;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at center,
+      rgba(0, 244, 255, 0.45),
+      rgba(0, 244, 255, 0.0) 70%
+    );
+    opacity: 0.7;
+    pointer-events: none;
+    filter: blur(4px);
+  }
+
+  /* Make text a bit smaller so the art dominates */
+  .asrar-companion-hero-label {
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    padding-top:13px;
+  }
+
+  .asrar-companion-hero-description {
+    font-size: 0.86rem;
+    line-height: 1.55;
+    margin-bottom: 0.9rem;
+  }
+
+  .asrar-companion-hero-cta {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.6rem;
+  }
+}
+/* === FIX COMPANION IMAGE CUTTING ON MOBILE ======================= */
+@media (max-width: 767px) {
+  /* The visual frame around the character */
+  .asrar-companion-hero-image {
+    width: 260px;
+    max-width: 80vw;
+    height: auto;        /* <-- no fixed height */
+    max-height: none;
+    margin: 0 auto;
+    background: transparent;  /* kill grey block */
+    border: none;
+    box-shadow: none;         /* base glow will come from the image */
+    position: relative;
+  }
+
+  /* Actual image – big but never cropped */
+  .asrar-companion-hero-image img {
+    display: block;
+    width: 100%;
+    height: auto;        /* keep full image */
+    max-height: 320px;
+    object-fit: contain; /* no cutting */
+    object-position: center;
+    border-radius: 14px;
+    border: 1px solid rgba(24, 209, 218, 0.35);
+    box-shadow: 0 0 26px rgba(24, 209, 218, 0.45);
+    padding: 6px;
+    background: radial-gradient(
+      circle at center,
+      rgba(0, 244, 255, 0.12),
+      rgba(3, 8, 16, 0.98)
+    );
+  }
+
+  /* Remove the previous glow floor that caused the weird strip */
+  .asrar-companion-hero-image::after {
+    display: none;
+  }
+
+  /* Slightly smaller text so art feels bigger overall */
+  .asrar-companion-hero-label {
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+  }
+
+  .asrar-companion-hero-description {
+    font-size: 0.86rem;
+    line-height: 1.55;
+  }
+}
+
+/* === FINAL FIX: Mood Chat Bot Should NEVER Expand Width ============ */
+
+/* Lock the entire mood-chat widget width */
+.asrar-mood-capsule,
+.asrar-mood-capsule-inner {
+  width: 100% !important;
+  max-width: 560px !important;   /* or whatever width you want */
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box !important;
+}
+
+/* The input area must wrap, NEVER expand horizontally */
+.asrar-mood-capsule-input,
+.asrar-mood-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+
+  /* Critical rules */
+  overflow-x: hidden !important;
+  resize: none !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+
+  /* Prevent any flex pushing it */
+  flex: 1 1 auto !important;
+}
+
+/* The flex row containing the input must NOT stretch */
+.asrar-mood-bar,
+.asrar-mood-form,
+.asrar-mood-shell {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+
+.asrar-characters-section {
+  position: relative;
+  padding-top: 16px;
+  padding-bottom: 32px;
+  background:
+    radial-gradient(circle at top, #101a27 0%, #05070c 70%);
+  border-radius: 32px;
+  max-width: 1180px;
+  margin: 0 auto 64px;
+}
+
+/* Kill the noisy checker 'before' pattern */
+.asrar-characters-section::before {
+  content: none !important;
+}
+
+/* === ASRAR GLOBAL BACKGROUND NORMALIZATION ===================== */
+/* 1) Use one global dark background everywhere */
+:root {
+  --asrar-bg-main: #05080b;                 /* same as <body> */
+  --asrar-surface-main: rgba(5, 8, 11, 0.96);
+}
+
+/* Page wrapper – keep subtle vignette but very dark */
+.asrar-page {
+  background: radial-gradient(
+    circle at top,
+    #05080b 0%,
+    #05080b 55%,
+    #010205 100%
+  );
+}
+
+/* 2) Sections themselves are transparent so you don't see bands */
+.asrar-section,
+.asrar-section--features,
+.asrar-section--trust,
+.asrar-section--pricing,
+.asrar-section--contact,
+.asrar-section--human-touch,
+.asrar-companions-section {
+  background: transparent !important;
+}
+
+/* Keep only the soft teal glow overlay for sections */
+.asrar-section::before,
+.asrar-companions-section::before {
+
+}
+
+/* 3) All cards use the SAME dark surface + teal glow on top */
+.feature,
+.step,
+.asrar-engine-card,
+.asrar-trust-item,
+.asrar-contact-card,
+.pricing-card,
+.asrar-pricing-shell,
+.asrar-pricing-card,
+.asrar-companions-shell,
+.asrar-chat-phone {
+  background:
+    radial-gradient(circle at top, rgba(24, 209, 218, 0.12) 0%, transparent 55%),
+    var(--asrar-surface-main) !important;
+  border-color: rgba(24, 209, 218, 0.22) !important;
+}
+
+/* Pro / accent cards keep their stronger glow but same base */
+.pricing-card--accent,
+.asrar-pricing-card--pro {
+  background:
+    radial-gradient(circle at top, rgba(24, 209, 218, 0.18) 0%, transparent 60%),
+    var(--asrar-surface-main) !important;
+}
+
+/* Footer matches the same background as the rest */
+.asrar-footer {
+  background:
+    radial-gradient(circle at top, rgba(24, 209, 218, 0.05) 0%, transparent 55%),
+    var(--asrar-bg-main) !important;
+}
+section,
+div[class*="section"],
+div[id*="section"],
+.asrar-wrapper,
+.asrar-section,
+.asrar-shell,
+.asrar-container {
+ 
 }

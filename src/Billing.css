@@ -4,10 +4,18 @@
 .asrar-billing-main {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .asrar-billing-panel {
   margin-top: 0.4rem;
+  text-align: center;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* GRID: LEFT (PLAN) + RIGHT (USAGE) */
@@ -16,6 +24,9 @@
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 1.4rem;
   margin-top: 1.8rem;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* CARDS */
@@ -77,8 +88,10 @@
 .asrar-billing-price-row {
   display: flex;
   align-items: baseline;
+  justify-content: center;
   gap: 0.3rem;
   margin-bottom: 0.4rem;
+  text-align: center;
 }
 
 .asrar-billing-price {

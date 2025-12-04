@@ -37,6 +37,15 @@ const ADMIN_EMAILS = RAW_ADMIN_EMAILS.split(",")
 function ProtectedRoute({ children }) {
   const { user, isAuthLoading } = useAuth();
 
+  const isDev = import.meta.env.DEV;
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(
+    window.location.hostname
+  );
+  const devBypass =
+    isDev &&
+    isLocalhost &&
+    import.meta.env.VITE_ASRAR_DEV_BYPASS_AUTH === "true";
+
   if (isAuthLoading) {
     // Show loading spinner while checking auth
     return (
@@ -48,6 +57,10 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) {
+    if (devBypass) {
+      console.info("[DEV AUTH] ProtectedRoute bypassed in dev mode.");
+      return children;
+    }
     // Not logged in -> send to login page
     return <Navigate to="/login" replace />;
   }

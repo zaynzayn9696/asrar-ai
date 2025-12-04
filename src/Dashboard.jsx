@@ -4,11 +4,11 @@ import "./Dashboard.css";
 import AsrarFooter from "./AsrarFooter";
 import CharacterCarousel from "./CharacterCarousel";
 
-import abuZainAvatar from "./assets/abu_zain.png";
-import hanaAvatar from "./assets/hana.png";
-import rashidAvatar from "./assets/rashid.png";
-import nourAvatar from "./assets/nour.png";
-import farahAvatar from "./assets/farah.png";
+import abuZainAvatar from "./assets/abu_zain_2.png";
+import hanaAvatar from "./assets/hana_2.png";
+import rashidAvatar from "./assets/rashid_2.png";
+import nourAvatar from "./assets/nour_2.png";
+import farahAvatar from "./assets/farah_2.png";
 
 import { useNavigate, Navigate } from "react-router-dom";
 import AsrarHeader from "./AsrarHeader";
@@ -88,20 +88,26 @@ const getInitialLang = () => {
 
 const DASHBOARD_TEXT = {
   en: {
-    eyebrow: "AI Companions • For the Arab World",
-    title: "Select your companion",
-    subtitle:
-      "Choose who you want to talk to, how you want them to speak, and how you feel right now.",
+    welcomeBack: "Welcome back",
+    emotionalSpace: "Your emotional space is ready.",
+    startChatting: "Start chatting",
+    chatHistory: "Chat history",
+    yourCompanions: "Your Companions",
+    selectCompanion: "Choose who you want to talk to today",
+    talkTo: "Talk to",
     dialectLabel: "Communication dialect",
-    startButton: "Start chatting",
+    selectDialect: "Select a communication dialect",
   },
   ar: {
-    eyebrow: "رفاق ذكاء اصطناعي • للعالم العربي",
-    title: "اختر رفيقك",
-    subtitle:
-      "اختر مَن تريد أن تحكي له، وكيف تحب أن يتحدث معك، وما الذي تشعر به الآن.",
+    welcomeBack: "أهلاً بعودتك",
+    emotionalSpace: "مساحتك العاطفية جاهزة.",
+    startChatting: "ابدأ المحادثة",
+    chatHistory: "سجل المحادثات",
+    yourCompanions: "رفاقك",
+    selectCompanion: "اختر من تريد التحدث معه اليوم",
+    talkTo: "تحدث مع",
     dialectLabel: "لهجة المحادثة",
-    startButton: "ابدأ المحادثة",
+    selectDialect: "اختر لهجة المحادثة",
   },
 };
 
@@ -171,12 +177,17 @@ export default function Dashboard() {
   const [selectedDialect, setSelectedDialect] = useState("");
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [billingSuccess, setBillingSuccess] = useState(false);
-  const [miniInput, setMiniInput] = useState("");
-  const [miniUserText, setMiniUserText] = useState("");
-  const [miniReply, setMiniReplyState] = useState("");
+  const [sliderIndex, setSliderIndex] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+  const [validationError, setValidationError] = useState("");
 
   const isAr = lang === "ar";
   const t = DASHBOARD_TEXT[isAr ? "ar" : "en"];
+  const isDesktop = windowWidth >= 1200;
+  const isTablet = windowWidth >= 768 && windowWidth < 1200;
+  const isMobile = windowWidth < 768;
 
   // Show loading state while checking auth
   if (isAuthLoading) {
@@ -227,17 +238,24 @@ export default function Dashboard() {
   const hasPremium = !!(user && (user.isPremium || user.plan === "pro" || user.plan === "premium"));
 
   const handleStartChat = () => {
+    setValidationError("");
+    
+    if (!selectedCharacterId) {
+      setValidationError(isAr ? "يرجى اختيار رفيق أولاً" : "Please select a companion first");
+      return;
+    }
+    
     if (!selectedDialect) {
-      alert(
+      setValidationError(
         isAr
-          ? "من فضلك اختر لهجة المحادثة أولاً."
-          : "Please choose a communication dialect first."
+          ? "يرجى اختيار لهجة المحادثة"
+          : "Please select a communication dialect"
       );
       return;
     }
 
     if (!hasPremium && selectedCharacterId !== "hana") {
-      alert(isAr ? "للمشتركين في الخطة المدفوعة فقط حالياً." : "For Pro users only for now.");
+      setValidationError(isAr ? "للمشتركين في الخطة المدفوعة فقط حالياً" : "For Pro users only for now");
       return;
     }
 
@@ -356,6 +374,12 @@ export default function Dashboard() {
     }
   }, [setUser]);
 
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div
       className={`asrar-dash-page asrar-dashboard-page ${
@@ -375,86 +399,133 @@ export default function Dashboard() {
 
       {/* MAIN */}
       <main className="asrar-dash-main">
-        <section
-          className="asrar-dash-panel"
-          dir={isAr ? "rtl" : "ltr"}
-        >
-          <p className="asrar-dash-eyebrow">{t.eyebrow}</p>
-          <h1 className="asrar-dash-title">{t.title}</h1>
-          <p className="asrar-dash-subtitle">{t.subtitle}</p>
 
-          {user?.isPremium ? (
-            <div style={{ textAlign: 'center', marginBottom: '12px', color: '#9be7c4' }}>
-              ✨ {isAr ? (
-                <>أنت على <strong>أسرار بريميوم</strong></>
-              ) : (
-                <>You’re on <strong>Asrar AI Premium</strong></>
-              )}
-            </div>
-          ) : (
-            !hasPremium && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
-                <button type="button" className="asrar-dash-start-button" onClick={handleUpgrade}>
-                  {isAr ? "الترقية إلى بريميوم" : "Upgrade to Premium"}
-                </button>
-              </div>
-            )
-          )}
-
-          {billingSuccess && (
-            <div style={{ textAlign: 'center', color: '#9be7c4', marginBottom: '10px' }}>
-              {isAr ? "✨ تم تفعيل اشتراكك المميز! تم فتح جميع الشخصيات." : "✨ Your premium subscription is active! All characters unlocked."}
-            </div>
-          )}
-
-          {/* CHARACTERS GRID */}
-          <div className="asrar-dash-characters">
-            <CharacterCarousel
-              characters={CHARACTERS}
-              selectedCharacterId={selectedCharacterId}
-              onChange={handleCharacterChange}
-              isAr={isAr}
-              isFreePlan={isFreePlan}
-              variant="dashboard"
-            />
+        {/* COMPANIONS SECTION */}
+        <section className="asrar-companions-section" dir={isAr ? "rtl" : "ltr"}>
+          <div className="asrar-companions-header">
+            <h2 className="asrar-companions-title">{t.yourCompanions}</h2>
+            <p className="asrar-companions-subtitle">{t.selectCompanion}</p>
           </div>
 
-          {/* DIALECT + START BUTTON */}
-          <div className="asrar-dash-footer-row">
-            <div className="asrar-dash-dialect-block">
-              <div className="asrar-dash-dialect-label">
-                {t.dialectLabel}
-              </div>
-              <div className="asrar-dash-dialect-select-shell">
-                <select
-                  className="asrar-dash-dialect-select"
-                  value={selectedDialect}
-                  onChange={(e) => setSelectedDialect(e.target.value)}
+          {/* DESKTOP: 5-COLUMN GRID */}
+          {isDesktop && (
+            <div className="asrar-companions-grid">
+              {CHARACTERS.map((char) => (
+                <div
+                  key={char.id}
+                  className={`asrar-companion-card ${
+                    selectedCharacterId === char.id ? "asrar-companion-card--selected" : ""
+                  } ${!hasPremium && char.id !== "hana" ? "asrar-companion-card--locked" : ""}`}
+                  onClick={() => handleCharacterChange(char)}
                 >
-                  <option value="">
-                    {isAr
-                      ? "اختر لهجة المحادثة"
-                      : "Select a communication dialect"}
-                  </option>
-
-                  {DIALECTS.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {isAr ? d.labelAr : d.labelEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <img
+                    src={char.avatar}
+                    alt={isAr ? char.nameAr : char.nameEn}
+                    className="asrar-companion-card-image"
+                  />
+                  <div className="asrar-companion-card-content">
+                    <h3 className="asrar-companion-card-name">
+                      {isAr ? char.nameAr : char.nameEn}
+                    </h3>
+                    <p className="asrar-companion-card-role">
+                      {isAr ? char.roleAr : char.roleEn}
+                    </p>
+                  </div>
+                  {!hasPremium && char.id !== "hana" && (
+                    <div className="asrar-companion-pro-badge">PRO</div>
+                  )}
+                </div>
+              ))}
             </div>
+          )}
 
+          {/* TABLET/MOBILE: SLIDER */}
+          {(isTablet || isMobile) && (
+            <div className="asrar-companions-slider-wrapper">
+              <button
+                className="asrar-slider-arrow asrar-slider-arrow-prev"
+                onClick={() => setSliderIndex(Math.max(0, sliderIndex - 1))}
+                disabled={sliderIndex === 0}
+              >
+                ‹
+              </button>
+              <div className="asrar-companions-slider">
+                <div
+                  className="asrar-companions-slider-track"
+                  style={{
+                    transform: `translateX(${-sliderIndex * 100}%)`,
+                  }}
+                >
+                  {CHARACTERS.map((char) => (
+                    <div key={char.id} className="asrar-companions-slider-item">
+                      <div
+                        className={`asrar-companion-card ${
+                          selectedCharacterId === char.id ? "asrar-companion-card--selected" : ""
+                        } ${!hasPremium && char.id !== "hana" ? "asrar-companion-card--locked" : ""}`}
+                        onClick={() => handleCharacterChange(char)}
+                      >
+                        <img
+                          src={char.avatar}
+                          alt={isAr ? char.nameAr : char.nameEn}
+                          className="asrar-companion-card-image"
+                        />
+                        <div className="asrar-companion-card-content">
+                          <h3 className="asrar-companion-card-name">
+                            {isAr ? char.nameAr : char.nameEn}
+                          </h3>
+                          <p className="asrar-companion-card-role">
+                            {isAr ? char.roleAr : char.roleEn}
+                          </p>
+                        </div>
+                        {!hasPremium && char.id !== "hana" && (
+                          <div className="asrar-companion-pro-badge">PRO</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button
+                className="asrar-slider-arrow asrar-slider-arrow-next"
+                onClick={() => setSliderIndex(Math.min(CHARACTERS.length - 1, sliderIndex + 1))}
+                disabled={sliderIndex === CHARACTERS.length - 1}
+              >
+                ›
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* DIALECT + START CARD */}
+        <div className="asrar-start-card" dir={isAr ? "rtl" : "ltr"}>
+          <div className="asrar-start-card-inner">
+            <label className="asrar-dialect-label">{t.dialectLabel}</label>
+            <select
+              className="asrar-dialect-select"
+              value={selectedDialect}
+              onChange={(e) => setSelectedDialect(e.target.value)}
+            >
+              <option value="">{t.selectDialect}</option>
+              {DIALECTS.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {isAr ? d.labelAr : d.labelEn}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
-              className="asrar-dash-start-button"
+              className="asrar-btn asrar-btn-start-primary"
               onClick={handleStartChat}
+              disabled={!selectedCharacterId || !selectedDialect}
             >
-              {t.startButton}
+              {t.startChatting}
             </button>
           </div>
-        </section>
+          {validationError && (
+            <div className="asrar-validation-error">{validationError}</div>
+          )}
+        </div>
+
       </main>
       <AsrarFooter />
 

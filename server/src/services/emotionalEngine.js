@@ -540,17 +540,20 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
  * @param {Object} params
  * @param {{ intensity:number }} params.emotion
  * @param {{ currentState?:string }|null} params.convoState
+ * @param {boolean} params.isPremiumUser
  */
-function selectModelForResponse({ emotion, convoState, engineMode }) {
-  if (!engineMode) {
-    return 'gpt-4o-mini';
+function selectModelForResponse({ emotion, convoState, engineMode, isPremiumUser }) {
+  const coreModel = process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
+  const premiumModel = process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o';
+
+  // For user-facing chat replies:
+  // - Premium users always use the premium model.
+  // - Non-premium users and internal/system flows use the core model.
+  if (isPremiumUser) {
+    return premiumModel;
   }
 
-  if (engineMode === ENGINE_MODES.PREMIUM_DEEP) {
-    return process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o';
-  }
-
-  return process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
+  return coreModel;
 }
 
 /**
