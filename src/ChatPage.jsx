@@ -1407,12 +1407,29 @@ export default function ChatPage() {
               ? "واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل."
               : "I had a small issue connecting. Please try again in a moment.");
 
-          const audioBase64 =
-            data && typeof data === "object" && typeof data.audioBase64 === "string"
-              ? data.audioBase64
-              : data && typeof data === "object" && typeof data.audio === "string"
-              ? data.audio
-              : null;
+        let finalAudioBase64 = null;
+let finalMimeType = "audio/mpeg";
+
+if (data.audioBase64) {
+  finalAudioBase64 = data.audioBase64;
+}
+
+if (typeof data.audio === "string") {
+  // backend sends raw base64 string
+  finalAudioBase64 = data.audio;
+}
+
+if (typeof data.audio === "object" && data.audio !== null) {
+  // backend sends structured object
+  if (data.audio.base64) finalAudioBase64 = data.audio.base64;
+  if (data.audio.mimeType) finalMimeType = data.audio.mimeType;
+}
+
+if (data.voice && typeof data.voice === "object") {
+  if (data.voice.base64) finalAudioBase64 = data.voice.base64;
+  if (data.voice.mimeType) finalMimeType = data.voice.mimeType;
+}
+
 
           setMessages((prev) => {
             const lastId =
@@ -1428,13 +1445,14 @@ export default function ChatPage() {
               audioBase64: userAudioBase64 || null,
               audioMimeType: mime,
             };
+         
            const aiVoiceMessage = {
   id: lastId + 2,
   from: "ai",
   text: "",  // ← DO NOT SHOW TEXT FOR VOICE REPLIES
   createdAt: nowIso,
-  audioBase64: audioBase64 || null,
-  audioMimeType: data.audioMimeType || "audio/mpeg",
+ audioBase64: finalAudioBase64 || null,
+audioMimeType: finalMimeType,
   type: "voice",
 };
             return [...prev, userVoiceMessage, aiVoiceMessage];
