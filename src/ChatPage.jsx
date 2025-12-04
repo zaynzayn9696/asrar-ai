@@ -1441,29 +1441,13 @@ export default function ChatPage() {
               ? data.audioMimeType
               : "audio/mpeg";
 
-          // If the backend did not provide any audio for a voice request,
-          // treat this as a failure rather than falling back to a text-only
-          // AI reply. Voice input should either get a voice reply or an
-          // explicit error, not a plain text assistant message.
-          if (!aiAudioBase64) {
-            const errorMessage = {
-              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
-              from: "system",
-              text: isArabicConversation
-                ? "فشل إنشاء الرد الصوتي. حاول مرة أخرى."
-                : "Failed to generate a voice reply. Please try again.",
-              createdAt: new Date().toISOString(),
-            };
-            setMessages((prev) => [...prev, errorMessage]);
-            return;
-          }
-
           setMessages((prev) => {
             const lastId =
               prev.length && typeof prev[prev.length - 1].id === "number"
                 ? prev[prev.length - 1].id
                 : prev.length;
             const nowIso = new Date().toISOString();
+
             const userVoiceMessage = {
               id: lastId + 1,
               from: "user",
@@ -1472,6 +1456,21 @@ export default function ChatPage() {
               audioBase64: userAudioBase64 || null,
               audioMimeType: mime,
             };
+
+            // If we didn't get any audio back from the server, still show the
+            // user's voice bubble and then a system error bubble instead of an
+            // AI reply.
+            if (!aiAudioBase64) {
+              const errorMessage = {
+                id: lastId + 2,
+                from: "system",
+                text: isArabicConversation
+                  ? "فشل إنشاء الرد الصوتي. حاول مرة أخرى."
+                  : "Failed to generate a voice reply. Please try again.",
+                createdAt: nowIso,
+              };
+              return [...prev, userVoiceMessage, errorMessage];
+            }
 
             const aiVoiceMessage = {
               id: lastId + 2,
