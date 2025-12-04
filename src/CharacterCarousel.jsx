@@ -39,9 +39,6 @@ export default function CharacterCarousel({
   const goToIndex = (nextIndex) => {
     const wrapped = (nextIndex + length) % length;
     setIndex(wrapped);
-    if (onChange) {
-      onChange(characters[wrapped]);
-    }
   };
 
   const handleNext = () => {
