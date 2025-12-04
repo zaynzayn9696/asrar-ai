@@ -1407,30 +1407,14 @@ export default function ChatPage() {
               ? "واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل."
               : "I had a small issue connecting. Please try again in a moment.");
 
-        let finalAudioBase64 = null;
-let finalMimeType = "audio/mpeg";
-
-if (data.audioBase64) {
-  finalAudioBase64 = data.audioBase64;
-}
-
-if (typeof data.audio === "string") {
-  // backend sends raw base64 string
-  finalAudioBase64 = data.audio;
-}
-
-if (typeof data.audio === "object" && data.audio !== null) {
-  // backend sends structured object
-  if (data.audio.base64) finalAudioBase64 = data.audio.base64;
-  if (data.audio.mimeType) finalMimeType = data.audio.mimeType;
-}
-
-if (data.voice && typeof data.voice === "object") {
-  if (data.voice.base64) finalAudioBase64 = data.voice.base64;
-  if (data.voice.mimeType) finalMimeType = data.voice.mimeType;
-}
-
-
+          // Voice replies: the backend always returns a flat audio payload
+          // { type: 'voice', audio: '<base64>', audioMimeType: 'audio/mpeg', ... }.
+          const aiAudioBase64 =
+            data && typeof data.audio === "string" ? data.audio : null;
+          const aiAudioMime =
+            data && typeof data.audioMimeType === "string"
+              ? data.audioMimeType
+              : "audio/mpeg";
           setMessages((prev) => {
             const lastId =
               prev.length && typeof prev[prev.length - 1].id === "number"
@@ -1445,27 +1429,25 @@ if (data.voice && typeof data.voice === "object") {
               audioBase64: userAudioBase64 || null,
               audioMimeType: mime,
             };
-         
-           const aiVoiceMessage = {
-  id: lastId + 2,
-  from: "ai",
-  text: "",  // ← DO NOT SHOW TEXT FOR VOICE REPLIES
-  createdAt: nowIso,
- audioBase64: finalAudioBase64 || null,
-audioMimeType: finalMimeType,
-  type: "voice",
-};
+
+            const aiVoiceMessage = {
+              id: lastId + 2,
+              from: "ai",
+              type: "voice",
+              text: "", // do not render text for voice replies
+              createdAt: nowIso,
+              audioBase64: aiAudioBase64,
+              audioMimeType: aiAudioMime,
+            };
+
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
 
           // Best-effort auto-play for fresh AI voice replies.
-          if (audioBase64) {
+          if (aiAudioBase64) {
             try {
-              const playbackMime =
-                data && typeof data.audioMimeType === "string"
-                  ? data.audioMimeType
-                  : "audio/mpeg";
-              const src = `data:${playbackMime};base64,${audioBase64}`;
+              const playbackMime = aiAudioMime;
+              const src = `data:${playbackMime};base64,${aiAudioBase64}`;
               const autoAudio = new Audio(src);
               autoAudio.play().catch(() => {});
             } catch (_) {}
@@ -1613,9 +1595,9 @@ audioMimeType: finalMimeType,
                     : "system"
                 }`}
               >
-                     
                 <div className="asrar-chat-bubble">
-                 {msg.audioBase64 && msg.from === "ai" ? (
+                  {/* AI voice replies: bubble only, no text */}
+                  {msg.from === "ai" && msg.audioBase64 ? (
                     <VoiceMessageBubble
                       audioBase64={msg.audioBase64}
                       from={msg.from}
@@ -1623,12 +1605,26 @@ audioMimeType: finalMimeType,
                       mimeType={msg.audioMimeType}
                     />
                   ) : (
-                    <span
-                      className="asrar-chat-text"
-                      dir={isArabicConversation ? "rtl" : "ltr"}
-                    >
-                      {msg.text}
-                    </span>
+                    <>
+                      {/* User messages: show transcript text */}
+                      <span
+                        className="asrar-chat-text"
+                        dir={isArabicConversation ? "rtl" : "ltr"}
+                      >
+                        {msg.text}
+                      </span>
+                      {/* User voice messages: also show a voice bubble under the text */}
+                      {msg.from === "user" && msg.audioBase64 && (
+                        <div className="asrar-chat-user-voice-wrap">
+                          <VoiceMessageBubble
+                            audioBase64={msg.audioBase64}
+                            from={msg.from}
+                            isArabic={isArabicConversation}
+                            mimeType={msg.audioMimeType}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                   {msg.createdAt && (
                     <div className="asrar-chat-meta">

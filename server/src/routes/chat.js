@@ -1001,14 +1001,15 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     });
 
     if (!ttsResult) {
-      // Fallback: return text-only reply if TTS fails.
+      // Fallback: TTS failed, but keep the response shape consistent for the
+      // voice client. Audio will be null so the frontend can skip playback.
       const fallback = {
-        type: 'text',
+        type: 'voice',
+        audio: null,
+        audioMimeType: 'audio/mpeg',
         text: aiMessage,
-        meta: { character: characterId, tone: toneKey },
-        userText,
         assistantText: aiMessage,
-        audioBase64: null,
+        userText,
         usage: buildUsageSummary(dbUser, usage),
       };
       return res.json(fallback);
@@ -1027,12 +1028,10 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const responsePayload = {
       type: 'voice',
       audio: ttsResult.base64,
-      text: aiMessage,
-      meta: { character: characterId, tone: toneKey },
-      userText,
-      assistantText: aiMessage,
-      audioBase64: ttsResult.base64,
       audioMimeType: ttsResult.mimeType,
+      text: aiMessage,
+      assistantText: aiMessage,
+      userText,
       usage: buildUsageSummary(dbUser, usage),
     };
 
