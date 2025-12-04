@@ -8,7 +8,16 @@ const fs = require('fs');
 const path = require('path');
 const { CHARACTER_VOICES } = require('../config/characterVoices');
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Use a dedicated OpenAI client for TTS. In some deployments the main
+// OPENAI_BASE_URL may point at a proxy or Azure endpoint that does not
+// implement /v1/audio/speech, which would cause 404 "Invalid URL" errors
+// for voice replies. Here we intentionally bypass any global OPENAI_BASE_URL
+// and allow an optional OPENAI_TTS_BASE_URL override. By default we talk
+// directly to the official api.openai.com endpoint.
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_TTS_API_KEY || process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_TTS_BASE_URL || 'https://api.openai.com/v1',
+});
 
 /**
  * Transcribe an audio file using OpenAI Whisper.
