@@ -19,62 +19,62 @@ const CHARACTERS = [
   {
     id: "abu-zain",
     avatar: abuZainAvatar,
-    nameEn: "Abu Zain",
-    nameAr: "أبو زين",
+    nameEn: "Sheikh El Hara",
+    nameAr: "شيخ الحارة",
     roleEn: "Guidance",
     roleAr: "إرشاد وحكمة",
     descriptionEn:
-      "Warm, wise guidance when you need a calm, grounded voice.",
+      "Sit down, let's talk. I've seen this before.\nThat wise voice when life's confusing and you need someone who's been around the block.",
     descriptionAr:
-      "دافئ وحكيم ومتزن. يمنحك نصائح حياتية وتوازناً عاطفياً وتوجيهاً لطيفاً.",
+      "اقعد، خلينا نحكي. أنا شفت هالحكي قبل هيك.\nالصوت الحكيم لما تكون الدنيا معقدة ومحتاج حد عنده خبرة.",
   },
   {
     id: "hana",
     avatar: hanaAvatar,
-    nameEn: "Hana",
-    nameAr: "هَنا",
+    nameEn: "Dalloo`a",
+    nameAr: "دلوعة",
     roleEn: "Deep Support",
     roleAr: "دعم عاطفي عميق",
     descriptionEn:
-      "Gentle, validating support for overthinking, sadness, loneliness, and stress.",
+      "Yalla habibi, tell me everything. I'm here, I get it.\nFor when you're spiraling, feeling lonely, or just need someone who actually listens.",
     descriptionAr:
-      "لطيفة ومتفهّمة. تساعدك مع كثرة التفكير، الحزن، الوحدة، والضغط.",
+      "يلا حبيبي، قلي كل شي. أنا هون، بفهم عليك.\nلما تكون تايه بأفكارك، حاسس بالوحدة، أو محتاج حد يسمعك فعلاً.",
   },
   {
     id: "rashid",
     avatar: rashidAvatar,
-    nameEn: "Rashid",
-    nameAr: "راشد",
+    nameEn: "Abu Mo5",
+    nameAr: "أبو مخ",
     roleEn: "Focus & Study",
     roleAr: "تركيز ودراسة",
     descriptionEn:
-      "Structured, strategic support for studying, routines, and getting unstuck.",
+      "Enough. Open the book. Let's do this properly.\nNo-nonsense study buddy who gets you organized and actually makes you finish stuff.",
     descriptionAr:
-      "منظم واستراتيجي ومحفّز. يساعدك في الدراسة والتخطيط والعادات اليومية.",
+      "خلص. افتح الكتاب. يلا نشتغل صح.\nصاحبك اللي بنظملك حياتك وبخليك تخلص شغلك بدون هبل.",
   },
   {
     id: "nour",
     avatar: nourAvatar,
-    nameEn: "Nour",
-    nameAr: "نور",
+    nameEn: "WalaaA",
+    nameAr: "ولااااء",
     roleEn: "Brutal Honesty",
     roleAr: "صراحة قاسية",
     descriptionEn:
-      "Unfiltered honesty that tells you the truth with warmth, not cruelty.",
+      "Walaaa shu? You know what you need to do, stop playing.\nThe truth you don't want to hear but absolutely need—straight up, no sugar.",
     descriptionAr:
-      "صريح بلا مجاملة وبنوايا طيبة. يقول لك الحقيقة دون تلطيف.",
+      "ولا شو؟ انت عارف شو لازم تعمل، بطّل لف ودوران.\nالحقيقة اللي ما بدك تسمعها بس محتاجها—مباشرة، بلا سكر زيادة.",
   },
   {
     id: "farah",
     avatar: farahAvatar,
-    nameEn: "Farah",
-    nameAr: "فرح",
+    nameEn: "HHHeba",
+    nameAr: "هــ هبة",
     roleEn: "Fun & Laughter",
     roleAr: "ضحك ومرح",
     descriptionEn:
-      "Light, playful energy for jokes, memes, and a break from heaviness.",
+      "Khalas, enough drama! Let's laugh before we lose our minds.\nYour chaos friend who brings memes, jokes, and reminds you life isn't that serious.",
     descriptionAr:
-      "خفيفة ظل ومرحة. نكات، ميمز، وطاقة ضحك ولعب.",
+      "خلص، كفاية دراما! يلا نضحك قبل ما نجن.\nصاحبتك الفوضوية اللي بتجيبلك ميمز ونكت وبتفكرك إن الحياة مش نهاية العالم.",
   },
 ];
 
