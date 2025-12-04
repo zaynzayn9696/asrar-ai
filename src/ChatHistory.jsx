@@ -5,6 +5,7 @@ import "./Dashboard.css";
 import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
 import { useAuth } from "./hooks/useAuth";
+import CharacterCarousel from "./CharacterCarousel";
 
 import abuZainAvatar from "./assets/abu_zain_2.png";
 import hanaAvatar from "./assets/hana_2.png";
@@ -94,6 +95,9 @@ export default function ChatHistory() {
   const t = TEXT[isAr ? "ar" : "en"];
 
   const [historyMap, setHistoryMap] = useState({});
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
 
   const hydrateHistory = useCallback(() => {
     if (!user) {
@@ -132,6 +136,21 @@ export default function ChatHistory() {
   useEffect(() => {
     hydrateHistory();
   }, [hydrateHistory]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window === "undefined") return;
+      setWindowWidth(window.innerWidth);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", handleResize);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", handleResize);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -176,6 +195,7 @@ export default function ChatHistory() {
   });
 
   const hasAnyHistory = charactersWithHistory.length > 0;
+  const isMobile = windowWidth < 768;
 
   const getLastSnippet = (entry) => {
     if (!entry || !Array.isArray(entry.messages) || !entry.messages.length) {
@@ -220,7 +240,58 @@ export default function ChatHistory() {
             <p className="asrar-history-empty-global">{t.emptyGlobal}</p>
           )}
 
-          {hasAnyHistory && (
+          {hasAnyHistory && !isMobile && (
+            <div className="asrar-dash-characters">
+              <div className="asrar-dash-char-grid">
+                {charactersWithHistory.map((c) => {
+                  const entry = historyMap[c.id];
+
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className="asrar-dash-char-card"
+                      onClick={() => handleOpenChatForCharacter(c.id)}
+                    >
+                      <div className="asrar-dash-char-avatar-wrap">
+                        <img
+                          src={c.avatar}
+                          alt={getName(c)}
+                          className="asrar-dash-char-avatar"
+                        />
+                      </div>
+                      <div className="asrar-dash-char-text">
+                        <div className="asrar-dash-char-name">{getName(c)}</div>
+                        <div className="asrar-dash-char-role">{getRole(c)}</div>
+                        <div className="asrar-history-snippet">
+                          {getLastSnippet(entry)}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {hasAnyHistory && isMobile && charactersWithHistory.length > 1 && (
+            <div className="asrar-dash-characters">
+              <CharacterCarousel
+                characters={charactersWithHistory.map((c) => ({
+                  ...c,
+                  roleEn: getRole(c),
+                  roleAr: getRole(c),
+                }))}
+                selectedCharacterId={charactersWithHistory[0].id}
+                onChange={(char) => handleOpenChatForCharacter(char.id)}
+                isAr={isAr}
+                variant="dashboard"
+                isFreePlan={false}
+              />
+            </div>
+          )}
+
+          {hasAnyHistory && isMobile && charactersWithHistory.length === 1 && (
             <div className="asrar-dash-characters">
               <div className="asrar-dash-char-grid">
                 {charactersWithHistory.map((c) => {

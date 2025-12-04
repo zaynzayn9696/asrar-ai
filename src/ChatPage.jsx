@@ -1488,15 +1488,6 @@ export default function ChatPage() {
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
 
-          // Best-effort auto-play for fresh AI voice replies.
-          if (aiAudioBase64) {
-            try {
-              const playbackMime = aiAudioMime;
-              const src = `data:${playbackMime};base64,${aiAudioBase64}`;
-              const autoAudio = new Audio(src);
-              autoAudio.play().catch(() => {});
-            } catch (_) {}
-          }
         } catch (err) {
           console.error("Voice send error", err);
         } finally {
