@@ -675,6 +675,22 @@ function trimForVoiceReply(text, severityLevel) {
 // Voice chat: accepts audio, transcribes to text, runs the emotional engine,
 // and returns a TTS reply as base64 audio. Voice chat is available to all
 // authenticated users (free + premium), but still enforces usage limits.
+function prepareTextForTTS(text) {
+  let s = String(text || '').trim();
+  if (!s) return s;
+
+  // Remove bullet markers and numbers that sound weird when read out
+  s = s
+    .replace(/^[\-\*\u2022]\s+/gm, '')      // - bullet, * bullet, • bullet
+    .replace(/^\d+\.\s+/gm, '')            // "1. " , "2. " etc.
+    .replace(/\s{2,}/g, ' ');              // collapse extra spaces
+
+  // Optional: avoid super long "paragraphs" by adding small pauses
+  s = s.replace(/([.!؟?])\s+/g, '$1 ');     // normalize spacing after punctuation
+
+  return s;
+}
+
 router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
   try {
     const tRouteStart = Date.now();
@@ -1008,11 +1024,14 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     }
 
     // 6) Text-to-speech for the final reply text.
-    const tTtsStart = Date.now();
-    const ttsResult = await generateVoiceReply(aiMessage, {
-      characterId,
-      format: 'mp3',
-    });
+   const spokenText = prepareTextForTTS(aiMessage);
+
+const tTtsStart = Date.now();
+const ttsResult = await generateVoiceReply(spokenText, {
+  characterId,
+  format: 'mp3',
+});
+
     ttsMs = Date.now() - tTtsStart;
 
     if (!ttsResult) {
