@@ -1339,14 +1339,14 @@ export default function ChatPage() {
           form.append("audio", file);
           form.append("characterId", selectedCharacterId);
           form.append("lang", conversationLang);
-          form.append("dialect", selectedDialect);
+          form.append("dialect", selectedDialect || "msa");
           form.append("tone", selectedTone);
           if (conversationId) {
             form.append("conversationId", String(conversationId));
           }
           form.append(
             "save",
-            user && user.saveHistoryEnabled ? "true" : "false"
+            user?.saveHistoryEnabled === false ? "false" : "true"
           );
           const payloadMessages = messages.map((m) => ({
             from: m.from,

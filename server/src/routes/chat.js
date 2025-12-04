@@ -824,6 +824,56 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
     const toneKey = rawToneKey || voiceProfile.defaultTone || 'calm';
 
+    const shouldSave =
+      !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
+
+    console.log(
+      '[Diagnostic] Attempting to Save (voice)? ShouldSave=%s, CID=%s, UserID=%s',
+      shouldSave,
+      cid == null ? 'null' : String(cid),
+      userId == null ? 'null' : String(userId)
+    );
+
+    let userRow = null;
+    if (shouldSave) {
+      try {
+        const rows = await prisma.$transaction([
+          prisma.message.create({
+            data: {
+              userId,
+              characterId,
+              conversationId: cid,
+              role: 'user',
+              content: userText,
+            },
+          }),
+          prisma.message.create({
+            data: {
+              userId,
+              characterId,
+              conversationId: cid,
+              role: 'assistant',
+              content: aiMessage,
+            },
+          }),
+          prisma.conversation.update({
+            where: { id: cid },
+            data: { updatedAt: new Date() },
+          }),
+        ]);
+        userRow = rows[0];
+        console.log(
+          '[Diagnostic] Voice Message Saved Successfully: ID=%s',
+          userRow && userRow.id != null ? String(userRow.id) : 'null'
+        );
+      } catch (err) {
+        console.error(
+          'Voice message persistence error',
+          err && err.message ? err.message : err
+        );
+      }
+    }
+
     // 6) Text-to-speech for the final reply text.
     const ttsResult = await generateVoiceReply(aiMessage, {
       characterId,

@@ -80,7 +80,7 @@ export default function Billing() {
   const usage = user?.usage || null;
   const isPremium = !!(user && (user.isPremium || plan === "premium" || plan === "pro"));
   const planName = isAr ? (isPremium ? "بريميوم" : "مجانية") : (isPremium ? "Premium" : "Free");
-  const planPrice = isPremium ? "$4.99" : "$0";
+  const planPrice = isPremium ? "$9.85" : "$0";
   const planTagline = isAr
     ? isPremium
       ? "كل شيء في أسرار بحدود سخية."
@@ -109,7 +109,7 @@ export default function Billing() {
     : ["1 core character", "5 messages/day", "Basic support"];
   const upgradeCtaText = isPremium
     ? (isAr ? "أنت على بريميوم" : "You’re on Premium")
-    : (isAr ? "الترقية إلى بريميوم — $4.99 شهرياً" : "Upgrade to Premium — $4.99/month");
+    : (isAr ? "الترقية إلى بريميوم — $9.85 شهرياً" : "Upgrade to Premium — $4.99/month");
 
   const handleLangSwitch = (newLang) => {
     setLang(newLang);

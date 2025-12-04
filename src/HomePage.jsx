@@ -1416,7 +1416,7 @@ export default function HomePage() {
               <div className="asrar-pricing-card asrar-pricing-card--pro">
                 <div className="asrar-pricing-badge">{isAr ? "الأكثر شيوعاً" : "Most Popular"}</div>
                 <h3>{isAr ? "برو" : "Pro"}</h3>
-                <p className="asrar-pricing-price">{isAr ? "٤.٨٥$ / شهرياً" : "$9.85 / month"}</p>
+                <p className="asrar-pricing-price">{isAr ? "$9.85 / شهرياً" : "$9.85 / month"}</p>
                 <ul className="asrar-pricing-features">
                   <li>
                     {isAr
