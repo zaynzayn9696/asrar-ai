@@ -350,6 +350,10 @@ export default function ChatPage() {
                       const localMsgs = parsed;
                       const merged = [];
                       let localIndex = 0;
+
+                      // First, walk server messages and overlay any matching
+                      // local entries that contain voice/audio for the same
+                      // (from,text) pair.
                       for (const m of serverMsgs) {
                         const from = m.from || "system";
                         const text = (m.text || "").trim();
@@ -375,6 +379,17 @@ export default function ChatPage() {
                           merged.push(m);
                         }
                       }
+
+                      // Any remaining local messages (for example, pure
+                      // voice messages that never hit the backend text
+                      // route) should also be kept so they don't disappear
+                      // on refresh.
+                      for (; localIndex < localMsgs.length; localIndex++) {
+                        const lm = localMsgs[localIndex];
+                        if (!lm) continue;
+                        merged.push(lm);
+                      }
+
                       finalMsgs = merged;
                     }
                   }
@@ -1407,10 +1422,20 @@ export default function ChatPage() {
               ? "واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل."
               : "I had a small issue connecting. Please try again in a moment.");
 
-          // Voice replies: the backend always returns a flat audio payload
+          // Voice replies: the backend is expected to return a flat payload
           // { type: 'voice', audio: '<base64>', audioMimeType: 'audio/mpeg', ... }.
-          const aiAudioBase64 =
-            data && typeof data.audio === "string" ? data.audio : null;
+          // Be defensive and also accept older shapes so we don't lose audio.
+          let aiAudioBase64 = null;
+          if (data && typeof data.audio === "string") {
+            aiAudioBase64 = data.audio;
+          } else if (data && typeof data.audioBase64 === "string") {
+            aiAudioBase64 = data.audioBase64;
+          } else if (data && data.voice && typeof data.voice === "object") {
+            if (typeof data.voice.base64 === "string") {
+              aiAudioBase64 = data.voice.base64;
+            }
+          }
+
           const aiAudioMime =
             data && typeof data.audioMimeType === "string"
               ? data.audioMimeType
@@ -1434,9 +1459,10 @@ export default function ChatPage() {
               id: lastId + 2,
               from: "ai",
               type: "voice",
-              // Hide text when we have audio, but if TTS fails and audio is null,
-              // fall back to showing the AI text instead of an empty bubble.
-              text: aiAudioBase64 ? "" : aiText,
+              // Keep full text for history / server merge, but UI will hide it
+              // whenever audioBase64 is present and treat this as a pure
+              // voice reply.
+              text: aiText,
               createdAt: nowIso,
               audioBase64: aiAudioBase64,
               audioMimeType: aiAudioMime,
