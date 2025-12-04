@@ -1,37 +1,67 @@
 // server/src/services/voiceService.js
-// Final, corrected, Render-compatible version
-// Includes dedicated OpenAI TTS client to avoid /v1/audio/speech 404 issues
+// Final, Render-friendly version with dedicated TTS client
+// - Uses a separate OpenAI client for TTS + STT
+// - Avoids /v1/audio/speech 404 issues caused by wrong base URLs
 
-const OpenAI = require('openai');
-const fs = require('fs');
-const path = require('path');
-const { CHARACTER_VOICES } = require('../config/characterVoices');
+const OpenAI = require("openai");
+const fs = require("fs");
+const { CHARACTER_VOICES } = require("../config/characterVoices");
 
-// ------------------------------
-// 🎤 DEDICATED TTS CLIENT
-// ------------------------------
-// This ignores any OPENAI_BASE_URL used for chat
-// because many proxies / Azure endpoints break /audio/speech.
-// This forces voice replies to always hit official OpenAI.
-// You can override if needed:
+// ------------------------------------
+// 🎤 Dedicated OpenAI client for audio
+// ------------------------------------
+// This client is ONLY for:
+//   - STT: /audio/transcriptions
+//   - TTS: /audio/speech
+//
+// It completely ignores any OPENAI_BASE_URL that might be used elsewhere.
+// By default it talks directly to official OpenAI:
+//
+//   https://api.openai.com/v1
+//
+// You can override with:
+//   OPENAI_TTS_API_KEY
+//   OPENAI_TTS_BASE_URL
+//
+const ttsBaseUrl = process.env.OPENAI_TTS_BASE_URL || "https://api.openai.com/v1";
+
 const openaiTTS = new OpenAI({
   apiKey: process.env.OPENAI_TTS_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_TTS_BASE_URL || 'https://api.openai.com/v1',
+  baseURL: ttsBaseUrl,
 });
 
-// ------------------------------
-// 🔊 TRANSCRIBE AUDIO (STT)
-// ------------------------------
-async function transcribeAudio(input) {
-  if (!process.env.OPENAI_API_KEY) return '';
+// Optional: small debug line so you can SEE in Render logs what base URL is used.
+// It will NOT print your key.
+console.log("[voiceService] TTS client configured with baseURL:", ttsBaseUrl);
 
-  const model = process.env.OPENAI_TRANSCRIBE_MODEL || 'whisper-1';
+// ------------------------------------
+// 🔊 TRANSCRIBE AUDIO (STT)
+// ------------------------------------
+/**
+ * Transcribe an audio file using OpenAI Whisper.
+ *
+ * @param {string|{path:string}} input - path or multer file object
+ * @returns {Promise<string>} - transcript text or '' on failure
+ */
+async function transcribeAudio(input) {
+  // If we have no key at all, bail
+  if (!process.env.OPENAI_TTS_API_KEY && !process.env.OPENAI_API_KEY) {
+    console.error("[voiceService] STT called but no OpenAI API key set");
+    return "";
+  }
+
+  const model = process.env.OPENAI_TRANSCRIBE_MODEL || "whisper-1";
 
   let filePath = null;
-  if (typeof input === 'string') filePath = input;
-  else if (input && typeof input.path === 'string') filePath = input.path;
+  if (typeof input === "string") {
+    filePath = input;
+  } else if (input && typeof input.path === "string") {
+    filePath = input.path;
+  }
 
-  if (!filePath) return '';
+  if (!filePath) {
+    return "";
+  }
 
   try {
     const stream = fs.createReadStream(filePath);
@@ -41,32 +71,47 @@ async function transcribeAudio(input) {
       file: stream,
     });
 
-    return (resp.text || resp.data?.text || '').trim();
+    const text = (resp && (resp.text || resp.data?.text)) || "";
+    return text.trim();
   } catch (err) {
-    console.error("[voiceService] STT error:", err.message || err);
-    return '';
+    console.error("[voiceService] STT error:", err?.message || err);
+    return "";
   }
 }
 
-// ------------------------------
+// ------------------------------------
 // 🔈 GENERATE VOICE REPLY (TTS)
-// ------------------------------
+// ------------------------------------
+/**
+ * Generate a voice reply with OpenAI TTS.
+ *
+ * @param {string} text
+ * @param {{ characterId?: string, format?: string }} options
+ * @returns {Promise<{ base64: string, buffer: Buffer, mimeType: string, voiceId: string }|null>}
+ */
 async function generateVoiceReply(text, options = {}) {
-  if (!process.env.OPENAI_API_KEY) return null;
+  // Same key check as STT
+  if (!process.env.OPENAI_TTS_API_KEY && !process.env.OPENAI_API_KEY) {
+    console.error("[voiceService] TTS called but no OpenAI API key set");
+    return null;
+  }
 
-  const safeText = String(text || '').trim();
-  if (!safeText) return null;
+  const safeText = String(text || "").trim();
+  if (!safeText) {
+    return null;
+  }
 
   const { characterId, format } = options;
 
-  const model = process.env.OPENAI_TTS_MODEL || 'gpt-4o-audio-preview';
-  const outputFormat = format || process.env.OPENAI_TTS_FORMAT || 'mp3';
+  // Model & format
+  const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-audio-preview";
+  const outputFormat = format || process.env.OPENAI_TTS_FORMAT || "mp3";
 
+  // Voice selection from CHARACTER_VOICES
   const profile = CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
-  const voiceId = profile.voiceId || process.env.OPENAI_TTS_VOICE || 'alloy';
+  const voiceId = profile.voiceId || process.env.OPENAI_TTS_VOICE || "alloy";
 
   try {
-    // This is the endpoint that was failing before
     const response = await openaiTTS.audio.speech.create({
       model,
       voice: voiceId,
@@ -76,16 +121,19 @@ async function generateVoiceReply(text, options = {}) {
 
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString('base64');
+    const base64 = buffer.toString("base64");
 
-    let mimeType = 'audio/mpeg';
-    if (outputFormat === 'wav') mimeType = 'audio/wav';
-    if (outputFormat === 'ogg') mimeType = 'audio/ogg';
-    if (outputFormat === 'flac') mimeType = 'audio/flac';
+    let mimeType = "audio/mpeg";
+    if (outputFormat === "wav") mimeType = "audio/wav";
+    else if (outputFormat === "ogg") mimeType = "audio/ogg";
+    else if (outputFormat === "flac") mimeType = "audio/flac";
 
     return { base64, buffer, mimeType, voiceId };
   } catch (err) {
-    console.error('[voiceService] generateVoiceReply error', err.message || err);
+    console.error(
+      "[voiceService] generateVoiceReply error",
+      err?.message || err
+    );
     return null;
   }
 }
