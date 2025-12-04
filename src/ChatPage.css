@@ -414,21 +414,44 @@
 }
 
 /* Clean premium typography */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700&display=swap');
+
 .asrar-chat-header-title {
-  font-family: "Cinzel", serif;
-  font-size: 1.05rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  font-weight: 600;
-  color: #e8f8ff;
+  font-family: "Tajawal", "Cinzel", serif;
+  font-size: 1.3rem;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  font-weight: 700;
+  color: #ffffff;
   margin: 0 0 0.25rem;
+  text-shadow: 0 0 10px rgba(0, 244, 255, 0.4);
+}
+
+/* RTL specific styles */
+[dir="rtl"] .asrar-chat-header-title {
+  font-family: "Tajawal", sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-transform: none;
 }
 
 .asrar-chat-header-sub {
-  font-size: 0.82rem;
-  color: #9fb1c3;
+  font-family: "Tajawal", sans-serif;
+  font-size: 0.95rem;
+  color: #b8e1ff;
   max-width: var(--asrar-chat-width);
   margin: 0;
+  font-weight: 500;
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.3);
+}
+
+/* RTL specific styles */
+[dir="rtl"] .asrar-chat-header-sub {
+  font-family: "Tajawal", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 /* No extra pill anymore */
