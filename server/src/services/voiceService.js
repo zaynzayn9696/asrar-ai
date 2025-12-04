@@ -14,25 +14,19 @@ const { CHARACTER_VOICES } = require("../config/characterVoices");
 //   - STT: /audio/transcriptions
 //   - TTS: /audio/speech
 //
-// It completely ignores any OPENAI_BASE_URL that might be used elsewhere.
-// By default it talks directly to official OpenAI:
-//
+// It *ignores* any OPENAI_BASE_URL / OPENAI_TTS_BASE_URL that might be used
+// elsewhere. We always talk directly to official OpenAI:
 //   https://api.openai.com/v1
-//
-// You can override with:
-//   OPENAI_TTS_API_KEY
-//   OPENAI_TTS_BASE_URL
-//
-const ttsBaseUrl = process.env.OPENAI_TTS_BASE_URL || "https://api.openai.com/v1";
+// using the primary OPENAI_API_KEY.
 
 const openaiTTS = new OpenAI({
-  apiKey: process.env.OPENAI_TTS_API_KEY || process.env.OPENAI_API_KEY,
-  baseURL: ttsBaseUrl,
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://api.openai.com/v1",
 });
 
-// Optional: small debug line so you can SEE in Render logs what base URL is used.
-// It will NOT print your key.
-console.log("[voiceService] TTS client configured with baseURL:", ttsBaseUrl);
+// Small debug line so Render logs show exactly which base URL is used.
+// This never prints any secrets.
+console.log("[voiceService] Using TTS baseURL:", "https://api.openai.com/v1");
 
 // ------------------------------------
 // 🔊 TRANSCRIBE AUDIO (STT)
@@ -45,8 +39,8 @@ console.log("[voiceService] TTS client configured with baseURL:", ttsBaseUrl);
  */
 async function transcribeAudio(input) {
   // If we have no key at all, bail
-  if (!process.env.OPENAI_TTS_API_KEY && !process.env.OPENAI_API_KEY) {
-    console.error("[voiceService] STT called but no OpenAI API key set");
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("[voiceService] STT called but no OPENAI_API_KEY set");
     return "";
   }
 
@@ -91,8 +85,8 @@ async function transcribeAudio(input) {
  */
 async function generateVoiceReply(text, options = {}) {
   // Same key check as STT
-  if (!process.env.OPENAI_TTS_API_KEY && !process.env.OPENAI_API_KEY) {
-    console.error("[voiceService] TTS called but no OpenAI API key set");
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("[voiceService] TTS called but no OPENAI_API_KEY set");
     return null;
   }
 
