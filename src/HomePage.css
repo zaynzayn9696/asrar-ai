@@ -495,51 +495,78 @@ body,
   align-items: center;
 }
 
-/* Subtle teal glow at top, very low opacity */
-.asrar-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at top center, rgba(0, 150, 160, 0.06), transparent 60%);
-  z-index: 0;
-}
-
-/* Soft digital rain animation */
-.asrar-hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.03) 50%,
-    transparent 100%
-  ),
-  linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.02) 0%,
-    transparent 100%
-  );
-  background-size: 100% 80px, 100% 100%;
-  animation: asrar-rain 20s linear infinite;  /* slower = smoother */
-  opacity: 0.06;
-  z-index: 0;
-}
-
-/* Make sure actual content is above the animation */
-.asrar-hero > * {
+/* Dedicated content wrapper so atmospheric layer stays behind */
+.asrar-hero-content {
   position: relative;
   z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-@keyframes asrar-subtle-rain {
+/* Atmospheric background layer: mist + soft vertical streaks */
+.asrar-hero-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.asrar-hero-atmosphere::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -25%;
+  width: 160%;
+  height: 160%;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(0, 180, 160, 0.22), transparent 65%),
+    radial-gradient(circle at 85% 100%, rgba(0, 255, 210, 0.16), transparent 70%);
+  filter: blur(20px);
+  opacity: 0.35;
+  mix-blend-mode: screen;
+  transform: translate3d(0, 0, 0) scale(1.02);
+  animation: asrar-hero-mist 46s ease-in-out infinite alternate;
+}
+
+.asrar-hero-atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: -20% 0 -30% 0;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 255, 210, 0.18) 0px,
+      rgba(0, 255, 210, 0.18) 1px,
+      transparent 16px,
+      transparent 32px
+    );
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  transform: translate3d(0, -15%, 0);
+  animation: asrar-hero-rain 28s linear infinite;
+}
+
+@keyframes asrar-hero-mist {
   0% {
-    background-position: 0 0, 0 0;
+    transform: translate3d(-4%, -2%, 0) scale(1.02);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.06);
   }
   100% {
-    background-position: 0 80px, 0 100%;
+    transform: translate3d(-2%, -1%, 0) scale(1.03);
+  }
+}
+
+@keyframes asrar-hero-rain {
+  0% {
+    transform: translate3d(0, -18%, 0);
+  }
+  100% {
+    transform: translate3d(0, 10%, 0);
   }
 }
 
@@ -2892,13 +2919,24 @@ border: none;
   .asrar-hero-eyebrow {
     font-size: 14px;
   }
-  
+
+  /* Tone down atmospheric layer on smaller screens */
+  .asrar-hero-atmosphere::before {
+    opacity: 0.24;
+    filter: blur(22px);
+  }
+
+  .asrar-hero-atmosphere::after {
+    opacity: 0.10;
+    animation-duration: 40s;
+  }
+
   /* Improve section spacing on mobile */
   .asrar-section-title {
     font-size: 24px;
     margin-bottom: 16px;
   }
-  
+
   .asrar-section-subtitle {
     font-size: 14px;
     margin-bottom: 24px;

@@ -952,32 +952,34 @@ export default function HomePage() {
       <main>
         {/* HERO */}
         <section id="hero" className="asrar-hero">
-          {/* Glowing Orb */}
-          <div className="asrar-hero-glow-orb"></div>
+          <div className="asrar-hero-atmosphere" aria-hidden="true"></div>
+          <div className="asrar-hero-content">
+            {/* Glowing Orb */}
+            <div className="asrar-hero-glow-orb"></div>
 
-          {/* Restored Asrar Logo — Larger & More Prominent */}
-          <div className="asrar-hero-logo-frame">
-            <div className="asrar-hero-logo-inner">
-              <img src={asrarLogo} alt="Asrar logo" className="asrar-hero-logo asrar-hero-logo--large" />
+            {/* Restored Asrar Logo — Larger & More Prominent */}
+            <div className="asrar-hero-logo-frame">
+              <div className="asrar-hero-logo-inner">
+                <img src={asrarLogo} alt="Asrar logo" className="asrar-hero-logo asrar-hero-logo--large" />
+              </div>
             </div>
-          </div>
 
-          {/* Centered Copy */}
-          <div className="asrar-hero-copy-centered">
-            <h1 className="asrar-hero-title-centered">
-              {isAr
-                ? "كيف تشعر فعلاً؟"
-                : "How do you really want to feel?"}
-            </h1>
-            <p className="asrar-hero-subtitle-centered">
-              {isAr
-                ? "التقِ برفيقك الذكي العاطفي. مصمم لك. مبني للشرق الأوسط."
-                : "Meet your emotional AI companion. Designed for you. Built for the Middle East."}
-            </p>
-          </div>
+            {/* Centered Copy */}
+            <div className="asrar-hero-copy-centered">
+              <h1 className="asrar-hero-title-centered">
+                {isAr
+                  ? "كيف تشعر فعلاً؟"
+                  : "How do you really want to feel?"}
+              </h1>
+              <p className="asrar-hero-subtitle-centered">
+                {isAr
+                  ? "التقِ برفيقك الذكي العاطفي. مصمم لك. مبني للشرق الأوسط."
+                  : "Meet your emotional AI companion. Designed for you. Built for the Middle East."}
+              </p>
+            </div>
 
-          {/* Mood Capsule — Minimal Emotion Capsule */}
-          <section className="asrar-mood-capsule">
+            {/* Mood Capsule — Minimal Emotion Capsule */}
+            <section className="asrar-mood-capsule">
             <form className="asrar-mood-capsule-inner" onSubmit={handleMiniChatSubmit}>
               {/* Header */}
               <div className="asrar-mood-capsule-header">
@@ -1137,6 +1139,7 @@ export default function HomePage() {
               </div>
             )}
           </section>
+          </div>
         </section>
         <div className="asrar-section-divider" aria-hidden="true" />
 
