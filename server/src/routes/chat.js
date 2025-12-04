@@ -91,12 +91,6 @@ function audioFilter(_req, file, cb) {
   cb(null, true);
 }
 
-const uploadAudio = multer({
-  storage: audioStorage,
-  fileFilter: audioFilter,
-  limits: { fileSize: 20 * 1024 * 1024 }, // ~20MB
-});
-
 function startOfMonth() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
@@ -104,30 +98,33 @@ function startOfMonth() {
 
 async function ensureUsage(userId) {
   let usage = await prisma.usage.findUnique({ where: { userId } });
+  const now = new Date();
   if (!usage) {
     usage = await prisma.usage.create({
       data: {
         userId,
         dailyCount: 0,
         monthlyCount: 0,
-        dailyResetAt: startOfToday(),
+        dailyResetAt: now,
         monthlyResetAt: startOfMonth(),
       },
     });
   }
 
-  const today0 = startOfToday();
+  const dayWindowStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const month0 = startOfMonth();
 
-  const needsDailyReset = !usage.dailyResetAt || usage.dailyResetAt < today0;
-  const needsMonthlyReset = !usage.monthlyResetAt || usage.monthlyResetAt < month0;
+  const needsDailyReset =
+    !usage.dailyResetAt || usage.dailyResetAt < dayWindowStart;
+  const needsMonthlyReset =
+    !usage.monthlyResetAt || usage.monthlyResetAt < month0;
 
   if (needsDailyReset || needsMonthlyReset) {
     const data = {};
 
     if (needsDailyReset) {
       data.dailyCount = 0;
-      data.dailyResetAt = today0;
+      data.dailyResetAt = now;
     }
 
     if (needsMonthlyReset) {
