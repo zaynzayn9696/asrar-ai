@@ -5,6 +5,7 @@
 
 const OpenAI = require("openai");
 const fs = require("fs");
+const https = require("https");
 const { CHARACTER_VOICES } = require("../config/characterVoices");
 
 // ------------------------------------
@@ -106,15 +107,54 @@ async function generateVoiceReply(text, options = {}) {
   const voiceId = profile.voiceId || process.env.OPENAI_TTS_VOICE || "alloy";
 
   try {
-    const response = await openaiTTS.audio.speech.create({
+    const payload = JSON.stringify({
       model,
       voice: voiceId,
       input: safeText,
       format: outputFormat,
     });
 
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const buffer = await new Promise((resolve, reject) => {
+      const req = https.request(
+        {
+          hostname: "api.openai.com",
+          path: "/v1/audio/speech",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            "Content-Length": Buffer.byteLength(payload),
+          },
+        },
+        (res) => {
+          const chunks = [];
+          res.on("data", (chunk) => chunks.push(chunk));
+          res.on("end", () => {
+            const body = Buffer.concat(chunks);
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              resolve(body);
+            } else {
+              let message = `HTTP ${res.statusCode || 0}`;
+              try {
+                const json = JSON.parse(body.toString("utf8"));
+                if (json && json.error && json.error.message) {
+                  message += `: ${json.error.message}`;
+                }
+              } catch (_) {}
+              reject(new Error(message));
+            }
+          });
+        }
+      );
+
+      req.on("error", (error) => {
+        reject(error);
+      });
+
+      req.write(payload);
+      req.end();
+    });
+
     const base64 = buffer.toString("base64");
 
     let mimeType = "audio/mpeg";
