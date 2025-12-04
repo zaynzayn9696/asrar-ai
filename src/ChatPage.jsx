@@ -1440,6 +1440,24 @@ export default function ChatPage() {
             data && typeof data.audioMimeType === "string"
               ? data.audioMimeType
               : "audio/mpeg";
+
+          // If the backend did not provide any audio for a voice request,
+          // treat this as a failure rather than falling back to a text-only
+          // AI reply. Voice input should either get a voice reply or an
+          // explicit error, not a plain text assistant message.
+          if (!aiAudioBase64) {
+            const errorMessage = {
+              id: messages.length ? messages[messages.length - 1].id + 1 : 1,
+              from: "system",
+              text: isArabicConversation
+                ? "فشل إنشاء الرد الصوتي. حاول مرة أخرى."
+                : "Failed to generate a voice reply. Please try again.",
+              createdAt: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+            return;
+          }
+
           setMessages((prev) => {
             const lastId =
               prev.length && typeof prev[prev.length - 1].id === "number"
