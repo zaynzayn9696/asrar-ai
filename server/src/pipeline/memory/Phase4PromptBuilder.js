@@ -210,32 +210,36 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     const longLines = [];
     if (longDominant) {
       longLines.push(
-        `Across many conversations, this user often presents as ${longDominant.toLowerCase()} in an emotional sense.`
+        `- Across conversations, the user often feels ${longDominant.toLowerCase()}.`
       );
     }
     if (topTopics.length) {
       longLines.push(
-        `Common recurring topics over time: ${topTopics.join(', ')}.`
+        `- Recurring themes: ${topTopics.join(', ')}.`
       );
     }
     if (volatility != null) {
       const volDesc =
         volatility > 0.7 ? 'frequently changing' : volatility < 0.3 ? 'relatively steady' : 'moderately variable';
       longLines.push(
-        `Long-term emotional trajectory tends to be ${volDesc}; avoid sudden shifts in tone.`
+        `- Emotional changes are ${volDesc}; avoid sudden tone shifts.`
       );
     }
     if (personaStats && typeof personaStats.avgOutcome === 'number') {
       const outcome = personaStats.avgOutcome;
       if (outcome > 0.1) {
         longLines.push(
-          'This companion style generally works well for this user; keep the tone consistent with it rather than experimenting wildly.'
+          '- This companion style generally suits the user; keep your tone consistent with it.'
         );
       } else if (outcome < -0.1) {
         longLines.push(
-          'Be extra gentle: past interactions with this companion style sometimes aligned with higher emotional intensity.'
+          '- Be extra gentle; this companion style sometimes appeared around higher emotional intensity.'
         );
       }
+    }
+    // Keep only the first few bullet hints so Phase 4 stays compact.
+    if (longLines.length > 3) {
+      longLines.length = 3;
     }
 
     // If the kernel JSON fields are still mostly empty but scalar
@@ -273,7 +277,7 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
 
     if (longLines.length) {
       lines.push(
-        'Longer-term patterns (use gently; do not mention them explicitly as analytics):',
+        'Longer-term patterns (bullet hints; do not mention explicitly as analytics):',
         ...longLines
       );
     }
@@ -288,8 +292,8 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
   ];
 
   const header = isArabic
-    ? 'Additional internal context from the memory kernel (do not expose as analytics to the user):'
-    : 'Additional internal context from the memory kernel (do not expose as analytics to the user):';
+    ? 'Internal emotional memory hints (do NOT show to the user):'
+    : 'Internal emotional memory hints (do NOT show to the user):';
 
   let block = [
     header,
@@ -300,7 +304,7 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     ...safetyHints,
   ].join('\n');
 
-  const MAX_PHASE4_LENGTH = 1200;
+  const MAX_PHASE4_LENGTH = 900;
   if (block.length > MAX_PHASE4_LENGTH) {
     block = block.slice(0, MAX_PHASE4_LENGTH);
   }

@@ -506,6 +506,7 @@ const audioStorage = multer.diskStorage({
 
 function audioFilter(_req, file, cb) {
   const raw = file.mimetype || '';
+
   const base = raw.split(';')[0].trim();
   if (!allowedAudio.has(base)) {
     return cb(new Error('Unsupported audio type'));
@@ -519,11 +520,44 @@ const uploadAudio = multer({
   limits: { fileSize: 20 * 1024 * 1024 }, // ~20MB
 });
 
+function trimForVoiceReply(text, severityLevel) {
+  const s = String(text || '').trim();
+  if (!s) return s;
+
+  if (String(severityLevel || '').toUpperCase() === 'HIGH_RISK') {
+    return s;
+  }
+
+  const parts = s.split(/\n\n+/);
+  let footer = '';
+  let body = s;
+
+  if (parts.length > 1) {
+    footer = parts[parts.length - 1];
+    body = parts.slice(0, -1).join('\n\n');
+  }
+
+  const sentences = body.split(/(?<=[.!؟?])\s+/).filter(Boolean);
+  const maxSentences = 4;
+  const trimmedBody = sentences.slice(0, maxSentences).join(' ') || body;
+
+  const MAX_CHARS = 600;
+  const finalBody =
+    trimmedBody.length > MAX_CHARS ? trimmedBody.slice(0, MAX_CHARS) : trimmedBody;
+
+  return footer ? `${finalBody}\n\n${footer}` : finalBody;
+}
+
 // Voice chat: accepts audio, transcribes to text, runs the emotional engine,
 // and returns a TTS reply as base64 audio. Voice chat is available to all
 // authenticated users (free + premium), but still enforces usage limits.
 router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
   try {
+    const tRouteStart = Date.now();
+    let sttMs = 0;
+    let dbSaveMs = 0;
+    let ttsMs = 0;
+
     if (!process.env.OPENAI_API_KEY) {
       return res
         .status(500)
@@ -551,7 +585,37 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     );
     const isFreePlanUser = !isPremiumUser && !isTester;
 
-    // Premium users: enforce monthly quota for voice.
+    if (!req.file) {
+      return res.status(400).json({ message: 'No audio uploaded' });
+    }
+
+    const tSttStart = Date.now();
+    const userText = await transcribeAudio(req.file);
+    sttMs = Date.now() - tSttStart;
+    if (!userText) {
+      return res.status(400).json({ message: 'Failed to transcribe audio' });
+    }
+
+    const body = req.body || {};
+
+    const rawMessages = Array.isArray(body.messages) ? body.messages : [];
+    const characterId = body.characterId || 'daloua';
+    const lang = body.lang || 'en';
+    const dialect = body.dialect || 'msa';
+    const rawToneKey = body.tone;
+    const bodyConversationId = body.conversationId;
+    const saveFlag = body.save !== false;
+
+    console.log(
+      '[Diagnostic] Incoming Request: route="/api/chat/voice" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
+      dialect,
+      characterId,
+      saveFlag,
+      typeof userText === 'string' ? userText.length : 0
+    );
+
+    // Quota gating: premium monthly, free daily (24h window)
+
     if (!isTester && isPremiumUser) {
       const used = usage.monthlyCount || 0;
       const limit = monthlyLimit || 3000;
@@ -566,12 +630,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
           limit,
           remaining: 0,
           usage: buildUsageSummary(dbUser, usage),
-          limitType: 'monthly',
         });
       }
     } else if (!isTester && isFreePlanUser) {
-      // Free users: enforce daily quota for voice based on a strict 24h window
-      // that starts when the user first hits the limit.
       const used = usage.dailyCount || 0;
       const limit = dailyLimit || 5;
       if (limit > 0 && used >= limit) {
@@ -579,14 +640,12 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         let resetAtDate;
 
         if (usage.dailyResetAt && usage.dailyResetAt > now) {
-          // Existing lock window: reuse it so the countdown stays consistent
           resetAtDate = new Date(usage.dailyResetAt);
         } else {
-          // First time hitting the limit (or stale/old value): start a fresh 24h window
           resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
           try {
             usage = await prisma.usage.update({
-              where: { userId: dbUser.id },
+              where: { userId },
               data: { dailyResetAt: resetAtDate },
             });
           } catch (_) {}
@@ -598,8 +657,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         );
 
         return res.status(429).json({
-          error: 'usage_limit_reached',
-          code: 'LIMIT_EXCEEDED',
+          error: 'limit_reached',
+          code: 'LIMIT_REACHED',
           message: 'Daily message limit reached.',
           scope: 'daily',
           plan: dbUser.plan,
@@ -607,69 +666,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
           limit,
           remaining: 0,
           usage: buildUsageSummary(dbUser, usage),
-          limitType: 'daily',
           resetAt: resetAtDate.toISOString(),
           resetInSeconds,
-        });
-      }
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'No audio uploaded' });
-    }
-
-    // 1) Speech-to-text
-    const userText = await transcribeAudio(req.file);
-    if (!userText) {
-      return res.status(400).json({ message: 'Failed to transcribe audio' });
-    }
-
-    // 2) Parse metadata from multipart fields
-    const characterId = req.body?.characterId || 'daloua';
-    const lang = req.body?.lang || 'en';
-    const dialect = req.body?.dialect || 'msa';
-    const rawToneKey = req.body?.tone;
-    const bodyConversationId = req.body?.conversationId;
-    const saveFlag = req.body?.save !== false && req.body?.save !== 'false';
-
-    console.log(
-      '[Diagnostic] Incoming Request: route="/api/chat/voice" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
-      dialect,
-      characterId,
-      saveFlag,
-      typeof userText === 'string' ? userText.length : 0
-    );
-
-    let incomingMessages = [];
-    if (req.body?.messages) {
-      try {
-        const parsed = JSON.parse(req.body.messages);
-        if (Array.isArray(parsed)) incomingMessages = parsed;
-      } catch (_) {}
-    }
-
-    // Character gating for free plan
-    if (dbUser.plan === 'free' && characterId !== freeCharacterId && !isTester) {
-      return res.status(403).json({
-        code: 'PRO_CHARACTER_LOCKED',
-        message:
-          'This companion is available on the Pro plan. Upgrade to unlock all characters.',
-        plan: dbUser.plan,
-        allowedCharacterId: freeCharacterId,
-      });
-    }
-
-    // Increment usage immediately for a successful voice request.
-    if (!isTester) {
-      if (isPremiumUser) {
-        usage = await prisma.usage.update({
-          where: { userId: dbUser.id },
-          data: { monthlyCount: { increment: 1 } },
-        });
-      } else {
-        usage = await prisma.usage.update({
-          where: { userId: dbUser.id },
-          data: { dailyCount: { increment: 1 } },
         });
       }
     }
@@ -684,7 +682,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const languageForEngine =
       lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en';
 
-    // 3) Resolve existing conversation
+    // Resolve conversation
     let cid = null;
     if (bodyConversationId && Number.isFinite(Number(bodyConversationId))) {
       const existing = await prisma.conversation.findFirst({
@@ -705,10 +703,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       cid = conv.id;
     }
 
-    // 4) Build history for the emotional engine
-    let history = Array.isArray(incomingMessages)
-      ? incomingMessages.slice()
-      : [];
+    // Build recent history (exclude the just-typed user message if duplicated)
+    let history = Array.isArray(rawMessages) ? rawMessages.slice() : [];
     if (history.length && typeof userText === 'string') {
       const last = history[history.length - 1];
       if (last && typeof last.text === 'string') {
@@ -731,7 +727,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       })
       .filter(Boolean);
 
-    // 5) Emotional engine -> system prompt + routing metadata.
+    // Emotional engine
     const engineResult = await runEmotionalEngine({
       userMessage: userText,
       recentMessages: recentMessagesForEngine,
@@ -753,6 +749,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       severityLevel,
       personaCfg,
     } = engineResult;
+
+    const engineTimings = engineResult.timings || {};
 
     const engineMode = decideEngineMode({
       isPremiumUser: isPremiumUser || isTester,
@@ -800,6 +798,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     let aiMessage = rawReply;
     let orchestrateMs = 0;
+
     try {
       const tOrchStart = Date.now();
       aiMessage = await orchestrateResponse({
@@ -823,6 +822,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       aiMessage = rawReply;
     }
 
+    // Voice mode: keep spoken reply compact while preserving any safety footer.
+    aiMessage = trimForVoiceReply(aiMessage, severityLevel || 'CASUAL');
+
     const voiceProfile =
       CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
     const toneKey = rawToneKey || voiceProfile.defaultTone || 'calm';
@@ -831,15 +833,17 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
 
     console.log(
-      '[Diagnostic] Attempting to Save (voice)? ShouldSave=%s, CID=%s, UserID=%s',
+      '[Diagnostic] Attempting to Save? ShouldSave=%s, CID=%s, UserID=%s',
       shouldSave,
       cid == null ? 'null' : String(cid),
       userId == null ? 'null' : String(userId)
     );
 
     let userRow = null;
+
     if (shouldSave) {
       try {
+        const tDbStart = Date.now();
         const rows = await prisma.$transaction([
           prisma.message.create({
             data: {
@@ -864,7 +868,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
             data: { updatedAt: new Date() },
           }),
         ]);
+        dbSaveMs = Date.now() - tDbStart;
         userRow = rows[0];
+
         console.log(
           '[Diagnostic] Voice Message Saved Successfully: ID=%s',
           userRow && userRow.id != null ? String(userRow.id) : 'null'
@@ -878,10 +884,12 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     }
 
     // 6) Text-to-speech for the final reply text.
+    const tTtsStart = Date.now();
     const ttsResult = await generateVoiceReply(aiMessage, {
       characterId,
       format: 'mp3',
     });
+    ttsMs = Date.now() - tTtsStart;
 
     if (!ttsResult) {
       // Fallback: TTS failed
@@ -907,6 +915,25 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       ttsVoice: ttsResult.voiceId,
     });
 
+    const totalMs = Date.now() - tRouteStart;
+    console.log('[VoiceTiming]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationId: cid == null ? 'null' : String(cid),
+      classifyMs: engineTimings.classifyMs || 0,
+      engineTotalMs: engineTimings.totalMs || 0,
+      snapshotMs: engineTimings.snapshotMs || 0,
+      triggersMs: engineTimings.triggersMs || 0,
+      phase4Ms: engineTimings.phase4Ms || 0,
+      stateUpdateMs: engineTimings.stateUpdateMs || 0,
+      stateReadMs: engineTimings.stateReadMs || 0,
+      tTranscribeMs: sttMs,
+      openAiMs,
+      orchestrateMs,
+      ttsMs,
+      dbSaveMs,
+      totalMs,
+    });
+
     const responsePayload = {
       type: 'voice',
       audio: ttsResult.base64,
@@ -926,6 +953,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
 router.post('/message', async (req, res) => {
   try {
+    const tRouteStart = Date.now();
+
     if (!process.env.OPENAI_API_KEY) {
       return res
         .status(500)
@@ -950,6 +979,7 @@ router.post('/message', async (req, res) => {
       dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro'
     );
     const isFreePlanUser = !isPremiumUser && !isTester;
+
     let usage = usageInitial;
 
     const body = req.body || {};
@@ -1112,6 +1142,8 @@ router.post('/message', async (req, res) => {
       personaCfg,
     } = engineResult;
 
+    const engineTimings = engineResult.timings || {};
+
     const engineMode = decideEngineMode({
       isPremiumUser: isPremiumUser || isTester,
       primaryEmotion: emo.primaryEmotion,
@@ -1158,6 +1190,7 @@ router.post('/message', async (req, res) => {
 
     let aiMessage = rawReply;
     let orchestrateMs = 0;
+
     try {
       const tOrchStart = Date.now();
       aiMessage = await orchestrateResponse({
@@ -1311,6 +1344,7 @@ router.post('/message', async (req, res) => {
           }),
         ]);
         userRow = rows[0];
+
         console.log(
           '[Diagnostic] Message Saved Successfully: ID=%s',
           userRow && userRow.id != null ? String(userRow.id) : 'null'
@@ -1453,10 +1487,33 @@ router.post('/message', async (req, res) => {
       conversationId: cid == null ? 'null' : String(cid),
       engineMode,
       isPremiumUser: !!isPremiumUser,
-      classifyMs: 0,
+      classifyMs: engineTimings.classifyMs || 0,
+      snapshotMs: engineTimings.snapshotMs || 0,
+      triggersMs: engineTimings.triggersMs || 0,
+      phase4Ms: engineTimings.phase4Ms || 0,
+      stateUpdateMs: engineTimings.stateUpdateMs || 0,
+      stateReadMs: engineTimings.stateReadMs || 0,
       orchestrateMs,
       openAiMs,
+      dbSaveMs,
       backgroundJobQueued,
+    });
+
+    const totalMs = Date.now() - tRouteStart;
+    console.log('[ChatTiming]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationId: cid == null ? 'null' : String(cid),
+      classifyMs: engineTimings.classifyMs || 0,
+      engineTotalMs: engineTimings.totalMs || 0,
+      snapshotMs: engineTimings.snapshotMs || 0,
+      triggersMs: engineTimings.triggersMs || 0,
+      phase4Ms: engineTimings.phase4Ms || 0,
+      stateUpdateMs: engineTimings.stateUpdateMs || 0,
+      stateReadMs: engineTimings.stateReadMs || 0,
+      openAiMs,
+      orchestrateMs,
+      dbSaveMs,
+      totalMs,
     });
 
     const wantsStream =

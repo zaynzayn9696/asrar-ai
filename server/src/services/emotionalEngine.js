@@ -119,6 +119,7 @@ function getDialectGuidance(language, dialect) {
 /**
  * Classifies the user's message emotion using OpenAI and returns a structured object.
  * Falls back to a neutral default on any error or parse failure.
+ * Prompt is deliberately compact for latency reasons.
  * @param {Object} params
  * @param {string} params.userMessage
  * @param {Array<{role: 'user'|'assistant', content: string}>} params.recentMessages
@@ -129,10 +130,10 @@ function getDialectGuidance(language, dialect) {
 async function classifyEmotion({ userMessage, recentMessages = [], language = 'en' }) {
   const cultureGuess = language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
 
-  // Build a compact context summary to keep token usage reasonable
+  // Build a very small context summary to keep token usage low
   const recentSummary = recentMessages
-    .slice(-5)
-    .map((m) => `${m.role === 'assistant' ? 'AI' : 'User'}: ${String(m.content || '').slice(0, 160)}`)
+    .slice(-3)
+    .map((m) => `${m.role === 'assistant' ? 'AI' : 'User'}: ${String(m.content || '').slice(0, 120)}`)
     .join('\n');
 
   const sys = [
@@ -140,6 +141,7 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
     'Return STRICT JSON only: {"primaryEmotion","intensity","confidence","cultureTag","notes","severityLevel"}.',
     'primaryEmotion ∈ [NEUTRAL,SAD,ANXIOUS,ANGRY,LONELY,STRESSED,HOPEFUL,GRATEFUL]; intensity 1-5; confidence 0-1.',
     'cultureTag ∈ ["ARABIC","ENGLISH","MIXED"]; severityLevel ∈ ["CASUAL","VENTING","SUPPORT","HIGH_RISK"].',
+    'Keep "notes" to at most one short sentence if you include it.',
   ].join('\n');
 
   const user = [
@@ -148,14 +150,14 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
     recentSummary || '(no prior messages)',
     '',
     'Current user message:',
-    String(userMessage || '').slice(0, 800),
+    String(userMessage || '').slice(0, 400),
   ].join('\n');
 
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0,
-      max_tokens: 96,
+      max_tokens: 64,
       messages: [
         { role: 'system', content: sys },
         { role: 'user', content: user },
@@ -206,27 +208,51 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
  */
 async function getEmotionForMessage({ userMessage, recentMessages, language }) {
   const hasHistory = Array.isArray(recentMessages) && recentMessages.length > 0;
+  const raw = String(userMessage || '');
+  const text = raw.trim();
+  const lower = text.toLowerCase();
+  const approxLength = text.length;
 
+  const cultureTag =
+    language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
+
+  // Very short acknowledgements / fillers: skip LLM and keep things neutral.
+  if (approxLength > 0 && approxLength <= 18) {
+    const trivialRe = /^(ok(ay)?|k|kk|thx|thanks|thank you|lol|haha|hehe|hmm|yep|yeah|yes|no|nah|sure|fine|great|cool|nice)$/i;
+    if (trivialRe.test(text)) {
+      return {
+        primaryEmotion: 'NEUTRAL',
+        intensity: 1,
+        confidence: 0.65,
+        cultureTag,
+        notes: 'Heuristic trivial/acknowledgement message (skipped LLM).',
+        severityLevel: 'CASUAL',
+      };
+    }
+  }
+
+  // High-risk / clearly negative keywords: always use the LLM-based classifier,
+  // regardless of length, so we keep severity-level nuance.
+  const negativeOrRiskRe =
+    /(suicid|kill myself|kill my self|end my life|self[-\s]?harm|cutting myself|cut myself|i want to die|i wanna die|don't want to live|dont want to live|life is pointless|worthless|sad|depress|cry|alone|lonely|hurt|anxious|anxiety|worried|worry|panic|nervous|afraid|scared|angry|mad|furious|rage|irritated|pissed|stress|stressed|overwhelmed|burnout|burned out|tired of)/i;
+
+  // First turn: keep the existing lightweight heuristic instead of an LLM call.
   if (!hasHistory) {
-    const text = String(userMessage || '').toLowerCase();
-    const cultureTag =
-      language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
-
+    const approxFirst = lower.length;
     let primaryEmotion = 'NEUTRAL';
-    if (/(sad|depress|cry|alone|lonely|hurt)/.test(text)) {
+    if (/(sad|depress|cry|alone|lonely|hurt)/.test(lower)) {
       primaryEmotion = 'SAD';
-    } else if (/(anxious|anxiety|worried|worry|panic|nervous|afraid|scared)/.test(text)) {
+    } else if (/(anxious|anxiety|worried|worry|panic|nervous|afraid|scared)/.test(lower)) {
       primaryEmotion = 'ANXIOUS';
-    } else if (/(angry|mad|furious|rage|irritated|pissed)/.test(text)) {
+    } else if (/(angry|mad|furious|rage|irritated|pissed)/.test(lower)) {
       primaryEmotion = 'ANGRY';
-    } else if (/(stress|stressed|overwhelmed|burnout|burned out|tired of)/.test(text)) {
+    } else if (/(stress|stressed|overwhelmed|burnout|burned out|tired of)/.test(lower)) {
       primaryEmotion = 'STRESSED';
-    } else if (/(grateful|thankful|hopeful|optimistic)/.test(text)) {
+    } else if (/(grateful|thankful|hopeful|optimistic)/.test(lower)) {
       primaryEmotion = 'HOPEFUL';
     }
 
-    const approxLength = text.length;
-    const lengthFactor = Math.max(0, Math.min(approxLength / 80, 4));
+    const lengthFactor = Math.max(0, Math.min(approxFirst / 80, 4));
     const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
 
     return {
@@ -239,7 +265,31 @@ async function getEmotionForMessage({ userMessage, recentMessages, language }) {
     };
   }
 
-  return classifyEmotion({ userMessage, recentMessages, language });
+  // For later turns: if there are no obviously negative / risky keywords and the
+  // message is quite short, keep a cheap heuristic instead of an LLM call.
+  if (!negativeOrRiskRe.test(lower) && approxLength > 0 && approxLength < 80) {
+    const hasPositive = /(grateful|thankful|hopeful|optimistic|love|appreciate|relieved)/.test(
+      lower
+    );
+
+    const lengthFactor = Math.max(0, Math.min(approxLength / 80, 4));
+    const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
+
+    return {
+      primaryEmotion: hasPositive ? 'HOPEFUL' : 'NEUTRAL',
+      intensity,
+      confidence: 0.55,
+      cultureTag,
+      notes: 'Heuristic short non-negative turn (skipped LLM).',
+      severityLevel: 'CASUAL',
+    };
+  }
+
+  // Fallback: full LLM-based classification with a compact history window.
+  const trimmedHistory = Array.isArray(recentMessages)
+    ? recentMessages.slice(-5)
+    : [];
+  return classifyEmotion({ userMessage: text, recentMessages: trimmedHistory, language });
 }
 
 /**
@@ -593,13 +643,22 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
   try {
     const tStart = Date.now();
 
+    let classifyMs = 0;
+    let snapshotMs = 0;
+    let triggersMs = 0;
+    let phase4Ms = 0;
+    let stateUpdateMs = 0;
+    let stateReadMs = 0;
+
     const tClassStart = Date.now();
     const emo = await getEmotionForMessage({ userMessage, recentMessages, language });
-    const classifyMs = Date.now() - tClassStart;
+    classifyMs = Date.now() - tClassStart;
 
     let convoState = null;
     try {
+      const tStateUpdateStart = Date.now();
       convoState = await updateConversationEmotionState(conversationId, emo);
+      stateUpdateMs = Date.now() - tStateUpdateStart;
     } catch (_) {}
 
     let longTermSnapshot = null;
@@ -608,20 +667,27 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
 
     await Promise.all([
       (async () => {
+        const tSnapStart = Date.now();
         try {
           longTermSnapshot = await getLongTermEmotionalSnapshot({ userId });
         } catch (_) {
           longTermSnapshot = null;
+        } finally {
+          snapshotMs = Date.now() - tSnapStart;
         }
       })(),
       (async () => {
+        const tTrigStart = Date.now();
         try {
           triggers = await detectEmotionalTriggers({ userId });
         } catch (_) {
           triggers = [];
+        } finally {
+          triggersMs = Date.now() - tTrigStart;
         }
       })(),
       (async () => {
+        const tPhase4Start = Date.now();
         try {
           phase4Block = await buildPhase4MemoryBlock({
             userId,
@@ -631,21 +697,27 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
           });
         } catch (_) {
           phase4Block = '';
+        } finally {
+          phase4Ms = Date.now() - tPhase4Start;
         }
       })(),
     ]);
 
     let flowState = null;
     try {
+      const tStateMachineStart = Date.now();
       await updateConversationStateMachine({
         conversationId,
         emotion: emo,
         longTermSnapshot,
         severityLevel: emo.severityLevel || 'CASUAL',
       });
+      stateUpdateMs += Date.now() - tStateMachineStart;
     } catch (_) {}
     try {
+      const tStateReadStart = Date.now();
       flowState = await getConversationState({ conversationId });
+      stateReadMs = Date.now() - tStateReadStart;
     } catch (_) {
       flowState = { currentState: 'NEUTRAL' };
     }
@@ -698,16 +770,20 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       : systemPromptBase;
 
     const totalMs = Date.now() - tStart;
-    console.log(
-      '[EmoEngine] convoId=%s userId=%s classifyMs=%d totalMs=%d phase4BlockLen=%d hasConvoState=%s hasProfileSnapshot=%s',
-      conversationId == null ? 'null' : String(conversationId),
-      userId == null ? 'null' : String(userId),
+    console.log('[EmoEngine][Timing]', {
+      userId: userId == null ? 'null' : String(userId),
+      conversationId: conversationId == null ? 'null' : String(conversationId),
       classifyMs,
+      snapshotMs,
+      triggersMs,
+      phase4Ms,
+      stateUpdateMs,
+      stateReadMs,
       totalMs,
-      typeof phase4Block === 'string' ? phase4Block.length : 0,
-      !!convoState,
-      !!longTermSnapshot
-    );
+      phase4BlockLen: typeof phase4Block === 'string' ? phase4Block.length : 0,
+      hasConvoState: !!convoState,
+      hasProfileSnapshot: !!longTermSnapshot,
+    });
 
     return {
       emo,
@@ -718,6 +794,15 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       longTermSnapshot,
       triggers,
       personaCfg: personas[personaId] || defaultPersona,
+      timings: {
+        classifyMs,
+        snapshotMs,
+        triggersMs,
+        phase4Ms,
+        stateUpdateMs,
+        stateReadMs,
+        totalMs,
+      },
     };
   } catch (e) {
     // Fallback: neutral prompt using persona only
