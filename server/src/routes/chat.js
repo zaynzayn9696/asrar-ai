@@ -530,10 +530,17 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         .json({ message: 'OPENAI_API_KEY is not configured on the server' });
     }
 
-    const dbUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const userId = req.user.id;
+    const [dbUser, usageInitial] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      ensureUsage(userId),
+    ]);
+
     if (!dbUser) {
       return res.status(401).json({ message: 'User not found' });
     }
+
+    let usage = usageInitial;
 
     const { dailyLimit, monthlyLimit, freeCharacterId, isTester } = getPlanLimits(
       dbUser.email,
@@ -543,10 +550,6 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro'
     );
     const isFreePlanUser = !isPremiumUser && !isTester;
-    const userId = dbUser.id;
-
-    // Ensure usage row exists and reset any expired daily/monthly windows.
-    let usage = await ensureUsage(dbUser.id);
 
     // Premium users: enforce monthly quota for voice.
     if (!isTester && isPremiumUser) {
@@ -921,8 +924,6 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
   }
 });
 
-// ------------------------- TEXT CHAT ROUTE ------------------------------
-
 router.post('/message', async (req, res) => {
   try {
     if (!process.env.OPENAI_API_KEY) {
@@ -931,7 +932,12 @@ router.post('/message', async (req, res) => {
         .json({ message: 'OPENAI_API_KEY is not configured on the server' });
     }
 
-    const dbUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const userId = req.user.id;
+    const [dbUser, usageInitial] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }),
+      ensureUsage(userId),
+    ]);
+
     if (!dbUser) {
       return res.status(401).json({ message: 'User not found' });
     }
@@ -944,9 +950,10 @@ router.post('/message', async (req, res) => {
       dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro'
     );
     const isFreePlanUser = !isPremiumUser && !isTester;
-    const userId = dbUser.id;
+    let usage = usageInitial;
 
     const body = req.body || {};
+
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
     const characterId = body.characterId || 'daloua';
     const lang = body.lang || 'en';
@@ -969,9 +976,8 @@ router.post('/message', async (req, res) => {
       return res.status(400).json({ message: 'content is required' });
     }
 
-    let usage = await ensureUsage(userId);
-
     // Quota gating: premium monthly, free daily (24h window)
+
     if (!isTester && isPremiumUser) {
       const used = usage.monthlyCount || 0;
       const limit = monthlyLimit || 3000;
@@ -1453,6 +1459,11 @@ router.post('/message', async (req, res) => {
       backgroundJobQueued,
     });
 
+    const wantsStream =
+      body.stream === true ||
+      body.stream === 'true' ||
+      (req.query && req.query.stream === '1');
+
     const responsePayload = {
       reply: aiMessage,
       usage: buildUsageSummary(dbUser, usage),
@@ -1489,6 +1500,36 @@ router.post('/message', async (req, res) => {
         responsePayload.resetAt = resetAtDate.toISOString();
         responsePayload.resetInSeconds = resetInSeconds;
       }
+    }
+
+    if (wantsStream) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+
+      const text = aiMessage || '';
+      const chunkSize = 120;
+      for (let i = 0; i < text.length; i += chunkSize) {
+        const chunk = text.slice(i, i + chunkSize);
+        if (chunk) {
+          res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
+        }
+      }
+
+      const donePayload = {
+        type: 'done',
+        reply: responsePayload.reply,
+        usage: responsePayload.usage,
+      };
+      if (responsePayload.dailyLimitReached) {
+        donePayload.dailyLimitReached = responsePayload.dailyLimitReached;
+        donePayload.limitType = responsePayload.limitType;
+        donePayload.resetAt = responsePayload.resetAt;
+        donePayload.resetInSeconds = responsePayload.resetInSeconds;
+      }
+
+      res.write(`data: ${JSON.stringify(donePayload)}\n\n`);
+      return res.end();
     }
 
     return res.json(responsePayload);

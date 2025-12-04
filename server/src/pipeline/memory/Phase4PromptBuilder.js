@@ -198,7 +198,7 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         typeof topicProfile[key]?.score === 'number' ? topicProfile[key].score : 0,
     }));
     topicEntries.sort((a, b) => b.score - a.score);
-    const topTopics = topicEntries.slice(0, 3).map((t) => t.topic);
+    const topTopics = topicEntries.slice(0, 2).map((t) => t.topic);
 
     const personaAffinity = ensureObject(profile.personaAffinity);
     const personaStats = personaId ? personaAffinity[personaId] || null : null;
@@ -216,10 +216,6 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     if (topTopics.length) {
       longLines.push(
         `Common recurring topics over time: ${topTopics.join(', ')}.`
-      );
-      // Nudge model to stay aware of strong themes without over-focusing.
-      longLines.push(
-        'When it fits naturally, you may lightly connect your guidance to these recurring areas, without forcing the conversation back to them.'
       );
     }
     if (volatility != null) {
@@ -295,7 +291,7 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     ? 'Additional internal context from the memory kernel (do not expose as analytics to the user):'
     : 'Additional internal context from the memory kernel (do not expose as analytics to the user):';
 
-  return [
+  let block = [
     header,
     '',
     ...lines,
@@ -303,6 +299,13 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     'Guidelines for using this context:',
     ...safetyHints,
   ].join('\n');
+
+  const MAX_PHASE4_LENGTH = 1200;
+  if (block.length > MAX_PHASE4_LENGTH) {
+    block = block.slice(0, MAX_PHASE4_LENGTH);
+  }
+
+  return block;
 }
 
 module.exports = {

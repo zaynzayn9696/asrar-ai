@@ -131,18 +131,15 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
 
   // Build a compact context summary to keep token usage reasonable
   const recentSummary = recentMessages
-    .slice(-8)
-    .map((m) => `${m.role === 'assistant' ? 'AI' : 'User'}: ${String(m.content || '').slice(0, 200)}`)
+    .slice(-5)
+    .map((m) => `${m.role === 'assistant' ? 'AI' : 'User'}: ${String(m.content || '').slice(0, 160)}`)
     .join('\n');
 
   const sys = [
-    'You are an emotion classification engine for a mental-wellbeing chat app called Asrar.',
-    'Output STRICT JSON only with these keys: primaryEmotion, intensity, confidence, cultureTag, notes, severityLevel.',
-    'Do not include explanations outside JSON. No markdown.',
-    'Use one of the following for primaryEmotion: NEUTRAL, SAD, ANXIOUS, ANGRY, LONELY, STRESSED, HOPEFUL, GRATEFUL.',
-    'intensity must be an integer 1-5. confidence is a float 0-1.',
-    'cultureTag must be one of: "ARABIC", "ENGLISH", "MIXED".',
-    'severityLevel must be one of: "CASUAL", "VENTING", "SUPPORT", "HIGH_RISK".',
+    'You are an emotion classifier for Asrar (mental wellbeing chat).',
+    'Return STRICT JSON only: {"primaryEmotion","intensity","confidence","cultureTag","notes","severityLevel"}.',
+    'primaryEmotion ∈ [NEUTRAL,SAD,ANXIOUS,ANGRY,LONELY,STRESSED,HOPEFUL,GRATEFUL]; intensity 1-5; confidence 0-1.',
+    'cultureTag ∈ ["ARABIC","ENGLISH","MIXED"]; severityLevel ∈ ["CASUAL","VENTING","SUPPORT","HIGH_RISK"].',
   ].join('\n');
 
   const user = [
@@ -151,14 +148,14 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
     recentSummary || '(no prior messages)',
     '',
     'Current user message:',
-    String(userMessage || '').slice(0, 1200),
+    String(userMessage || '').slice(0, 800),
   ].join('\n');
 
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0,
-      max_tokens: 128,
+      max_tokens: 96,
       messages: [
         { role: 'system', content: sys },
         { role: 'user', content: user },
