@@ -44,7 +44,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Sliding-window size for model context
 const MAX_CONTEXT_MESSAGES = parseInt(process.env.MAX_CONTEXT_MESSAGES || '20', 10);
-const FAST_CONTEXT_MESSAGES = 10;
+const FAST_CONTEXT_MESSAGES = 5;
 
 // Usage helpers
 function startOfToday() {

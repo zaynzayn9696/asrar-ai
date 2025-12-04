@@ -67,6 +67,8 @@ function decideEngineMode({ isPremiumUser, primaryEmotion, intensity, conversati
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+const personaStyleBlockCache = new Map();
+
 function getDialectGuidance(language, dialect) {
   const lang = String(language || '').toLowerCase();
 
@@ -129,8 +131,8 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
 
   // Build a compact context summary to keep token usage reasonable
   const recentSummary = recentMessages
-    .slice(-12)
-    .map((m) => `${m.role === 'assistant' ? 'AI' : 'User'}: ${String(m.content || '').slice(0, 280)}`)
+    .slice(-8)
+    .map((m) => `${m.role === 'assistant' ? 'AI' : 'User'}: ${String(m.content || '').slice(0, 200)}`)
     .join('\n');
 
   const sys = [
@@ -149,13 +151,14 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
     recentSummary || '(no prior messages)',
     '',
     'Current user message:',
-    String(userMessage || '').slice(0, 2000),
+    String(userMessage || '').slice(0, 1200),
   ].join('\n');
 
   try {
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0,
+      max_tokens: 128,
       messages: [
         { role: 'system', content: sys },
         { role: 'user', content: user },
@@ -410,18 +413,23 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       : `Sensitivity note: be especially gentle around topics like: ${top}.`;
   }
 
-  const personaStyleBlock = [
-    isArabic ? 'وصف الدور للشخصية:' : 'Persona role description:',
-    personaCfg.roleDescription,
-    isArabic ? 'الأسلوب (للمرجع الداخلي):' : 'Style (internal guidance):',
-    `- warmth: ${personaCfg.style?.warmth || 'medium'}`,
-    `- humor: ${personaCfg.style?.humor || 'low'}`,
-    `- directness: ${personaCfg.style?.directness || 'medium'}`,
-    `- energy: ${personaCfg.style?.energy || 'calm'}`,
-    personaCfg.specialties && personaCfg.specialties.length
-      ? (isArabic ? `مجالات تركيز: ${personaCfg.specialties.join(', ')}` : `Specialties: ${personaCfg.specialties.join(', ')}`)
-      : '',
-  ].filter(Boolean).join('\n');
+  const personaStyleKey = `${personaId || 'default'}|${isArabic ? 'ar' : 'en'}`;
+  let personaStyleBlock = personaStyleBlockCache.get(personaStyleKey);
+  if (!personaStyleBlock) {
+    personaStyleBlock = [
+      isArabic ? 'وصف الدور للشخصية:' : 'Persona role description:',
+      personaCfg.roleDescription,
+      isArabic ? 'الأسلوب (للمرجع الداخلي):' : 'Style (internal guidance):',
+      `- warmth: ${personaCfg.style?.warmth || 'medium'}`,
+      `- humor: ${personaCfg.style?.humor || 'low'}`,
+      `- directness: ${personaCfg.style?.directness || 'medium'}`,
+      `- energy: ${personaCfg.style?.energy || 'calm'}`,
+      personaCfg.specialties && personaCfg.specialties.length
+        ? (isArabic ? `مجالات تركيز: ${personaCfg.specialties.join(', ')}` : `Specialties: ${personaCfg.specialties.join(', ')}`)
+        : '',
+    ].filter(Boolean).join('\n');
+    personaStyleBlockCache.set(personaStyleKey, personaStyleBlock);
+  }
 
   // Short long-term hint line
   let longTermHint = '';
@@ -592,38 +600,90 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     const emo = await getEmotionForMessage({ userMessage, recentMessages, language });
     const classifyMs = Date.now() - tClassStart;
 
-    // Only update conversation state if we have a conversationId
     let convoState = null;
     try {
       convoState = await updateConversationEmotionState(conversationId, emo);
     } catch (_) {}
 
-    // Phase 2: Long-term intelligence (best-effort; failures are non-fatal)
-    // Log timeline event if meaningful
-    try { await logEmotionalTimelineEvent({ userId, conversationId, emotion: emo }); } catch (_) {}
-    // Update aggregated user profile
-    try { await updateUserEmotionProfile({ userId }); } catch (_) {}
-    // Snapshot and triggers (best-effort)
     let longTermSnapshot = null;
-    try { longTermSnapshot = await getLongTermEmotionalSnapshot({ userId }); } catch (_) {}
     let triggers = [];
-    try { triggers = await detectEmotionalTriggers({ userId }); } catch (_) { triggers = []; }
-    // Lightweight pattern extraction over long-term profile (best-effort)
-    try { await updateEmotionalPatterns({ userId }); } catch (_) {}
+    let phase4Block = '';
 
-    // Phase 3: Emotional Pattern table (best-effort, non-blocking)
+    await Promise.all([
+      (async () => {
+        try {
+          longTermSnapshot = await getLongTermEmotionalSnapshot({ userId });
+        } catch (_) {
+          longTermSnapshot = null;
+        }
+      })(),
+      (async () => {
+        try {
+          triggers = await detectEmotionalTriggers({ userId });
+        } catch (_) {
+          triggers = [];
+        }
+      })(),
+      (async () => {
+        try {
+          phase4Block = await buildPhase4MemoryBlock({
+            userId,
+            conversationId,
+            language,
+            personaId: personaId || 'hana',
+          });
+        } catch (_) {
+          phase4Block = '';
+        }
+      })(),
+    ]);
+
+    let flowState = null;
     try {
-      await updateEmotionalPatterns({
-        userId,
-        snapshot: longTermSnapshot,
-        triggers,
+      await updateConversationStateMachine({
+        conversationId,
+        emotion: emo,
+        longTermSnapshot,
+        severityLevel: emo.severityLevel || 'CASUAL',
       });
     } catch (_) {}
+    try {
+      flowState = await getConversationState({ conversationId });
+    } catch (_) {
+      flowState = { currentState: 'NEUTRAL' };
+    }
 
-    // Phase 3: update and fetch conversation state machine
-    let flowState = null;
-    try { await updateConversationStateMachine({ conversationId, emotion: emo, longTermSnapshot, severityLevel: emo.severityLevel || 'CASUAL' }); } catch (_) {}
-    try { flowState = await getConversationState({ conversationId }); } catch (_) { flowState = { currentState: 'NEUTRAL' }; }
+    try {
+      const bgUserId = userId;
+      const bgConversationId = conversationId;
+      const bgEmotion = emo;
+      const bgSnapshot = longTermSnapshot;
+      const bgTriggers = triggers;
+
+      setImmediate(() => {
+        (async () => {
+          try {
+            await logEmotionalTimelineEvent({
+              userId: bgUserId,
+              conversationId: bgConversationId,
+              emotion: bgEmotion,
+            });
+          } catch (_) {}
+
+          try {
+            await updateUserEmotionProfile({ userId: bgUserId });
+          } catch (_) {}
+
+          try {
+            await updateEmotionalPatterns({
+              userId: bgUserId,
+              snapshot: bgSnapshot,
+              triggers: bgTriggers,
+            });
+          } catch (_) {}
+        })().catch(() => {});
+      });
+    } catch (_) {}
 
     let systemPromptBase = buildSystemPrompt({
       personaText,
@@ -635,19 +695,6 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       triggers,
       dialect,
     });
-
-    // Phase 4: memory-aware additive block (short + long-term kernel)
-    let phase4Block = '';
-    try {
-      phase4Block = await buildPhase4MemoryBlock({
-        userId,
-        conversationId,
-        language,
-        personaId: personaId || 'hana',
-      });
-    } catch (_) {
-      phase4Block = '';
-    }
 
     const systemPrompt = phase4Block
       ? `${systemPromptBase}\n\n${phase4Block}`
