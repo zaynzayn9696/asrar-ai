@@ -1434,7 +1434,9 @@ export default function ChatPage() {
               id: lastId + 2,
               from: "ai",
               type: "voice",
-              text: "", // do not render text for voice replies
+              // Hide text when we have audio, but if TTS fails and audio is null,
+              // fall back to showing the AI text instead of an empty bubble.
+              text: aiAudioBase64 ? "" : aiText,
               createdAt: nowIso,
               audioBase64: aiAudioBase64,
               audioMimeType: aiAudioMime,
@@ -1584,59 +1586,65 @@ export default function ChatPage() {
               {null}
             </header>
 
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`asrar-chat-row asrar-chat-row--${
-                  msg.from === "ai"
-                    ? "assistant"
-                    : msg.from === "user"
-                    ? "user"
-                    : "system"
-                }`}
-              >
-                <div className="asrar-chat-bubble">
-                  {/* AI voice replies: bubble only, no text */}
-                  {msg.from === "ai" && msg.audioBase64 ? (
-                    <VoiceMessageBubble
-                      audioBase64={msg.audioBase64}
-                      from={msg.from}
-                      isArabic={isArabicConversation}
-                      mimeType={msg.audioMimeType}
-                    />
-                  ) : (
-                    <>
-                      {/* User messages: show transcript text */}
+            {messages.map((msg) => {
+              const isAiVoice = msg.from === "ai" && !!msg.audioBase64;
+              const isUserVoice = msg.from === "user" && !!msg.audioBase64;
+              const isTextOnly = !msg.audioBase64; // any message without audio uses text bubble
+
+              return (
+                <div
+                  key={msg.id}
+                  className={`asrar-chat-row asrar-chat-row--${
+                    msg.from === "ai"
+                      ? "assistant"
+                      : msg.from === "user"
+                      ? "user"
+                      : "system"
+                  }`}
+                >
+                  <div className="asrar-chat-bubble">
+                    {/* AI voice replies: voice bubble only */}
+                    {isAiVoice && (
+                      <VoiceMessageBubble
+                        audioBase64={msg.audioBase64}
+                        from={msg.from}
+                        isArabic={isArabicConversation}
+                        mimeType={msg.audioMimeType}
+                      />
+                    )}
+
+                    {/* User voice messages: voice bubble only (no transcript text) */}
+                    {isUserVoice && !isAiVoice && (
+                      <VoiceMessageBubble
+                        audioBase64={msg.audioBase64}
+                        from={msg.from}
+                        isArabic={isArabicConversation}
+                        mimeType={msg.audioMimeType}
+                      />
+                    )}
+
+                    {/* Any message without audio (user or AI or system): normal text bubble */}
+                    {isTextOnly && (
                       <span
                         className="asrar-chat-text"
                         dir={isArabicConversation ? "rtl" : "ltr"}
                       >
                         {msg.text}
                       </span>
-                      {/* User voice messages: also show a voice bubble under the text */}
-                      {msg.from === "user" && msg.audioBase64 && (
-                        <div className="asrar-chat-user-voice-wrap">
-                          <VoiceMessageBubble
-                            audioBase64={msg.audioBase64}
-                            from={msg.from}
-                            isArabic={isArabicConversation}
-                            mimeType={msg.audioMimeType}
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
-                  {msg.createdAt && (
-                    <div className="asrar-chat-meta">
-                      {new Date(msg.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  )}
+                    )}
+
+                    {msg.createdAt && (
+                      <div className="asrar-chat-meta">
+                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <button
