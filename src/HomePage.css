@@ -416,6 +416,7 @@ body,
   background: rgba(7, 12, 21, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.06);
   overflow: hidden;
+  margin:0px auto;
 }
 
 .asrar-lang-toggle button {
@@ -711,6 +712,7 @@ body,
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(188, 215, 230, 0.7);
+  margin:0px auto;
 }
 
 .asrar-mood-capsule-label {
