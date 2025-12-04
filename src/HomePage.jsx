@@ -964,6 +964,13 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* New Headline */}
+            <h2 className="asrar-hero-tagline">
+              {isAr 
+                ? "الذكاء الاصطناعي العاطفي الأول للشرق الأوسط بخصوصية تامة" 
+                : "The #1 Fully Private Emotional AI for the Middle East."}
+            </h2>
+
             {/* Centered Copy */}
             <div className="asrar-hero-copy-centered">
               <h1 className="asrar-hero-title-centered">
@@ -1067,10 +1074,10 @@ export default function HomePage() {
             {isAr ? (
               <div className="asrar-engine-inner">
                 <h2 className="asrar-section-title">
-                  {"أول ذكاء اصطناعي خاص بالكامل في الشرق الأوسط"}
+                  {"مدعوم بمحرك المشاعر المتقدم من أسرار — الإصدار السادس"}
                 </h2>
                 <p className="asrar-section-subtitle">
-                  {"طبقة  الذكاء العاطفي V6"}
+                  {"ذكاء اصطناعي يفهم المشاعر، وليس فقط اللغة."}
                 </p>
 
                 <div className="asrar-engine-grid">
@@ -1105,10 +1112,10 @@ export default function HomePage() {
             ) : (
               <div className="asrar-engine-inner">
                 <h2 className="asrar-section-title">
-                  The #1 Fully Private Emotional AI for the Middle East.
+                  {"Powered by the Asrar Emotional Engine V6"}
                 </h2>
                 <p className="asrar-section-subtitle">
-                  Deep Emotional Engine V6              
+                  {"AI that understands emotion, not just language."}
                 </p>
 
                 <div className="asrar-engine-grid">
@@ -1442,7 +1449,7 @@ export default function HomePage() {
                   <li>
                     {isAr
                       ? "محرك المشاعر العميق V6 (إرشاد أعمق وخطوات عملية)"
-                      : "Deep Emotional Engine V6 for longer, structured guidance."}
+                      : "Powered by the Asrar Emotional Engine V6 for longer, structured guidance."}
                   </li>
                   <li>
   {isAr
