@@ -510,7 +510,7 @@ export default function Dashboard() {
               >
                 ‹
               </button>
-              <div className="asrar-companions-slider">
+              <div className="asrar-companions-slider" dir="ltr">
                 <div
                   className="asrar-companions-slider-track"
                   style={{
