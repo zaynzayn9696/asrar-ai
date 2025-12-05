@@ -109,7 +109,7 @@ export default function Billing() {
     : ["1 core character", "5 messages/day", "Basic support"];
   const upgradeCtaText = isPremium
     ? (isAr ? "أنت على بريميوم" : "You’re on Premium")
-    : (isAr ? "الترقية إلى بريميوم — $9.85 شهرياً" : "Upgrade to Premium — $4.99/month");
+    : (isAr ? "الترقية إلى بريميوم — $9.85 شهرياً" : "Upgrade to Premium — $9.85/month");
 
   const handleLangSwitch = (newLang) => {
     setLang(newLang);

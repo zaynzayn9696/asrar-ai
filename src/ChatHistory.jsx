@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
+import { API_BASE } from "./apiBase";
 import CharacterCarousel from "./CharacterCarousel";
 
 import abuZainAvatar from "./assets/abu_zain_2.png";
@@ -112,25 +113,114 @@ export default function ChatHistory() {
       return;
     }
 
-    try {
-      const map = {};
-      CHARACTERS.forEach((c) => {
-        const storageKey = `asrar-chat-history-${userId}-${c.id}`;
-        const raw = localStorage.getItem(storageKey);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed) || !parsed.length) return;
-        map[c.id] = { messages: parsed };
-      });
-      console.log("[ChatHistory] hydrated history", {
-        userId,
-        characters: Object.keys(map),
-      });
-      setHistoryMap(map);
-    } catch (e) {
-      console.error("[ChatHistory] Failed to load chat history", e);
-      setHistoryMap({});
+    const saveHistoryEnabled = user.saveHistoryEnabled !== false;
+
+    const loadFromLocal = () => {
+      try {
+        const map = {};
+        CHARACTERS.forEach((c) => {
+          const storageKey = `asrar-chat-history-${userId}-${c.id}`;
+          const raw = localStorage.getItem(storageKey);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed) || !parsed.length) return;
+          map[c.id] = { messages: parsed };
+        });
+        console.log("[ChatHistory] hydrated history from localStorage", {
+          userId,
+          characters: Object.keys(map),
+        });
+        setHistoryMap(map);
+      } catch (e) {
+        console.error("[ChatHistory] Failed to load chat history from localStorage", e);
+        setHistoryMap({});
+      }
+    };
+
+    // If the user has disabled server-side history, stick to per-device local history.
+    if (!saveHistoryEnabled) {
+      loadFromLocal();
+      return;
     }
+
+    const loadFromServer = async () => {
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        const headers = token
+          ? {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            }
+          : {
+              "Content-Type": "application/json",
+            };
+
+        const res = await fetch(`${API_BASE}/api/chat/conversations`, {
+          method: "GET",
+          credentials: "include",
+          headers,
+        });
+
+        if (!res.ok) {
+          console.error("[ChatHistory] conversations list failed", res.status);
+          // On server error, fall back to localStorage-based history.
+          loadFromLocal();
+          return;
+        }
+
+        let list = [];
+        try {
+          list = await res.json();
+        } catch (_) {
+          list = [];
+        }
+
+        if (!Array.isArray(list) || !list.length) {
+          setHistoryMap({});
+          return;
+        }
+
+        // API returns conversations ordered by updatedAt desc. Keep the first per character.
+        const latestByChar = {};
+        list.forEach((conv) => {
+          if (!conv || !conv.characterId) return;
+          const cid = String(conv.characterId);
+          if (!latestByChar[cid]) {
+            latestByChar[cid] = conv;
+          }
+        });
+
+        const map = {};
+        CHARACTERS.forEach((c) => {
+          const conv = latestByChar[c.id];
+          if (!conv) return;
+          const text = (conv.firstUserMessage || "").trim();
+          if (!text) return;
+          map[c.id] = {
+            messages: [
+              {
+                from: "user",
+                text,
+                createdAt:
+                  conv.updatedAt || conv.createdAt || new Date().toISOString(),
+              },
+            ],
+          };
+        });
+
+        console.log("[ChatHistory] hydrated history from server", {
+          userId,
+          characters: Object.keys(map),
+        });
+        setHistoryMap(map);
+      } catch (e) {
+        console.error("[ChatHistory] Failed to load chat history from server", e);
+        // On error, fall back to local history so the page still works per-device.
+        loadFromLocal();
+      }
+    };
+
+    loadFromServer();
   }, [user]);
 
   useEffect(() => {
