@@ -178,6 +178,16 @@
   transform: translateX(16px);
 }
 
+/* RTL support for toggle */
+[dir="rtl"] .asrar-toggle--on .asrar-toggle-thumb {
+  transform: translateX(-16px);
+}
+
+/* Ensure the toggle container maintains its layout in RTL */
+[dir="rtl"] .asrar-toggle {
+  direction: ltr; /* Keep the inner toggle LTR while the page is RTL */
+}
+
 .asrar-toggle--off {
   opacity: 0.85;
 }
