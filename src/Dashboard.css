@@ -60,11 +60,6 @@
 
 /* HEADER */
 .asrar-dash-header {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -76,6 +71,14 @@
   background: rgba(5, 8, 11, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.asrar-dashboard-page .asrar-dash-header {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
 /* Adjust layout for medium screens */
@@ -1511,7 +1514,7 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
 
 /* Keep the logged-in header following the viewport on mobile */
 @media (max-width: 900px) {
-  .asrar-dash-header {
+  .asrar-dashboard-page .asrar-dash-header {
     position: fixed;
     top: 0;
     left: 0;
@@ -1519,7 +1522,7 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
     z-index: 85;
   }
 
-  .asrar-dash-page {
+  .asrar-dashboard-page {
     padding-top: 0;
   }
 
@@ -1532,7 +1535,7 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
 }
 
 @media (max-width: 600px) {
-  .asrar-dash-header {
+  .asrar-dashboard-page .asrar-dash-header {
     position: sticky;
     top: 0;
     flex-direction: column;
