@@ -1239,6 +1239,44 @@ export default function HomePage() {
                             }
                           >
                             <img src={companion.avatar} alt={isAr ? companion.nameAr : companion.nameEn} />
+                            
+                            {/* Mobile Pagination - Moved under the character image */}
+                            <div className="asrar-companions-pagination-wrapper asrar-companions-pagination-mobile">
+                              <button
+                                type="button"
+                                className="asrar-companions-mobile-arrow asrar-companions-mobile-arrow--prev"
+                                onClick={goToPrevCompanion}
+                                aria-label={isAr ? "الرفيق السابق" : "Previous companion"}
+                              >
+                                ‹
+                              </button>
+
+                              <div className="asrar-companions-pagination">
+                                {CHARACTERS.map((_, idx) => (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    className={
+                                      idx === companionCarouselIndex
+                                        ? "asrar-companion-dot asrar-companion-dot--active"
+                                        : "asrar-companion-dot"
+                                    }
+                                    onClick={() => goToCompanion(idx)}
+                                    aria-label={isAr ? `عرض ${CHARACTERS[idx].nameAr}` : `Show ${CHARACTERS[idx].nameEn}`}
+                                    aria-current={idx === companionCarouselIndex ? "true" : "false"}
+                                  />
+                                ))}
+                              </div>
+
+                              <button
+                                type="button"
+                                className="asrar-companions-mobile-arrow asrar-companions-mobile-arrow--next"
+                                onClick={goToNextCompanion}
+                                aria-label={isAr ? "الرفيق التالي" : "Next companion"}
+                              >
+                                ›
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1257,8 +1295,8 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* Pagination Dots + Mobile Bottom Arrows */}
-            <div className="asrar-companions-pagination-wrapper">
+            {/* Desktop Pagination - Hidden on mobile */}
+            <div className="asrar-companions-pagination-wrapper asrar-companions-pagination-desktop">
               <button
                 type="button"
                 className="asrar-companions-mobile-arrow asrar-companions-mobile-arrow--prev"

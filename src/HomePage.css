@@ -3901,6 +3901,62 @@ display:none;
 
 /* Mobile responsive */
 @media (max-width: 900px) {
+  /* Hide desktop pagination on mobile */
+  .asrar-companions-pagination-desktop {
+    display: none !important;
+  }
+  
+  /* Show mobile pagination */
+  .asrar-companions-pagination-mobile {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    position: absolute;
+    inset: 0;
+    padding: 0 0.75rem;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    z-index: 10;
+  }
+  
+  .asrar-companions-pagination-mobile .asrar-companions-pagination {
+    position: absolute;
+    left: 50%;
+    bottom: 0.75rem;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .asrar-companions-mobile-arrow--prev {
+    margin-left: -2.4rem;
+  }
+
+  .asrar-companions-mobile-arrow--next {
+    margin-right: -2.4rem;
+  }
+  
+  /* Remove background from cards on mobile */
+  .feature,
+  .step,
+  .asrar-engine-card,
+  .asrar-trust-item,
+  .asrar-contact-card,
+  .pricing-card,
+  .asrar-pricing-shell,
+  .asrar-pricing-card,
+  .asrar-companions-shell,
+  .asrar-chat-phone,
+  .asrar-companions-header {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+  
   .asrar-companions-section {
     padding: 40px 20px;
   }
@@ -4055,8 +4111,9 @@ display:none;
 @media (max-width: 900px) {
   .asrar-companion-hero-image,
   .asrar-companion-hero-image img {
-    max-height: 220px;
+    max-height: 290px;
   }
+ 
 }
 
 @media (max-width: 600px) {
@@ -4458,6 +4515,21 @@ display:none;
     radial-gradient(circle at top, rgba(24, 209, 218, 0.12) 0%, transparent 55%),
     var(--asrar-surface-main) !important;
   border-color: rgba(24, 209, 218, 0.22) !important;
+}
+@media (max-width: 900px){
+  .feature,
+.step,
+.asrar-engine-card,
+.asrar-trust-item,
+.asrar-contact-card,
+.pricing-card,
+.asrar-pricing-shell,
+.asrar-pricing-card,
+.asrar-companions-shell,
+.asrar-chat-phone {
+  background: none !important;
+  border-color: rgba(24, 209, 218, 0.22) !important;
+}
 }
 
 /* Pro / accent cards keep their stronger glow but same base */
