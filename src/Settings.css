@@ -154,9 +154,16 @@
     border-color 140ms ease,
     box-shadow 140ms ease,
     opacity 120ms ease;
+  /* Ensure proper RTL handling */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .asrar-toggle-thumb {
+  position: absolute;
+  left: 2px;
   width: 18px;
   height: 18px;
   border-radius: 999px;
@@ -164,8 +171,11 @@
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.35),
     0 8px 14px rgba(0, 0, 0, 0.9);
-  transform: translateX(0);
   transition: transform 160ms ease, background 140ms ease, box-shadow 160ms ease;
+  /* Ensure proper RTL handling */
+  transform: translateX(0);
+  -webkit-transform: translateX(0);
+  will-change: transform;
 }
 
 .asrar-toggle--on {
@@ -174,18 +184,35 @@
   box-shadow: 0 0 18px rgba(0, 240, 255, 0.55);
 }
 
+/* LTR (English) */
 .asrar-toggle--on .asrar-toggle-thumb {
-  transform: translateX(16px);
+  transform: translateX(18px);
+  -webkit-transform: translateX(18px);
 }
 
-/* RTL support for toggle */
+/* RTL (Arabic) */
+[dir="rtl"] .asrar-toggle-thumb {
+  left: auto;
+  right: 2px;
+  transform: translateX(0);
+  -webkit-transform: translateX(0);
+}
+
 [dir="rtl"] .asrar-toggle--on .asrar-toggle-thumb {
-  transform: translateX(-16px);
+  transform: translateX(-18px);
+  -webkit-transform: translateX(-18px);
 }
 
 /* Ensure the toggle container maintains its layout in RTL */
 [dir="rtl"] .asrar-toggle {
   direction: ltr; /* Keep the inner toggle LTR while the page is RTL */
+  transform: scaleX(-1); /* Flip the toggle container */
+}
+
+/* Flip the toggle content back to normal */
+[dir="rtl"] .asrar-toggle * {
+  transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
 }
 
 .asrar-toggle--off {
