@@ -5,9 +5,9 @@ import AsrarFooter from "./AsrarFooter";
 import CharacterCarousel from "./CharacterCarousel";
 
 import abuZainAvatar from "./assets/abu_zain_2.png";
-import hanaAvatar from "./assets/hana_2.png";
+import hanaAvatar from "./assets/nour_2.png";
 import rashidAvatar from "./assets/rashid_2.png";
-import nourAvatar from "./assets/nour_2.png";
+import nourAvatar from "./assets/hana_2.png";
 import farahAvatar from "./assets/farah_2.png";
 
 import { useNavigate, Navigate, useLocation } from "react-router-dom";
@@ -94,6 +94,10 @@ const DASHBOARD_TEXT = {
     chatHistory: "Chat history",
     yourCompanions: "Your Companions",
     selectCompanion: "Choose who you want to talk to today",
+    upgradeTitle: "Unlock all 5 companions",
+    upgradeSubtitle:
+      "Go Premium to talk to every character, keep longer history and remove limits.",
+    upgradeCta: "Upgrade to Premium",
     talkTo: "Talk to",
     dialectLabel: "Communication dialect",
     selectDialect: "Select a communication dialect",
@@ -105,6 +109,10 @@ const DASHBOARD_TEXT = {
     chatHistory: "سجل المحادثات",
     yourCompanions: "رفاقك",
     selectCompanion: "اختر من تريد التحدث معه اليوم",
+    upgradeTitle: "افتح كل الرفقاء الخمسة",
+    upgradeSubtitle:
+      "رقِّ حسابك إلى بريميوم لتتحدث مع جميع الشخصيات وتزيد حدود الرسائل وتحصل على تجربة كاملة.",
+    upgradeCta: "الترقية إلى بريميوم",
     talkTo: "تحدث مع",
     dialectLabel: "لهجة المحادثة",
     selectDialect: "اختر لهجة المحادثة",
@@ -467,6 +475,28 @@ export default function Dashboard() {
             <h2 className="asrar-companions-title">{t.yourCompanions}</h2>
             <p className="asrar-companions-subtitle">{t.selectCompanion}</p>
           </div>
+
+          {/* Upgrade teaser for free users */}
+          {isFreePlan && (
+            <div
+              className="asrar-dash-upgrade-teaser"
+              dir={isAr ? "rtl" : "ltr"}
+            >
+              <div className="asrar-dash-upgrade-teaser-text">
+                <h3 className="asrar-dash-upgrade-title">{t.upgradeTitle}</h3>
+                <p className="asrar-dash-upgrade-subtitle">
+                  {t.upgradeSubtitle}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="asrar-dash-upgrade-btn"
+                onClick={handleUpgrade}
+              >
+                {t.upgradeCta}
+              </button>
+            </div>
+          )}
 
           {/* DESKTOP: 5-COLUMN GRID */}
           {isDesktop && (

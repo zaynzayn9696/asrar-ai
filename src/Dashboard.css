@@ -19,6 +19,10 @@
   overflow-x: hidden;
 }
 
+.asrar-dashboard-page {
+  padding-top: 72px;
+}
+
 .asrar-dash-page > main,
 .asrar-dash-page > .asrar-dash-main,
 .asrar-dash-page > .asrar-dash-content {
@@ -74,11 +78,12 @@
 }
 
 .asrar-dashboard-page .asrar-dash-header {
-  position: -webkit-sticky;
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  z-index: 50;
+  height: 72px;
 }
 
 /* Adjust layout for medium screens */
@@ -420,6 +425,87 @@
   margin: 0;
   font-size: 14px;
   color: #a0a9b8;
+}
+
+/* Upgrade teaser for free users under companions */
+.asrar-dash-upgrade-teaser {
+  margin: 14px auto 26px;
+  max-width: 900px;
+  padding: 0.85rem 1.2rem;
+  border-radius: 18px;
+  border: 1px solid rgba(24, 209, 218, 0.45);
+  background: radial-gradient(
+    circle at top left,
+    rgba(24, 209, 218, 0.16),
+    rgba(3, 10, 24, 0.96)
+  );
+  box-shadow:
+    0 0 0 1px rgba(24, 209, 218, 0.25),
+    0 20px 50px rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.asrar-dash-upgrade-teaser-text {
+  flex: 1 1 auto;
+}
+
+.asrar-dash-upgrade-title {
+  margin: 0 0 4px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #eafcff;
+}
+
+.asrar-dash-upgrade-subtitle {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #a0b6c8;
+}
+
+.asrar-dash-upgrade-btn {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: none;
+  padding: 0.55rem 1.3rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: linear-gradient(
+    135deg,
+    #2cf6ff 0%,
+    #7c4dff 45%,
+    #ffa53f 100%
+  );
+  color: #050313;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 16px 40px rgba(0, 0, 0, 0.95);
+  white-space: nowrap;
+}
+
+.asrar-dash-upgrade-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+@media (max-width: 768px) {
+  .asrar-dash-upgrade-teaser {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.9rem 0.95rem;
+  }
+
+  .asrar-dash-upgrade-btn {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* MINI MOOD CHAT ------------------------------------------------ */
@@ -1523,23 +1609,16 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
   }
 
   .asrar-dashboard-page {
-    padding-top: 0;
-  }
-
- 
-
-  .asrar-chat-page .asrar-chat-layout {
-    margin-top: calc(70px + env(safe-area-inset-top, 0px));
-    min-height: calc(100vh - 70px - env(safe-area-inset-top, 0px));
+    padding-top: 72px;
   }
 }
 
 @media (max-width: 600px) {
   .asrar-dashboard-page .asrar-dash-header {
-    position: sticky;
+    position: fixed;
     top: 0;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: 0.6rem;
     padding-top: calc(0.6rem + env(safe-area-inset-top, 0px));
   }
