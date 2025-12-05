@@ -502,7 +502,7 @@ export default function Dashboard() {
 
           {/* TABLET/MOBILE: SLIDER */}
           {(isTablet || isMobile) && (
-            <div className="asrar-companions-slider-wrapper">
+            <div className="asrar-companions-slider-wrapper" dir="ltr">
               <button
                 className="asrar-slider-arrow asrar-slider-arrow-prev"
                 onClick={() => goToSliderIndex(sliderIndex - 1)}
