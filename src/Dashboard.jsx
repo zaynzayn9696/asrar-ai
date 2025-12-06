@@ -60,6 +60,8 @@ const CHARACTERS = [
   },
 ];
 
+const FREE_CHARACTER_IDS = ["sheikh-al-hara", "abu-mukh", "daloua"];
+
 // --- DIALECTS ---------------------------------------------
 const DIALECTS = [
   { id: "msa", labelEn: "Modern Standard Arabic", labelAr: "العربية الفصحى الحديثة" },
@@ -323,7 +325,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (!hasPremium && selectedCharacterId !== "daloua") {
+    if (!hasPremium && !FREE_CHARACTER_IDS.includes(selectedCharacterId)) {
       setValidationError(isAr ? "للمشتركين في الخطة المدفوعة فقط حالياً" : "For Pro users only for now");
       return;
     }
@@ -339,7 +341,7 @@ export default function Dashboard() {
   const isFreePlan = !hasPremium;
 
   const handleCharacterChange = (char) => {
-    const locked = !hasPremium && char.id !== "daloua";
+    const locked = !hasPremium && !FREE_CHARACTER_IDS.includes(char.id);
     if (locked) {
       setShowPremiumModal(true);
       return;
@@ -506,7 +508,7 @@ export default function Dashboard() {
                   key={char.id}
                   className={`asrar-companion-card ${
                     selectedCharacterId === char.id ? "asrar-companion-card--selected" : ""
-                  } ${!hasPremium && char.id !== "daloua" ? "asrar-companion-card--locked" : ""}`}
+                  } ${!hasPremium && !FREE_CHARACTER_IDS.includes(char.id) ? "asrar-companion-card--locked" : ""}`}
                   onClick={() => handleCharacterChange(char)}
                 >
                   <img
@@ -522,7 +524,7 @@ export default function Dashboard() {
                       {isAr ? char.roleAr : char.roleEn}
                     </p>
                   </div>
-                  {!hasPremium && char.id !== "daloua" && (
+                  {!hasPremium && !FREE_CHARACTER_IDS.includes(char.id) && (
                     <div className="asrar-companion-pro-badge">PRO</div>
                   )}
                 </div>
@@ -555,7 +557,7 @@ export default function Dashboard() {
                       <div
                         className={`asrar-companion-card ${
                           selectedCharacterId === char.id ? "asrar-companion-card--selected" : ""
-                        } ${!hasPremium && char.id !== "daloua" ? "asrar-companion-card--locked" : ""}`}
+                        } ${!hasPremium && !FREE_CHARACTER_IDS.includes(char.id) ? "asrar-companion-card--locked" : ""}`}
                         onClick={() => handleCharacterChange(char)}
                       >
                         <img
@@ -571,7 +573,7 @@ export default function Dashboard() {
                             {isAr ? char.roleAr : char.roleEn}
                           </p>
                         </div>
-                        {!hasPremium && char.id !== "daloua" && (
+                        {!hasPremium && !FREE_CHARACTER_IDS.includes(char.id) && (
                           <div className="asrar-companion-pro-badge">PRO</div>
                         )}
                       </div>

@@ -77,8 +77,10 @@ export default function CharacterCarousel({
     }
   };
 
+  const FREE_CHARACTER_IDS = ["sheikh-al-hara", "abu-mukh", "daloua"];
+
   const renderHomeCard = (character, isActive, i) => {
-    const isLocked = isFreePlan && character.id !== "daloua";
+    const isLocked = isFreePlan && !FREE_CHARACTER_IDS.includes(character.id);
     
     return (
     <div
@@ -107,9 +109,10 @@ export default function CharacterCarousel({
           </p>
         )}
         <Link
-          to="/dashboard"
+          to={isLocked ? "/billing" : "/dashboard"}
           className="asrar-btn primary small asrar-character-cta"
           onClick={() => {
+            if (isLocked) return;
             if (typeof window !== "undefined") {
               try {
                 window.localStorage.setItem(
@@ -120,7 +123,11 @@ export default function CharacterCarousel({
             }
           }}
         >
-          {isAr
+          {isLocked
+            ? isAr
+              ? "متاح في الباقة المدفوعة فقط"
+              : "Premium only"
+            : isAr
             ? `ابدأ المحادثة مع ${character.nameAr}`
             : `Talk to ${character.nameEn}`}
         </Link>
@@ -136,7 +143,7 @@ export default function CharacterCarousel({
 };
 
   const renderDashboardCard = (character, isActive) => {
-    const isLocked = isFreePlan && character.id !== "daloua";
+    const isLocked = isFreePlan && !FREE_CHARACTER_IDS.includes(character.id);
     const cardClasses =
       "asrar-dash-char-card" +
       (isActive ? " asrar-dash-char-card--selected" : "") +
@@ -146,7 +153,15 @@ export default function CharacterCarousel({
       <button
         type="button"
         className={cardClasses}
-        onClick={() => onChange && onChange(character)}
+        onClick={() => {
+          if (isLocked) {
+            if (typeof window !== "undefined") {
+              window.location.href = "/billing";
+            }
+            return;
+          }
+          onChange && onChange(character);
+        }}
       >
         <div className="asrar-dash-char-avatar-wrap">
           <img

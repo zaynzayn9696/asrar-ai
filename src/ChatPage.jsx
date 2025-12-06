@@ -957,11 +957,20 @@ export default function ChatPage() {
           }
           return;
         }
+        if (res.status === 403 && data && data.error === "premium_required") {
+          setModalText(
+            isArabicConversation
+              ? "هذه الشخصية متاحة فقط في الخطة المدفوعة. بإمكانك الترقية لفتح جميع الرفقاء."
+              : "This companion is available on the Premium plan. Upgrade to unlock all characters."
+          );
+          setShowLockedModal(true);
+          return;
+        }
         if (data && data.code === "PRO_CHARACTER_LOCKED") {
           setModalText(
             isArabicConversation
-              ? "هذه الشخصية متاحة فقط في خطة برو. بإمكانك الترقية لفتح جميع الرفقاء."
-              : "This companion is available on the Pro plan. Upgrade to unlock all characters."
+              ? "هذه الشخصية متاحة فقط في الخطة المدفوعة. بإمكانك الترقية لفتح جميع الرفقاء."
+              : "This companion is available on the Premium plan. Upgrade to unlock all characters."
           );
           setShowLockedModal(true);
           return;
@@ -1375,11 +1384,14 @@ export default function ChatPage() {
             if (isMobile) {
               console.error("Mobile upload error:", res.status, data);
             }
-            if (data && (data.code === "VOICE_PRO_ONLY" || data.error === "voice_premium_only")) {
+            if (
+              (data && (data.code === "VOICE_PRO_ONLY" || data.error === "voice_premium_only")) ||
+              (res.status === 403 && data && data.error === "premium_required")
+            ) {
               setModalText(
                 isArabicConversation
-                  ? "المحادثة الصوتية متاحة فقط لمشتركي برو."
-                  : "Voice chat is available for Pro members only."
+                  ? "هذه الشخصية متاحة فقط في الخطة المدفوعة. بإمكانك الترقية لفتح جميع الرفقاء."
+                  : "This companion is available on the Premium plan. Upgrade to unlock all characters."
               );
               setShowLockedModal(true);
               return;

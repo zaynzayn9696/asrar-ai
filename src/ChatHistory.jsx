@@ -57,6 +57,8 @@ const CHARACTERS = [
   },
 ];
 
+const FREE_CHARACTER_IDS = ["sheikh-al-hara", "abu-mukh", "daloua"];
+
 const CHAT_HISTORY_KEY = "asrar-chat-history";
 
 const getInitialLang = () => {
@@ -90,6 +92,11 @@ const TEXT = {
 export default function ChatHistory() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  const hasPremium = !!(
+    user && (user.isPremium || user.plan === "pro" || user.plan === "premium")
+  );
+  const isFreePlan = !hasPremium;
 
   const [lang, setLang] = useState(getInitialLang);
   const isAr = lang === "ar";
@@ -266,6 +273,11 @@ export default function ChatHistory() {
   };
 
   const handleOpenChatForCharacter = (id) => {
+    const isLocked = isFreePlan && !FREE_CHARACTER_IDS.includes(id);
+    if (isLocked) {
+      navigate("/billing");
+      return;
+    }
     if (typeof window !== "undefined") {
       localStorage.setItem("asrar-selected-character", id);
     }
@@ -335,12 +347,17 @@ export default function ChatHistory() {
               <div className="asrar-dash-char-grid">
                 {charactersWithHistory.map((c) => {
                   const entry = historyMap[c.id];
+                  const isLocked =
+                    isFreePlan && !FREE_CHARACTER_IDS.includes(c.id);
 
                   return (
                     <button
                       key={c.id}
                       type="button"
-                      className="asrar-dash-char-card"
+                      className={
+                        "asrar-dash-char-card" +
+                        (isLocked ? " asrar-dash-char-card--locked" : "")
+                      }
                       onClick={() => handleOpenChatForCharacter(c.id)}
                     >
                       <div className="asrar-dash-char-avatar-wrap">
@@ -371,12 +388,15 @@ export default function ChatHistory() {
                   ...c,
                   roleEn: getRole(c),
                   roleAr: getRole(c),
+                  isLocked: isFreePlan && !FREE_CHARACTER_IDS.includes(c.id),
                 }))}
                 selectedCharacterId={charactersWithHistory[0].id}
-                onChange={(char) => handleOpenChatForCharacter(char.id)}
+                onChange={(char) =>
+                  char.isLocked ? navigate("/billing") : handleOpenChatForCharacter(char.id)
+                }
                 isAr={isAr}
                 variant="dashboard"
-                isFreePlan={false}
+                isFreePlan={isFreePlan}
               />
             </div>
           )}
@@ -386,12 +406,17 @@ export default function ChatHistory() {
               <div className="asrar-dash-char-grid">
                 {charactersWithHistory.map((c) => {
                   const entry = historyMap[c.id];
+                  const isLocked =
+                    isFreePlan && !FREE_CHARACTER_IDS.includes(c.id);
 
                   return (
                     <button
                       key={c.id}
                       type="button"
-                      className="asrar-dash-char-card"
+                      className={
+                        "asrar-dash-char-card" +
+                        (isLocked ? " asrar-dash-char-card--locked" : "")
+                      }
                       onClick={() => handleOpenChatForCharacter(c.id)}
                     >
                       <div className="asrar-dash-char-avatar-wrap">

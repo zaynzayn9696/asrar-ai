@@ -5,6 +5,13 @@ const toInt = (v, fallback) => {
 
 const LIMITS = {
   FREE_CHARACTER_ID: process.env.FREE_CHARACTER_ID || 'daloua',
+  FREE_CHARACTER_IDS:
+    (process.env.FREE_CHARACTER_IDS &&
+      String(process.env.FREE_CHARACTER_IDS)
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean)) || ['sheikh-al-hara', 'abu-mukh', 'daloua'],
+  PROHIBITED_FOR_FREE_IDS: ['walaa', 'hiba'],
   FREE_DAILY: toInt(process.env.FREE_DAILY, 5),
   PRO_DAILY: toInt(process.env.PRO_DAILY, 0),
   PRO_MONTHLY: toInt(process.env.PRO_MONTHLY, 3000),
@@ -20,6 +27,8 @@ function getPlanLimits(email, plan) {
       dailyLimit: LIMITS.TESTER_LIMIT,
       monthlyLimit: LIMITS.TESTER_LIMIT,
       freeCharacterId: LIMITS.FREE_CHARACTER_ID,
+      freeCharacterIds: LIMITS.FREE_CHARACTER_IDS,
+      premiumOnlyCharacterIds: LIMITS.PROHIBITED_FOR_FREE_IDS,
       isTester: true,
     };
   }
@@ -28,6 +37,8 @@ function getPlanLimits(email, plan) {
       dailyLimit: LIMITS.PRO_DAILY,
       monthlyLimit: LIMITS.PRO_MONTHLY,
       freeCharacterId: LIMITS.FREE_CHARACTER_ID,
+      freeCharacterIds: LIMITS.FREE_CHARACTER_IDS,
+      premiumOnlyCharacterIds: LIMITS.PROHIBITED_FOR_FREE_IDS,
       isTester: false,
     };
   }
@@ -35,6 +46,8 @@ function getPlanLimits(email, plan) {
     dailyLimit: LIMITS.FREE_DAILY,
     monthlyLimit: 0,
     freeCharacterId: LIMITS.FREE_CHARACTER_ID,
+    freeCharacterIds: LIMITS.FREE_CHARACTER_IDS,
+    premiumOnlyCharacterIds: LIMITS.PROHIBITED_FOR_FREE_IDS,
     isTester: false,
   };
 }

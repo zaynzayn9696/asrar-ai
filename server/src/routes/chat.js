@@ -40,6 +40,24 @@ const router = express.Router();
 // every chat route needs login
 router.use(requireAuth);
 
+// Character access helpers (free vs premium companions)
+const FREE_CHARACTER_IDS = Array.isArray(LIMITS.FREE_CHARACTER_IDS)
+  ? LIMITS.FREE_CHARACTER_IDS
+  : ['sheikh-al-hara', 'abu-mukh', 'daloua'];
+
+const PREMIUM_ONLY_CHARACTER_IDS = Array.isArray(LIMITS.PROHIBITED_FOR_FREE_IDS)
+  ? LIMITS.PROHIBITED_FOR_FREE_IDS
+  : ['walaa', 'hiba'];
+
+function isCharacterPremiumOnly(characterId) {
+  if (!characterId) return false;
+  const id = String(characterId);
+  if (FREE_CHARACTER_IDS.includes(id)) return false;
+  if (PREMIUM_ONLY_CHARACTER_IDS.includes(id)) return true;
+  // For safety, treat unknown characters as premium-only
+  return true;
+}
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Sliding-window size for model context
@@ -62,9 +80,9 @@ function startOfMonth() {
  * Usage semantics:
  * - dailyCount: number of free messages/voice requests used in the current 24h lock window.
  * - dailyResetAt: timestamp when the current 24h window unlocks.
- *   * null => not currently locked.
- *   * > now => locked until that instant.
- *   * <= now => window expired; we reset counts and clear the lock.
+   * null => not currently locked.
+   * > now => locked until that instant.
+   * <= now => window expired; we reset counts and clear the lock.
  */
 async function ensureUsage(userId) {
   let usage = await prisma.usage.findUnique({ where: { userId } });
@@ -172,7 +190,8 @@ const CHARACTER_PERSONAS = {
   - نوّر الطريق بدون ما تفرض القرار؛ القرار الأخير له هو.
 - لا تفعل:
   - لا تتكلم كأنك طبيب نفسي غربي أو معالج إكلينيكي.
-  - لا تستخدم سب أو سخرية جارحة أو تقليل من الشخص؛ الشدة فقط من باب الحرص والمحبة.`
+  - لا تستخدم سب أو سخرية جارحة أو تقليل من الشخص؛ الشدة فقط من باب الحرص والمحبة.`,
+
   },
 
   // 2. Daloua (Deep Emotional Support)
@@ -217,7 +236,8 @@ const CHARACTER_PERSONAS = {
 - لا تفعلي:
   - لا تتحولي لمدرّبة قاسية أو سخرية؛ القسوة عند ولاء.
   - لا تتكلمي كطبيبة نفسية أو محلّلة باردة.
-  - لا تضغطي على الشخص يعمل أشياء كثيرة بسرعة؛ الأولوية للراحة والأمان.`
+  - لا تضغطي على الشخص يعمل أشياء كثيرة بسرعة؛ الأولوية للراحة والأمان.`,
+
   },
 
   // 3. Abu Mukh (Focus & Study)
@@ -259,7 +279,8 @@ const CHARACTER_PERSONAS = {
 - لا تفعل:
   - لا تغرق في تحليل مشاعر طويل؛ هذا دور دلوعة.
   - لا تستعمل سخرية جارحة أو تحقير؛ الشدة بس عشان المصلحة.
-  - لا تقدّم محاضرات نظرية طويلة؛ ركّز على الشيء اللي يقدر يعمله اليوم.`
+  - لا تقدّم محاضرات نظرية طويلة؛ ركّز على الشيء اللي يقدر يعمله اليوم.`,
+
   },
 
   // 4. Walaa (Brutal Honesty)
@@ -300,7 +321,8 @@ const CHARACTER_PERSONAS = {
 - لا تفعلي:
   - لا تشتغلي تنمّر أو شتائم أو سب على الشكل/الجسد/الدين.
   - لا تستخفي بالصدمات أو المواضيع العالية الخطورة.
-  - لا تتحولي لمعالجة غربية باردة؛ خلي روح الصحبة العربية حاضرة.`
+  - لا تتحولي لمعالجة غربية باردة؛ خلي روح الصحبة العربية حاضرة.`,
+
   },
 
   // 5. Hiba (Fun & Chaos)
@@ -343,7 +365,8 @@ const CHARACTER_PERSONAS = {
 - لا تفعلي:
   - لا تمزحي أبداً مع مواضيع انتحار أو أذى للنفس أو إساءة خطيرة.
   - لا تعطي نصائح طبية أو نفسية جدية؛ دوري الأساسي تفريغ الجو.
-  - لا تقللي من شعوره؛ حتى الهزار عندك فيه احترام لقلبه.`
+  - لا تقللي من شعوره؛ حتى الهزار عندك فيه احترام لقلبه.`,
+
   }
 };
 
@@ -366,9 +389,25 @@ router.post('/conversations', async (req, res) => {
     if (!characterId || typeof characterId !== 'string') {
       return res.status(400).json({ message: 'characterId is required' });
     }
+
+    const userId = req.user.id;
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!dbUser) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    const { isTester } = getPlanLimits(dbUser.email, dbUser.plan);
+    const isPremiumUser = !!(
+      dbUser.isPremium || dbUser.plan === 'premium' || dbUser.plan === 'pro'
+    );
+
+    if (!isPremiumUser && !isTester && isCharacterPremiumOnly(characterId)) {
+      return res.status(403).json({ error: 'premium_required' });
+    }
+
     const conv = await prisma.conversation.create({
       data: {
-        userId: req.user.id,
+        userId,
         characterId,
         title: req.body?.title || null,
       },
@@ -740,6 +779,10 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
     const characterId = body.characterId || 'daloua';
+    if (!isPremiumUser && !isTester && isCharacterPremiumOnly(characterId)) {
+      return res.status(403).json({ error: 'premium_required' });
+    }
+
     const lang = body.lang || 'en';
     const dialect = body.dialect || 'msa';
     const rawToneKey = body.tone;
@@ -1024,13 +1067,13 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     }
 
     // 6) Text-to-speech for the final reply text.
-   const spokenText = prepareTextForTTS(aiMessage);
+    const spokenText = prepareTextForTTS(aiMessage);
 
-const tTtsStart = Date.now();
-const ttsResult = await generateVoiceReply(spokenText, {
-  characterId,
-  format: 'mp3',
-});
+    const tTtsStart = Date.now();
+    const ttsResult = await generateVoiceReply(spokenText, {
+      characterId,
+      format: 'mp3',
+    });
 
     ttsMs = Date.now() - tTtsStart;
 
@@ -1139,6 +1182,10 @@ router.post('/message', async (req, res) => {
 
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
     const characterId = body.characterId || 'daloua';
+    if (!isPremiumUser && !isTester && isCharacterPremiumOnly(characterId)) {
+      return res.status(403).json({ error: 'premium_required' });
+    }
+
     const lang = body.lang || 'en';
     const dialect = body.dialect || 'msa';
     const rawToneKey = body.tone;
@@ -1373,50 +1420,6 @@ router.post('/message', async (req, res) => {
       }
     } catch (_) {
       aiMessage = rawReply;
-    }
-
-    // Phase 4: character-based routing for free users
-    if (isFreePlanUser && characterId !== freeCharacterId) {
-      if (!isArabicConversation) {
-        const briefLines = [];
-        if (characterId === 'abu-mukh') {
-          briefLines.push(
-            "I can share a quick study tip, but Daloua is your main unlocked companion."
-          );
-          briefLines.push(
-            'If you want full study plans, you can switch to Daloua or upgrade.'
-          );
-        } else if (characterId === 'sheikh-al-hara') {
-          briefLines.push(
-            'I can offer a small piece of wisdom, but Daloua is your available friend.'
-          );
-          briefLines.push(
-            'For deep life guidance, I am available on the Pro plan.'
-          );
-        } else if (characterId === 'hiba') {
-          briefLines.push(
-            'I can give you a quick laugh, but Daloua is your unlocked companion.'
-          );
-          briefLines.push(
-            'For full fun and memes, I am available on the Pro plan.'
-          );
-        } else if (characterId === 'walaa') {
-          briefLines.push(
-            "I can be blunt for a second, but Daloua is the one available on your plan."
-          );
-          briefLines.push(
-            'If you want the hard truth all the time, you can upgrade.'
-          );
-        } else {
-          briefLines.push(
-            'I can give a short hint here, but Daloua is available on your plan for deeper support.'
-          );
-          briefLines.push(
-            'You can switch to Daloua from the companions section whenever you like.'
-          );
-        }
-        aiMessage = briefLines.join(' ');
-      }
     }
 
     // Premium users: gently suggest Abu Mukh if Daloua is being used for study/productivity
