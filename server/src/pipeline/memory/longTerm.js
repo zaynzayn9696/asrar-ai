@@ -27,7 +27,9 @@ async function detectNameUsingLLM(messageText) {
 
   // Lightweight cue-based gating so we only call the LLM when the message
   // plausibly contains an explicit name change / "call me" instruction.
-  const cueRegex = /(my name is|call me|i am called|انا اسمي|أنا اسمي|اسمي|ناديني|اسمي الجديد|اسمي صار|اسمي يكون)/i;
+  // Includes both English and Arabic phrasing variants.
+  const cueRegex = /(my name is|my new name is|from now on[, ]*call me|you can call me|i want you to call me|you should call me|people call me|name me|your new name is|call me|i am called|انا اسمي|أنا اسمي|اسمي الجديد|اسمي صار|اسمي يكون|اسمي|ناديني)/i;
+
   if (!cueRegex.test(text)) {
     return null;
   }
@@ -35,6 +37,11 @@ async function detectNameUsingLLM(messageText) {
   // Very small heuristic language hint for the prompt only.
   const hasArabic = /[\u0600-\u06FF]/u.test(text);
   const languageHint = hasArabic ? 'ar' : 'en';
+
+  console.log('[LongTermMemory] detectNameUsingLLM cue', {
+    hasArabic,
+    messageLength: text.length,
+  });
 
   const systemPrompt = [
     'You are a precise name extractor for a mental wellbeing chat app.',
@@ -66,14 +73,49 @@ async function detectNameUsingLLM(messageText) {
 
     // Normalise trivial wrappers like quotes.
     out = out.replace(/^["'«»“”\s]+|["'«»“”\s]+$/gu, '').trim();
-    if (!out) return null;
+    if (!out) {
+      console.log('[LongTermMemory] detectNameUsingLLM candidate_empty', {
+        hasArabic,
+      });
+      return null;
+    }
+
+    // Heuristic extraction: keep only the last contiguous run of
+    // Arabic/Latin letters (e.g. "your new name is Alex" -> "Alex").
+    const nameMatches = out.match(/[A-Za-z\u0600-\u06FF]{2,40}/gu);
+    let candidate = out;
+    if (Array.isArray(nameMatches) && nameMatches.length) {
+      candidate = nameMatches[nameMatches.length - 1];
+    }
+    candidate = String(candidate || '').trim();
+
+    // Strip trailing punctuation around the candidate.
+    candidate = candidate.replace(/[.,!?؟،]+$/gu, '').trim();
+
+    if (!candidate) {
+      console.log('[LongTermMemory] detectNameUsingLLM candidate_empty_after_extract', {
+        hasArabic,
+      });
+      return null;
+    }
 
     // Basic validation: length and presence of letters.
-    if (out.length < 2 || out.length > 40) return null;
-    if (!/[A-Za-z\u0600-\u06FF]/u.test(out)) return null;
+    if (candidate.length < 2 || candidate.length > 40) {
+      console.log('[LongTermMemory] detectNameUsingLLM candidate_rejected_length', {
+        hasArabic,
+        candidateLength: candidate.length,
+      });
+      return null;
+    }
+    if (!/[A-Za-z\u0600-\u06FF]/u.test(candidate)) {
+      console.log('[LongTermMemory] detectNameUsingLLM candidate_rejected_chars', {
+        hasArabic,
+      });
+      return null;
+    }
 
     // Guard against common non-name tokens that might slip through.
-    const lower = out.toLowerCase();
+    const lower = candidate.toLowerCase();
     const banned = new Set([
       'رح',
       'من',
@@ -82,12 +124,20 @@ async function detectNameUsingLLM(messageText) {
       'انا',
       'أنا',
       'name',
-      'my name',
-      'call me',
     ]);
-    if (banned.has(lower)) return null;
+    if (banned.has(lower)) {
+      console.log('[LongTermMemory] detectNameUsingLLM candidate_rejected_banned', {
+        hasArabic,
+      });
+      return null;
+    }
 
-    return out;
+    console.log('[LongTermMemory] detectNameUsingLLM candidate_accepted', {
+      hasArabic,
+      candidateLength: candidate.length,
+    });
+
+    return candidate;
   } catch (err) {
     console.error(
       '[LongTermMemory] detectNameUsingLLM error',
@@ -243,6 +293,9 @@ async function updateLongTerm(userId, event, outcome) {
           select: { id: true },
         });
 
+        const isArabicName = /[\u0600-\u06FF]/u.test(detectedName);
+        const isLatinName = /[A-Za-z]/.test(detectedName);
+
         if (existing && existing.id) {
           await prisma.userMemoryFact.update({
             where: { id: existing.id },
@@ -251,6 +304,16 @@ async function updateLongTerm(userId, event, outcome) {
               confidence: 1.0,
               sourceMessageId: event.messageId || null,
             },
+          });
+
+          console.log('[LongTermMemory] identity.name updated', {
+            userId,
+            hasName: true,
+            sourceMessageId: event.messageId || null,
+            isArabic: isArabicName,
+            isLatin: isLatinName,
+            nameLength: detectedName.length,
+            mode: 'update',
           });
         } else {
           await prisma.userMemoryFact.create({
@@ -262,11 +325,21 @@ async function updateLongTerm(userId, event, outcome) {
               sourceMessageId: event.messageId || null,
             },
           });
-        }
 
-        console.log('[LongTermMemory] identity.name updated', {
+          console.log('[LongTermMemory] identity.name updated', {
+            userId,
+            hasName: true,
+            sourceMessageId: event.messageId || null,
+            isArabic: isArabicName,
+            isLatin: isLatinName,
+            nameLength: detectedName.length,
+            mode: 'create',
+          });
+        }
+      } else {
+        console.log('[LongTermMemory] identity.name detection_skipped_or_rejected', {
           userId,
-          hasName: true,
+          hasMessage: true,
           sourceMessageId: event.messageId || null,
         });
       }
