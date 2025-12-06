@@ -194,7 +194,7 @@ function getSupportedMimeType() {
 
 export default function ChatPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
 
   const [lang, setLang] = useState(getInitialLang);
   const isAr = lang === "ar";
@@ -955,6 +955,12 @@ export default function ChatPage() {
           } else {
             setLimitResetSeconds(null);
           }
+          if (data.usage) {
+            setUsageInfo(data.usage);
+            if (setUser) {
+              setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
+            }
+          }
           return;
         }
         if (res.status === 403 && data && data.error === "premium_required") {
@@ -976,7 +982,13 @@ export default function ChatPage() {
           return;
         }
         if (data && (data.error === "usage_limit_reached" || data.code === "LIMIT_EXCEEDED")) {
-          setUsageInfo(data.usage || usageInfo);
+          const nextUsage = data.usage || usageInfo;
+          if (nextUsage) {
+            setUsageInfo(nextUsage);
+            if (setUser) {
+              setUser((prev) => (prev ? { ...prev, usage: nextUsage } : prev));
+            }
+          }
           const isPrem = !!(user?.isPremium || user?.plan === 'premium' || user?.plan === 'pro');
           if (isArabicConversation) {
             setModalText(
@@ -1007,7 +1019,12 @@ export default function ChatPage() {
         return;
       }
 
-      if (data.usage) setUsageInfo(data.usage);
+      if (data.usage) {
+        setUsageInfo(data.usage);
+        if (setUser) {
+          setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
+        }
+      }
 
       if (data && data.dailyLimitReached) {
         setLimitExceeded(true);
@@ -1397,7 +1414,13 @@ export default function ChatPage() {
               return;
             }
             if (data && (data.error === "usage_limit_reached" || data.code === "LIMIT_EXCEEDED")) {
-              setUsageInfo(data.usage || usageInfo);
+              const nextUsage = data.usage || usageInfo;
+              if (nextUsage) {
+                setUsageInfo(nextUsage);
+                if (setUser) {
+                  setUser((prev) => (prev ? { ...prev, usage: nextUsage } : prev));
+                }
+              }
               setModalText(
                 isArabicConversation
                   ? data.limitType === "monthly"
@@ -1422,7 +1445,12 @@ export default function ChatPage() {
             return;
           }
 
-          if (data.usage) setUsageInfo(data.usage);
+          if (data.usage) {
+            setUsageInfo(data.usage);
+            if (setUser) {
+              setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
+            }
+          }
 
           console.log(
             "Mic: voice response payload keys",

@@ -1448,7 +1448,7 @@ export default function HomePage() {
                 <h3>{isAr ? "مجاني" : "Free"}</h3>
                 <p className="asrar-pricing-price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
                 <ul className="asrar-pricing-features">
-                  <li>{isAr ? "شخصية أساسية واحدة" : "1 core character"}</li>
+                  <li>{isAr ? "ثلاث شخصيات اساسية" : "3 core character"}</li>
                   <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
                   <li>
                     {isAr

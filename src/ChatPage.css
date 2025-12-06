@@ -1426,7 +1426,6 @@
     margin-top: 0px;
   }
 
-  /* Allow the whole page to scroll on mobile (no extra inner scroll bar) */
   .asrar-dash-page.asrar-chat-page {
     overflow-y: auto;
   }
@@ -1434,13 +1433,14 @@
   .asrar-chat-main {
     height: auto;
     min-height: calc(100vh - 72px);
+    padding-bottom: 220px;
   }
 
   .asrar-chat-messages {
     max-height: none;
     overflow-y: visible;
-    padding-bottom: 200px !important; /* Increased padding to ensure space for last message */
-    margin-bottom: 20px; /* Extra margin to prevent any cutoff */
+    padding-bottom: 0 !important;
+    margin-bottom: 20px;
   }
   
   /* Ensure the last message has extra space below it */
