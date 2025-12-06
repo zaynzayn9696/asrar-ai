@@ -79,7 +79,8 @@ async function recordEvent(event) {
 
 /**
  * Retrieve best-effort identity memory (user name) for a given userId.
- * Looks first in UserMemoryFact(identity.name), then falls back to User.name.
+ * Always prefers semantic memory (UserMemoryFact.identity.name) when present.
+ * Only falls back to User.name when no semantic fact exists or value is empty.
  * Returns a small object or null.
  */
 async function getIdentityMemory({ userId }) {
@@ -88,27 +89,35 @@ async function getIdentityMemory({ userId }) {
   }
   const uid = Number(userId);
 
+  let result = null;
+
   try {
-    let result = null;
-
-    // Prefer explicit semantic memory facts.
+    // --- 1) Semantic memory: UserMemoryFact(identity.name) ---
     try {
-      const fact = await prisma.userMemoryFact.findFirst({
-        where: { userId: uid, kind: 'identity.name' },
-        orderBy: { updatedAt: 'desc' },
-        select: { value: true, confidence: true },
-      });
+      const model = prisma && prisma.userMemoryFact;
+      if (!model || typeof model.findFirst !== 'function') {
+        console.error('[MemoryKernel] getIdentityMemory fact model missing on prisma client');
+      } else {
+        const fact = await model.findFirst({
+          where: { userId: uid, kind: 'identity.name' },
+          orderBy: { updatedAt: 'desc' },
+          select: { value: true, confidence: true },
+        });
 
-      if (fact && typeof fact.value === 'string' && fact.value.trim()) {
-        result = {
-          name: fact.value.trim(),
-          kind: 'identity.name',
-          confidence:
-            typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
-              ? fact.confidence
-              : 1.0,
-          source: 'UserMemoryFact',
-        };
+        if (fact && typeof fact.value === 'string') {
+          const trimmed = fact.value.trim();
+          if (trimmed) {
+            result = {
+              name: trimmed,
+              kind: 'identity.name',
+              confidence:
+                typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
+                  ? fact.confidence
+                  : 1.0,
+              source: 'UserMemoryFact',
+            };
+          }
+        }
       }
     } catch (err) {
       console.error(
@@ -117,20 +126,23 @@ async function getIdentityMemory({ userId }) {
       );
     }
 
-    // Fallback to account-level name if no fact is present.
+    // --- 2) Fallback: account-level name only if no semantic fact was usable ---
     if (!result) {
       try {
         const user = await prisma.user.findUnique({
           where: { id: uid },
           select: { name: true },
         });
-        if (user && typeof user.name === 'string' && user.name.trim()) {
-          result = {
-            name: user.name.trim(),
-            kind: 'identity.name',
-            confidence: 0.7,
-            source: 'User.name',
-          };
+        if (user && typeof user.name === 'string') {
+          const trimmed = user.name.trim();
+          if (trimmed) {
+            result = {
+              name: trimmed,
+              kind: 'identity.name',
+              confidence: 0.7,
+              source: 'User.name',
+            };
+          }
         }
       } catch (err) {
         console.error(
@@ -139,21 +151,20 @@ async function getIdentityMemory({ userId }) {
         );
       }
     }
-
-    console.log('[MemoryKernel] getIdentityMemory', {
-      userId: uid,
-      hasName: !!result,
-      source: result && result.source ? result.source : null,
-    });
-
-    return result;
   } catch (err) {
     console.error(
       '[MemoryKernel] getIdentityMemory error',
       err && err.message ? err.message : err
     );
-    return null;
   }
+
+  console.log('[MemoryKernel] getIdentityMemory', {
+    userId: uid,
+    hasName: !!result,
+    source: result && result.source ? result.source : null,
+  });
+
+  return result;
 }
 
 module.exports = {
