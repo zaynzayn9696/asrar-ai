@@ -13,69 +13,75 @@ datasource db {
 ///
 
 model User {
-  id                 Int       @id @default(autoincrement())
-  name               String
-  email              String    @unique
-  passwordHash       String
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  plan               String    @default("free") 
-  isPremium          Boolean   @default(false)
-  lemonCustomerId     String?   @unique
+  plan                String  @default("free")
+  isPremium           Boolean @default(false)
+  lemonCustomerId     String? @unique
   lemonSubscriptionId String?
 
-  saveHistoryEnabled Boolean   @default(true)
+  saveHistoryEnabled Boolean @default(true)
   photoUrl           String?
 
-  usage              Usage?
-  messages           Message[]
-  conversations      Conversation[]
-  emotionProfile     UserEmotionProfile?
+  usage                   Usage?
+  messages                Message[]
+  conversations           Conversation[]
+  emotionProfile          UserEmotionProfile?
   emotionalTimelineEvents EmotionalTimelineEvent[]
-  emotionalPatterns  EmotionalPattern[] 
-  emotionalTriggerEvents EmotionalTriggerEvent[]
+  emotionalPatterns       EmotionalPattern[]
+  emotionalTriggerEvents  EmotionalTriggerEvent[]
+
+  // NEW: back relation to UserMemoryFact (semantic memory)
+  memoryFacts UserMemoryFact[]
 }
 
 model Usage {
-  userId        Int      @id
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dailyCount    Int      @default(0)
-  monthlyCount  Int      @default(0)
-  dailyResetAt  DateTime?
+  userId         Int       @id
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyCount     Int       @default(0)
+  monthlyCount   Int       @default(0)
+  dailyResetAt   DateTime?
   monthlyResetAt DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model Conversation {
-  id           Int       @id @default(autoincrement())
-  userId       Int
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  characterId  String
-  title        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  messages     Message[]
-  emotionState ConversationEmotionState?
+  id                      Int                       @id @default(autoincrement())
+  userId                  Int
+  user                    User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characterId             String
+  title                   String?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  messages                Message[]
+  emotionState            ConversationEmotionState?
   emotionalTimelineEvents EmotionalTimelineEvent[]
-  stateMachine ConversationStateMachine?
-  emotionalTriggerEvents EmotionalTriggerEvent[]
-
+  stateMachine            ConversationStateMachine?
+  emotionalTriggerEvents  EmotionalTriggerEvent[]
 }
 
 model Message {
-  id              Int           @id @default(autoincrement())
-  userId          Int
-  characterId     String
-  conversationId  Int
-  role            String
-  content         String
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  emotion         MessageEmotion?
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  characterId    String
+  conversationId Int
+  role           String
+  content        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  emotion      MessageEmotion?
+
+  // NEW: back relation to UserMemoryFact (semantic memory)
+  memoryFacts UserMemoryFact[]
 }
 
 //
@@ -112,24 +118,24 @@ enum UserMemoryMode {
 // MESSAGE EMOTION — With Phase-4 extensions
 //
 model MessageEmotion {
-  id             Int           @id @default(autoincrement())
-  messageId      Int           @unique
-  message        Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  messageId Int     @unique
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   primaryEmotion EmotionLabel
   intensity      Int
   confidence     Float
   cultureTag     String?
   notes          String?
-  createdAt      DateTime      @default(now())
+  createdAt      DateTime     @default(now())
 
   /// PHASE-4 FIELDS
   secondaryEmotion EmotionLabel?
-  emotionVector    Json?          // distribution / vector
-  intensityDelta   Float?         // change vs previous
-  trend            EmotionTrend?  // UP / DOWN / STABLE / VOLATILE
-  topicTags        String[] @default([])
-  isKernelRelevant Boolean  @default(true)
+  emotionVector    Json? // distribution / vector
+  intensityDelta   Float? // change vs previous
+  trend            EmotionTrend? // UP / DOWN / STABLE / VOLATILE
+  topicTags        String[]      @default([])
+  isKernelRelevant Boolean       @default(true)
   detectorVersion  String?
 }
 
@@ -137,26 +143,26 @@ model MessageEmotion {
 // CONVERSATION EMOTION STATE — With Phase-4 short-term kernel fields
 //
 model ConversationEmotionState {
-  id               Int          @id @default(autoincrement())
-  conversationId   Int          @unique
-  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  id             Int          @id @default(autoincrement())
+  conversationId Int          @unique
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  dominantEmotion  EmotionLabel
-  avgIntensity     Float        @default(0)
-  sadnessScore     Float        @default(0)
-  anxietyScore     Float        @default(0)
-  angerScore       Float        @default(0)
-  lonelinessScore  Float        @default(0)
-  lastUpdatedAt    DateTime     @default(now())
+  dominantEmotion EmotionLabel
+  avgIntensity    Float        @default(0)
+  sadnessScore    Float        @default(0)
+  anxietyScore    Float        @default(0)
+  angerScore      Float        @default(0)
+  lonelinessScore Float        @default(0)
+  lastUpdatedAt   DateTime     @default(now())
 
   /// PHASE-4 SHORT-TERM MEMORY
-  windowSize             Int     @default(20)
+  windowSize             Int           @default(20)
   rollingEmotionStats    Json?
   rollingTopicStats      Json?
   activeThreads          Json?
   sessionBaselineEmotion EmotionLabel?
   currentBaselineEmotion EmotionLabel?
-  stabilityScore         Float   @default(0)
+  stabilityScore         Float         @default(0)
   flags                  Json?
   lastKernelUpdateAt     DateTime?
 }
@@ -180,30 +186,30 @@ model EmotionalTimelineEvent {
 // USER EMOTION PROFILE — With Phase-4 long-term memory & pattern fields
 //
 model UserEmotionProfile {
-  id               Int       @id @default(autoincrement())
-  userId           Int       @unique
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  sadnessScore     Float     @default(0)
-  anxietyScore     Float     @default(0)
-  angerScore       Float     @default(0)
-  lonelinessScore  Float     @default(0)
-  hopeScore        Float     @default(0)
-  gratitudeScore   Float     @default(0)
-  avgIntensity     Float     @default(0)
-  lastUpdatedAt    DateTime  @default(now())
+  sadnessScore    Float    @default(0)
+  anxietyScore    Float    @default(0)
+  angerScore      Float    @default(0)
+  lonelinessScore Float    @default(0)
+  hopeScore       Float    @default(0)
+  gratitudeScore  Float    @default(0)
+  avgIntensity    Float    @default(0)
+  lastUpdatedAt   DateTime @default(now())
 
   /// PHASE-4 LONG-TERM MEMORY
   emotionTraitVector   Json?
   emotionStats         Json?
   topicProfile         Json?
   personaAffinity      Json?
-  volatilityIndex      Float    @default(0)
+  volatilityIndex      Float          @default(0)
   recentKernelSnapshot Json?
   memoryMode           UserMemoryMode @default(STANDARD)
   retentionPolicy      Json?
   lastPatternRefreshAt DateTime?
-  emotionalAnchors     String[] @default([])
+  emotionalAnchors     String[]       @default([])
 }
 
 //
@@ -225,16 +231,16 @@ model EmotionalPattern {
 }
 
 model EmotionalTriggerEvent {
-  id             Int           @id @default(autoincrement())
+  id             Int  @id @default(autoincrement())
   userId         Int
   conversationId Int?
 
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  type           String        // e.g. "family_conflict"
-  intensity      Int           // 1–5
-  createdAt      DateTime      @default(now())
+  type      String // e.g. "family_conflict"
+  intensity Int // 1–5
+  createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
   @@index([conversationId, createdAt])
@@ -251,4 +257,22 @@ model ConversationStateMachine {
   lastEmotion    EmotionLabel
   lastUpdatedAt  DateTime     @default(now())
   notes          String?
+}
+
+//
+// SEMANTIC MEMORY — UserMemoryFact
+//
+model UserMemoryFact {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind            String
+  value           String
+  confidence      Float    @default(1.0)
+  sourceMessageId Int?
+  sourceMessage   Message? @relation(fields: [sourceMessageId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, kind])
 }

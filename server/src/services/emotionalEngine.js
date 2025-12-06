@@ -18,6 +18,7 @@ const {
   getConversationState,
 } = require('./emotionalStateMachine');
 const { buildPhase4MemoryBlock } = require('../pipeline/memory/Phase4PromptBuilder');
+const { getIdentityMemory } = require('../pipeline/memory/memoryKernel');
 
 const ENGINE_MODES = {
   CORE_FAST: 'CORE_FAST',
@@ -391,9 +392,10 @@ async function updateConversationEmotionState(conversationId, emo) {
  * @param {string} params.conversationSummary
  * @param {boolean} params.isPremiumUser
  * @param {string} params.reasonLabel
+ * @param {{ name?: string }} [params.identityMemory]
  * @returns {string}
  */
-function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect }) {
+function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect, identityMemory }) {
   const isArabic = language === 'ar';
   const personaCfg = personas[personaId] || defaultPersona;
   const premiumUser = !!isPremiumUser;
@@ -493,6 +495,29 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       : `Sensitive areas (handle gently): ${triggers.slice(0, 3).map(t => t.topic).join(', ')}`)
     : '';
 
+  // Identity block: short, non-creepy guidance about using the user's name.
+  let identityBlock = '';
+  if (identityMemory && typeof identityMemory.name === 'string') {
+    const safeName = identityMemory.name.trim();
+    if (safeName) {
+      identityBlock = isArabic
+        ? [
+            'معلومة هوية المستخدم (للاستخدام الداخلي):',
+            `- المستخدم أخبرك أن اسمه "${safeName}".`,
+            'يمكنك مناداته باسمه أحياناً لخلق دفء وطمأنينة، لكن لا تكرر الاسم في كل رد ولا تسأله عن اسمه مرة أخرى إلا إذا قال إنه تغيّر.',
+          ].join('\n')
+        : [
+            'User identity (internal guidance):',
+            `- The user told you their name is "${safeName}".`,
+            'You may use their name warmly and naturally sometimes, but do not overuse it or repeat it every message. Do not ask for their name again unless they say it changed.',
+          ].join('\n');
+    }
+  }
+
+  console.log('[SystemPrompt] identity block', {
+    hasIdentity: !!(identityMemory && identityMemory.name),
+  });
+
   const isFreeFast = engineMode === ENGINE_MODES.CORE_FAST && !premiumUser;
 
   let anchorsList = Array.isArray(anchors) ? anchors.filter(Boolean) : [];
@@ -580,6 +605,8 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     longTermBlock,
     longTermHint ? '' : '',
     longTermHint,
+    identityBlock ? '' : '',
+    identityBlock,
     triggersBlock ? '' : '',
     triggersBlock,
     triggersHint ? '' : '',
@@ -664,7 +691,9 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     let longTermSnapshot = null;
     let triggers = [];
     let phase4Block = '';
+    let identityMemory = null;
 
+    // Fetch long-term snapshot and triggers in parallel.
     await Promise.all([
       (async () => {
         const tSnapStart = Date.now();
@@ -686,22 +715,30 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
           triggersMs = Date.now() - tTrigStart;
         }
       })(),
-      (async () => {
-        const tPhase4Start = Date.now();
-        try {
-          phase4Block = await buildPhase4MemoryBlock({
-            userId,
-            conversationId,
-            language,
-            personaId: personaId || 'hana',
-          });
-        } catch (_) {
-          phase4Block = '';
-        } finally {
-          phase4Ms = Date.now() - tPhase4Start;
-        }
-      })(),
     ]);
+
+    // Fetch identity semantic memory (best-effort, non-blocking for rest of pipeline).
+    try {
+      identityMemory = await getIdentityMemory({ userId });
+    } catch (_) {
+      identityMemory = null;
+    }
+
+    // Build Phase 4 block after identityMemory is available so hints can include name.
+    const tPhase4Start = Date.now();
+    try {
+      phase4Block = await buildPhase4MemoryBlock({
+        userId,
+        conversationId,
+        language,
+        personaId: personaId || 'hana',
+        identityMemory,
+      });
+    } catch (_) {
+      phase4Block = '';
+    } finally {
+      phase4Ms = Date.now() - tPhase4Start;
+    }
 
     let flowState = null;
     try {
@@ -763,6 +800,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       longTermSnapshot,
       triggers,
       dialect,
+      identityMemory,
     });
 
     const systemPrompt = phase4Block
@@ -793,6 +831,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       flowState,
       longTermSnapshot,
       triggers,
+      identityMemory,
       personaCfg: personas[personaId] || defaultPersona,
       timings: {
         classifyMs,
@@ -822,6 +861,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       longTermSnapshot: null,
       triggers: [],
       personaCfg: defaultPersona,
+      identityMemory: null,
     };
   }
 }

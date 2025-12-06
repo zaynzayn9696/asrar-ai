@@ -77,9 +77,89 @@ async function recordEvent(event) {
   }
 }
 
+/**
+ * Retrieve best-effort identity memory (user name) for a given userId.
+ * Looks first in UserMemoryFact(identity.name), then falls back to User.name.
+ * Returns a small object or null.
+ */
+async function getIdentityMemory({ userId }) {
+  if (!userId || !Number.isFinite(Number(userId))) {
+    return null;
+  }
+  const uid = Number(userId);
+
+  try {
+    let result = null;
+
+    // Prefer explicit semantic memory facts.
+    try {
+      const fact = await prisma.userMemoryFact.findFirst({
+        where: { userId: uid, kind: 'identity.name' },
+        orderBy: { updatedAt: 'desc' },
+        select: { value: true, confidence: true },
+      });
+
+      if (fact && typeof fact.value === 'string' && fact.value.trim()) {
+        result = {
+          name: fact.value.trim(),
+          kind: 'identity.name',
+          confidence:
+            typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
+              ? fact.confidence
+              : 1.0,
+          source: 'UserMemoryFact',
+        };
+      }
+    } catch (err) {
+      console.error(
+        '[MemoryKernel] getIdentityMemory fact query error',
+        err && err.message ? err.message : err
+      );
+    }
+
+    // Fallback to account-level name if no fact is present.
+    if (!result) {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: uid },
+          select: { name: true },
+        });
+        if (user && typeof user.name === 'string' && user.name.trim()) {
+          result = {
+            name: user.name.trim(),
+            kind: 'identity.name',
+            confidence: 0.7,
+            source: 'User.name',
+          };
+        }
+      } catch (err) {
+        console.error(
+          '[MemoryKernel] getIdentityMemory user fallback error',
+          err && err.message ? err.message : err
+        );
+      }
+    }
+
+    console.log('[MemoryKernel] getIdentityMemory', {
+      userId: uid,
+      hasName: !!result,
+      source: result && result.source ? result.source : null,
+    });
+
+    return result;
+  } catch (err) {
+    console.error(
+      '[MemoryKernel] getIdentityMemory error',
+      err && err.message ? err.message : err
+    );
+    return null;
+  }
+}
+
 module.exports = {
   recordEvent,
   updateShortTerm,
   updateLongTerm,
+  getIdentityMemory,
 };
 

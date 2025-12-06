@@ -19,9 +19,10 @@ function ensureObject(val) {
  * @param {number|undefined|null} params.conversationId
  * @param {string} params.language  // 'ar' | 'en' | 'mixed'
  * @param {string} params.personaId
+ * @param {{ name?: string }} [params.identityMemory]
  * @returns {Promise<string>}
  */
-async function buildPhase4MemoryBlock({ userId, conversationId, language, personaId }) {
+async function buildPhase4MemoryBlock({ userId, conversationId, language, personaId, identityMemory }) {
   if (!userId) return '';
 
   const [convoState, profile] = await Promise.all([
@@ -280,6 +281,24 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         'Longer-term patterns (bullet hints; do not mention explicitly as analytics):',
         ...longLines
       );
+    }
+  }
+
+  // Optional identity hints (semantic memory, per user).
+  if (identityMemory && typeof identityMemory.name === 'string') {
+    const safeName = identityMemory.name.trim();
+    if (safeName) {
+      if (isArabic) {
+        lines.push(
+          'هوية المستخدم (تلميح داخلي):',
+          `- المستخدم قال لك إن اسمه "${safeName}"؛ يمكنك استخدام اسمه أحياناً لزيادة الألفة بدون مبالغة.`
+        );
+      } else {
+        lines.push(
+          'Identity hints (internal, not analytics):',
+          `- The user has shared their name "${safeName}"; you can occasionally use it to build warmth without overusing it.`
+        );
+      }
     }
   }
 

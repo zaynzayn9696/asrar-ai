@@ -12,6 +12,39 @@ function ensureObject(val) {
   return { ...val };
 }
 
+// NEW: best-effort name detection from a single message text (English + Arabic cues).
+function detectNameFromMessageText(messageText) {
+  const text = String(messageText || '').trim();
+  if (!text) return null;
+
+  const patterns = [
+    /\bmy name is\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
+    /\bcall me\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
+    /\bانا اسمي\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
+    /\bأنا اسمي\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
+    /\bناديني\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
+  ];
+
+  for (const re of patterns) {
+    const match = re.exec(text);
+    if (match && match[1]) {
+      let name = String(match[1]).trim();
+      // Trim common trailing punctuation attached to names.
+      name = name.replace(/[.,!?؟،]+$/u, '').trim();
+      if (!name || name.length < 2 || name.length > 40) {
+        return null;
+      }
+      // For Latin-based names, capitalise the first letter without touching the rest.
+      if (/^[A-Za-z]/.test(name)) {
+        name = name.charAt(0).toUpperCase() + name.slice(1);
+      }
+      return name;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Update long-term emotional profile for a user.
  *
@@ -144,6 +177,52 @@ async function updateLongTerm(userId, event, outcome) {
       }
     } catch (err) {
       // best-effort only
+    }
+  }
+
+  // NEW: best-effort identity (name) detection and persistence to UserMemoryFact.
+  if (messageText) {
+    try {
+      const detectedName = detectNameFromMessageText(messageText);
+      if (detectedName) {
+        const kind = 'identity.name';
+        const existing = await prisma.userMemoryFact.findFirst({
+          where: { userId, kind },
+          select: { id: true },
+        });
+
+        if (existing && existing.id) {
+          await prisma.userMemoryFact.update({
+            where: { id: existing.id },
+            data: {
+              value: detectedName,
+              confidence: 1.0,
+              sourceMessageId: event.messageId || null,
+            },
+          });
+        } else {
+          await prisma.userMemoryFact.create({
+            data: {
+              userId,
+              kind,
+              value: detectedName,
+              confidence: 1.0,
+              sourceMessageId: event.messageId || null,
+            },
+          });
+        }
+
+        console.log('[LongTermMemory] identity.name updated', {
+          userId,
+          hasName: true,
+          sourceMessageId: event.messageId || null,
+        });
+      }
+    } catch (err) {
+      console.error(
+        '[LongTermMemory] identity.name update error',
+        err && err.message ? err.message : err
+      );
     }
   }
 
