@@ -94,29 +94,52 @@ async function getIdentityMemory({ userId }) {
   try {
     // --- 1) Semantic memory: UserMemoryFact(identity.name) ---
     try {
+      let fact = null;
+
       const model = prisma && prisma.userMemoryFact;
       if (!model || typeof model.findFirst !== 'function') {
-        console.error('[MemoryKernel] getIdentityMemory fact model missing on prisma client');
+        // In some environments the generated Prisma client may be stale and not
+        // yet include the UserMemoryFact delegate. Fall back to a raw query
+        // against the underlying table so semantic memory still works.
+        console.error('[MemoryKernel] getIdentityMemory fact model missing on prisma client; using raw query fallback');
+
+        try {
+          const rows = await prisma.$queryRaw`
+            SELECT "value", "confidence"
+            FROM "UserMemoryFact"
+            WHERE "userId" = ${uid} AND "kind" = 'identity.name'
+            ORDER BY "updatedAt" DESC
+            LIMIT 1
+          `;
+          if (Array.isArray(rows) && rows.length > 0) {
+            fact = rows[0];
+          }
+        } catch (rawErr) {
+          console.error(
+            '[MemoryKernel] getIdentityMemory raw fact query error',
+            rawErr && rawErr.message ? rawErr.message : rawErr
+          );
+        }
       } else {
-        const fact = await model.findFirst({
+        fact = await model.findFirst({
           where: { userId: uid, kind: 'identity.name' },
           orderBy: { updatedAt: 'desc' },
           select: { value: true, confidence: true },
         });
+      }
 
-        if (fact && typeof fact.value === 'string') {
-          const trimmed = fact.value.trim();
-          if (trimmed) {
-            result = {
-              name: trimmed,
-              kind: 'identity.name',
-              confidence:
-                typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
-                  ? fact.confidence
-                  : 1.0,
-              source: 'UserMemoryFact',
-            };
-          }
+      if (fact && typeof fact.value === 'string') {
+        const trimmed = fact.value.trim();
+        if (trimmed) {
+          result = {
+            name: trimmed,
+            kind: 'identity.name',
+            confidence:
+              typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
+                ? fact.confidence
+                : 1.0,
+            source: 'UserMemoryFact',
+          };
         }
       }
     } catch (err) {
