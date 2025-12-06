@@ -3,6 +3,11 @@
 
 const prisma = require('../../prisma');
 const { detectAnchorsFromMessage, deriveEmotionalReason } = require('../../services/emotionalReasoning');
+const OpenAI = require('openai');
+
+const openaiClient = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 /**
  * Safely parse a JSON-like field from Prisma (which is already JS) into an object.
@@ -12,58 +17,84 @@ function ensureObject(val) {
   return { ...val };
 }
 
-// NEW: best-effort name detection from a single message text (English + Arabic cues).
-function detectNameFromMessageText(messageText) {
+// LLM-powered name extraction from a single message text (English + Arabic).
+// Returns a clean name string or null if no explicit new name is present.
+async function detectNameUsingLLM(messageText) {
   const text = String(messageText || '').trim();
-  if (!text) return null;
-
-  // Patterns are designed to capture the name in common English and Arabic phrases.
-  // We prefer the *last* valid match in the message, so that
-  // "كان اسمي علي بس من اليوم ناديني جعفر" yields "جعفر".
-  const patterns = [
-    // English forms
-    /\bmy name is\s+([A-Za-z\u0600-\u06FF]{2,40})/giu,
-    /\bcall me\s+([A-Za-z\u0600-\u06FF]{2,40})/giu,
-
-    // Arabic forms like:
-    //   "اسمي جعفر"
-    //   "اسمي هو جعفر"
-    //   "من الآن اسمي جعفر"
-    //   "انا اسمي جعفر" / "أنا اسمي جعفر"
-    /(?:^|[\s,،:.!?؟])(انا اسمي|أنا اسمي|اسمي)\s+(?:هو|يكون)?\s*([A-Za-z\u0600-\u06FF]{2,40})/giu,
-
-    // Arabic forms like:
-    //   "ناديني جعفر"
-    //   "من اليوم ناديني جعفر"
-    /(?:^|[\s,،:.!?؟])ناديني\s+([A-Za-z\u0600-\u06FF]{2,40})/giu,
-  ];
-
-  let lastName = null;
-
-  for (const re of patterns) {
-    re.lastIndex = 0;
-    let match;
-    while ((match = re.exec(text)) !== null) {
-      // For patterns with an extra prefix group (e.g. "انا اسمي"), the name
-      // is always the *last* capturing group.
-      const raw = match[match.length - 1];
-      if (!raw) continue;
-
-      let name = String(raw).trim();
-      // Trim common trailing punctuation attached to names.
-      name = name.replace(/[.,!?؟،]+$/gu, '').trim();
-      if (!name || name.length < 2 || name.length > 40) {
-        continue;
-      }
-      // For Latin-based names, capitalise the first letter without touching the rest.
-      if (/^[A-Za-z]/.test(name)) {
-        name = name.charAt(0).toUpperCase() + name.slice(1);
-      }
-      lastName = name;
-    }
+  if (!text || !openaiClient) {
+    return null;
   }
 
-  return lastName;
+  // Lightweight cue-based gating so we only call the LLM when the message
+  // plausibly contains an explicit name change / "call me" instruction.
+  const cueRegex = /(my name is|call me|i am called|انا اسمي|أنا اسمي|اسمي|ناديني|اسمي الجديد|اسمي صار|اسمي يكون)/i;
+  if (!cueRegex.test(text)) {
+    return null;
+  }
+
+  // Very small heuristic language hint for the prompt only.
+  const hasArabic = /[\u0600-\u06FF]/u.test(text);
+  const languageHint = hasArabic ? 'ar' : 'en';
+
+  const systemPrompt = [
+    'You are a precise name extractor for a mental wellbeing chat app.',
+    'The user message is in Arabic or English.',
+    'If the user explicitly says they changed their name or want to be called a specific name,',
+    'return ONLY the new name. No punctuation. No extra words. No explanations.',
+    'If you are not sure that a new name was provided, return an empty string.',
+  ].join(' ');
+
+  const userPrompt = [
+    `Language hint: ${languageHint}.`,
+    'User message:',
+    text,
+  ].join('\n');
+
+  try {
+    const completion = await openaiClient.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      max_tokens: 16,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+    });
+
+    let out = completion.choices?.[0]?.message?.content || '';
+    out = String(out).trim();
+
+    // Normalise trivial wrappers like quotes.
+    out = out.replace(/^["'«»“”\s]+|["'«»“”\s]+$/gu, '').trim();
+    if (!out) return null;
+
+    // Basic validation: length and presence of letters.
+    if (out.length < 2 || out.length > 40) return null;
+    if (!/[A-Za-z\u0600-\u06FF]/u.test(out)) return null;
+
+    // Guard against common non-name tokens that might slip through.
+    const lower = out.toLowerCase();
+    const banned = new Set([
+      'رح',
+      'من',
+      'اليوم',
+      'اسمي',
+      'انا',
+      'أنا',
+      'name',
+      'my name',
+      'call me',
+    ]);
+    if (banned.has(lower)) return null;
+
+    return out;
+  } catch (err) {
+    console.error(
+      '[LongTermMemory] detectNameUsingLLM error',
+      err && err.message ? err.message : err
+    );
+    return null;
+  }
 }
 
 /**
@@ -204,7 +235,7 @@ async function updateLongTerm(userId, event, outcome) {
   // NEW: best-effort identity (name) detection and persistence to UserMemoryFact.
   if (messageText) {
     try {
-      const detectedName = detectNameFromMessageText(messageText);
+      const detectedName = await detectNameUsingLLM(messageText);
       if (detectedName) {
         const kind = 'identity.name';
         const existing = await prisma.userMemoryFact.findFirst({

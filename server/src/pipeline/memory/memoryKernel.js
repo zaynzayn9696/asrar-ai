@@ -131,15 +131,33 @@ async function getIdentityMemory({ userId }) {
       if (fact && typeof fact.value === 'string') {
         const trimmed = fact.value.trim();
         if (trimmed) {
-          result = {
-            name: trimmed,
-            kind: 'identity.name',
-            confidence:
-              typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
-                ? fact.confidence
-                : 1.0,
-            source: 'UserMemoryFact',
-          };
+          // Basic validation to avoid polluted semantic names.
+          if (trimmed.length >= 2 && trimmed.length <= 40 && /[A-Za-z\u0600-\u06FF]/u.test(trimmed)) {
+            const lower = trimmed.toLowerCase();
+            const banned = new Set([
+              'رح',
+              'من',
+              'اليوم',
+              'اسمي',
+              'انا',
+              'أنا',
+              'name',
+              'my name',
+              'call me',
+            ]);
+
+            if (!banned.has(lower)) {
+              result = {
+                name: trimmed,
+                kind: 'identity.name',
+                confidence:
+                  typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
+                    ? fact.confidence
+                    : 1.0,
+                source: 'UserMemoryFact',
+              };
+            }
+          }
         }
       }
     } catch (err) {
