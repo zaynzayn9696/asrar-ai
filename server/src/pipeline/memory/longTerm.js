@@ -17,32 +17,53 @@ function detectNameFromMessageText(messageText) {
   const text = String(messageText || '').trim();
   if (!text) return null;
 
+  // Patterns are designed to capture the name in common English and Arabic phrases.
+  // We prefer the *last* valid match in the message, so that
+  // "كان اسمي علي بس من اليوم ناديني جعفر" yields "جعفر".
   const patterns = [
-    /\bmy name is\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
-    /\bcall me\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
-    /\bانا اسمي\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
-    /\bأنا اسمي\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
-    /\bناديني\s+([A-Za-z\u0600-\u06FF]{2,30})/i,
+    // English forms
+    /\bmy name is\s+([A-Za-z\u0600-\u06FF]{2,40})/giu,
+    /\bcall me\s+([A-Za-z\u0600-\u06FF]{2,40})/giu,
+
+    // Arabic forms like:
+    //   "اسمي جعفر"
+    //   "اسمي هو جعفر"
+    //   "من الآن اسمي جعفر"
+    //   "انا اسمي جعفر" / "أنا اسمي جعفر"
+    /(?:^|[\s,،:.!?؟])(انا اسمي|أنا اسمي|اسمي)\s+(?:هو|يكون)?\s*([A-Za-z\u0600-\u06FF]{2,40})/giu,
+
+    // Arabic forms like:
+    //   "ناديني جعفر"
+    //   "من اليوم ناديني جعفر"
+    /(?:^|[\s,،:.!?؟])ناديني\s+([A-Za-z\u0600-\u06FF]{2,40})/giu,
   ];
 
+  let lastName = null;
+
   for (const re of patterns) {
-    const match = re.exec(text);
-    if (match && match[1]) {
-      let name = String(match[1]).trim();
+    re.lastIndex = 0;
+    let match;
+    while ((match = re.exec(text)) !== null) {
+      // For patterns with an extra prefix group (e.g. "انا اسمي"), the name
+      // is always the *last* capturing group.
+      const raw = match[match.length - 1];
+      if (!raw) continue;
+
+      let name = String(raw).trim();
       // Trim common trailing punctuation attached to names.
-      name = name.replace(/[.,!?؟،]+$/u, '').trim();
+      name = name.replace(/[.,!?؟،]+$/gu, '').trim();
       if (!name || name.length < 2 || name.length > 40) {
-        return null;
+        continue;
       }
       // For Latin-based names, capitalise the first letter without touching the rest.
       if (/^[A-Za-z]/.test(name)) {
         name = name.charAt(0).toUpperCase() + name.slice(1);
       }
-      return name;
+      lastName = name;
     }
   }
 
-  return null;
+  return lastName;
 }
 
 /**
