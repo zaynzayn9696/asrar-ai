@@ -255,9 +255,18 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
         out = lightOpener + out;
       }
     } else {
-      const friendly = isAr ? 'أهلًا، يسعدني نحكي سوا. ' : "Hey, it's good to hear from you. ";
-      if (!trimmed.startsWith('أهلًا') && !trimmed.startsWith("Hey, it's good to hear")) {
-        out = friendly + out;
+      // For low-empathy/casual states, avoid a single fixed opener to reduce
+      // repetitive greetings like "Hey, it's good to hear from you." and let
+      // the persona + system prompt drive natural variety instead.
+      // As a light touch, only soften very abrupt starts.
+      const genericStartRe = isAr
+        ? /^(طيب|شوف|اسمع)\b/
+        : /^(So\b|Look\b|Listen\b)/i;
+      if (genericStartRe.test(trimmed)) {
+        const alt = isAr
+          ? 'خلّينا نحكي بهدوء وبساطة. '
+          : "Let's talk through this calmly and simply. ";
+        out = alt + trimmed;
       }
     }
 

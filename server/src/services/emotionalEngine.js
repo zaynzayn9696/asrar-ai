@@ -395,7 +395,7 @@ async function updateConversationEmotionState(conversationId, emo) {
  * @param {{ name?: string }} [params.identityMemory]
  * @returns {string}
  */
-function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect, identityMemory }) {
+function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect, identityMemory, recentAssistantReplies = [] }) {
   const isArabic = language === 'ar';
   const personaCfg = personas[personaId] || defaultPersona;
   const premiumUser = !!isPremiumUser;
@@ -426,9 +426,20 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
         '- Be supportive, validating, and prioritize emotional safety at all times.',
       ].join('\n');
 
-  const guidance = isArabic
-    ? 'حافظ على ردود موجزة واضحة (٣–٦ جمل عادةً) ما لم يطلب المستخدم تفاصيل أكثر.'
-    : 'Keep replies concise (about 3–6 sentences) unless the user clearly asks for more detail.';
+  const guidanceLines = isArabic
+    ? [
+        'حافظ على ردود موجزة واضحة (٣–٦ جمل عادةً) ما لم يطلب المستخدم تفاصيل أكثر.',
+        'لا تبدأ كل رسالة بنفس الجملة أو نفس التحية؛ بدّل طريقة البداية من رد لآخر بشكل طبيعي.',
+        'اربط ردّك دائماً بما قاله المستخدم تحديداً في رسالته الأخيرة، وتجنّب النصائح العامة المكرّرة.',
+        'تجنّب نسخ أي جملة كاملة من ردودك السابقة حرفياً، خصوصاً الجملة الأولى في كل رد.'
+      ]
+    : [
+        'Keep replies concise (about 3–6 sentences) unless the user clearly asks for more detail.',
+        'Do NOT start every reply with the same sentence or greeting; vary your openings naturally from turn to turn.',
+        "Always ground your answer in what the user just said instead of generic repeated advice.",
+        'Avoid copying any full sentence exactly from your last couple of replies, especially the opening line.'
+      ];
+  const guidance = guidanceLines.join('\n');
 
   const header = isArabic
     ? 'أنت رفيق داخل تطبيق "أسرار" للدعم العاطفي.'
@@ -586,6 +597,31 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       ]
     : [];
 
+  // Optional repetition-awareness hint using the last couple of assistant replies.
+  let repetitionHintBlock = '';
+  if (Array.isArray(recentAssistantReplies) && recentAssistantReplies.length) {
+    const snippetLines = recentAssistantReplies
+      .slice(-2)
+      .map((m, idx) => {
+        const raw = typeof m?.content === 'string' ? m.content : '';
+        const snippet = raw.length > 160 ? `${raw.slice(0, 160)}…` : raw;
+        return `${idx + 1}) ${snippet}`;
+      })
+      .filter(Boolean);
+
+    if (snippetLines.length) {
+      repetitionHintBlock = isArabic
+        ? [
+            'للتذكير: هذه أمثلة على جملك الأخيرة كمساعد (لا تعِد استخدامها حرفياً في الرد الجديد):',
+            ...snippetLines,
+          ].join('\n')
+        : [
+            'Reminder: these are examples of your last couple of assistant replies (do NOT reuse these sentences verbatim in the new reply):',
+            ...snippetLines,
+          ].join('\n');
+    }
+  }
+
   const systemPrompt = [
     header,
     cultural,
@@ -611,6 +647,8 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     triggersBlock,
     triggersHint ? '' : '',
     triggersHint,
+    repetitionHintBlock ? '' : '',
+    repetitionHintBlock,
     '',
     'Safety & Empathy Rules:',
     safety,
@@ -791,6 +829,10 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       });
     } catch (_) {}
 
+    const recentAssistantReplies = Array.isArray(recentMessages)
+      ? recentMessages.filter((m) => m && m.role === 'assistant').slice(-2)
+      : [];
+
     let systemPromptBase = buildSystemPrompt({
       personaText,
       personaId: personaId || 'hana',
@@ -801,6 +843,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       triggers,
       dialect,
       identityMemory,
+      recentAssistantReplies,
     });
 
     const systemPrompt = phase4Block

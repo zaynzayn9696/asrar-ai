@@ -4,20 +4,20 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.28rem 0.9rem;
+  padding: 0.3rem 0.95rem;
   border-radius: 999px;
-  border: 1px solid rgba(151, 191, 255, 0.8);
+  border: 1px solid rgba(151, 191, 255, 0.9);
   background: radial-gradient(
     circle at top,
-    rgba(102, 153, 255, 0.14),
-    rgba(3, 8, 18, 0.96)
+    rgba(102, 153, 255, 0.18),
+    rgba(3, 8, 18, 0.97)
   );
   color: #e8f4ff;
   font-size: 0.78rem;
   cursor: pointer;
   box-shadow:
-    0 0 0 1px rgba(102, 153, 255, 0.32),
-    0 10px 24px rgba(0, 0, 0, 0.9);
+    0 0 0 1px rgba(102, 153, 255, 0.4),
+    0 10px 26px rgba(0, 0, 0, 0.92);
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
@@ -28,8 +28,19 @@
 .asrar-timeline-badge:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 0 0 1px rgba(170, 210, 255, 0.6),
-    0 14px 30px rgba(0, 0, 0, 0.96);
+    0 0 0 1px rgba(170, 210, 255, 0.8),
+    0 15px 32px rgba(0, 0, 0, 0.98);
+}
+
+.asrar-timeline-badge-icon {
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+.asrar-timeline-badge-label {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .asrar-timeline-layer {

@@ -1035,28 +1035,7 @@ export default function ChatPage() {
         return;
       }
 
-      if (data.usage) {
-        setUsageInfo(data.usage);
-        if (setUser) {
-          setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
-        }
-      }
-
-      if (Array.isArray(data.whispersUnlocked) && data.whispersUnlocked.length) {
-        setRecentWhispers((prev) => [...data.whispersUnlocked, ...prev]);
-        setHasNewWhispers(true);
-      }
-
-      if (data && data.dailyLimitReached) {
-        setLimitExceeded(true);
-        setLimitUsage(data.usage || null);
-        if (typeof data.resetInSeconds === "number" && data.resetInSeconds >= 0) {
-          setLimitResetSeconds(data.resetInSeconds);
-        } else {
-          setLimitResetSeconds(null);
-        }
-      }
-
+      // 1) Build and append assistant message immediately so the UI updates first.
       const aiText = data.reply || (isArabicConversation
         ? `واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل.`
         : "I had a small issue connecting. Please try again in a moment.");
@@ -1067,11 +1046,11 @@ export default function ChatPage() {
         const alreadyMentions = (
           (suggestedName && lower.includes(suggestedName.toLowerCase())) ||
           lower.includes('switch to') ||
-        finalText.includes('حزين جدا')
+          finalText.includes('حزين جدا')
         );
         if (!alreadyMentions) {
           const rec = isArabicConversation
-          ? "حدث خطأ أثناء توليد الرد. حاول مرة أخرى لاحقاً."
+            ? "حدث خطأ أثناء توليد الرد. حاول مرة أخرى لاحقاً."
             : `If you'd like more practical guidance focused on this topic, you can try chatting with ${suggestedName}.`;
           finalText = `${finalText}\n\n${rec}`;
         }
@@ -1086,23 +1065,53 @@ export default function ChatPage() {
 
       setMessages((prev) => [...prev, aiMessage]);
 
-      // If no active conversation existed, fetch the latest one and set it
-      if (!conversationId) {
-        try {
-          const token2 = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
-          const headers2 = token2
-            ? { "Content-Type": "application/json", Authorization: `Bearer ${token2}` }
-            : { "Content-Type": "application/json" };
-          const listRes = await fetch(
-            `${API_BASE}/api/chat/conversations?characterId=${selectedCharacterId}`,
-            { method: 'GET', credentials: 'include', headers: headers2 }
-          );
-          const list = await listRes.json().catch(() => []);
-          if (Array.isArray(list) && list.length) {
-            setConversations(list);
-            setConversationId(list[0].id || null);
+      // 2) Non-critical UI updates (usage, whispers, limit banner) in a follow-up tick.
+      setTimeout(() => {
+        if (data.usage) {
+          setUsageInfo(data.usage);
+          if (setUser) {
+            setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
           }
-        } catch (_) {}
+        }
+
+        if (Array.isArray(data.whispersUnlocked) && data.whispersUnlocked.length) {
+          setRecentWhispers((prev) => [...data.whispersUnlocked, ...prev]);
+          setHasNewWhispers(true);
+        }
+
+        if (data && data.dailyLimitReached) {
+          setLimitExceeded(true);
+          setLimitUsage(data.usage || null);
+          if (typeof data.resetInSeconds === "number" && data.resetInSeconds >= 0) {
+            setLimitResetSeconds(data.resetInSeconds);
+          } else {
+            setLimitResetSeconds(null);
+          }
+        }
+      }, 0);
+
+      // 3) Refresh conversation list in the background if this created the first conversation.
+      if (!conversationId) {
+        setTimeout(() => {
+          (async () => {
+            try {
+              const token2 =
+                typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+              const headers2 = token2
+                ? { "Content-Type": "application/json", Authorization: `Bearer ${token2}` }
+                : { "Content-Type": "application/json" };
+              const listRes = await fetch(
+                `${API_BASE}/api/chat/conversations?characterId=${selectedCharacterId}`,
+                { method: "GET", credentials: "include", headers: headers2 }
+              );
+              const list = await listRes.json().catch(() => []);
+              if (Array.isArray(list) && list.length) {
+                setConversations(list);
+                setConversationId(list[0].id || null);
+              }
+            } catch (_) {}
+          })();
+        }, 0);
       }
     } catch (err) {
       console.error("Failed to send chat message", err);
@@ -1466,18 +1475,6 @@ export default function ChatPage() {
             return;
           }
 
-          if (data.usage) {
-            setUsageInfo(data.usage);
-            if (setUser) {
-              setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
-            }
-          }
-
-          if (Array.isArray(data.whispersUnlocked) && data.whispersUnlocked.length) {
-            setRecentWhispers((prev) => [...data.whispersUnlocked, ...prev]);
-            setHasNewWhispers(true);
-          }
-
           console.log(
             "Mic: voice response payload keys",
             data && typeof data === "object" ? Object.keys(data) : []
@@ -1523,6 +1520,7 @@ export default function ChatPage() {
               ? data.audioMimeType
               : "audio/mpeg";
 
+          // 1) Append user + assistant voice messages immediately.
           setMessages((prev) => {
             const lastId =
               prev.length && typeof prev[prev.length - 1].id === "number"
@@ -1558,9 +1556,6 @@ export default function ChatPage() {
               id: lastId + 2,
               from: "ai",
               type: "voice",
-              // Keep full text for history / server merge, but UI will hide it
-              // whenever audioBase64 is present and treat this as a pure
-              // voice reply.
               text: aiText,
               createdAt: nowIso,
               audioBase64: aiAudioBase64,
@@ -1569,6 +1564,21 @@ export default function ChatPage() {
 
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
+
+          // 2) Non-critical usage + whispers updates in a follow-up tick.
+          setTimeout(() => {
+            if (data.usage) {
+              setUsageInfo(data.usage);
+              if (setUser) {
+                setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
+              }
+            }
+
+            if (Array.isArray(data.whispersUnlocked) && data.whispersUnlocked.length) {
+              setRecentWhispers((prev) => [...data.whispersUnlocked, ...prev]);
+              setHasNewWhispers(true);
+            }
+          }, 0);
 
         } catch (err) {
           console.error("Voice send error", err);
@@ -1712,8 +1722,8 @@ export default function ChatPage() {
                     className="asrar-timeline-badge"
                     onClick={() => setIsTimelineOpen(true)}
                   >
-                    <span aria-hidden="true">▤</span>
-                    <span>
+                    <span className="asrar-timeline-badge-icon" aria-hidden="true">▤</span>
+                    <span className="asrar-timeline-badge-label">
                       {isAr ? "خريطة المشاعر" : "History"}
                     </span>
                   </button>

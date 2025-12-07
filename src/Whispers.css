@@ -5,28 +5,29 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 0.45rem;
+  margin-top: 0.4rem;
   flex-wrap: wrap;
+  padding: 0 0.25rem;
 }
 
 .asrar-whispers-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.28rem 0.85rem;
+  padding: 0.3rem 0.95rem;
   border-radius: 999px;
-  border: 1px solid rgba(0, 240, 255, 0.55);
+  border: 1px solid rgba(0, 240, 255, 0.75);
   background: radial-gradient(
     circle at top,
-    rgba(0, 240, 255, 0.14),
-    rgba(4, 10, 22, 0.95)
+    rgba(0, 240, 255, 0.18),
+    rgba(4, 10, 22, 0.96)
   );
   color: #e8f8ff;
   font-size: 0.78rem;
   cursor: pointer;
   box-shadow:
-    0 0 0 1px rgba(0, 240, 255, 0.18),
-    0 10px 24px rgba(0, 0, 0, 0.85);
+    0 0 0 1px rgba(0, 240, 255, 0.3),
+    0 10px 26px rgba(0, 0, 0, 0.9);
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
@@ -42,10 +43,11 @@
 }
 
 .asrar-whispers-badge--highlight {
-  border-color: rgba(255, 196, 120, 0.9);
+  border-color: rgba(255, 196, 120, 0.95);
   box-shadow:
-    0 0 0 1px rgba(255, 196, 120, 0.7),
-    0 0 24px rgba(255, 196, 120, 0.85);
+    0 0 0 1px rgba(255, 196, 120, 0.8),
+    0 0 26px rgba(255, 196, 120, 0.9);
+  animation: asrar-whispers-pulse 1.9s ease-in-out infinite;
 }
 
 .asrar-whispers-badge-icon {
@@ -56,6 +58,7 @@
 .asrar-whispers-badge-label {
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .asrar-whispers-badge-dot {
@@ -64,6 +67,25 @@
   border-radius: 999px;
   background: radial-gradient(circle at center, #ffd37a, #ff7a7a);
   box-shadow: 0 0 10px rgba(255, 160, 120, 0.9);
+}
+
+@keyframes asrar-whispers-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 196, 120, 0.7),
+      0 0 22px rgba(255, 196, 120, 0.75);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 220, 160, 1),
+      0 0 32px rgba(255, 210, 150, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .asrar-whispers-badge--highlight {
+    animation: none;
+  }
 }
 
 /* Unlock card stack under messages */
