@@ -448,7 +448,9 @@ export default function ChatPage() {
     console.log("[ChatPage] selectedCharacterId", selectedCharacterId);
   }, [selectedCharacterId]);
 
-  // Load any existing history for this user + character on mount
+  // Load any existing history for this user + character on mount.
+  // Only depend on user.id so usage/plan updates on the user object
+  // dont re-trigger hydration and overwrite fresh messages.
   useEffect(() => {
     if (!user) return;
     if (typeof window === "undefined") return;
@@ -488,7 +490,7 @@ export default function ChatPage() {
       // Mark that we attempted to hydrate from storage (even if nothing was there)
       setHasHydratedHistory(true);
     }
-  }, [user, selectedCharacterId]);
+  }, [user && user.id, selectedCharacterId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
