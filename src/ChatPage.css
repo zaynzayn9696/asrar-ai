@@ -238,6 +238,26 @@
   box-shadow: none;
 }
 
+.asrar-chat-tools-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.asrar-chat-tools-sidebar .asrar-whispers-badge,
+.asrar-chat-tools-sidebar .asrar-timeline-badge {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .asrar-chat-tools-sidebar {
+    gap: 0.4rem;
+  }
+}
+
 .asrar-conversation-list {
   flex: 1;
   overflow-y: auto;

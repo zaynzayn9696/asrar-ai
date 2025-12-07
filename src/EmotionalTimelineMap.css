@@ -43,6 +43,10 @@
   font-weight: 600;
 }
 
+[dir="rtl"] .asrar-timeline-badge {
+  flex-direction: row-reverse;
+}
+
 .asrar-timeline-layer {
   position: fixed;
   inset: 0;

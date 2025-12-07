@@ -739,25 +739,71 @@ export default function ChatPage() {
     }
   };
 
-  const renderSidebarContent = () => (
-    <>
+const renderSidebarContent = () => (
+  <>
+    <button
+      className="asrar-new-chat-btn"
+      onClick={handleStartNewChat}
+      type="button"
+    >
+      {isAr ? "+ ابدأ محادثة جديدة" : "+ Start new chat"}
+    </button>
+
+    <div className="asrar-chat-tools-sidebar">
+      <WhispersBadge
+        isAr={isAr}
+        hasNew={hasNewWhispers}
+        onClick={() => {
+          setIsWhispersOpen(true);
+          setHasNewWhispers(false);
+        }}
+      />
       <button
-        className="asrar-new-chat-btn"
-        onClick={handleStartNewChat}
         type="button"
+        className="asrar-timeline-badge"
+        onClick={() => setIsTimelineOpen(true)}
       >
-        {isAr ? "+ ابدأ محادثة جديدة" : "+ Start new chat"}
+        <span className="asrar-timeline-badge-icon" aria-hidden="true">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 16L9 11L13 13.5L20 8"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="4" cy="16" r="1.4" fill="currentColor" />
+            <circle cx="9" cy="11" r="1.4" fill="currentColor" />
+            <circle cx="13" cy="13.5" r="1.4" fill="currentColor" />
+            <circle cx="20" cy="8" r="1.4" fill="currentColor" />
+          </svg>
+        </span>
+        <span className="asrar-timeline-badge-label">
+          {isAr ? "رحلة مشاعرك" : "Mood Journey"}
+        </span>
       </button>
-      <div className="asrar-conversation-list">
-        {convLoading && <div className="asrar-conv-item">Loading...</div>}
-        {convError && !convLoading && (
-          <div className="asrar-conv-item">{convError}</div>
-        )}
-        {!convLoading && !convError && Array.isArray(conversations) && conversations.map((conv) => (
+    </div>
+
+    <div className="asrar-conversation-list">
+      {convLoading && <div className="asrar-conv-item">Loading...</div>}
+      {convError && !convLoading && (
+        <div className="asrar-conv-item">{convError}</div>
+      )}
+      {!convLoading &&
+        !convError &&
+        Array.isArray(conversations) &&
+        conversations.map((conv) => (
           <div
             key={conv.id}
             className={
-              "asrar-conv-item" + (conv.id === conversationId ? " asrar-conv-item--active" : "")
+              "asrar-conv-item" +
+              (conv.id === conversationId ? " asrar-conv-item--active" : "")
             }
             onClick={() => handleConversationClick(conv.id)}
           >
@@ -771,19 +817,24 @@ export default function ChatPage() {
                 ×
               </button>
             </div>
-            <div className="asrar-conv-preview">{(conv.firstUserMessage && conv.firstUserMessage.trim()) ? conv.firstUserMessage.slice(0, 60) : "No messages yet"}</div>
+            <div className="asrar-conv-preview">
+              {conv.firstUserMessage && conv.firstUserMessage.trim()
+                ? conv.firstUserMessage.slice(0, 60)
+                : "No messages yet"}
+            </div>
           </div>
         ))}
-      </div>
-    </>
-  );
+    </div>
+  </>
+);
 
-  const mobileSidebarTitle = isAr ? "المحادثات" : "Conversations";
+const mobileSidebarTitle = isAr ? "المحادثات" : "Conversations";
 
-  // Persist history whenever messages change
-  useEffect(() => {
-    if (!user) return;
-    if (!hasHydratedHistory) return; // avoid overwriting stored history before hydration
+// Persist history whenever messages change
+useEffect(() => {
+  if (!user) return;
+  if (!hasHydratedHistory) return; // avoid overwriting stored history before hydration
+  if (typeof window === "undefined") return;
     if (typeof window === "undefined") return;
 
     const userId = user.id;
@@ -1710,30 +1761,6 @@ export default function ChatPage() {
                 </h1>
               </div>
             </header>
-
-            <div className="asrar-chat-tools-bar">
-              <div className="asrar-chat-header-subrow">
-                <WhispersBadge
-                  isAr={isAr}
-                  hasNew={hasNewWhispers}
-                  onClick={() => {
-                    setIsWhispersOpen(true);
-                    setHasNewWhispers(false);
-                  }}
-                />
-                <button
-                  type="button"
-                  className="asrar-timeline-badge"
-                  onClick={() => setIsTimelineOpen(true)}
-                >
-                  <span className="asrar-timeline-badge-icon" aria-hidden="true">▤</span>
-                  <span className="asrar-timeline-badge-label">
-                    {isAr ? "رحلة مشاعرك" : "Mood Journey"}
-                  </span>
-                </button>
-              </div>
-            </div>
-
             {recentWhispers.length > 0 && (
               <div className="asrar-whisper-unlock-stack">
                 <WhisperUnlockCard
