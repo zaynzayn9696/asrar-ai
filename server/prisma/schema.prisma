@@ -38,6 +38,13 @@ model User {
 
   // NEW: back relation to UserMemoryFact (semantic memory)
   memoryFacts UserMemoryFact[]
+
+  // Whispers / trust & emotional history relations
+  personaTrusts           UserPersonaTrust[]
+  unlockedWhispers        UserUnlockedWhisper[]
+  emotionalEvents         EmotionalEvent[]
+  emotionalDailySummaries EmotionalDailySummary[]
+  mirrorSessions          MirrorSession[]
 }
 
 model Usage {
@@ -64,6 +71,8 @@ model Conversation {
   emotionalTimelineEvents EmotionalTimelineEvent[]
   stateMachine            ConversationStateMachine?
   emotionalTriggerEvents  EmotionalTriggerEvent[]
+
+  emotionalEvents         EmotionalEvent[]
 }
 
 model Message {
@@ -275,4 +284,106 @@ model UserMemoryFact {
   updatedAt       DateTime @updatedAt
 
   @@index([userId, kind])
+}
+
+model UserPersonaTrust {
+  id                    Int      @id @default(autoincrement())
+  userId                Int
+  personaId             String
+  trustScore            Float    @default(0)
+  trustLevel            Int      @default(0)
+  messageCount          Int      @default(0)
+  distinctDaysCount     Int      @default(0)
+  lastInteractionAt     DateTime @default(now())
+  lastEvaluatedAt       DateTime?
+  lastWhisperUnlockedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, personaId])
+  @@index([userId, personaId])
+}
+
+model PersonaWhisper {
+  id              Int    @id @default(autoincrement())
+  personaId       String
+  levelRequired   Int
+  title           String
+  contentTemplate String
+  lang            String
+  tags            Json?
+  sortOrder       Int     @default(0)
+  isActive        Boolean @default(true)
+
+  unlockedBy UserUnlockedWhisper[]
+}
+
+model UserUnlockedWhisper {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  personaId       String
+  whisperId       Int
+  unlockedAt      DateTime @default(now())
+  firstRevealedAt DateTime?
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  whisper PersonaWhisper @relation(fields: [whisperId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, whisperId])
+  @@index([userId, personaId])
+}
+
+model EmotionalEvent {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  personaId      String
+  conversationId Int?
+  timestamp      DateTime @default(now())
+  dominantEmotion String
+  intensity      Float
+  valence        Float?
+  source         String
+  eventType      String
+  tags           Json?
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, personaId, timestamp])
+  @@index([userId, timestamp])
+}
+
+model EmotionalDailySummary {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  personaId          String
+  date               DateTime
+  topEmotion         String?
+  avgIntensity       Float    @default(0)
+  emotionCounts      Json?
+  firstMessageAt     DateTime?
+  lastMessageAt      DateTime?
+  messageCount       Int      @default(0)
+  voiceMessageCount  Int      @default(0)
+  whisperUnlockCount Int      @default(0)
+  mirrorSessionCount Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, personaId, date])
+  @@index([userId, personaId, date])
+}
+
+model MirrorSession {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  personaId     String
+  generatedAt   DateTime @default(now())
+  rangeDays     Int
+  summaryText   String
+  dominantTrend String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, personaId, generatedAt])
 }

@@ -29,6 +29,11 @@ const {
   updateEmotionalPatterns,
   logTriggerEventsForMessage,
 } = require('../services/emotionalLongTerm');
+const {
+  updateTrustOnMessage,
+  evaluateWhisperUnlocks,
+} = require('../services/whispersTrustService');
+const { logEmotionalEvent } = require('../services/timelineService');
 const { recordEvent: recordMemoryEvent } = require('../pipeline/memory/memoryKernel');
 const { orchestrateResponse } = require('../services/responseOrchestrator');
 const multer = require('multer');
@@ -1068,6 +1073,45 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       personaCfg,
     } = engineResult;
 
+    try {
+      await updateTrustOnMessage({
+        userId,
+        personaId: characterId,
+        emotionSnapshot: emo,
+        triggers,
+        timestamp: new Date(),
+      });
+    } catch (err) {
+      console.error(
+        '[Whispers][Trust] updateTrustOnMessage failed',
+        err && err.message ? err.message : err
+      );
+    }
+
+    try {
+      await logEmotionalEvent({
+        userId,
+        personaId: characterId,
+        conversationId: cid,
+        timestamp: new Date(),
+        dominantEmotion:
+          emo && typeof emo.primaryEmotion === 'string'
+            ? emo.primaryEmotion
+            : 'NEUTRAL',
+        intensity:
+          emo && typeof emo.intensity === 'number' ? emo.intensity : 0,
+        valence: null,
+        source: 'user_message',
+        eventType: 'message',
+        tags: { source: 'text', severityLevel: severityLevel || 'CASUAL' },
+      });
+    } catch (err) {
+      console.error(
+        '[Timeline] logEmotionalEvent (message) failed',
+        err && err.message ? err.message : err
+      );
+    }
+
     const engineTimings = engineResult.timings || {};
 
     const engineMode = decideEngineMode({
@@ -1255,6 +1299,47 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       totalMs,
     });
 
+    let whispersUnlocked = [];
+    try {
+      const unlocked = await evaluateWhisperUnlocks({
+        userId,
+        personaId: characterId,
+      });
+      if (Array.isArray(unlocked) && unlocked.length) {
+        whispersUnlocked = unlocked;
+        for (const w of unlocked) {
+          try {
+            await logEmotionalEvent({
+              userId,
+              personaId: characterId,
+              conversationId: cid,
+              timestamp: w.unlockedAt || new Date(),
+              dominantEmotion: 'NEUTRAL',
+              intensity: 0,
+              valence: null,
+              source: 'system_event',
+              eventType: 'whisper_unlocked',
+              tags: {
+                whisperId: w.id,
+                title: w.title,
+                levelRequired: w.levelRequired,
+              },
+            });
+          } catch (err) {
+            console.error(
+              '[Timeline] logEmotionalEvent (whisper_unlocked:voice) failed',
+              err && err.message ? err.message : err
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.error(
+        '[Whispers][Route] evaluateWhisperUnlocks (voice) failed',
+        err && err.message ? err.message : err
+      );
+    }
+
     const responsePayload = {
       type: 'voice',
       audio: ttsResult.base64,
@@ -1264,6 +1349,10 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       userText,
       usage: buildUsageSummary(dbUser, usage),
     };
+
+    if (whispersUnlocked.length) {
+      responsePayload.whispersUnlocked = whispersUnlocked;
+    }
 
     return res.json(responsePayload);
   } catch (err) {
@@ -1477,6 +1566,45 @@ router.post('/message', async (req, res) => {
       severityLevel,
       personaCfg,
     } = engineResult;
+
+    try {
+      await updateTrustOnMessage({
+        userId,
+        personaId: characterId,
+        emotionSnapshot: emo,
+        triggers,
+        timestamp: new Date(),
+      });
+    } catch (err) {
+      console.error(
+        '[Whispers][Trust] updateTrustOnMessage failed',
+        err && err.message ? err.message : err
+      );
+    }
+
+    try {
+      await logEmotionalEvent({
+        userId,
+        personaId: characterId,
+        conversationId: cid,
+        timestamp: new Date(),
+        dominantEmotion:
+          emo && typeof emo.primaryEmotion === 'string'
+            ? emo.primaryEmotion
+            : 'NEUTRAL',
+        intensity:
+          emo && typeof emo.intensity === 'number' ? emo.intensity : 0,
+        valence: null,
+        source: 'user_message',
+        eventType: 'message',
+        tags: { source: 'text', severityLevel: severityLevel || 'CASUAL' },
+      });
+    } catch (err) {
+      console.error(
+        '[Timeline] logEmotionalEvent (message) failed',
+        err && err.message ? err.message : err
+      );
+    }
 
     const engineTimings = engineResult.timings || {};
 
@@ -1803,6 +1931,47 @@ router.post('/message', async (req, res) => {
       totalMs,
     });
 
+    let whispersUnlocked = [];
+    try {
+      const unlocked = await evaluateWhisperUnlocks({
+        userId,
+        personaId: characterId,
+      });
+      if (Array.isArray(unlocked) && unlocked.length) {
+        whispersUnlocked = unlocked;
+        for (const w of unlocked) {
+          try {
+            await logEmotionalEvent({
+              userId,
+              personaId: characterId,
+              conversationId: cid,
+              timestamp: w.unlockedAt || new Date(),
+              dominantEmotion: 'NEUTRAL',
+              intensity: 0,
+              valence: null,
+              source: 'system_event',
+              eventType: 'whisper_unlocked',
+              tags: {
+                whisperId: w.id,
+                title: w.title,
+                levelRequired: w.levelRequired,
+              },
+            });
+          } catch (err) {
+            console.error(
+              '[Timeline] logEmotionalEvent (whisper_unlocked) failed',
+              err && err.message ? err.message : err
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.error(
+        '[Whispers][Route] evaluateWhisperUnlocks failed',
+        err && err.message ? err.message : err
+      );
+    }
+
     const wantsStream =
       body.stream === true ||
       body.stream === 'true' ||
@@ -1812,6 +1981,10 @@ router.post('/message', async (req, res) => {
       reply: aiMessage,
       usage: buildUsageSummary(dbUser, usage),
     };
+
+    if (whispersUnlocked.length) {
+      responsePayload.whispersUnlocked = whispersUnlocked;
+    }
 
     // If a free-plan user has just used their final daily message (e.g. 5/5),
     // return a hint so the frontend can immediately show the limit banner.
@@ -1870,6 +2043,10 @@ router.post('/message', async (req, res) => {
         donePayload.limitType = responsePayload.limitType;
         donePayload.resetAt = responsePayload.resetAt;
         donePayload.resetInSeconds = responsePayload.resetInSeconds;
+      }
+
+      if (responsePayload.whispersUnlocked) {
+        donePayload.whispersUnlocked = responsePayload.whispersUnlocked;
       }
 
       res.write(`data: ${JSON.stringify(donePayload)}\n\n`);

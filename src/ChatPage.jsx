@@ -5,6 +5,10 @@ import "./ChatPage.css";
 import AsrarHeader from "./AsrarHeader";
 
 import VoiceMessageBubble from "./VoiceMessageBubble"; // tap-to-play audio bubble for voice replies
+import WhispersBadge from "./WhispersBadge";
+import WhisperUnlockCard from "./WhisperUnlockCard";
+import WhispersPanel from "./WhispersPanel";
+import EmotionalTimelineMap from "./EmotionalTimelineMap";
 import { API_BASE } from "./apiBase";
 
 import abuZainAvatar from "./assets/abu_zain.png";
@@ -240,6 +244,12 @@ export default function ChatPage() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  // Whispers / timeline UI state
+  const [recentWhispers, setRecentWhispers] = useState([]);
+  const [hasNewWhispers, setHasNewWhispers] = useState(false);
+  const [isWhispersOpen, setIsWhispersOpen] = useState(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+
   // Free plan limit banner state
   const [limitExceeded, setLimitExceeded] = useState(false);
   const [limitUsage, setLimitUsage] = useState(null);
@@ -262,6 +272,12 @@ export default function ChatPage() {
       return null;
     }
   };
+
+  // Clear newly-unlocked whisper cards when switching persona
+  useEffect(() => {
+    setRecentWhispers([]);
+    setHasNewWhispers(false);
+  }, [selectedCharacterId]);
 
   const [messages, setMessages] = useState(() => {
     const now = new Date().toISOString();
@@ -1026,6 +1042,11 @@ export default function ChatPage() {
         }
       }
 
+      if (Array.isArray(data.whispersUnlocked) && data.whispersUnlocked.length) {
+        setRecentWhispers((prev) => [...data.whispersUnlocked, ...prev]);
+        setHasNewWhispers(true);
+      }
+
       if (data && data.dailyLimitReached) {
         setLimitExceeded(true);
         setLimitUsage(data.usage || null);
@@ -1452,6 +1473,11 @@ export default function ChatPage() {
             }
           }
 
+          if (Array.isArray(data.whispersUnlocked) && data.whispersUnlocked.length) {
+            setRecentWhispers((prev) => [...data.whispersUnlocked, ...prev]);
+            setHasNewWhispers(true);
+          }
+
           console.log(
             "Mic: voice response payload keys",
             data && typeof data === "object" ? Object.keys(data) : []
@@ -1672,9 +1698,45 @@ export default function ChatPage() {
                 <h1 className="asrar-chat-header-title">
                   {getName(character)} - {getRole(character)}
                 </h1>
+                <div className="asrar-chat-header-subrow">
+                  <WhispersBadge
+                    isAr={isAr}
+                    hasNew={hasNewWhispers}
+                    onClick={() => {
+                      setIsWhispersOpen(true);
+                      setHasNewWhispers(false);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="asrar-timeline-badge"
+                    onClick={() => setIsTimelineOpen(true)}
+                  >
+                    <span aria-hidden="true">▤</span>
+                    <span>
+                      {isAr ? "خريطة المشاعر" : "History"}
+                    </span>
+                  </button>
+                </div>
               </div>
-              {null}
             </header>
+
+            {recentWhispers.length > 0 && (
+              <div className="asrar-whisper-unlock-stack">
+                <WhisperUnlockCard
+                  whisper={recentWhispers[0]}
+                  personaName={characterDisplayName}
+                  isAr={isAr}
+                  onViewAll={() => {
+                    setIsWhispersOpen(true);
+                    setHasNewWhispers(false);
+                  }}
+                  onDismiss={() => {
+                    setRecentWhispers((prev) => prev.slice(1));
+                  }}
+                />
+              </div>
+            )}
 
             {messages.map((msg) => {
               const isAiVoice = msg.from === "ai" && !!msg.audioBase64;
@@ -1935,7 +1997,7 @@ export default function ChatPage() {
         </div>
       </main>
 
-      {/* Modals */}
+      {/* Existing plan/character modals */}
       {(showLockedModal || showLimitModal) && (
         <div
           className="asrar-modal-backdrop"
@@ -1974,9 +2036,25 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+
+      {/* Whispers Mode full panel */}
+      <WhispersPanel
+        isOpen={isWhispersOpen}
+        onClose={() => setIsWhispersOpen(false)}
+        personaId={selectedCharacterId}
+        personaName={characterDisplayName}
+        isAr={isAr}
+      />
+
+      {/* Emotional Timeline Map + Mirror Mode */}
+      <EmotionalTimelineMap
+        isOpen={isTimelineOpen}
+        onClose={() => setIsTimelineOpen(false)}
+        personaId={selectedCharacterId}
+        personaName={characterDisplayName}
+        isAr={isAr}
+      />
     </div>
   );
 }
-
-
 
