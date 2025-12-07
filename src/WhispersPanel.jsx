@@ -88,17 +88,17 @@ export default function WhispersPanel({
       ? status.unlockedWhispers
       : []) || [];
 
-  const title = isAr
-    ? "همساتك السرّية"
-    : "Your Whispers with this companion";
-
-  const subtitle = personaName
+  const title = personaName
     ? isAr
-      ? `أسرار بينك وبين ${personaName}`
-      : `Secrets between you and ${personaName}`
+      ? `الجانب الخفي لـ ${personaName}`
+      : `Hidden Side of ${personaName}`
     : isAr
-    ? "أسرارك الآمنة هنا."
-    : "Your safe secrets live here.";
+    ? "الجانب الخفي"
+    : "Hidden Side";
+
+  const subtitle = isAr
+    ? "أسرار وجوانب أعمق لهذا الرفيق تنفتح مع الوقت."
+    : "Unlocked secrets and deeper sides of this companion.";
 
   const trustLabel = (() => {
     if (!status) return null;

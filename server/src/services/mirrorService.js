@@ -162,18 +162,35 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
 }
 
 async function callLLMForMirror({ insights, personaMeta, lang }) {
-  const language = (lang || 'ar').toLowerCase();
+
+  // Mirror language should follow the UI language from the client.
+  // If lang is missing or unknown, fall back to English.
+  const rawLang = typeof lang === 'string' ? lang.toLowerCase() : '';
+  const language = rawLang === 'ar' ? 'ar' : 'en';
 
   const isAr = language === 'ar';
 
-  const systemPrompt = isAr
-    ? 'أنت رفيق عاطفي داخل تطبيق "أسرار". وظيفتك أن تعكس للمستخدم نمط مشاعره بلطف، بدون أي لغة طبية أو تشخيصية، وبدون ذكر أمراض نفسية، وبدون إعطاء وعود بالعلاج. تحدّث كصديق مهتم من المنطقة، يستخدم لغة بسيطة ودافئة.'
-    : 'You are an emotional companion inside an app called Asrar. Your job is to gently reflect emotional patterns back to the user, without using clinical or diagnostic language, without naming disorders, and without promising treatment. Speak like a caring friend from their region in simple, warm language.';
+  const basePromptAr = 'أنت رفيق عاطفي داخل تطبيق "أسرار". وظيفتك أن تعكس للمستخدم نمط مشاعره بلطف، بدون أي لغة طبية أو تشخيصية، وبدون ذكر أمراض نفسية، وبدون إعطاء وعود بالعلاج. تحدّث كصديق مهتم من المنطقة، يستخدم لغة بسيطة ودافئة.';
+  const basePromptEn = 'You are an emotional companion inside an app called Asrar. Your job is to gently reflect emotional patterns back to the user, without using clinical or diagnostic language, without naming disorders, and without promising treatment. Speak like a caring friend from their region in simple, warm language.';
+
+  // Explicitly pin the LLM to the requested language so Mirror Mode always
+  // matches the UI language.
+  const languageInstruction = isAr
+    ? 'استجب دائماً بالكامل باللغة المحددة في الحقل lang. إذا كانت lang = "ar" فليكن الرد بالعربية فقط، وإذا كانت lang = "en" فليكن الرد بالإنجليزية فقط، ولا تخلط بين اللغتين في نفس الرد.'
+    : 'Respond fully in the language given by the `lang` parameter. If lang = "en", output English only and do not include Arabic text. If lang = "ar", output Arabic only. Do not mix languages in a single reply.';
+
+  const systemPrompt = `${isAr ? basePromptAr : basePromptEn}\n\n${languageInstruction}`;
 
   const userContent = JSON.stringify({
     persona: personaMeta || null,
     insights,
   });
+
+  const userInstruction = isAr
+    ? 'حول هذا الملخص العددي إلى فقرتين أو ثلاث فقرات قصيرة تشرح للمستخدم بلطف كيف كانت أجواءه ومشاعره في الفترة الماضية، مع ملاحظات بسيطة عن الأوقات التي يكثر فيها الحديث، وأي تحسن أو ضغط واضح، ثم اختم بجملة تشجيعية لطيفة. لا تستخدم أي مصطلحات تشخيصية.'
+    : 'Turn this numeric summary into two or three short paragraphs that gently explain to the user how their overall mood and feelings have been in the recent period, including simple notes about the times of day they tend to talk more and any clear improvements or pressure. Finish with one warm, encouraging sentence. Do not use clinical or diagnostic language, and do not name mental disorders.';
+
+  const userPrompt = `${userInstruction}\n\nJSON:\n${userContent}`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -184,10 +201,7 @@ async function callLLMForMirror({ insights, personaMeta, lang }) {
         { role: 'system', content: systemPrompt },
         {
           role: 'user',
-          content:
-            'حول هذا الملخص العددي إلى فقرتين أو ثلاث فقرات قصيرة تشرح للمستخدم بلطف كيف كانت أجواءه ومشاعره في الفترة الماضية، مع ملاحظات بسيطة عن الأوقات التي يكثر فيها الحديث، وأي تحسن أو ضغط واضح، ثم اختم بجملة تشجيعية لطيفة. لا تستخدم أي مصطلحات تشخيصية.' +
-            '\n\nJSON:\n' +
-            userContent,
+          content: userPrompt,
         },
       ],
     });

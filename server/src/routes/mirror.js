@@ -21,7 +21,9 @@ router.post('/:personaId', async (req, res) => {
 
     const body = req.body || {};
     const rangeInput = body.rangeDays || body.range || 30;
-    const lang = body.lang || 'ar';
+    // Mirror language should follow the explicit UI language sent from the client.
+    // Default to English if not provided.
+    const lang = body.lang || 'en';
 
     const personaMeta = personas[personaId] || defaultPersona;
 

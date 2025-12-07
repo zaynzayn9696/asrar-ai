@@ -85,17 +85,17 @@ export default function EmotionalTimelineMap({
 
   const points = Array.isArray(data?.points) ? data.points : [];
 
-  const title = isAr
-    ? "خريطة مشاعرك مع هذا الرفيق"
-    : "Your emotional timeline with this companion";
-
-  const subtitle = personaName
+  const title = personaName
     ? isAr
-      ? `كيف تغيّر شعورك مع ${personaName} عبر الأيام؟`
-      : `How has your mood with ${personaName} shifted over time?`
+      ? `رحلة مشاعرك مع ${personaName}`
+      : `Mood Journey with ${personaName}`
     : isAr
-    ? "تمثيل بسيط لتقلّبات مشاعرك عبر الأيام."
-    : "A gentle visualization of how your mood has moved over days.";
+    ? "رحلة مشاعرك"
+    : "Your Mood Journey";
+
+  const subtitle = isAr
+    ? "خريطة بصرية لكيفية تغيّر مشاعرك مع الوقت."
+    : "A visual map of how your feelings change over time.";
 
   const emptyLabel = isAr
     ? "لا توجد بيانات كافية بعد لرسم خريطة المشاعر. استمر في التحدث مع رفيقك."

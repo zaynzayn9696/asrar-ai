@@ -401,16 +401,18 @@
 /* ---- Header (Hana — Deep Support) ---- */
 /* ---- Header (Hana — Deep Support) ---- */
 .asrar-chat-header-strip {
-  padding: 0.55rem 0 0.85rem;
-  background: linear-gradient(to bottom, rgba(2, 6, 18, 0.96), rgba(2, 6, 18, 0.86), transparent);
+  padding: 0.7rem 0 0.4rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 6, 18, 0.96),
+    rgba(2, 6, 18, 0.9),
+    transparent
+  );
   border: 0;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.75);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
-  position: sticky;
-  top: 0;
-  z-index: 8; /* keeps pills above messages but below global header */
-  backdrop-filter: blur(12px);
+  position: relative;
 }
 
 .asrar-chat-header-main {
@@ -447,7 +449,7 @@
   text-transform: none;
   font-weight: 700;
   color: #ffffff;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.6rem;
   text-shadow: 0 0 10px rgba(0, 244, 255, 0.4);
 }
 
@@ -491,11 +493,35 @@
   }
 
   .asrar-chat-header-strip {
-    padding-top: 0.35rem;
-    padding-bottom: 0.6rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.3rem;
     display: flex;
   }
 }
+
+.asrar-chat-tools-bar {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 0.35rem 0 0.6rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 6, 18, 0.96),
+    rgba(2, 6, 18, 0.86),
+    transparent
+  );
+  display: flex;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 900px) {
+  .asrar-chat-tools-bar {
+    padding-top: 0.3rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
 /* ---- Messages scroll area (single scroll region inside chat column) ---- */
 .asrar-chat-messages {
   flex: 1 1 auto;      /* <-- make it grow to fill space */

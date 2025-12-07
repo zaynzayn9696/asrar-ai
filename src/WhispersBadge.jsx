@@ -3,7 +3,7 @@ import React from "react";
 import "./Whispers.css";
 
 export default function WhispersBadge({ isAr, hasNew, onClick }) {
-  const label = isAr ? "وضع الهمسات" : "Whispers";
+  const label = isAr ? "الجانب الخفي" : "Hidden Side";
 
   return (
     <button

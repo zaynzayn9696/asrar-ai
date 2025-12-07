@@ -1708,28 +1708,31 @@ export default function ChatPage() {
                 <h1 className="asrar-chat-header-title">
                   {getName(character)} - {getRole(character)}
                 </h1>
-                <div className="asrar-chat-header-subrow">
-                  <WhispersBadge
-                    isAr={isAr}
-                    hasNew={hasNewWhispers}
-                    onClick={() => {
-                      setIsWhispersOpen(true);
-                      setHasNewWhispers(false);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="asrar-timeline-badge"
-                    onClick={() => setIsTimelineOpen(true)}
-                  >
-                    <span className="asrar-timeline-badge-icon" aria-hidden="true">▤</span>
-                    <span className="asrar-timeline-badge-label">
-                      {isAr ? "خريطة المشاعر" : "History"}
-                    </span>
-                  </button>
-                </div>
               </div>
             </header>
+
+            <div className="asrar-chat-tools-bar">
+              <div className="asrar-chat-header-subrow">
+                <WhispersBadge
+                  isAr={isAr}
+                  hasNew={hasNewWhispers}
+                  onClick={() => {
+                    setIsWhispersOpen(true);
+                    setHasNewWhispers(false);
+                  }}
+                />
+                <button
+                  type="button"
+                  className="asrar-timeline-badge"
+                  onClick={() => setIsTimelineOpen(true)}
+                >
+                  <span className="asrar-timeline-badge-icon" aria-hidden="true">▤</span>
+                  <span className="asrar-timeline-badge-label">
+                    {isAr ? "رحلة مشاعرك" : "Mood Journey"}
+                  </span>
+                </button>
+              </div>
+            </div>
 
             {recentWhispers.length > 0 && (
               <div className="asrar-whisper-unlock-stack">
