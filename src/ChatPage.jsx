@@ -441,7 +441,7 @@ export default function ChatPage() {
       }
     };
     loadConversations();
-  }, [user, selectedCharacterId, reloadConversationsToken]);
+  }, [user && user.id, selectedCharacterId, reloadConversationsToken]);
 
   // Debug: track which companion is selected in chat
   useEffect(() => {
@@ -529,13 +529,8 @@ export default function ChatPage() {
     const el = messagesContainerRef.current;
     if (!el) return;
 
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    const threshold = 80; // px from bottom
-
-    if (distanceFromBottom <= threshold) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
-    }
-  }, [messages]);
+    el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+  }, [messages.length]);
 
   const handleScrollToBottomClick = () => {
     const el = messagesContainerRef.current;
