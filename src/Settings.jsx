@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./HomePage.css";
 import "./Dashboard.css";
 import "./Settings.css";
+import "./AuthPage.css";
 import AsrarHeader from "./AsrarHeader";
 import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
@@ -97,6 +98,8 @@ export default function Settings() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
   
 
   // HISTORY STATES
@@ -171,14 +174,14 @@ export default function Settings() {
   // UPDATE PASSWORD
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
+    setPasswordError("");
+    setPasswordSuccess("");
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setErrorMessage(isAr ? "اكمل جميع الحقول" : "Please fill all fields");
+      setPasswordError(isAr ? "اكمل جميع الحقول" : "Please fill all fields");
       return;
     }
     if (newPassword !== confirmPassword) {
-      setErrorMessage(isAr ? "كلمتا المرور غير متطابقتين" : "Passwords do not match");
+      setPasswordError(isAr ? "كلمتا المرور غير متطابقتين" : "Passwords do not match");
       return;
     }
     try {
@@ -190,16 +193,16 @@ export default function Settings() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErrorMessage(data?.message || (isAr ? "فشل تحديث كلمة المرور" : "Failed to update password"));
+        setPasswordError(data?.message || (isAr ? "فشل تحديث كلمة المرور" : "Failed to update password"));
         return;
       }
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setSuccessMessage(isAr ? "تم تحديث كلمة المرور" : "Password updated successfully");
+      setPasswordSuccess(isAr ? "تم تحديث كلمة المرور" : "Password updated successfully");
     } catch (err) {
       console.error("Update password error", err);
-      setErrorMessage(isAr ? "حدث خطأ أثناء تحديث كلمة المرور" : "An error occurred while updating password");
+      setPasswordError(isAr ? "حدث خطأ أثناء تحديث كلمة المرور" : "An error occurred while updating password");
     }
   };
 
@@ -248,26 +251,31 @@ export default function Settings() {
     }
   };
 
-  // Download full user data as JSON
+  // Download full user data as PDF
   const handleDownloadData = async () => {
     setErrorMessage("");
     try {
-      const res = await fetch(`${API_BASE}/api/user/export`, {
+      const langParam = isAr ? "ar" : "en";
+      const res = await fetch(`${API_BASE}/api/user/export/pdf?lang=${langParam}`, {
         method: "GET",
         credentials: "include",
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         setErrorMessage(
-          data?.message || (isAr ? "فشل تنزيل البيانات" : "Failed to download data")
+          isAr
+            ? "تعذّر إنشاء ملف الـ PDF. يرجى المحاولة لاحقًا."
+            : "Could not generate PDF. Please try again later."
         );
         return;
       }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
+      const today = new Date();
+      const ymd = today.toISOString().slice(0, 10);
       a.href = url;
-      a.download = "asrarai-data-export.json";
+      a.download = `asrar_data_export_${ymd}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -275,7 +283,9 @@ export default function Settings() {
     } catch (err) {
       console.error("Export data error", err);
       setErrorMessage(
-        isAr ? "حدث خطأ أثناء تنزيل البيانات" : "An error occurred while downloading data"
+        isAr
+          ? "تعذّر إنشاء ملف الـ PDF. يرجى المحاولة لاحقًا."
+          : "Could not generate PDF. Please try again later."
       );
     }
   };
@@ -529,6 +539,17 @@ export default function Settings() {
               </div>
 
               <p className="asrar-settings-hint">{t.passwordHint}</p>
+
+              {passwordError && (
+                <div className="auth-error-banner" style={{ marginTop: "0.8rem" }}>
+                  {passwordError}
+                </div>
+              )}
+              {passwordSuccess && !passwordError && (
+                <div className="auth-success-banner" style={{ marginTop: "0.8rem" }}>
+                  {passwordSuccess}
+                </div>
+              )}
 
               <div className="asrar-settings-actions">
                 <button type="submit" className="asrar-settings-update-btn">

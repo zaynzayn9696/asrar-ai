@@ -193,23 +193,50 @@ async function sendPasswordResetEmail({ to, resetLink, language }) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>إعادة تعيين كلمة المرور — أسرار AI</title>
   </head>
-  <body style="margin:0;padding:24px;background-color:#050914;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;direction:rtl;text-align:right;">
-    <div style="max-width:520px;margin:0 auto;padding:20px 20px 24px;border-radius:18px;border:1px solid #1c2238;background:radial-gradient(circle at top,#07121d 0,#040813 40%,#03040c 100%);">
-      <h1 style="margin-top:0;margin-bottom:10px;font-size:20px;color:#f9fafb;">إعادة تعيين كلمة المرور</h1>
-      <p style="margin:0 0 10px 0;font-size:14px;color:#e5e7eb;">مرحباً،</p>
-      <p style="margin:0 0 10px 0;font-size:14px;color:#d1d5db;">
-        لقد طلبت إعادة تعيين كلمة المرور لحسابك في أسرار AI.
-      </p>
-      <p style="margin:0 0 16px 0;font-size:14px;color:#d1d5db;">
-        اضغط على الزر أدناه لتغيير كلمة المرور:
-      </p>
-      <p style="margin:0 0 18px 0;">
-        <a href="${resetLink}" style="display:inline-block;padding:10px 22px;border-radius:999px;background-image:linear-gradient(135deg,#22c55e,#4ade80);color:#020617;font-size:13px;font-weight:600;text-decoration:none;">إعادة تعيين كلمة المرور</a>
-      </p>
-      <p style="margin:0 0 6px 0;font-size:13px;color:#d1d5db;">
-        إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة بأمان.
-      </p>
-    </div>
+  <body style="margin:0;padding:0;background-color:#050914;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;direction:rtl;text-align:right;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#050914;padding:24px 0;">
+      <tr>
+        <td align="center" style="padding:0 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background-color:#070b1c;border-radius:18px;border:1px solid #1c2238;box-shadow:0 18px 50px rgba(0,0,0,0.65);overflow:hidden;">
+            <tr>
+              <td style="padding:24px 24px 8px 24px;text-align:center;border-bottom:1px solid #1c2238;background:radial-gradient(circle at top,#151b33 0,#050914 60%);">
+                <div style="font-family:'Cinzel','Times New Roman',serif;font-size:24px;letter-spacing:0.24em;text-transform:uppercase;color:#f8fafc;margin-bottom:4px;">ASRAR AI</div>
+                <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;">Private Emotional Space</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 24px 8px 24px;">
+                <p style="margin:0 0 12px 0;font-size:16px;line-height:1.6;color:#e5e7eb;">مرحباً،</p>
+                <h1 style="margin:0 0 10px 0;font-size:20px;line-height:1.5;color:#f9fafb;font-weight:600;">إعادة تعيين كلمة المرور</h1>
+                <p style="margin:0 0 10px 0;font-size:14px;line-height:1.7;color:#d1d5db;">
+                  لقد طلبت إعادة تعيين كلمة المرور لحسابك في أسرار AI.
+                </p>
+                <p style="margin:0 0 16px 0;font-size:14px;line-height:1.7;color:#d1d5db;">
+                  اضغط على الزر أدناه لتغيير كلمة المرور:
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:0 24px 20px 24px;">
+                <a
+                  href="${resetLink}"
+                  style="display:inline-block;padding:11px 28px;border-radius:999px;background-image:linear-gradient(135deg,#22c55e,#4ade80);color:#020617;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;"
+                >
+                  إعادة تعيين كلمة المرور
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 24px 18px 24px;">
+                <p style="margin:0 0 8px 0;font-size:13px;line-height:1.6;color:#d1d5db;">
+                  إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة بأمان.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>`
     : `<!DOCTYPE html>
@@ -219,23 +246,50 @@ async function sendPasswordResetEmail({ to, resetLink, language }) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reset your Asrar AI password</title>
   </head>
-  <body style="margin:0;padding:24px;background-color:#050914;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-    <div style="max-width:520px;margin:0 auto;padding:20px 20px 24px;border-radius:18px;border:1px solid #1c2238;background:radial-gradient(circle at top,#07121d 0,#040813 40%,#03040c 100%);">
-      <h1 style="margin-top:0;margin-bottom:10px;font-size:20px;color:#f9fafb;">Reset your Asrar AI password</h1>
-      <p style="margin:0 0 10px 0;font-size:14px;color:#e5e7eb;">Hi,</p>
-      <p style="margin:0 0 10px 0;font-size:14px;color:#d1d5db;">
-        You requested a password reset for your Asrar AI account.
-      </p>
-      <p style="margin:0 0 16px 0;font-size:14px;color:#d1d5db;">
-        Click the button below to choose a new password:
-      </p>
-      <p style="margin:0 0 18px 0;">
-        <a href="${resetLink}" style="display:inline-block;padding:10px 22px;border-radius:999px;background-image:linear-gradient(135deg,#22c55e,#4ade80);color:#020617;font-size:13px;font-weight:600;text-decoration:none;">Reset password</a>
-      </p>
-      <p style="margin:0 0 6px 0;font-size:13px;color:#d1d5db;">
-        If you didn’t request this, you can safely ignore this email.
-      </p>
-    </div>
+  <body style="margin:0;padding:0;background-color:#050914;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#050914;padding:24px 0;">
+      <tr>
+        <td align="center" style="padding:0 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background-color:#070b1c;border-radius:18px;border:1px solid #1c2238;box-shadow:0 18px 50px rgba(0,0,0,0.65);overflow:hidden;">
+            <tr>
+              <td style="padding:24px 24px 8px 24px;text-align:center;border-bottom:1px solid #1c2238;background:radial-gradient(circle at top,#151b33 0,#050914 60%);">
+                <div style="font-family:'Cinzel','Times New Roman',serif;font-size:24px;letter-spacing:0.24em;text-transform:uppercase;color:#f8fafc;margin-bottom:4px;">ASRAR AI</div>
+                <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;">Private Emotional Space</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 24px 8px 24px;">
+                <p style="margin:0 0 12px 0;font-size:16px;line-height:1.6;color:#e5e7eb;">Hi,</p>
+                <h1 style="margin:0 0 10px 0;font-size:22px;line-height:1.4;color:#f9fafb;font-weight:600;">Reset your Asrar AI password</h1>
+                <p style="margin:0 0 12px 0;font-size:14px;line-height:1.7;color:#d1d5db;">
+                  You requested a password reset for your Asrar AI account.
+                </p>
+                <p style="margin:0 0 16px 0;font-size:14px;line-height:1.7;color:#d1d5db;">
+                  Click the button below to choose a new password:
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:0 24px 20px 24px;">
+                <a
+                  href="${resetLink}"
+                  style="display:inline-block;padding:11px 28px;border-radius:999px;background-image:linear-gradient(135deg,#22c55e,#4ade80);color:#020617;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.04em;text-transform:uppercase;"
+                >
+                  Reset password
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 24px 18px 24px;">
+                <p style="margin:0 0 8px 0;font-size:13px;line-height:1.6;color:#d1d5db;">
+                  If you didn’t request this, you can safely ignore this email.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>`;
 

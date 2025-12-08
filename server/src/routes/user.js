@@ -5,6 +5,7 @@ const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const { createUserExportPdf } = require('../utils/userExportPdf');
 
 const router = express.Router();
 
@@ -275,6 +276,52 @@ router.get('/export', async (req, res) => {
   } catch (err) {
     console.error('User export error:', err && err.message ? err.message : err);
     return res.status(500).json({ message: 'Failed to export data' });
+  }
+});
+
+// Export user data as a styled PDF
+router.get('/export/pdf', async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    let messages = [];
+    if (user.saveHistoryEnabled) {
+      messages = await prisma.message.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          characterId: true,
+          role: true,
+          content: true,
+          createdAt: true,
+        },
+      });
+    }
+
+    const usage = await prisma.usage.findMany({ where: { userId: user.id } });
+
+    const lang = req.query && req.query.lang === 'ar' ? 'ar' : 'en';
+
+    const buffer = await createUserExportPdf({ user, messages, usage, lang });
+
+    const today = new Date();
+    const ymd = today.toISOString().slice(0, 10);
+    const fileName = `asrar_data_export_${ymd}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${fileName}"`
+    );
+
+    return res.status(200).send(buffer);
+  } catch (err) {
+    console.error('User export PDF error:', err && err.message ? err.message : err);
+    return res.status(500).json({ message: 'Failed to generate PDF export' });
   }
 });
 
