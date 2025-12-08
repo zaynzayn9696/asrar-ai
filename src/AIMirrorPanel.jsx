@@ -105,19 +105,19 @@ export default function AIMirrorPanel({
 
   const subtitle = isGlobal
     ? isAr
-      ? "تأمل لطيف في نمطك العاطفي عبر كل محادثاتك في أسرار AI."
-      : "A gentle reflection on your emotional pattern across all your chats in Asrar AI."
+      ? "ملخص عاطفي مبسّط مبني على الأنماط في محادثاتك الأخيرة عبر أسرار AI."
+      : "A simple emotional summary built from patterns in your recent chats across Asrar AI."
     : personaName
     ? isAr
-      ? `نظرة لطيفة على نمط مشاعرك مع ${personaName}.`
-      : `A gentle reflection on your emotional pattern with ${personaName}.`
+      ? `ملخّص لطيف للمشاعر والأنماط التي تظهر في محادثاتك الأخيرة مع ${personaName}.`
+      : `A friendly summary of the feelings and patterns your recent chats with ${personaName} have been showing.`
     : isAr
-    ? "قراءة هادئة لما تعلمناه عن مشاعرك في الفترة الماضية."
-    : "A soft, non-clinical reflection on what we’ve noticed in your recent mood.";
+    ? "انعكاس لطيف للمشاعر والأنماط العاطفية التي التقطناها من محادثاتك الأخيرة."
+    : "A gentle reflection of the moods and emotional patterns we’ve picked up from your recent conversations.";
 
   const noDataLabel = isAr
-    ? "لا توجد بيانات كافية بعد لصنع ملخص صادق. استمر في استخدام التطبيق ثم جرّب مرة أخرى."
-    : "There isn’t enough history yet to create an honest mirror. Keep using the app and try again later.";
+    ? "لا نملك بعد لحظات عاطفية كافية لنقدّم لك انعكاسًا حقيقيًا. تحدّث أكثر عن شعورك، خصوصًا في أيام ومزاجات مختلفة، ثم افتح المرآة مرة أخرى."
+    : "We don’t have enough emotional moments yet to reflect back something real. Talk a bit more about how you feel—especially on different days—and then open Mirror Me again.";
 
   return (
     <div className="asrar-mirror-layer" onClick={handleBackdropClick}>
@@ -213,8 +213,8 @@ export default function AIMirrorPanel({
             <div className="asrar-mirror-body">
               <p className="asrar-mirror-paragraph">
                 {isAr
-                  ? "نحن ما زلنا نتعلم من محادثاتك. استمر في الحديث، وسنعرض لك هنا قريبًا نمطك العاطفي عبر كل المحادثات."
-                  : "We’re still learning from your conversations. Keep chatting, and we’ll reflect back your emotional pattern here soon."}
+                  ? "ما زلنا نتعلم من محادثاتك مع كل الرفاق. كلما شاركت مشاعرك أكثر، سنعرض لك هنا أنماطًا بسيطة في مزاجك عبر المحادثات."
+                  : "We’re still learning from your conversations across companions. As you share more about your feelings, this space will show simple patterns in your moods."}
               </p>
             </div>
           )}

@@ -10,31 +10,31 @@ const TRUST_LEVELS_UI = {
       id: 1,
       label: "Surface",
       description:
-        "You're just getting to know each other. Your companion is still staying on the safe side.",
+        "You're just starting to build trust. Hidden Side is mostly quiet while your companion gets a feel for you.",
     },
     {
       id: 2,
       label: "Openness",
       description:
-        "Your companion is starting to share more personal thoughts and reactions with you.",
+        "You’ve shared enough that your companion starts unlocking small 'whispers' about how it sees your moods.",
     },
     {
       id: 3,
       label: "Depth",
       description:
-        "Conversations are getting deeper. Your companion reflects more honestly on your emotions.",
+        "Trust is growing. Your companion now reflects back deeper emotional patterns and gentle insights.",
     },
     {
       id: 4,
       label: "Secrets",
       description:
-        "You've unlocked more hidden sides. Your companion now reveals private perspectives and vulnerable moments.",
+        "You’ve opened more of your inner world. Whispers can point to recurring triggers and how you tend to cope.",
     },
     {
       id: 5,
       label: "True Bond",
       description:
-        "You've reached the deepest layer. Your companion speaks to you with full emotional honesty and trust.",
+        "Your conversations span many moments and moods. Your companion now offers its most honest, high-trust reflections.",
     },
   ],
   ar: [
@@ -42,31 +42,31 @@ const TRUST_LEVELS_UI = {
       id: 1,
       label: "السطح",
       description:
-        "أنتم فقط في بداية التعارف. ما زال رفيقك يتحدث معك من مساحة آمنة وسطحية.",
+        "أنتم في بداية بناء الثقة. الجانب الخفي ما زال هادئًا بينما يتعرّف رفيقك عليك أكثر.",
     },
     {
       id: 2,
       label: "الانفتاح",
       description:
-        "رفيقك بدأ يشاركك أفكارًا وردود فعل شخصية أكثر معك.",
+        "بدأت تشارك أكثر. رفيقك يبدأ بفتح «همسات» صغيرة عن كيف يرى تقلبات مزاجك.",
     },
     {
       id: 3,
       label: "العمق",
       description:
-        "المحادثات أصبحت أعمق. رفيقك يعكس مشاعرك بصدق أكبر.",
+        "الثقة تكبر. رفيقك يعكس لك أنماطًا أعمق في مشاعرك وبعض الملاحظات اللطيفة.",
     },
     {
       id: 4,
       label: "الأسرار",
       description:
-        "فتحت جوانب أكثر خفاءً. رفيقك يشاركك الآن لحظات خاصة وهشّة.",
+        "فتحت جزءًا أكبر من عالمك الداخلي. الهمسات قد تشير الآن إلى محفّزات متكررة وطرق تعاملك معها.",
     },
     {
       id: 5,
       label: "الرابطة الحقيقية",
       description:
-        "وصلتم إلى أعمق طبقة. رفيقك يتحدث معك بصراحة عاطفية كاملة وثقة عالية.",
+        "محادثاتك تغطي لحظات وحالات مزاجية مختلفة. رفيقك يقدّم أصدق انعكاساته عالية الثقة عنك.",
     },
   ],
 };
@@ -164,8 +164,8 @@ export default function WhispersPanel({
     : "Hidden Side";
 
   const subtitle = isAr
-    ? "أسرار وجوانب أعمق لهذا الرفيق تنفتح مع الوقت."
-    : "Unlocked secrets and deeper sides of this companion.";
+    ? "مساحة ثقة طويلة المدى؛ كلما زادت ثقتكما، فتح رفيقك همسات عاطفية خاصة عنك بمرور الوقت."
+    : "A long‑term trust space where this companion slowly unlocks private emotional 'whispers' about you over time.";
   const rawTrustScore =
     typeof status?.trustScore === "number" ? status.trustScore : null;
 
@@ -255,8 +255,8 @@ export default function WhispersPanel({
 
         <p className="asrar-whispers-explainer">
           {isAr
-            ? "الجانب الخفي لا يغيّر شخصية رفيقك، بل يكشف طبقات أعمق من شخصيته كلما زاد مستوى الثقة بينكما مع الوقت."
-            : "Hidden Side doesn't change who your companion is. It simply reveals deeper layers of their personality as trust grows over time."}
+            ? "الجانب الخفي لا يغيّر شخصية رفيقك. هو مقياس ثقة بينكما: كلما زادت الثقة ظهرت همسات عاطفية أعمق وانعكاسات أوضح مخصّصة لك."
+            : "Hidden Side doesn’t change who your companion is. It’s a trust meter between you and this persona: more trust unlocks deeper emotional whispers and clearer reflections, just for you."}
         </p>
 
         {loading && (
@@ -285,8 +285,8 @@ export default function WhispersPanel({
         {!loading && !error && unlockedList.length === 0 && (
           <div className="asrar-whispers-state">
             {isAr
-              ? "لا توجد همسات بعد. استمر في التحدث مع رفيقك لفتح أسرار خاصة."
-              : "No whispers yet. Keep talking with your companion to unlock private secrets."}
+              ? "لا توجد همسات بعد. استمر في التحدّث بصدق مع رفيقك، ومع الوقت ستظهر هنا انعكاسات خاصة كلما زادت الثقة."
+              : "No whispers yet. Keep talking honestly with your companion and, as trust grows, private emotional whispers will start to appear here."}
           </div>
         )}
 

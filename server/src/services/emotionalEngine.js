@@ -208,7 +208,6 @@ async function classifyEmotion({ userMessage, recentMessages = [], language = 'e
  * @returns {Promise<Emotion>}
  */
 async function getEmotionForMessage({ userMessage, recentMessages, language }) {
-  const hasHistory = Array.isArray(recentMessages) && recentMessages.length > 0;
   const raw = String(userMessage || '');
   const text = raw.trim();
   const lower = text.toLowerCase();
@@ -216,7 +215,6 @@ async function getEmotionForMessage({ userMessage, recentMessages, language }) {
 
   const cultureTag =
     language === 'ar' ? 'ARABIC' : language === 'mixed' ? 'MIXED' : 'ENGLISH';
-  const isArabicLang = language === 'ar' || language === 'mixed';
 
   // Very short acknowledgements / fillers: skip LLM and keep things neutral.
   if (approxLength > 0 && approxLength <= 18) {
@@ -231,65 +229,6 @@ async function getEmotionForMessage({ userMessage, recentMessages, language }) {
         severityLevel: 'CASUAL',
       };
     }
-  }
-
-  // High-risk / clearly negative keywords: always use the LLM-based classifier,
-  // regardless of length, so we keep severity-level nuance.
-  const negativeOrRiskRe =
-    /(suicid|kill myself|kill my self|end my life|self[-\s]?harm|cutting myself|cut myself|i want to die|i wanna die|don't want to live|dont want to live|life is pointless|worthless|sad|depress|cry|alone|lonely|hurt|anxious|anxiety|worried|worry|panic|nervous|afraid|scared|angry|mad|furious|rage|irritated|pissed|stress|stressed|overwhelmed|burnout|burned out|tired of)/i;
-
-  // First turn: keep the existing lightweight heuristic instead of an LLM call.
-  // For Arabic or mixed-language conversations, always use the LLM-based
-  // classifier for the first turn so we can capture negative emotions that
-  // are expressed in Arabic wording, not just English keywords.
-  if (!hasHistory && !isArabicLang) {
-    const approxFirst = lower.length;
-    let primaryEmotion = 'NEUTRAL';
-    if (/(sad|depress|cry|alone|lonely|hurt)/.test(lower)) {
-      primaryEmotion = 'SAD';
-    } else if (/(anxious|anxiety|worried|worry|panic|nervous|afraid|scared)/.test(lower)) {
-      primaryEmotion = 'ANXIOUS';
-    } else if (/(angry|mad|furious|rage|irritated|pissed)/.test(lower)) {
-      primaryEmotion = 'ANGRY';
-    } else if (/(stress|stressed|overwhelmed|burnout|burned out|tired of)/.test(lower)) {
-      primaryEmotion = 'STRESSED';
-    } else if (/(grateful|thankful|hopeful|optimistic)/.test(lower)) {
-      primaryEmotion = 'HOPEFUL';
-    }
-
-    const lengthFactor = Math.max(0, Math.min(approxFirst / 80, 4));
-    const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
-
-    return {
-      primaryEmotion,
-      intensity,
-      confidence: 0.55,
-      cultureTag,
-      notes: 'Heuristic first-turn classification (no context)',
-      severityLevel: 'CASUAL',
-    };
-  }
-
-  // For later turns: if there are no obviously negative / risky keywords and the
-  // message is quite short, keep a cheap heuristic instead of an LLM call.
-  // In Arabic/mixed conversations we always fall back to the LLM classifier
-  // (except trivial acks above) so we don't miss emotional cues in Arabic text.
-  if (!isArabicLang && !negativeOrRiskRe.test(lower) && approxLength > 0 && approxLength < 80) {
-    const hasPositive = /(grateful|thankful|hopeful|optimistic|love|appreciate|relieved)/.test(
-      lower
-    );
-
-    const lengthFactor = Math.max(0, Math.min(approxLength / 80, 4));
-    const intensity = Math.max(1, Math.min(5, Math.round(1 + lengthFactor)));
-
-    return {
-      primaryEmotion: hasPositive ? 'HOPEFUL' : 'NEUTRAL',
-      intensity,
-      confidence: 0.55,
-      cultureTag,
-      notes: 'Heuristic short non-negative turn (skipped LLM).',
-      severityLevel: 'CASUAL',
-    };
   }
 
   // Fallback: full LLM-based classification with a compact history window.
