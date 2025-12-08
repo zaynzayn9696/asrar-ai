@@ -76,8 +76,6 @@ export default function EmotionalTimelineMap({
     };
   }, [isOpen, personaId, isAr, refreshKey]);
 
-  if (!isOpen) return null;
-
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -140,6 +138,8 @@ export default function EmotionalTimelineMap({
       .filter(Boolean)
       .join(" ");
   }, [visiblePoints]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="asrar-timeline-layer" onClick={handleBackdropClick}>
