@@ -101,6 +101,15 @@ function getCharacterRecommendation(message) {
       "job",
       "fix my life",
       "organize",
+      "guide",
+      "guidance",
+      "mentor",
+      "plan",
+      "organized",
+      "organised",
+      "roadmap",
+      "career",
+      "grades",
       "ادرس",
       "دراسة",
       "امتحان",
@@ -113,6 +122,13 @@ function getCharacterRecommendation(message) {
       "بدي اركز",
       "بدي ادرس",
       "مذاكرة",
+      "توجيه",
+      "ارشاد",
+      "خطّة",
+      "خطة",
+      "مستقبل",
+      "علاماتي",
+      "شهادة",
     ])
   ) {
     return "abu-mukh";
@@ -176,6 +192,19 @@ function getCharacterRecommendation(message) {
       "متضايق",
       "مخنوق",
       "منهك",
+      "life advice",
+      "life guidance",
+      "what should i do",
+      "i'm lost",
+      "im lost",
+      "lost in life",
+      "confused about life",
+      "تايه",
+      "ضايع",
+      "مش عارف شو أعمل",
+      "شو أعمل",
+      "احتاج نصيحة",
+      "بدّي نصيحة",
     ])
   ) {
     return "sheikh-al-hara";
@@ -206,20 +235,100 @@ function getCharacterRecommendation(message) {
 }
 
 function formatMoodBotReply({ character, isAr }) {
-  const name = isAr ? character.nameAr : character.nameEn;
+  const id = character.id;
 
   if (isAr) {
+    if (id === "daloua") {
+      return {
+        title: "حاسّة بثقل الكلام اللي كتبته.",
+        match: "دلوعه هي أكثر رفيقة تسمع لقلبك بدون استعجال.",
+        hint: "لما تحس إنك جاهز، افتح معها محادثة كاملة وفضفض على مهلك.",
+      };
+    }
+
+    if (id === "abu-mukh") {
+      return {
+        title: "واضح إنك ناوي ترتّب أمورك عن جد.",
+        match: "أبو مخ هو اللي يعطيك خطة وترتيب بدل الكلام الفاضي.",
+        hint: "ابدأ معه محادثة لما تكون جاهز نمشي خطوة خطوة.",
+      };
+    }
+
+    if (id === "sheikh-al-hara") {
+      return {
+        title: "الكلام اللي قلته يحتاج صوت صريح وواعي.",
+        match: "شيخ الحارة يسمع لك وبعدين يحكي لك الحقيقة بأسلوب أخ كبير.",
+        hint: "افتح معه محادثة لما تحب نصيحة صريحة بدون تلميع.",
+      };
+    }
+
+    if (id === "walaa") {
+      return {
+        title: "واضح إنك مستعد لتغيير معيّن.",
+        match: "ولاء هي اللي تدفعك لعادات أحسن وخطوات صغيرة حقيقية.",
+        hint: "احكي معها لما تحب تحوّل هذا الشعور لخطة فعلية.",
+      };
+    }
+
+    if (id === "hiba") {
+      return {
+        title: "حاس فيك… ويمكن تحتاج شوية خفة مو بس جدية.",
+        match: "هبة تمزح معك بس برضه تحترم مشاعرك.",
+        hint: "ابدأ معها محادثة لما تحب الجو يخف شوي بس يظل حقيقي.",
+      };
+    }
+
     return {
-      title: "سمعتك.",
-      match: `أعتقد أن ${name} الأنسب لك الآن.`,
-      hint: "تقدر تبدأ محادثة معه/معها من الزر بالأسفل.",
+      title: "حاسّة بثقل الكلام اللي كتبته.",
+      match: `${isAr ? character.nameAr : character.nameEn} يمكن يكون الأنسب يسمعلك الآن.`,
+      hint: "تقدر تفتح معه/معها محادثة كاملة من الزر بالأسفل.",
+    };
+  }
+
+  if (id === "daloua") {
+    return {
+      title: "I feel the heaviness in what you shared.",
+      match: "Daloua is the one who sits with your feelings and doesn’t rush you.",
+      hint: "When you’re ready, you can open a full chat with her and unpack this slowly.",
+    };
+  }
+
+  if (id === "abu-mukh") {
+    return {
+      title: "I can see you want to get serious and organized.",
+      match: "Abu Mo5 is the one who gives you structure, not drama.",
+      hint: "Start a chat with him when you’re ready to plan things step by step.",
+    };
+  }
+
+  if (id === "sheikh-al-hara") {
+    return {
+      title: "What you’re talking about needs a grounded, honest voice.",
+      match: "Sheikh Al-Hara listens, then tells you the truth the way a big brother would.",
+      hint: "Open a chat with him when you want straight guidance, not sugar-coating.",
+    };
+  }
+
+  if (id === "walaa") {
+    return {
+      title: "I can see you’re ready for some kind of change.",
+      match: "Walaa is the one who pushes you toward better habits and small wins.",
+      hint: "Chat with her when you want to turn that feeling into a real plan.",
+    };
+  }
+
+  if (id === "hiba") {
+    return {
+      title: "I sense you need some lightness, not more heaviness.",
+      match: "Hiba is the one who jokes with you but still takes your feelings seriously.",
+      hint: "Start a chat with her when you want the mood a bit lighter but still real.",
     };
   }
 
   return {
-    title: "I hear you.",
-    match: `I think ${name} is the right match for you right now.`,
-    hint: "You can talk to them using the button below.",
+    title: "I feel there’s something real in what you shared.",
+    match: `${character.nameEn} is a good match to stay with you in this moment.`,
+    hint: "You can start a full chat with them using the button below.",
   };
 }
 
@@ -339,8 +448,11 @@ function getMiniChatReply(message, isAr) {
 
   const hasKnownKeyword = knownKeywords.some((kw) => lower.includes(kw));
 
+  const recId = getCharacterRecommendation(trimmed);
+  const hasPersona = !!(recId && (recId !== "daloua" || hasKnownKeyword));
+
   // Very short input *without* any known emotional keyword â†’ treat as unclear / gibberish.
-  if (isVeryShort && !hasKnownKeyword) {
+  if (isVeryShort && !hasKnownKeyword && !hasPersona) {
     return {
       charId: null,
       text: isAr
@@ -349,7 +461,6 @@ function getMiniChatReply(message, isAr) {
     };
   }
 
-  const recId = getCharacterRecommendation(trimmed);
   const char = recId && CHARACTERS.find((c) => c.id === recId);
 
   if (!char) {
@@ -885,7 +996,7 @@ export default function HomePage() {
                     >
                       {isAr
                         ? `ابدأ مع ${miniChatCharacter.nameAr}`
-                        : `Chat with ${miniChatCharacter.nameEn.split(" ")[0]}`}
+                        : `Chat with ${miniChatCharacter.nameEn}`}
                     </Link>
                   )}
                 </div>
