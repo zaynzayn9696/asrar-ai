@@ -711,7 +711,7 @@ body,
 .asrar-mood-capsule {
   display: flex;
   justify-content: center;
-  margin: 30px auto -26px;
+  margin: 30px auto 40px;
   padding: 0 16px;
 }
 
@@ -2466,6 +2466,170 @@ body,
     rgba(3, 8, 18, 0.96)
   );
   box-shadow: 0 0 26px rgba(24, 209, 218, 0.22);
+}
+
+/* FEATURES ACCORDION SECTION ----------------------------------------- */
+
+.asrar-section--features {
+  background: #0a0f1a;
+  padding: 40px 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.asrar-section-header {
+  text-align: center;
+  margin-bottom: 50px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 20px;
+}
+
+.asrar-section-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #f5f7fb;
+  margin-bottom: 16px;
+ 
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+.asrar-section-subtitle {
+  font-size: 1.1rem;
+  color: #a8b3cf;
+  line-height: 1.6;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.asrar-accordion {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.asrar-accordion-item {
+  background: rgba(12, 18, 34, 0.7);
+  border: 1px solid rgba(44, 246, 255, 0.1);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  will-change: transform, box-shadow;
+}
+
+.asrar-accordion-item:hover {
+  border-color: rgba(44, 246, 255, 0.3);
+}
+
+.asrar-accordion-item.active {
+  border-color: rgba(44, 246, 255, 0.5);
+  background: rgba(12, 18, 34, 0.9);
+  box-shadow: 0 0 30px rgba(44, 246, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.asrar-accordion-header {
+  width: 100%;
+  padding: 24px 32px;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  color: #f5f7fb;
+  font-size: 1.25rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.asrar-accordion-header:hover .asrar-accordion-title {
+  background: linear-gradient(90deg, #2cf6ff, #6a5acd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.asrar-accordion-header:hover {
+  color: #2cf6ff;
+}
+
+.asrar-accordion-item.active .asrar-accordion-header {
+  color: #2cf6ff;
+}
+
+.asrar-accordion-icon {
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-left: 16px;
+  min-width: 20px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+[dir='rtl'] .asrar-accordion-icon {
+  margin-left: 0;
+  margin-right: 16px;
+}
+
+.asrar-accordion-item.active .asrar-accordion-icon {
+  transform: rotate(180deg);
+}
+
+.asrar-accordion-panel {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(8, 14, 30, 0.5);
+  will-change: max-height, opacity, transform;
+}
+
+.asrar-accordion-item.active .asrar-accordion-panel {
+  max-height: 500px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.asrar-accordion-content {
+  padding: 0 32px 24px;
+  color: #d1d5e0;
+  line-height: 1.7;
+}
+
+.asrar-accordion-content p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .asrar-section--features {
+    padding: 30px 0 60px;
+  }
+  
+  .asrar-section-title {
+    font-size: 2rem;
+  }
+  
+  .asrar-accordion-header {
+    padding: 20px 24px;
+    font-size: 1.1rem;
+  }
+  
+  .asrar-accordion-content {
+    padding: 0 24px 20px;
+  }
+  
+  .asrar-accordion-item {
+    margin-bottom: 12px;
+  }
 }
 
 /* SECTION DIVIDERS --------------------------------------------------- */

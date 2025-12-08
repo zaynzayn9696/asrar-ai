@@ -13,6 +13,7 @@ import farahAvatar from "./assets/farah_2.png";
 import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
 import AsrarHeader from "./AsrarHeader";
+import FeaturesAccordion from "./components/FeaturesAccordion";
 
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
@@ -631,7 +632,7 @@ export default function HomePage() {
     ? [
         { href: "#hero", label: "الرئيسية" },
         { href: "#characters", label: "الشخصيات" },
-      
+        { href: "#features", label: "لماذا أسرار؟" },
         { href: "#security-privacy", label: "الأمان والخصوصية" },
         { href: "#pricing", label: "الأسعار" },
         { href: "#contact", label: "تواصل معنا" },
@@ -639,7 +640,7 @@ export default function HomePage() {
     : [
         { href: "#hero", label: "Home" },
         { href: "#characters", label: "Characters" },
-       
+        { href: "#features", label: "Why Asrar?" },
         { href: "#security-privacy", label: "Security & Privacy" },
         { href: "#pricing", label: "Pricing" },
         { href: "#contact", label: "Contact" },
@@ -1068,84 +1069,6 @@ export default function HomePage() {
               )}
             </form>
           </section>
-
-          {/* EMOTIONAL INTELLIGENCE LAYER - After Mood Chat */}
-          <section id="emotional-engine" className="asrar-section asrar-section--emotional-engine asrar-engine-hero">
-            {isAr ? (
-              <div className="asrar-engine-inner">
-                <h2 className="asrar-section-title">
-                  {"مدعوم بمحرك المشاعر المتقدم من أسرار — الإصدار السادس"}
-                </h2>
-                <p className="asrar-section-subtitle">
-                  {"ذكاء اصطناعي يفهم المشاعر، وليس فقط اللغة."}
-                </p>
-
-                <div className="asrar-engine-grid">
-                  <article className="asrar-engine-card">
-                    <h3>{"استجابات واعية بالمشاعر"}</h3>
-                    <p>
-                      {
-                        "يقوم المحرك بتصنيف ما تشعر به — مثل الحزن، القلق، الوحدة، الغضب وغيرها — ويضبط نبرة وعمق الرد ليتناسب مع حالتك العاطفية."
-                      }
-                    </p>
-                  </article>
-
-                  <article className="asrar-engine-card">
-                    <h3>{"دعم مخصص لكل شخصية"}</h3>
-                    <p>
-                      {
-                        "هَنا، أبو زين، رشيد، نور، وفَرَح يشتركون في نفس محرك المشاعر، لكن كل واحد منهم يرد بأسلوب وصوت ومستوى توجيه مختلف."
-                      }
-                    </p>
-                  </article>
-
-                  <article className="asrar-engine-card">
-                    <h3>{"مصمم خصيصاً للمنطقة العربية"}</h3>
-                    <p>
-                      {
-                        "تم تصميم أسرار في الأردن مع أخذ الثقافة العربية في الحسبان، لتجمع بين الذكاء الاصطناعي الحديث والحس المحلي والاحترام والدفء — وليس مجرد نسخة من قالب غربي."
-                      }
-                    </p>
-                  </article>
-                </div>
-              </div>
-            ) : (
-              <div className="asrar-engine-inner">
-                <h2 className="asrar-section-title">
-                  {"Powered by the Asrar Emotional Engine V6"}
-                </h2>
-                <p className="asrar-section-subtitle">
-                  {"AI that understands emotion, not just language."}
-                </p>
-
-                <div className="asrar-engine-grid">
-                  <article className="asrar-engine-card">
-                    <div className="asrar-engine-icon">🧠</div>
-                    <h3>Reads Your Tone</h3>
-                    <p>
-                      Understands emotion, context, and nuance. Not just words.
-                    </p>
-                  </article>
-
-                  <article className="asrar-engine-card">
-                    <div className="asrar-engine-icon">💫</div>
-                    <h3>Persona-Driven</h3>
-                    <p>
-                      Adapts to your unique personality. Learns what matters to you.
-                    </p>
-                  </article>
-
-                  <article className="asrar-engine-card">
-                    <div className="asrar-engine-icon">🌙</div>
-                    <h3>Built for This Region</h3>
-                    <p>
-                      Respects culture, values, and identity. Made for the Middle East.
-                    </p>
-                  </article>
-                </div>
-              </div>
-            )}
-          </section>
           </div>
         </section>
         <div className="asrar-section-divider" aria-hidden="true" />
@@ -1154,12 +1077,12 @@ export default function HomePage() {
         <section id="characters" className="asrar-companions-section">
           <div className="asrar-companions-shell">
             <div className="asrar-companions-header">
-              <p className="asrar-companions-kicker">
+              <h2 class="asrar-section-title">
                 {isAr ? "رفقاؤك الذكيون العاطفيون" : "Your Emotional AI Companions"}
-              </p>
-              <h2 className="asrar-companions-title">
-                {isAr ? "خمس شخصيات مختلفة. رسالة واحدة مشتركة: فهمك." : "Five distinct personalities. One shared mission: to understand you."}
               </h2>
+              <p>
+                {isAr ? "خمس شخصيات مختلفة. رسالة واحدة مشتركة: فهمك." : "Five distinct personalities. One shared mission: to understand you."}
+              </p>
             </div>
 
             <div className="asrar-companions-carousel-wrapper">
@@ -1334,6 +1257,10 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <div className="asrar-section-divider" aria-hidden="true" />
+
+        {/* FEATURES ACCORDION */}
+        <FeaturesAccordion isAr={isAr} />
         <div className="asrar-section-divider" aria-hidden="true" />
 
         {/* SECURITY & PRIVACY / WHY */}

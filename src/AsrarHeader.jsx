@@ -125,8 +125,18 @@ export default function AsrarHeader({
           {/* Logged-out: show auth buttons */}
           {!isAuthLoading && !user && (
             <div className="asrar-header-auth-buttons">
-              {/* Emotional Engine (desktop) */}
-             
+              {/* Navigation Links */}
+              <a 
+                href="#features" 
+                className="asrar-dash-header-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.querySelector('#features').scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {isAr ? 'لماذا أسرار؟' : 'Why Asrar?'}
+              </a>
+              
               <Link to="/login" className="asrar-btn ghost">
                 {authLabels.login}
               </Link>
