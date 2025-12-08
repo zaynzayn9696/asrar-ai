@@ -32,7 +32,7 @@ const CHARACTER_VOICES = {
   // Voice choice: "alloy" – confident, warm male voice that reads as early‑30s
   // and works well for structured, motivational guidance in Arabic/Gulf context.
   "abu-mukh": {
-    voiceId: "alloy",
+    voiceId: "atticus",
     styleDescription:
       "Male, early 30s, Gulf-leaning, confident and focused. Clear, structured, motivational teacher tone.",
     defaultTone: "energetic",
