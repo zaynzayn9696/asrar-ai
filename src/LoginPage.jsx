@@ -185,13 +185,9 @@ const LoginPage = () => {
             <button
               type="button"
               className="auth-link-button auth-link-button-small"
-              onClick={() =>
-                alert(
-                  isArabic
-                    ? "إعادة تعيين كلمة المرور سيتم تفعيلها لاحقاً."
-                    : "Password reset will be implemented later."
-                )
-              }
+              onClick={() => {
+                navigate("/forgot-password");
+              }}
             >
               {t.forgot}
             </button>

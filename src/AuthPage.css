@@ -123,6 +123,18 @@
   text-align: center;
 }
 
+.auth-success-banner {
+  width: 100%;
+  border-radius: 14px;
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1rem;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.75);
+  color: #dcfce7;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
 /* FORM */
 .auth-form {
   display: flex;

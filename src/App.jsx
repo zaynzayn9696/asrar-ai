@@ -17,6 +17,8 @@ import Billing from "./Billing";
 import ChatHistory from "./ChatHistory";
 import GoogleAuthComplete from "./GoogleAuthComplete";
 import AdminDashboard from "./AdminDashboard";
+import ForgotPassword from "./ForgotPassword";
+import ResetPassword from "./ResetPassword";
 
 
 import { AuthProvider, useAuth } from "./hooks/useAuth"; // <-- make sure path is correct
@@ -137,6 +139,22 @@ function App() {
             }
           />
           <Route path="/google-auth-complete" element={<GoogleAuthComplete />} />
+          <Route
+            path="/forgot-password"
+            element={
+              <GuestOnlyRoute>
+                <ForgotPassword />
+              </GuestOnlyRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <GuestOnlyRoute>
+                <ResetPassword />
+              </GuestOnlyRoute>
+            }
+          />
 
           {/* Protected pages */}
           <Route

@@ -150,6 +150,109 @@ async function sendWelcomeEmail(toEmail, name) {
   }
 }
 
+async function sendPasswordResetEmail({ to, resetLink, language }) {
+  if (!to || !resetLink) return;
+
+  const transporter = getTransporter();
+  if (!transporter) return;
+
+  const fromAddress = process.env.SUPPORT_EMAIL_FROM || 'support@asrarai.com';
+  const from = `Asrar AI Support <${fromAddress}>`;
+
+  const isArabic = language === 'ar';
+
+  const subject = isArabic
+    ? 'إعادة تعيين كلمة المرور — أسرار AI'
+    : 'Reset your Asrar AI password';
+
+  const text = isArabic
+    ? [
+        'مرحباً،',
+        '',
+        'لقد طلبت إعادة تعيين كلمة المرور لحسابك في أسرار AI.',
+        'اضغط على الرابط أدناه لتغيير كلمة المرور:',
+        resetLink,
+        '',
+        'إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة بأمان.',
+      ].join('\n')
+    : [
+        'Hi,',
+        '',
+        'You requested a password reset for your Asrar AI account.',
+        'Click the link below to choose a new password:',
+        resetLink,
+        '',
+        "If you didn’t request this, you can safely ignore this email.",
+      ].join('\n');
+
+  const html = isArabic
+    ? `<!DOCTYPE html>
+<html lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إعادة تعيين كلمة المرور — أسرار AI</title>
+  </head>
+  <body style="margin:0;padding:24px;background-color:#050914;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;direction:rtl;text-align:right;">
+    <div style="max-width:520px;margin:0 auto;padding:20px 20px 24px;border-radius:18px;border:1px solid #1c2238;background:radial-gradient(circle at top,#07121d 0,#040813 40%,#03040c 100%);">
+      <h1 style="margin-top:0;margin-bottom:10px;font-size:20px;color:#f9fafb;">إعادة تعيين كلمة المرور</h1>
+      <p style="margin:0 0 10px 0;font-size:14px;color:#e5e7eb;">مرحباً،</p>
+      <p style="margin:0 0 10px 0;font-size:14px;color:#d1d5db;">
+        لقد طلبت إعادة تعيين كلمة المرور لحسابك في أسرار AI.
+      </p>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#d1d5db;">
+        اضغط على الزر أدناه لتغيير كلمة المرور:
+      </p>
+      <p style="margin:0 0 18px 0;">
+        <a href="${resetLink}" style="display:inline-block;padding:10px 22px;border-radius:999px;background-image:linear-gradient(135deg,#22c55e,#4ade80);color:#020617;font-size:13px;font-weight:600;text-decoration:none;">إعادة تعيين كلمة المرور</a>
+      </p>
+      <p style="margin:0 0 6px 0;font-size:13px;color:#d1d5db;">
+        إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة بأمان.
+      </p>
+    </div>
+  </body>
+</html>`
+    : `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reset your Asrar AI password</title>
+  </head>
+  <body style="margin:0;padding:24px;background-color:#050914;color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+    <div style="max-width:520px;margin:0 auto;padding:20px 20px 24px;border-radius:18px;border:1px solid #1c2238;background:radial-gradient(circle at top,#07121d 0,#040813 40%,#03040c 100%);">
+      <h1 style="margin-top:0;margin-bottom:10px;font-size:20px;color:#f9fafb;">Reset your Asrar AI password</h1>
+      <p style="margin:0 0 10px 0;font-size:14px;color:#e5e7eb;">Hi,</p>
+      <p style="margin:0 0 10px 0;font-size:14px;color:#d1d5db;">
+        You requested a password reset for your Asrar AI account.
+      </p>
+      <p style="margin:0 0 16px 0;font-size:14px;color:#d1d5db;">
+        Click the button below to choose a new password:
+      </p>
+      <p style="margin:0 0 18px 0;">
+        <a href="${resetLink}" style="display:inline-block;padding:10px 22px;border-radius:999px;background-image:linear-gradient(135deg,#22c55e,#4ade80);color:#020617;font-size:13px;font-weight:600;text-decoration:none;">Reset password</a>
+      </p>
+      <p style="margin:0 0 6px 0;font-size:13px;color:#d1d5db;">
+        If you didn’t request this, you can safely ignore this email.
+      </p>
+    </div>
+  </body>
+</html>`;
+
+  try {
+    await transporter.sendMail({
+      from,
+      to,
+      subject,
+      text,
+      html,
+    });
+  } catch (err) {
+    console.error('[email] Failed to send password reset email:', err && err.message ? err.message : err);
+  }
+}
+
 module.exports = {
   sendWelcomeEmail,
+  sendPasswordResetEmail,
 };

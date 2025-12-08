@@ -2,10 +2,11 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const prisma = require('../prisma');
 const requireAuth = require('../middleware/requireAuth');
 const { LIMITS, getPlanLimits } = require('../config/limits');
-const { sendWelcomeEmail } = require('../utils/email');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
 
 const router = express.Router();
 
@@ -138,6 +139,14 @@ function buildUsageSummary(user, usage) {
     monthlyLimit: monthlyLimit || 0,
     monthlyRemaining,
   };
+}
+
+function getFrontendBaseUrl() {
+  const fromEnv = process.env.FRONTEND_URL;
+  if (fromEnv && typeof fromEnv === 'string') {
+    return fromEnv;
+  }
+  return 'http://localhost:5173';
 }
 
 // ---------- REGISTER ----------
@@ -281,6 +290,157 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// ---------- REQUEST PASSWORD RESET ----------
+router.post('/request-password-reset', async (req, res) => {
+  try {
+    const emailRaw = req.body && typeof req.body.email === 'string' ? req.body.email : '';
+    const email = emailRaw.trim().toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ ok: false, message: 'Email is required' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user) {
+      try {
+        await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+      } catch (_) {}
+
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+      await prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          token: tokenHash,
+          expiresAt,
+        },
+      });
+
+      const frontendBase = getFrontendBaseUrl();
+      let resetLink = frontendBase;
+      try {
+        const url = new URL('/reset-password', frontendBase);
+        url.searchParams.set('token', rawToken);
+        resetLink = url.toString();
+      } catch (_) {
+        resetLink = `${frontendBase.replace(/\/$/, '')}/reset-password?token=${encodeURIComponent(rawToken)}`;
+      }
+
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          resetLink,
+          language: 'en',
+        });
+      } catch (emailErr) {
+        console.error('[auth/request-password-reset] email error:', emailErr && emailErr.message ? emailErr.message : emailErr);
+      }
+    }
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[auth/request-password-reset] error:', err && err.message ? err.message : err);
+    return res.status(500).json({ ok: true });
+  }
+});
+
+// ---------- VALIDATE RESET TOKEN ----------
+router.post('/reset-password/validate', async (req, res) => {
+  try {
+    const rawToken = req.body && typeof req.body.token === 'string' ? req.body.token : '';
+    if (!rawToken) {
+      return res.status(400).json({ ok: false, valid: false, message: 'Invalid or expired reset link.' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const now = new Date();
+
+    const tokenRow = await prisma.passwordResetToken.findUnique({
+      where: { token: tokenHash },
+    });
+
+    if (!tokenRow || tokenRow.expiresAt <= now) {
+      return res.status(200).json({ ok: false, valid: false, message: 'Invalid or expired reset link.' });
+    }
+
+    return res.json({ ok: true, valid: true });
+  } catch (err) {
+    console.error('[auth/reset-password/validate] error:', err && err.message ? err.message : err);
+    return res.status(500).json({ ok: false, valid: false, message: 'Invalid or expired reset link.' });
+  }
+});
+
+// ---------- RESET PASSWORD ----------
+router.post('/reset-password', async (req, res) => {
+  try {
+    if (!req.body) {
+      return res.status(400).json({ message: 'Invalid request' });
+    }
+
+    let { token, password, newPassword } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ message: 'Invalid or expired reset token.' });
+    }
+
+    if (!password && typeof newPassword === 'string') {
+      password = newPassword;
+    }
+
+    if (!password || typeof password !== 'string') {
+      return res.status(400).json({ message: 'New password is required.' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters.' });
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const now = new Date();
+
+    const tokenRow = await prisma.passwordResetToken.findUnique({
+      where: { token: tokenHash },
+    });
+
+    if (!tokenRow || tokenRow.expiresAt <= now) {
+      if (tokenRow && tokenRow.expiresAt <= now) {
+        try {
+          await prisma.passwordResetToken.delete({ where: { id: tokenRow.id } });
+        } catch (_) {}
+      }
+      return res.status(400).json({ message: 'Invalid or expired reset token.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: tokenRow.userId } });
+    if (!user) {
+      try {
+        await prisma.passwordResetToken.delete({ where: { id: tokenRow.id } });
+      } catch (_) {}
+      return res.status(400).json({ message: 'Invalid or expired reset token.' });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    try {
+      await prisma.$transaction([
+        prisma.user.update({ where: { id: user.id }, data: { passwordHash: hash } }),
+        prisma.passwordResetToken.delete({ where: { id: tokenRow.id } }),
+      ]);
+    } catch (txErr) {
+      console.error('[auth/reset-password] transaction error:', txErr && txErr.message ? txErr.message : txErr);
+      return res.status(500).json({ message: 'Failed to reset password.' });
+    }
+
+    return res.json({ ok: true, message: 'Password has been reset successfully.' });
+  } catch (err) {
+    console.error('[auth/reset-password] error:', err && err.message ? err.message : err);
+    return res.status(500).json({ message: 'Failed to reset password.' });
   }
 });
 
