@@ -40,6 +40,7 @@ router.post('/:personaId', async (req, res) => {
       insights: result.insights,
       generatedAt: result.session ? result.session.generatedAt : null,
       rangeDays: result.insights ? result.insights.rangeDays : null,
+      notEnoughHistory: !!result.notEnoughHistory,
     });
   } catch (err) {
     console.error(

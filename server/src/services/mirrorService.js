@@ -8,6 +8,16 @@ const { logEmotionalEvent } = require('./timelineService');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Thresholds for deciding when there is enough persona-level history
+// to justify a full Mirror reflection. These are intentionally conservative
+// so that brand-new companions with only a handful of neutral messages do
+// NOT get a fake "month of calm neutrality" summary.
+const MIN_MESSAGES_FOR_PATTERN = 10; // typical threshold for a reliable pattern
+const MIN_DAYS_FOR_PATTERN = 3; // or at least a few distinct days
+const MIN_MESSAGES_ABSOLUTE = 3; // below this, always treat as low-data
+
+const NEGATIVE_LABELS = new Set(['SAD', 'ANXIOUS', 'ANGRY', 'LONELY', 'STRESSED']);
+
 function startOfDay(date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -66,15 +76,20 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
   const emotionTotals = {};
   let totalMessages = 0;
   let weightedIntensitySum = 0;
+  let negativeMessages = 0;
 
   for (const s of summaries) {
     const counts = (s.emotionCounts && typeof s.emotionCounts === 'object') ? s.emotionCounts : {};
-    for (const [emotion, count] of Object.entries(counts)) {
+    for (const [emotionRaw, count] of Object.entries(counts)) {
+      const emotion = String(emotionRaw || '').toUpperCase();
       const c = typeof count === 'number' ? count : 0;
       if (!emotionTotals[emotion]) emotionTotals[emotion] = 0;
       emotionTotals[emotion] += c;
       totalMessages += c;
       weightedIntensitySum += c * (Number(s.avgIntensity) || 0);
+      if (NEGATIVE_LABELS.has(emotion)) {
+        negativeMessages += c;
+      }
     }
   }
 
@@ -88,6 +103,10 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
 
   const avgIntensity = totalMessages
     ? weightedIntensitySum / totalMessages
+    : 0;
+
+  const negativeShare = totalMessages
+    ? Math.max(0, Math.min(1, negativeMessages / totalMessages))
     : 0;
 
   // Time-of-day patterns from events.
@@ -140,6 +159,47 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
     ? startOfDay(summaries[summaries.length - 1].date)
     : startOfDay(now);
 
+  // Compute an approximate span in days and a human-friendly period label
+  const spanMs = lastDate.getTime() - firstDate.getTime();
+  const spanDays = Math.max(1, Math.round(spanMs / (24 * 60 * 60 * 1000)));
+  const totalDays = summaries.length;
+
+  let periodKey = 'recent_period';
+  let periodLabel = 'the recent period';
+
+  if (spanDays <= 2 && totalMessages < 10) {
+    periodKey = 'early';
+    periodLabel = 'these early conversations';
+  } else if (spanDays <= 7) {
+    periodKey = 'few_days';
+    periodLabel = 'the past few days';
+  } else if (spanDays <= 21) {
+    periodKey = 'couple_of_weeks';
+    periodLabel = 'the past couple of weeks';
+  } else {
+    periodKey = 'month';
+    periodLabel = 'the past month';
+  }
+
+  // Decide if we truly have enough persona-level history to justify
+  // a detailed reflection. We gate on BOTH volume and span, but allow
+  // strongly negative, high-intensity patterns to be reflected a bit
+  // earlier so we can still acknowledge distress.
+  let notEnoughHistory = false;
+
+  if (totalMessages < MIN_MESSAGES_ABSOLUTE && totalDays <= 1) {
+    // Brand-new companion with just a couple of short exchanges.
+    notEnoughHistory = true;
+  } else if (
+    totalMessages < MIN_MESSAGES_FOR_PATTERN &&
+    totalDays < MIN_DAYS_FOR_PATTERN &&
+    negativeShare < 0.6
+  ) {
+    // Very light and mostly neutral usage: better to be honest and say
+    // we do not yet have a reliable emotional pattern.
+    notEnoughHistory = true;
+  }
+
   return {
     hasData: true,
     rangeDays: days,
@@ -156,7 +216,12 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
       firstDate,
       lastDate,
       totalMessages,
-      totalDays: summaries.length,
+      totalDays,
+      spanDays,
+      periodKey,
+      periodLabel,
+      negativeShare,
+      notEnoughHistory,
     },
   };
 }
@@ -187,10 +252,18 @@ async function callLLMForMirror({ insights, personaMeta, lang }) {
   });
 
   const userInstruction = isAr
-    ? 'حول هذا الملخص العددي إلى فقرتين أو ثلاث فقرات قصيرة تشرح للمستخدم بلطف كيف كانت أجواءه ومشاعره في الفترة الماضية، مع ملاحظات بسيطة عن الأوقات التي يكثر فيها الحديث، وأي تحسن أو ضغط واضح، ثم اختم بجملة تشجيعية لطيفة. لا تستخدم أي مصطلحات تشخيصية.'
+    ? 'حول هذا الملخص العددي إلى فقرتين أو ثلاث فقرات قصيرة تشرح للمستخدم بلطف كيف كانت أجواؤه ومشاعره في الفترة الماضية، مع ملاحظات بسيطة عن الأوقات التي يكثر فيها الحديث، وأي تحسن أو ضغط واضح، ثم اختم بجملة تشجيعية لطيفة. لا تستخدم أي مصطلحات تشخيصية.'
     : 'Turn this numeric summary into two or three short paragraphs that gently explain to the user how their overall mood and feelings have been in the recent period, including simple notes about the times of day they tend to talk more and any clear improvements or pressure. Finish with one warm, encouraging sentence. Do not use clinical or diagnostic language, and do not name mental disorders.';
 
-  const userPrompt = `${userInstruction}\n\nJSON:\n${userContent}`;
+  const timeInstruction = isAr
+    ? 'عند وصف الفترة الزمنية، اعتمد على الحقل insights.meta.periodLabel فقط (مثل: "هذه البدايات المبكرة"، "الأيام القليلة الماضية"، "الأسابيع القليلة الماضية"، "الشهر الماضي")، ولا تدّعِ فترة أطول من هذه التسمية.'
+    : 'When you talk about the time period, always base it on `insights.meta.periodLabel` (for example: "in these early conversations", "over the past few days", "over the past couple of weeks", "over the past month") and do not claim a longer time span than this label implies.';
+
+  const emotionInstruction = isAr
+    ? 'انتبه جيدًا لتوزيع المشاعر في insights.topEmotions وشدة avgIntensity. إذا كانت المشاعر السلبية (مثل الحزن أو القلق أو الغضب أو الوحدة أو الضغط) هي الغالبة، فاذكر ذلك بوضوح ولا تصف النمط بأنه هادئ أو محايد.'
+    : 'Pay close attention to the distribution of emotions in `insights.topEmotions` and the overall `avgIntensity`. If negative emotions (sad, anxious, angry, lonely, stressed) are dominant, clearly acknowledge this distress or tension instead of calling the pattern calm or neutral.';
+
+  const userPrompt = `${userInstruction}\n\n${timeInstruction}\n\n${emotionInstruction}\n\nJSON:\n${userContent}`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -218,7 +291,13 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
   const insights = await generateMirrorInsights({ userId, personaId, rangeDays });
 
   if (!insights.hasData) {
-    return { summaryText: null, insights };
+    return { summaryText: null, insights, notEnoughHistory: true };
+  }
+
+  if (insights.meta && insights.meta.notEnoughHistory) {
+    // Explicit low-data path: do NOT call the LLM, just surface the flag
+    // so the UI can show a truthful "not enough history yet" state.
+    return { summaryText: null, insights, notEnoughHistory: true };
   }
 
   const { summaryText } = await callLLMForMirror({ insights, personaMeta, lang });
@@ -257,7 +336,7 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
     console.error('[Mirror] Failed to log mirror event', err && err.message ? err.message : err);
   }
 
-  return { summaryText, insights, session };
+  return { summaryText, insights, session, notEnoughHistory: false };
 }
 
 module.exports = {
