@@ -103,6 +103,7 @@ export default function ChatHistory() {
   const t = TEXT[isAr ? "ar" : "en"];
 
   const [historyMap, setHistoryMap] = useState({});
+  const [loading, setLoading] = useState(true);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200
   );
@@ -110,13 +111,17 @@ export default function ChatHistory() {
   const hydrateHistory = useCallback(() => {
     if (!user) {
       setHistoryMap({});
+      setLoading(false);
       return;
     }
     if (typeof window === "undefined") return;
 
+    setLoading(true);
+
     const userId = user.id;
     if (!userId) {
       setHistoryMap({});
+      setLoading(false);
       return;
     }
 
@@ -138,9 +143,11 @@ export default function ChatHistory() {
           characters: Object.keys(map),
         });
         setHistoryMap(map);
+        setLoading(false);
       } catch (e) {
         console.error("[ChatHistory] Failed to load chat history from localStorage", e);
         setHistoryMap({});
+        setLoading(false);
       }
     };
 
@@ -184,6 +191,7 @@ export default function ChatHistory() {
 
         if (!Array.isArray(list) || !list.length) {
           setHistoryMap({});
+          setLoading(false);
           return;
         }
 
@@ -220,6 +228,7 @@ export default function ChatHistory() {
           characters: Object.keys(map),
         });
         setHistoryMap(map);
+        setLoading(false);
       } catch (e) {
         console.error("[ChatHistory] Failed to load chat history from server", e);
         // On error, fall back to local history so the page still works per-device.
@@ -338,11 +347,19 @@ export default function ChatHistory() {
           <h1 className="asrar-dash-title">{t.title}</h1>
           <p className="asrar-dash-subtitle">{t.subtitle}</p>
 
-          {!hasAnyHistory && (
+          {loading && (
+            <div className="asrar-history-skeleton-wrap">
+              <div className="asrar-history-skeleton-card" />
+              <div className="asrar-history-skeleton-card" />
+              <div className="asrar-history-skeleton-card" />
+            </div>
+          )}
+
+          {!loading && !hasAnyHistory && (
             <p className="asrar-history-empty-global">{t.emptyGlobal}</p>
           )}
 
-          {hasAnyHistory && !isMobile && (
+          {!loading && hasAnyHistory && !isMobile && (
             <div className="asrar-dash-characters">
               <div className="asrar-dash-char-grid">
                 {charactersWithHistory.map((c) => {
@@ -381,7 +398,7 @@ export default function ChatHistory() {
             </div>
           )}
 
-          {hasAnyHistory && isMobile && charactersWithHistory.length > 1 && (
+          {!loading && hasAnyHistory && isMobile && charactersWithHistory.length > 1 && (
             <div className="asrar-dash-characters">
               <CharacterCarousel
                 characters={charactersWithHistory.map((c) => ({
@@ -401,7 +418,7 @@ export default function ChatHistory() {
             </div>
           )}
 
-          {hasAnyHistory && isMobile && charactersWithHistory.length === 1 && (
+          {!loading && hasAnyHistory && isMobile && charactersWithHistory.length === 1 && (
             <div className="asrar-dash-characters">
               <div className="asrar-dash-char-grid">
                 {charactersWithHistory.map((c) => {

@@ -832,6 +832,36 @@
   margin-bottom: 1.4rem;
 }
 
+.asrar-history-skeleton-wrap {
+  max-width: 980px;
+  margin: 1.2rem auto 1.4rem;
+}
+
+.asrar-history-skeleton-card {
+  height: 120px;
+  border-radius: 18px;
+  margin-bottom: 16px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02),
+    rgba(255, 255, 255, 0.08)
+  );
+  background-size: 200px 100%;
+  animation: asrar-history-shimmer 1.6s infinite linear;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+@keyframes asrar-history-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
 /* RESPONSIVE DESIGN */
 
 /* RESPONSIVE */
