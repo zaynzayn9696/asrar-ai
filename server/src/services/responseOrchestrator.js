@@ -154,24 +154,25 @@ function addEmpathy(text, language) {
 }
 
 /**
- * Decide if a safety footer should be appended. Once the conversation is in a
- * support/struggle state, append the footer on every assistant reply while in
- * that state. Do not append in NEUTRAL small talk.
- * @param {{ primaryEmotion?: string, intensity?: number }} emotion
- * @param {{ currentState?: string, state?: string }=} convoState
+ * Decide if a *crisis-level* safety footer should be appended.
+ * We keep this strictly for self-harm / suicidal intent or wanting to
+ * seriously harm someone else.
+ *
+ * Approximation: classifier severityLevel === "HIGH_RISK" OR the emotion
+ * notes clearly mention self-harm / suicide / harming others.
+ * @param {{ severityLevel?:string, emotion?:{ notes?:string }, convoState?:{ currentState?:string, state?:string } }} meta
  */
-function shouldAppendSafetyFooter(emotion, convoState) {
-  const SUPPORT_STATES = [
-    'SAD_SUPPORT',
-    'ANXIETY_CALMING',
-    'LONELY_COMPANIONSHIP',
-    'ANGER_DEESCALATE',
-  ];
-  const state = String(convoState?.currentState || convoState?.state || '').toUpperCase();
-  const label = String(emotion?.primaryEmotion || '').toUpperCase();
-  const intense = Number(emotion?.intensity || 0) >= 3;
-  const severeNegative = ['SAD', 'ANXIOUS', 'LONELY', 'ANGRY'].includes(label) && intense;
-  return severeNegative && SUPPORT_STATES.includes(state);
+function shouldAppendSafetyFooter(meta) {
+  const sev = String(meta?.severityLevel || '').toUpperCase();
+  if (sev === 'HIGH_RISK') return true;
+
+  const notes = String(meta?.emotion?.notes || '').toLowerCase();
+  if (!notes) return false;
+
+  const selfHarmRe = /(?:self[-\s]?harm|kill myself|suicide|suicidal|end my life|إيذاء\s+النفس|انتحار|قتل\s+نفسي)/i;
+  const harmOthersRe = /(?:harm(?:ing)?\s+(?:someone|others)|kill\s+(?:someone|them)|إيذاء\s+(?:الآخرين|شخص)|قتل\s+(?:شخص|أحد|الناس))/i;
+
+  return selfHarmRe.test(notes) || harmOthersRe.test(notes);
 }
 
 /**
@@ -234,6 +235,68 @@ function applyStateAdjustments(text, convoState, language) {
     return gentle + text;
   }
   return text;
+}
+
+/**
+ * Lightly decorates the reply with 1–2 emojis based on primary emotion.
+ * Avoids duplicating emojis or touching safety disclaimer lines.
+ * @param {string} text
+ * @param {{ primaryEmotion?:string }} emotion
+ * @param {'ar'|'en'|'mixed'} language
+ * @param {'CASUAL'|'VENTING'|'SUPPORT'|'HIGH_RISK'} severityLevel
+ */
+function decorateWithEmojis(text, emotion, language, severityLevel) {
+  const raw = String(text || '');
+  if (!raw) return raw;
+
+  // Skip if emojis already present to avoid spam
+  try {
+    const emojiRe = /[\u{1F300}-\u{1FAFF}]/u;
+    if (emojiRe.test(raw)) return raw;
+  } catch (_) {
+    // Environments without Unicode property support: fall through
+  }
+
+  const primary = String(emotion?.primaryEmotion || '').toUpperCase();
+  let suffix = '';
+
+  switch (primary) {
+    case 'SAD':
+      suffix = ' 😔💙';
+      break;
+    case 'ANXIOUS':
+    case 'STRESSED':
+      suffix = ' 😟✨';
+      break;
+    case 'ANGRY':
+      suffix = ' 😡🔥';
+      break;
+    case 'LONELY':
+      suffix = ' 🫂';
+      break;
+    case 'HOPEFUL':
+    case 'GRATEFUL':
+      suffix = ' ✨❤️';
+      break;
+    default:
+      suffix = ' 🙂';
+  }
+
+  if (!suffix) return raw;
+
+  const lines = raw.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    // Avoid decorating disclaimer/footer lines
+    if (hasAnySafetyDisclaimer(line)) continue;
+    lines[i] = line + suffix;
+    return lines.join('\n');
+  }
+
+  // Fallback: append at very end
+  return raw + suffix;
 }
 
 /**
@@ -410,12 +473,8 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
 
     const safetyAlreadyPresent = hasAnySafetyDisclaimer(out);
 
-    if (!safetyAlreadyPresent) {
-      if (severityLevel === 'HIGH_RISK' || shouldAppendSafetyFooter(emotion, convoState)) {
-        if (!out.includes(fullFooter)) out = out + '\n\n' + fullFooter;
-      } else if (tone.includeSoftDisclaimer) {
-        if (!out.includes(mildFooter)) out = out + '\n\n' + mildFooter;
-      }
+    if (!safetyAlreadyPresent && shouldAppendSafetyFooter({ severityLevel, emotion, convoState })) {
+      if (!out.includes(fullFooter)) out = out + '\n\n' + fullFooter;
     }
 
     // Final gentle polish: avoid overly long replies
@@ -456,6 +515,9 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
     } else if (convoState?.currentState === 'SAD_SUPPORT' && lines.length > 5) {
       out = lines.slice(0, 5).join('\n');
     }
+
+    // Final pass: add a small emoji decoration based on emotional tone.
+    out = decorateWithEmojis(out, emotion, language, severityLevel);
 
     return out;
   } catch (e) {

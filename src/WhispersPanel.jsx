@@ -22,7 +22,7 @@ const TRUST_LEVELS_UI = {
       id: 2,
       label: "Opening Up",
       description:
-        "Your companion begins revealing small emotional hints and light whispers about how it sees your moods.",
+        "Your companion starts unlocking small emotional hints and light whispers about how it sees your moods.",
     },
     {
       id: 3,
@@ -34,13 +34,13 @@ const TRUST_LEVELS_UI = {
       id: 4,
       label: "Inner Layers",
       description:
-        "Your companion now shares deeper psychological whispers about triggers, coping styles, and what weighs on you.",
+        "Your companion now shares deeper psychological whispers about triggers, coping styles, and what usually weighs on you.",
     },
     {
       id: 5,
       label: "True Bond",
       description:
-        "Full Hidden Side unlocked. You receive the most honest, intimate reflections it can safely share about you.",
+        "Full Hidden Side unlocked. You receive the most honest, intimate reflections it can safely share about you over time.",
     },
   ],
   ar: [
@@ -261,8 +261,8 @@ export default function WhispersPanel({
 
         <p className="asrar-whispers-explainer">
           {isAr
-            ? "الجانب الخفي لا يغيّر شخصية رفيقك. هو مقياس ثقة بينكما: كلما زادت الثقة ظهرت همسات عاطفية أعمق وانعكاسات أوضح مخصّصة لك."
-            : "Hidden Side doesn’t change who your companion is. It’s a trust meter between you and this persona: more trust unlocks deeper emotional whispers and clearer reflections, just for you."}
+            ? "الجانب الخفي هو مقياس ثقة؛ كل ما فضفضت أكثر وبصدق، تنفتح لك همسات عاطفية أعمق مع الوقت."
+            : "Hidden Side is a trust meter: more honest, frequent conversations slowly unlock deeper emotional whispers."}
         </p>
 
         {loading && (

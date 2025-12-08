@@ -89,6 +89,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
 }
 
 .asrar-timeline-title {
@@ -156,6 +157,9 @@
   width: 32px;
   height: 32px;
   cursor: pointer;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .asrar-timeline-state {

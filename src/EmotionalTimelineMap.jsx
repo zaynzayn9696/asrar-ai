@@ -172,9 +172,8 @@ export default function EmotionalTimelineMap({
           <div>
             <h2 className="asrar-timeline-title">{title}</h2>
             <p className="asrar-timeline-subtitle">{subtitle}</p>
-          </div>
-          <div className="asrar-timeline-header-right">
-            <div className="asrar-timeline-range-toggle">
+            <div className="asrar-timeline-header-right">
+              <div className="asrar-timeline-range-toggle">
               <button
                 type="button"
                 className={
@@ -195,16 +194,17 @@ export default function EmotionalTimelineMap({
               >
                 {isAr ? "آخر ٣٠ يومًا" : "Last 30 days"}
               </button>
+              </div>
             </div>
-            <button
-              type="button"
-              className="asrar-timeline-close"
-              onClick={onClose}
-              aria-label={isAr ? "إغلاق" : "Close"}
-            >
-              ×
-            </button>
           </div>
+          <button
+            type="button"
+            className="asrar-timeline-close"
+            onClick={onClose}
+            aria-label={isAr ? "إغلاق" : "Close"}
+          >
+            ×
+          </button>
         </div>
 
         {loading && (
