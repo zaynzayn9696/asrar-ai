@@ -739,7 +739,7 @@ export default function ChatPage() {
 const renderSidebarContent = () => (
   <>
     <button
-      className="asrar-conv-title"
+      className="asrar-new-chat-btn"
       onClick={handleStartNewChat}
       type="button"
     >
