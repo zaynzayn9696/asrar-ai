@@ -5,9 +5,16 @@
 
 /**
  * Softens directive language in English.
+ * At higher trust tiers we allow slightly more direct language.
  * @param {string} text
+ * @param {number=} trustTier
  */
-function softenEnglish(text) {
+function softenEnglish(text, trustTier) {
+  const tier = Number(trustTier || 1);
+  // At strong trust (4–5), keep the model's directness.
+  if (tier >= 4) {
+    return text;
+  }
   return text
     .replace(/\byou must\b/gi, 'you might')
     .replace(/\byou should\b/gi, 'you could consider')
@@ -17,14 +24,89 @@ function softenEnglish(text) {
 
 /**
  * Softens directive language in Arabic (simple heuristics).
+ * At higher trust tiers we keep more direct suggestions.
  * @param {string} text
+ * @param {number=} trustTier
  */
-function softenArabic(text) {
+function softenArabic(text, trustTier) {
+  const tier = Number(trustTier || 1);
+  if (tier >= 4) {
+    return text;
+  }
   return text
     .replace(/\bلازم\b/g, 'يمكن')
     .replace(/\bيجب\b/g, 'ممكن')
     .replace(/\bلا تفعل\b/g, 'حاول تتجنب')
     .replace(/\bافعل\b/g, 'ممكن تحاول');
+}
+
+// Safety disclaimer helpers: detect and strip model-generated disclaimers so we
+// can append a single canonical footer. Covers English + Arabic patterns.
+const EN_DISCLAIMER_PATTERNS = [
+  /\bnot\s+(?:a\s+)?(?:doctor|therapist|psychologist|psychiatrist|counselor|professional)\b/i,
+  /\bI['’]m\s+not\s+(?:a\s+)?(?:doctor|therapist|psychologist|psychiatrist|counselor|professional)\b/i,
+  /\bnot\s+(?:medical|professional)\s+advice\b/i,
+  /\bI\s+can(?:not|'t)\s+give\s+(?:you\s+)?(?:a\s+)?diagnosis\b/i,
+  /\bfor\s+serious\s+or\s+urgent\s+concerns\b/i,
+  /\bif\s+(?:you|u)\s+have\s+thoughts?\s+of\s+(?:self[-\s]?harm|suicide|ending\s+your\s+life)\b/i,
+  /\breach\s+out\s+to\s+(?:a\s+)?(?:professional|therapist|doctor|someone\s+you\s+trust)\b/i,
+  /supportive\s+guidance,\s+not\s+medical\s+advice/i,
+  /I'm\s+here\s+to\s+support\s+you,\s+but\s+I\s+can't\s+replace\s+professional\s+care/i,
+];
+
+const AR_DISCLAIMER_PATTERNS = [
+  /ليس(?:ت)?\s+(?:نصيحة|استشارة)\s+(?:طبية|طبي)/i,
+  /ليس\s+تشخيصاً?\s+طبي/i,
+  /لست(?:ُ)?\s+(?:طبيباً|طبيب|معالج(?:اً)?(?:\s+نفسي)?)/i,
+  /أفكار\s+(?:إيذاء\s+النفس|إيذاءٍ?\s+للنفس|انتحار|انتحارية)/i,
+  /تواص(?:ل|لي)\s+مع\s+(?:مختص|أخصائي|شخص\s+تثق\s+به)/i,
+  /أنا\s+هنا\s+للدعم،\s+لكن\s+لا\s+أستبدل\s+الرعاية\s+المتخصّصة/i,
+  /كلامي\s+دعم\s+ومساندة\s+وليس\s+تشخيص\s+طبي/i,
+];
+
+function hasAnySafetyDisclaimer(text) {
+  const str = String(text || '');
+  if (!str) return false;
+  const lower = str.toLowerCase();
+  for (const re of EN_DISCLAIMER_PATTERNS) {
+    if (re.test(lower)) return true;
+  }
+  for (const re of AR_DISCLAIMER_PATTERNS) {
+    if (re.test(str)) return true;
+  }
+  return false;
+}
+
+function stripModelGeneratedDisclaimers(text) {
+  const raw = String(text || '');
+  if (!raw) return raw;
+  const sentences = raw
+    .split(/(?<=[.!؟?])\s+/)
+    .filter(Boolean);
+  const kept = sentences.filter((s) => {
+    const lower = s.toLowerCase();
+    if (EN_DISCLAIMER_PATTERNS.some((re) => re.test(lower))) return false;
+    if (AR_DISCLAIMER_PATTERNS.some((re) => re.test(s))) return false;
+    return true;
+  });
+  const joined = kept.join(' ').trim();
+  return joined || raw;
+}
+
+function computeTrustTier(trustSnapshot) {
+  if (!trustSnapshot) {
+    return { tier: 1, score: 0 };
+  }
+  const score = Number(trustSnapshot.trustScore || 0);
+  if (!Number.isFinite(score) || score <= 0) {
+    return { tier: 1, score: 0 };
+  }
+  let tier = 1;
+  if (score >= 80) tier = 5;
+  else if (score >= 60) tier = 4;
+  else if (score >= 40) tier = 3;
+  else if (score >= 20) tier = 2;
+  return { tier, score };
 }
 
 /**
@@ -226,17 +308,19 @@ function modulateByPrimaryEmotion(text, emotion, language) {
  * @param {{ style?: {warmth?:string, humor?:string, directness?:string, energy?:string} }} params.personaCfg
  * @param {'CORE_FAST'|'CORE_DEEP'|'PREMIUM_DEEP'=} params.engineMode
  * @param {boolean=} params.isPremiumUser
+ * @param {{ trustScore?:number, trustLevel?:number }=} params.trustSnapshot
  * @returns {Promise<string>}
  */
-async function orchestrateResponse({ rawReply, persona, emotion, convoState, longTermSnapshot, triggers, language, severityLevel, personaCfg, engineMode, isPremiumUser }) {
+async function orchestrateResponse({ rawReply, persona, emotion, convoState, longTermSnapshot, triggers, language, severityLevel, personaCfg, engineMode, isPremiumUser, trustSnapshot }) {
   try {
     if (!rawReply || typeof rawReply !== 'string') return '';
     const isAr = language === 'ar';
+    const { tier: trustTier } = computeTrustTier(trustSnapshot);
 
     let out = rawReply.trim();
 
-    // Tone softening
-    out = isAr ? softenArabic(out) : softenEnglish(out);
+    // Tone softening (trust-aware)
+    out = isAr ? softenArabic(out, trustTier) : softenEnglish(out, trustTier);
 
     // Trigger sensitivity
     out = avoidTriggerReintensification(out, triggers);
@@ -245,7 +329,17 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
     out = applyStateAdjustments(out, convoState, language);
 
     // Choose opener style from tone profile
-    const tone = getToneProfile({ severityLevel, convoState, personaCfg });
+    let tone = getToneProfile({ severityLevel, convoState, personaCfg });
+    if (String(severityLevel || '').toUpperCase() !== 'HIGH_RISK') {
+      if (trustTier >= 3 && tone.empathyLevel === 'low') {
+        tone = { ...tone, empathyLevel: 'medium' };
+      }
+      if (trustTier >= 4 && tone.messageLength === 'short') {
+        tone = { ...tone, messageLength: 'normal' };
+      } else if (trustTier >= 5 && tone.messageLength === 'normal') {
+        tone = { ...tone, messageLength: 'extended' };
+      }
+    }
     const trimmed = String(out).trim();
     if (tone.empathyLevel === 'high') {
       out = addEmpathy(out, language);
@@ -303,6 +397,9 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
       }
     }
 
+    // Strip any model-generated disclaimers before appending our own.
+    out = stripModelGeneratedDisclaimers(out);
+
     // Conditionally append safety footer, but never duplicate it.
     const fullFooter = isAr
       ? 'تذكّر: كلامي دعم ومساندة وليس تشخيص طبي. لو ظهرت أفكار إيذاء للنفس، تواصل مع مختص أو شخص تثق به.'
@@ -311,17 +408,7 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
       ? 'أنا هنا للدعم، لكن لا أستبدل الرعاية المتخصّصة. لو حسّيت أن الموضوع محتاج أكثر، تكلم مع شخص تثق به أو مختص.'
       : "I'm here to support you, but I can't replace professional care. For serious or urgent concerns, consider talking to a trusted person or a professional.";
 
-    const lowerOut = String(out || '').toLowerCase();
-    const safetyAlreadyPresent = (() => {
-      if (!lowerOut) return false;
-      // English
-      if (lowerOut.includes('supportive guidance, not medical advice')) return true;
-      if (lowerOut.includes("i'm here to support you, but i can't replace professional care")) return true;
-      // Arabic
-      if (lowerOut.includes('كلامي دعم ومساندة وليس تشخيص طبي')) return true;
-      if (lowerOut.includes('أنا هنا للدعم، لكن لا أستبدل الرعاية المتخصّصة')) return true;
-      return false;
-    })();
+    const safetyAlreadyPresent = hasAnySafetyDisclaimer(out);
 
     if (!safetyAlreadyPresent) {
       if (severityLevel === 'HIGH_RISK' || shouldAppendSafetyFooter(emotion, convoState)) {
@@ -339,8 +426,14 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
         out = lines.slice(0, 6).join('\n');
       }
     } else if (engineMode === 'CORE_DEEP') {
-      if (lines.length > 9) {
-        out = lines.slice(0, 9).join('\n');
+      let maxLines = 9;
+      if (tone.messageLength === 'short') {
+        maxLines = 7;
+      } else if (tone.messageLength === 'extended' && trustTier >= 4) {
+        maxLines = 11;
+      }
+      if (lines.length > maxLines) {
+        out = lines.slice(0, maxLines).join('\n');
       }
     } else if (engineMode === 'PREMIUM_DEEP') {
       const intensity = Number(emotion?.intensity || 0);
@@ -351,6 +444,11 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
         maxLines = 10; // 8–10 lines typical
       } else if (intensity > 0) {
         maxLines = 8; // gentler for low intensity
+      }
+      if (tone.messageLength === 'extended' && trustTier >= 4) {
+        maxLines += 2;
+      } else if (tone.messageLength === 'short') {
+        maxLines = Math.max(6, maxLines - 2);
       }
       if (lines.length > maxLines) {
         out = lines.slice(0, maxLines).join('\n');

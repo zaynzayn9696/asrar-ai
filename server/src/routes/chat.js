@@ -1073,14 +1073,16 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       personaCfg,
     } = engineResult;
 
+    let trustSnapshot = null;
     try {
-      await updateTrustOnMessage({
+      const trustRes = await updateTrustOnMessage({
         userId,
         personaId: characterId,
         emotionSnapshot: emo,
         triggers,
         timestamp: new Date(),
       });
+      trustSnapshot = trustRes && trustRes.trust ? trustRes.trust : null;
     } catch (err) {
       console.error(
         '[Whispers][Trust] updateTrustOnMessage failed',
@@ -1134,7 +1136,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     if (Array.isArray(limitedContext) && limitedContext.length) {
       openAIMessages.push(...limitedContext);
     }
-    openAIMessages.push({ role: 'user', content: userText });
+    openAIMessages.push({ role: 'user', content: body.text });
 
     const routedModel = selectModelForResponse({
       emotion: emo,
@@ -1175,6 +1177,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         personaCfg: personaCfg || null,
         engineMode,
         isPremiumUser: isPremiumUser || isTester,
+        trustSnapshot,
       });
       orchestrateMs = Date.now() - tOrchStart;
       if (typeof aiMessage !== 'string' || !aiMessage.trim()) {
