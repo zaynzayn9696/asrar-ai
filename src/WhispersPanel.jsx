@@ -178,6 +178,7 @@ export default function WhispersPanel({
   const [error, setError] = useState(null);
   const [status, setStatus] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [previewLevelId, setPreviewLevelId] = useState(null);
 
   useEffect(() => {
     if (!isOpen || !personaId) return;
@@ -237,6 +238,12 @@ export default function WhispersPanel({
       controller.abort();
     };
   }, [isOpen, personaId, isAr, refreshKey]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPreviewLevelId(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -298,10 +305,64 @@ export default function WhispersPanel({
     };
   })();
 
-  const nextLevelUi =
-    trustLevelUi && levelsForUi
-      ? getNextLevelUi(levelsForUi, trustLevelUi.levelNumber)
+  const currentLevelNumber = trustLevelUi?.levelNumber || null;
+
+  const effectivePreviewLevelNumber =
+    previewLevelId && levelsForUi
+      ? (() => {
+          const found = levelsForUi.find(
+            (lvl) => Number(lvl.id) === Number(previewLevelId)
+          );
+          return found ? Number(found.id) : currentLevelNumber;
+        })()
+      : currentLevelNumber;
+
+  const previewLevelUi =
+    effectivePreviewLevelNumber != null
+      ? (() => {
+          const metaById = levelsForUi.find(
+            (lvl) => Number(lvl.id) === Number(effectivePreviewLevelNumber)
+          );
+          const meta =
+            metaById ||
+            levelsForUi[effectivePreviewLevelNumber - 1] ||
+            levelsForUi[0];
+          return {
+            levelNumber: effectivePreviewLevelNumber,
+            label: meta.label,
+            shortLabel: meta.shortLabel || meta.label,
+            description: meta.description,
+            nowBullets: Array.isArray(meta.nowBullets) ? meta.nowBullets : [],
+            nextHint: meta.nextHint || "",
+          };
+        })()
       : null;
+
+  const nextLevelUi =
+    previewLevelUi && levelsForUi
+      ? getNextLevelUi(levelsForUi, previewLevelUi.levelNumber)
+      : null;
+
+  let progressToNext = null;
+  let progressPercent = null;
+  let nextLevelNumberForProgress = null;
+
+  if (trustScore != null && trustLevelUi) {
+    if (trustLevelUi.levelNumber >= 5) {
+      progressToNext = 1;
+      progressPercent = 100;
+    } else {
+      const currentNumber = trustLevelUi.levelNumber;
+      const currentMin = (currentNumber - 1) * 20;
+      const nextMin = currentNumber * 20;
+      const range = nextMin - currentMin || 1;
+      const raw = (trustScore - currentMin) / range;
+      const clamped = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+      progressToNext = clamped;
+      progressPercent = Math.round(clamped * 100);
+      nextLevelNumberForProgress = currentNumber + 1;
+    }
+  }
 
   const handleRetry = () => {
     setRefreshKey((k) => k + 1);
@@ -336,8 +397,12 @@ export default function WhispersPanel({
               </span>
               <span className="asrar-whispers-trust-level-name">
                 {isAr
-                  ? `المستوى ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`
-                  : `Level ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`}
+                  ? `المستوى ${
+                      (previewLevelUi || trustLevelUi).levelNumber
+                    } — ${(previewLevelUi || trustLevelUi).label}`
+                  : `Level ${
+                      (previewLevelUi || trustLevelUi).levelNumber
+                    } — ${(previewLevelUi || trustLevelUi).label}`}
               </span>
             </div>
             <div className="asrar-whispers-trust-indicator">
@@ -359,16 +424,33 @@ export default function WhispersPanel({
         {trustLevelUi && (
           <div className="asrar-whispers-level-badges">
             {levelsForUi.map((lvl) => {
-              const isActive = lvl.id === trustLevelUi.levelNumber;
+              const isCurrent =
+                trustLevelUi &&
+                Number(lvl.id) === Number(trustLevelUi.levelNumber);
+              const isPreview =
+                previewLevelUi &&
+                Number(lvl.id) === Number(previewLevelUi.levelNumber);
               return (
                 <div
                   key={lvl.id}
                   className={
                     "asrar-whispers-level-badge" +
-                    (isActive
-                      ? " asrar-whispers-level-badge--active"
+                    (isCurrent
+                      ? " asrar-whispers-level-badge--current"
+                      : "") +
+                    (isPreview
+                      ? " asrar-whispers-level-badge--preview"
                       : "")
                   }
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setPreviewLevelId(lvl.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setPreviewLevelId(lvl.id);
+                    }
+                  }}
                 >
                   <div className="asrar-whispers-level-dot">{lvl.id}</div>
                   <span className="asrar-whispers-level-label">
@@ -380,7 +462,7 @@ export default function WhispersPanel({
           </div>
         )}
 
-        {trustLevelUi && (
+        {previewLevelUi && (
           <>
             <p className="asrar-whispers-section-heading">
               {isAr
@@ -388,19 +470,42 @@ export default function WhispersPanel({
                 : "What this level gives you"}
             </p>
             <ul className="asrar-whispers-now-list">
-              {trustLevelUi.nowBullets.map((line, idx) => (
-                <li key={idx}>{`✅ ${line}`}</li>
+              {previewLevelUi.nowBullets.map((line, idx) => (
+                <li key={idx}>{line}</li>
               ))}
             </ul>
             <p className="asrar-whispers-next-hint">
               {nextLevelUi
                 ? isAr
-                  ? `المستوى التالي يفتح: ${nextLevelUi.nextHint} استمر بالفضفضة بصدق مع هذا الرفيق، خصوصًا عن مشاعرك الحقيقية.`
-                  : `Next level unlocks: ${nextLevelUi.nextHint} Keep talking honestly with this companion, especially about how you really feel.`
+                  ? `المستوى التالي يفتح: ${nextLevelUi.nextHint}`
+                  : `Next level unlocks: ${nextLevelUi.nextHint}`
                 : isAr
-                ? "لقد وصلت لأعلى مستوى في الجانب الخفي. استمر بنفس الصراحة، ورفيقك سيواصل تعميق همساته عنك مع الوقت."
-                : "You’ve reached the highest Hidden Side level. Keep being this honest and your companion will keep deepening its private reflections about you over time."}
+                ? "في هذا المستوى يكون الجانب الخفي مفتوحًا بالكامل ويستمر بمشاركة أعمق انعكاساته عن رحلتك العاطفية."
+                : "At this level, Hidden Side is fully unlocked and keeps offering its deepest, long-term reflections about your emotional journey."}
             </p>
+            {trustLevelUi &&
+              trustLevelUi.levelNumber < 5 &&
+              progressPercent != null && (
+                <>
+                  <p className="asrar-whispers-progress-line">
+                    {isAr
+                      ? `التقدّم نحو المستوى ${nextLevelNumberForProgress}: ${progressPercent}% تقريبًا`
+                      : `Progress to Level ${nextLevelNumberForProgress}: ${progressPercent}%`}
+                  </p>
+                  <p className="asrar-whispers-progress-howto">
+                    {isAr
+                      ? "للترقية: استمر بالفضفضة بصدق مع هذا الرفيق، خصوصًا عن مشاعرك، وعلى أكثر من يوم."
+                      : "To level up: keep having honest conversations with this companion, especially about how you actually feel, over multiple days."}
+                  </p>
+                </>
+              )}
+            {trustLevelUi && trustLevelUi.levelNumber >= 5 && (
+              <p className="asrar-whispers-progress-max">
+                {isAr
+                  ? "وصلت لأعلى مستوى ثقة مع هذا الرفيق. تم فتح الجانب الخفي بالكامل."
+                  : "You've reached the highest trust level with this companion. Hidden Side is fully unlocked."}
+              </p>
+            )}
           </>
         )}
 
