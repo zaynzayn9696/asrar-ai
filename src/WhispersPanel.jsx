@@ -15,67 +15,157 @@ const TRUST_LEVELS_UI = {
     {
       id: 1,
       label: "Surface",
+      shortLabel: "Surface",
       description:
         "You’re just starting to build trust. Hidden Side is quiet and keeps things very gentle.",
+      nowBullets: [
+        "Very gentle, non-intrusive emotional support.",
+        "A safe space to vent without deep analysis yet.",
+        "Basic reading of your mood and overall tone.",
+      ],
+      nextHint:
+        "slightly clearer emotional hints and the first small private whispers.",
     },
     {
       id: 2,
       label: "Opening Up",
+      shortLabel: "Opening",
       description:
         "Your companion starts unlocking small emotional hints and light whispers about how it sees your moods.",
+      nowBullets: [
+        "Light hints about how your mood shifts between messages.",
+        "Occasional small whispers about what feels off or heavy.",
+        "Keeps things soft, validating, and non-judgmental.",
+      ],
+      nextHint:
+        "more confident reflections about your usual moods and what repeats.",
     },
     {
       id: 3,
       label: "Deeper Insight",
+      shortLabel: "Deeper",
       description:
         "You unlock early private reflections about your emotional patterns and how they tend to repeat.",
+      nowBullets: [
+        "Notices simple emotional patterns across recent chats.",
+        "Highlights moods that keep coming back.",
+        "Gently connects certain feelings with situations in your life.",
+      ],
+      nextHint:
+        "deeper looks at triggers, coping habits, and how you react over time.",
     },
     {
       id: 4,
       label: "Inner Layers",
+      shortLabel: "Inner",
       description:
         "Your companion now shares deeper psychological whispers about triggers, coping styles, and what usually weighs on you.",
+      nowBullets: [
+        "Surfaces deeper triggers that tend to spike your emotions.",
+        "Reflects how you usually cope when things get heavy.",
+        "Whispers about what drains you versus what steadies you.",
+      ],
+      nextHint:
+        "its most intimate, long-term reflections about your emotional story.",
     },
     {
       id: 5,
       label: "True Bond",
+      shortLabel: "Bond",
       description:
         "Full Hidden Side unlocked. You receive the most honest, intimate reflections it can safely share about you over time.",
+      nowBullets: [
+        "Shares the most honest, high-trust reflections it can safely offer.",
+        "Connects today’s mood with your longer-term emotional themes.",
+        "Treats your history as a story, not random isolated moments.",
+      ],
+      nextHint:
+        "You’re already at the top tier; staying honest keeps this level alive.",
     },
   ],
   ar: [
     {
       id: 1,
       label: "السطح",
+      shortLabel: "السطح",
       description:
         "أنتم في بداية بناء الثقة؛ الجانب الخفي هادئ ويحافظ على دعم لطيف وبسيط.",
+      nowBullets: [
+        "دعم لطيف جداً بدون حفر عميق.",
+        "مساحة آمنة للفضفضة بدون تحليل ثقيل.",
+        "قراءة بسيطة لمزاجك ونبرة شعورك.",
+      ],
+      nextHint:
+        "تلميحات أوضح عن مزاجك وأول همسات خاصة صغيرة.",
     },
     {
       id: 2,
       label: "بدء الانفتاح",
+      shortLabel: "الانفتاح",
       description:
         "يبدأ رفيقك بكشف تلميحات عاطفية بسيطة وهمسات خفيفة عن كيف يرى مزاجك.",
+      nowBullets: [
+        "يلمح لك كيف يتغيّر مزاجك بين الرسائل.",
+        "يُظهر همسات صغيرة عن ما يضغط عليك أو يزعجك.",
+        "يحافظ على أسلوب ناعم وبدون حكم.",
+      ],
+      nextHint:
+        "انعكاسات أوضح عن مزاجك المعتاد وما يتكرر معك.",
     },
     {
       id: 3,
       label: "نظرة أعمق",
+      shortLabel: "أعمق",
       description:
         "تفتح انعكاسات خاصة مبكرة عن أنماط مشاعرك والدورات التي تتكرر في حياتك.",
+      nowBullets: [
+        "يربط بين مشاعرك ورسائلك في الأيام الأخيرة.",
+        "يلفت انتباهك للمشاعر التي تتكرر.",
+        "يبدأ يربط بين المواقف والشعور بطريقة لطيفة.",
+      ],
+      nextHint:
+        "نظرة أعمق على المحفّزات وأنماط تعاملك عندما تتوتر.",
     },
     {
       id: 4,
       label: "الطبقات الداخلية",
+      shortLabel: "الطبقات",
       description:
         "يشاركك رفيقك الآن همسات أعمق عن المحفّزات، وطريقة تعاملك، وما يضغط عليك عادةً.",
+      nowBullets: [
+        "يكشف محفّزات أعمق ترفع أو تخفض مزاجك.",
+        "يعكس لك كيف تتعامل عادةً مع الضغط والألم.",
+        "يقدّم همسات أوضح عن ما يستنزفك وما يهدّيك.",
+      ],
+      nextHint:
+        "أقرب وأصدق قراءة طويلة الأمد لقصة مشاعرك.",
     },
     {
       id: 5,
       label: "رابطة حقيقية",
+      shortLabel: "رابطة",
       description:
         "تم فتح الجانب الخفي بالكامل. تحصل على أصدق وأقرب الانعكاسات التي يمكنه مشاركتها عن تاريخك العاطفي.",
+      nowBullets: [
+        "يشاركك أعمق وأصدق همساته العاطفية الآمنة عنك.",
+        "يربط بين مزاج اليوم والأنماط الطويلة في حياتك.",
+        "يتعامل مع قصتك كرحلة متكاملة، وليس لحظات منفصلة.",
+      ],
+      nextHint:
+        "أنت في أعلى مستوى؛ استمرار صدقك يحافظ على هذه الرابطة.",
     },
   ],
 };
+
+function getNextLevelUi(levelUiList, currentLevelNumber) {
+  if (!Array.isArray(levelUiList) || !currentLevelNumber) return null;
+  const idxById = levelUiList.findIndex(
+    (lvl) => Number(lvl.id) === Number(currentLevelNumber)
+  );
+  const index = idxById >= 0 ? idxById : Number(currentLevelNumber) - 1;
+  if (index < 0 || index >= levelUiList.length - 1) return null;
+  return levelUiList[index + 1] || null;
+}
 
 export default function WhispersPanel({
   isOpen,
@@ -180,10 +270,11 @@ export default function WhispersPanel({
       ? null
       : Math.max(0, Math.min(100, Math.round(rawTrustScore)));
 
+  const langKey = isAr ? "ar" : "en";
+  const levelsForUi = TRUST_LEVELS_UI[langKey] || TRUST_LEVELS_UI.en;
+
   const trustLevelUi = (() => {
     if (trustScore == null) return null;
-    const langKey = isAr ? "ar" : "en";
-    const levels = TRUST_LEVELS_UI[langKey] || TRUST_LEVELS_UI.en;
 
     let levelNumber = 1;
     if (trustScore <= 20) levelNumber = 1;
@@ -192,13 +283,25 @@ export default function WhispersPanel({
     else if (trustScore <= 80) levelNumber = 4;
     else levelNumber = 5;
 
-    const meta = levels[levelNumber - 1] || levels[0];
+    const metaById = levelsForUi.find(
+      (lvl) => Number(lvl.id) === Number(levelNumber)
+    );
+    const meta = metaById || levelsForUi[levelNumber - 1] || levelsForUi[0];
+
     return {
       levelNumber,
       label: meta.label,
+      shortLabel: meta.shortLabel || meta.label,
       description: meta.description,
+      nowBullets: Array.isArray(meta.nowBullets) ? meta.nowBullets : [],
+      nextHint: meta.nextHint || "",
     };
   })();
+
+  const nextLevelUi =
+    trustLevelUi && levelsForUi
+      ? getNextLevelUi(levelsForUi, trustLevelUi.levelNumber)
+      : null;
 
   const handleRetry = () => {
     setRefreshKey((k) => k + 1);
@@ -254,9 +357,51 @@ export default function WhispersPanel({
         )}
 
         {trustLevelUi && (
-          <p className="asrar-whispers-trust-description">
-            {trustLevelUi.description}
-          </p>
+          <div className="asrar-whispers-level-badges">
+            {levelsForUi.map((lvl) => {
+              const isActive = lvl.id === trustLevelUi.levelNumber;
+              return (
+                <div
+                  key={lvl.id}
+                  className={
+                    "asrar-whispers-level-badge" +
+                    (isActive
+                      ? " asrar-whispers-level-badge--active"
+                      : "")
+                  }
+                >
+                  <div className="asrar-whispers-level-dot">{lvl.id}</div>
+                  <span className="asrar-whispers-level-label">
+                    {lvl.shortLabel || lvl.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {trustLevelUi && (
+          <>
+            <p className="asrar-whispers-section-heading">
+              {isAr
+                ? "ماذا يفتح لك هذا المستوى؟"
+                : "What this level gives you"}
+            </p>
+            <ul className="asrar-whispers-now-list">
+              {trustLevelUi.nowBullets.map((line, idx) => (
+                <li key={idx}>{`✅ ${line}`}</li>
+              ))}
+            </ul>
+            <p className="asrar-whispers-next-hint">
+              {nextLevelUi
+                ? isAr
+                  ? `المستوى التالي يفتح: ${nextLevelUi.nextHint} استمر بالفضفضة بصدق مع هذا الرفيق، خصوصًا عن مشاعرك الحقيقية.`
+                  : `Next level unlocks: ${nextLevelUi.nextHint} Keep talking honestly with this companion, especially about how you really feel.`
+                : isAr
+                ? "لقد وصلت لأعلى مستوى في الجانب الخفي. استمر بنفس الصراحة، ورفيقك سيواصل تعميق همساته عنك مع الوقت."
+                : "You’ve reached the highest Hidden Side level. Keep being this honest and your companion will keep deepening its private reflections about you over time."}
+            </p>
+          </>
         )}
 
         <p className="asrar-whispers-explainer">
@@ -291,8 +436,8 @@ export default function WhispersPanel({
         {!loading && !error && unlockedList.length === 0 && (
           <div className="asrar-whispers-state">
             {isAr
-              ? "لا توجد همسات بعد. استمر في التحدّث بصدق مع رفيقك، ومع الوقت ستظهر هنا انعكاسات خاصة كلما زادت الثقة."
-              : "No whispers yet. Keep talking honestly with your companion and, as trust grows, private emotional whispers will start to appear here."}
+              ? "لا توجد همسات بعد. استمر في بناء الثقة وستبدأ بالظهور هنا."
+              : "No whispers yet. Keep building trust and they’ll start appearing here."}
           </div>
         )}
 

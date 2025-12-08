@@ -356,12 +356,94 @@
     0 0 12px rgba(0, 240, 255, 0.8);
 }
 
+.asrar-whispers-level-badges {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.asrar-whispers-level-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.7rem;
+  opacity: 0.55;
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.asrar-whispers-level-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(170, 196, 255, 0.5);
+  background: rgba(4, 8, 18, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  color: #d9e7ff;
+  box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.15);
+}
+
+.asrar-whispers-level-badge--active .asrar-whispers-level-dot {
+  background: radial-gradient(circle at top, #00f4ff, #1a2340);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 14px rgba(0, 255, 255, 0.8);
+}
+
+.asrar-whispers-level-badge--active {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.asrar-whispers-level-label {
+  margin-top: 0.25rem;
+  white-space: nowrap;
+  color: #d6ecff;
+}
+
 .asrar-whispers-trust-description {
   margin: 0.45rem 0 0;
   font-size: 0.83rem;
   line-height: 1.6;
   color: #d6ecff;
   text-align: center;
+}
+
+.asrar-whispers-section-heading {
+  margin-top: 0.8rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  text-align: center;
+  color: #9fbce6;
+}
+
+.asrar-whispers-now-list {
+  margin-top: 0.25rem;
+  list-style: none;
+  padding: 0;
+  text-align: center;
+}
+
+.asrar-whispers-now-list li {
+  font-size: 0.85rem;
+  margin: 0.1rem 0;
+  color: #d6ecff;
+}
+
+.asrar-whispers-next-hint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  text-align: center;
+  opacity: 0.9;
+  color: #b5cff5;
 }
 
 .asrar-whispers-explainer {
