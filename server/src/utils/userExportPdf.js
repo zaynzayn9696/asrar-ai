@@ -8,7 +8,15 @@ function getLogoDataUri() {
   if (cachedLogoDataUri !== null) return cachedLogoDataUri;
 
   try {
-    const logoPath = path.resolve(__dirname, '..', '..', 'src', 'assets', 'asrar-logo.png');
+    const logoPath = path.resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'src',
+      'assets',
+      'asrar-logo.png'
+    );
     const file = fs.readFileSync(logoPath);
     const base64 = file.toString('base64');
     cachedLogoDataUri = `data:image/png;base64,${base64}`;
@@ -50,6 +58,10 @@ function getPlanLabel(plan, lang) {
   }
   if (p === 'pro' || p === 'premium') return 'Premium';
   return 'Free';
+}
+
+function hasArabic(text) {
+  return /[\u0600-\u06FF]/.test(text || '');
 }
 
 function getSpeakerLabel(message, lang) {
@@ -103,23 +115,38 @@ function buildUserExportHtml({ user, messages, usage, lang }) {
     ? 'لا توجد رسائل متاحة في هذا التصدير (تم إيقاف حفظ السجل أو لم يتم إرسال رسائل بعد).'
     : 'No messages are available in this export (history is disabled or no messages yet).';
 
-  const messagesHtml = Array.isArray(messages) && messages.length
-    ? messages
-        .map((m) => {
-          const ts = formatDateTime(m.createdAt, lang);
-          const speaker = getSpeakerLabel(m, lang);
-          const safeContent = escapeHtml(m.content || '');
-          return `
-          <div style="margin:0 0 8px 0;padding:8px 10px;border-radius:12px;background-color:rgba(4,16,24,0.95);border:1px solid rgba(0,209,255,0.18);">
-            <div style="font-size:11px;color:#7aa0b5;margin:0 0 4px 0;">[${ts}]</div>
-            <div style="font-size:13px;color:${softText};line-height:1.7;">
-              <span style="color:${accent};font-weight:600;">${escapeHtml(speaker)}:</span>
-              <span> ${safeContent}</span>
-            </div>
-          </div>`;
-        })
-        .join('\n')
-    : `<p style="margin:0;font-size:13px;color:#9bb0c6;">${escapeHtml(noHistoryText)}</p>`;
+  let messagesHtml;
+  if (Array.isArray(messages) && messages.length) {
+    const chunks = [];
+    messages.forEach((m, index) => {
+      const ts = formatDateTime(m.createdAt, lang);
+      const speaker = getSpeakerLabel(m, lang);
+      const rawContent = m.content || '';
+      const isMsgAr = hasArabic(rawContent);
+      const msgDir = isMsgAr ? 'rtl' : dir;
+      const msgAlign = isMsgAr ? 'right' : textAlign;
+      const safeContent = escapeHtml(rawContent).replace(/\n/g, '<br />');
+
+      chunks.push(`
+        <div style="padding:10px 0;">
+          <div style="font-size:11px;color:#7aa0b5;text-align:center;margin:0 0 4px 0;">[${ts}]</div>
+          <div dir="${msgDir}" style="font-size:13px;color:${softText};line-height:1.7;text-align:${msgAlign};word-wrap:break-word;white-space:pre-wrap;">
+            <span style="color:${accent};font-weight:600;">${escapeHtml(speaker)}:</span>
+            <span> ${safeContent}</span>
+          </div>
+        </div>
+      `);
+
+      if (index < messages.length - 1) {
+        chunks.push(`
+          <div style="border-top:1px solid rgba(148,163,184,0.28);margin:4px 0 8px 0;"></div>
+        `);
+      }
+    });
+    messagesHtml = chunks.join('\n');
+  } else {
+    messagesHtml = `<p style="margin:0;font-size:13px;color:#9bb0c6;">${escapeHtml(noHistoryText)}</p>`;
+  }
 
   const logoBlock = logoSrc
     ? `<img src="${logoSrc}" alt="Asrar AI" style="width:120px;height:auto;display:block;margin:0 auto 6px auto;" />`
@@ -149,46 +176,37 @@ function buildUserExportHtml({ user, messages, usage, lang }) {
             </tr>
 
             <tr>
-              <td style="padding:10px 4px 6px 4px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-spacing:14px 12px;">
-                  <tr>
-                    <td valign="top" style="width:50%;padding:0;">
-                      <div style="border-radius:18px;background:linear-gradient(145deg,rgba(7,19,31,0.98),rgba(3,9,18,0.98));border:1px solid rgba(0,209,255,0.4);box-shadow:0 14px 45px rgba(0,0,0,0.9);padding:14px 14px 12px 14px;">
-                        <div style="font-size:12px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:${accent};margin-bottom:10px;">${escapeHtml(userInfoTitle)}</div>
-                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:12px;color:${softText};border-collapse:collapse;">
-                          <tr>
-                            <td style="padding:3px 6px 3px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(nameLabel)}</td>
-                            <td style="padding:3px 0 3px 4px;color:${softText};">${escapeHtml(userName || '-')}</td>
-                          </tr>
-                          <tr>
-                            <td style="padding:3px 6px 3px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(emailLabel)}</td>
-                            <td style="padding:3px 0 3px 4px;color:${softText};">${escapeHtml(userEmail || '-')}</td>
-                          </tr>
-                          <tr>
-                            <td style="padding:3px 6px 3px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(planLabelText)}</td>
-                            <td style="padding:3px 0 3px 4px;color:${softText};">${escapeHtml(planLabel)}</td>
-                          </tr>
-                          <tr>
-                            <td style="padding:3px 6px 3px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(createdLabel)}</td>
-                            <td style="padding:3px 0 3px 4px;color:${softText};">${escapeHtml(userCreatedAt)}</td>
-                          </tr>
-                          <tr>
-                            <td style="padding:3px 6px 3px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(totalMessagesLabel)}</td>
-                            <td style="padding:3px 0 3px 4px;color:${softText};">${totalMessages}</td>
-                          </tr>
-                        </table>
-                      </div>
-                    </td>
-                    <td valign="top" style="width:50%;padding:0;">
-                      <div style="border-radius:18px;background:linear-gradient(145deg,rgba(14,11,32,0.98),rgba(5,6,18,0.98));border:1px solid rgba(115,105,255,0.6);box-shadow:0 14px 45px rgba(0,0,0,0.9);padding:14px 14px 12px 14px;">
-                        <div style="font-size:12px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#c4b5ff;margin-bottom:8px;">${escapeHtml(messagesTitle)}</div>
-                        <div style="max-height:640px;overflow-y:auto;padding-right:4px;">
-                          ${messagesHtml}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </table>
+              <td style="padding:12px 14px 12px 14px;">
+                <div style="border-radius:18px;background:linear-gradient(145deg,rgba(7,19,31,0.98),rgba(3,9,18,0.98));border:1px solid rgba(0,209,255,0.4);box-shadow:0 14px 45px rgba(0,0,0,0.9);padding:16px 18px 12px 18px;margin-bottom:16px;">
+                  <div style="font-size:12px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:${accent};margin-bottom:10px;">${escapeHtml(userInfoTitle)}</div>
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:12px;color:${softText};border-collapse:collapse;">
+                    <tr>
+                      <td style="padding:4px 8px 4px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(nameLabel)}</td>
+                      <td style="padding:4px 0 4px 4px;color:${softText};line-height:1.6;">${escapeHtml(userName || '-')}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 8px 4px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(emailLabel)}</td>
+                      <td style="padding:4px 0 4px 4px;color:${softText};line-height:1.6;">${escapeHtml(userEmail || '-')}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 8px 4px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(planLabelText)}</td>
+                      <td style="padding:4px 0 4px 4px;color:${softText};line-height:1.6;">${escapeHtml(planLabel)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 8px 4px 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(createdLabel)}</td>
+                      <td style="padding:4px 0 4px 4px;color:${softText};line-height:1.6;">${escapeHtml(userCreatedAt)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding:4px 8px 0 0;color:#8fa3ba;white-space:nowrap;">${escapeHtml(totalMessagesLabel)}</td>
+                      <td style="padding:4px 0 0 4px;color:${softText};line-height:1.6;">${totalMessages}</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div style="border-radius:18px;background:linear-gradient(145deg,rgba(14,11,32,0.98),rgba(5,6,18,0.98));border:1px solid rgba(115,105,255,0.6);box-shadow:0 14px 45px rgba(0,0,0,0.9);padding:16px 18px 14px 18px;">
+                  <div style="font-size:12px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#c4b5ff;margin-bottom:10px;">${escapeHtml(messagesTitle)}</div>
+                  ${messagesHtml}
+                </div>
               </td>
             </tr>
           </table>
