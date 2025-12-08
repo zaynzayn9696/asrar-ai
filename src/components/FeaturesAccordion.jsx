@@ -38,7 +38,7 @@ const accordionStyles = `
 `;
 
 const FeaturesAccordion = ({ isAr }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const itemRefs = useRef([]);
   
   // Add the styles to the document head
@@ -86,11 +86,11 @@ const FeaturesAccordion = ({ isAr }) => {
       descriptionAr: 'وضع خاص يساعدك على رؤية نفسك بوضوح أكبر. يكشف لك أنماطك العاطفية وسلوكياتك بطريقة لطيفة ودقيقة.'
     },
     {
-      id: 'whispers-mode',
-      titleEn: 'Whispers Mode™',
-      titleAr: 'وضع الهمسات™',
-      descriptionEn: 'A fully private space where you can express anything freely. Whispers Mode combines deep listening + subtle emotional cues to give you guidance without judgment.',
-      descriptionAr: 'مساحة خاصة تماماً للتعبير دون حكم. يعتمد على الاستماع العميق وإشارات عاطفية ذكية ليمنحك توجيهاً حقيقياً يناسبك.'
+      id: 'hidden-side',
+      titleEn: 'Hidden Side™',
+      titleAr: 'الجانب الخفي™',
+      descriptionEn: 'A private space inside Asrar where your deeper thoughts, unfiltered emotions, and personal reflections are captured for you alone. Hidden Side analyzes your emotional patterns quietly in the background, helping you discover what\'s beneath the surface without sharing anything publicly. It\'s where your companion observes your inner world and gently reveals insights when you\'re ready.',
+      descriptionAr: 'مساحة خاصة داخل أسرار تحتفظ فيها بأفكارك العميقة ومشاعرك الحقيقية دون أي قيود. يقوم الجانب الخفي بتحليل أنماطك العاطفية بهدوء، ليكشف لك ما يجري داخلك عندما تكون مستعدًا لذلك. هنا يتعرف عليك رفيقك على مستوى أعمق — دون مشاركة أي شيء مع أي طرف آخر.'
     }
   ];
 

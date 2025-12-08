@@ -422,17 +422,14 @@
 /* ---- Header (Hana — Deep Support) ---- */
 .asrar-chat-header-strip {
   padding: 0.7rem 0 0.4rem;
-  background: linear-gradient(
-    to bottom,
-    rgba(2, 6, 18, 0.96),
-    rgba(2, 6, 18, 0.9),
-    transparent
-  );
-  border: 0;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
-  display: flex;
-  justify-content: center;
+  background: transparent;
   position: relative;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .asrar-chat-header-main {
