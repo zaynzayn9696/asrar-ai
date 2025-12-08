@@ -4,37 +4,43 @@ import "./Whispers.css";
 import { API_BASE } from "./apiBase";
 import { TOKEN_KEY } from "./hooks/useAuth";
 
+// Hidden Side trust tiers are interpreted as:
+// Level 1 (Surface)      → very safe, generic emotional support.
+// Level 2 (Opening Up)   → can gently hint at simple patterns.
+// Level 3 (Deeper Insight) → can point out emotional cycles and recurring moods.
+// Level 4 (Inner Layers) → can bring up deeper triggers and coping styles.
+// Level 5 (True Bond)    → can reference longer-term personal emotional history.
 const TRUST_LEVELS_UI = {
   en: [
     {
       id: 1,
       label: "Surface",
       description:
-        "You're just starting to build trust. Hidden Side is mostly quiet while your companion gets a feel for you.",
+        "You’re just starting to build trust. Hidden Side is quiet and keeps things very gentle.",
     },
     {
       id: 2,
-      label: "Openness",
+      label: "Opening Up",
       description:
-        "You’ve shared enough that your companion starts unlocking small 'whispers' about how it sees your moods.",
+        "Your companion begins revealing small emotional hints and light whispers about how it sees your moods.",
     },
     {
       id: 3,
-      label: "Depth",
+      label: "Deeper Insight",
       description:
-        "Trust is growing. Your companion now reflects back deeper emotional patterns and gentle insights.",
+        "You unlock early private reflections about your emotional patterns and how they tend to repeat.",
     },
     {
       id: 4,
-      label: "Secrets",
+      label: "Inner Layers",
       description:
-        "You’ve opened more of your inner world. Whispers can point to recurring triggers and how you tend to cope.",
+        "Your companion now shares deeper psychological whispers about triggers, coping styles, and what weighs on you.",
     },
     {
       id: 5,
       label: "True Bond",
       description:
-        "Your conversations span many moments and moods. Your companion now offers its most honest, high-trust reflections.",
+        "Full Hidden Side unlocked. You receive the most honest, intimate reflections it can safely share about you.",
     },
   ],
   ar: [
@@ -42,31 +48,31 @@ const TRUST_LEVELS_UI = {
       id: 1,
       label: "السطح",
       description:
-        "أنتم في بداية بناء الثقة. الجانب الخفي ما زال هادئًا بينما يتعرّف رفيقك عليك أكثر.",
+        "أنتم في بداية بناء الثقة؛ الجانب الخفي هادئ ويحافظ على دعم لطيف وبسيط.",
     },
     {
       id: 2,
-      label: "الانفتاح",
+      label: "بدء الانفتاح",
       description:
-        "بدأت تشارك أكثر. رفيقك يبدأ بفتح «همسات» صغيرة عن كيف يرى تقلبات مزاجك.",
+        "يبدأ رفيقك بكشف تلميحات عاطفية بسيطة وهمسات خفيفة عن كيف يرى مزاجك.",
     },
     {
       id: 3,
-      label: "العمق",
+      label: "نظرة أعمق",
       description:
-        "الثقة تكبر. رفيقك يعكس لك أنماطًا أعمق في مشاعرك وبعض الملاحظات اللطيفة.",
+        "تفتح انعكاسات خاصة مبكرة عن أنماط مشاعرك والدورات التي تتكرر في حياتك.",
     },
     {
       id: 4,
-      label: "الأسرار",
+      label: "الطبقات الداخلية",
       description:
-        "فتحت جزءًا أكبر من عالمك الداخلي. الهمسات قد تشير الآن إلى محفّزات متكررة وطرق تعاملك معها.",
+        "يشاركك رفيقك الآن همسات أعمق عن المحفّزات، وطريقة تعاملك، وما يضغط عليك عادةً.",
     },
     {
       id: 5,
-      label: "الرابطة الحقيقية",
+      label: "رابطة حقيقية",
       description:
-        "محادثاتك تغطي لحظات وحالات مزاجية مختلفة. رفيقك يقدّم أصدق انعكاساته عالية الثقة عنك.",
+        "تم فتح الجانب الخفي بالكامل. تحصل على أصدق وأقرب الانعكاسات التي يمكنه مشاركتها عن تاريخك العاطفي.",
     },
   ],
 };

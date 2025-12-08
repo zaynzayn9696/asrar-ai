@@ -116,6 +116,27 @@ export default function EmotionalTimelineMap({
     ? "لا توجد بيانات للمشاعر بعد."
     : "No mood data available yet.";
 
+  const emotionLabel = (emotionCode) => {
+    const code = String(emotionCode || "NEUTRAL").toUpperCase();
+    if (!isAr) return code;
+    switch (code) {
+      case "NEUTRAL":
+        return "محايد";
+      case "SAD":
+        return "حزين";
+      case "ANGRY":
+        return "غاضب";
+      case "ANXIOUS":
+        return "قلق";
+      case "LONELY":
+        return "وحيد";
+      case "STRESSED":
+        return "مُتوتّر";
+      default:
+        return code;
+    }
+  };
+
   const handleRetry = () => {
     setRefreshKey((k) => k + 1);
   };
@@ -285,7 +306,9 @@ export default function EmotionalTimelineMap({
                         <div className="asrar-timeline-point-label">
                           <div className="asrar-timeline-date">{dateLabel}</div>
                           <div className="asrar-timeline-emotion">
-                            <span className="asrar-timeline-mood-pill">{emotion}</span>
+                            <span className="asrar-timeline-mood-pill">
+                              {emotionLabel(emotion)}
+                            </span>
                           </div>
                         </div>
                       </div>
