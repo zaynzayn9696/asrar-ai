@@ -303,7 +303,7 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
       }
     }
 
-    // Conditionally append safety footer
+    // Conditionally append safety footer, but never duplicate it.
     const fullFooter = isAr
       ? 'تذكّر: كلامي دعم ومساندة وليس تشخيص طبي. لو ظهرت أفكار إيذاء للنفس، تواصل مع مختص أو شخص تثق به.'
       : 'Remember: this is supportive guidance, not medical advice. If self-harm thoughts appear, please reach out to a professional or someone you trust.';
@@ -311,10 +311,24 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
       ? 'أنا هنا للدعم، لكن لا أستبدل الرعاية المتخصّصة. لو حسّيت أن الموضوع محتاج أكثر، تكلم مع شخص تثق به أو مختص.'
       : "I'm here to support you, but I can't replace professional care. For serious or urgent concerns, consider talking to a trusted person or a professional.";
 
-    if (severityLevel === 'HIGH_RISK' || shouldAppendSafetyFooter(emotion, convoState)) {
-      if (!out.includes(fullFooter)) out = out + '\n\n' + fullFooter;
-    } else if (tone.includeSoftDisclaimer) {
-      if (!out.includes(mildFooter)) out = out + '\n\n' + mildFooter;
+    const lowerOut = String(out || '').toLowerCase();
+    const safetyAlreadyPresent = (() => {
+      if (!lowerOut) return false;
+      // English
+      if (lowerOut.includes('supportive guidance, not medical advice')) return true;
+      if (lowerOut.includes("i'm here to support you, but i can't replace professional care")) return true;
+      // Arabic
+      if (lowerOut.includes('كلامي دعم ومساندة وليس تشخيص طبي')) return true;
+      if (lowerOut.includes('أنا هنا للدعم، لكن لا أستبدل الرعاية المتخصّصة')) return true;
+      return false;
+    })();
+
+    if (!safetyAlreadyPresent) {
+      if (severityLevel === 'HIGH_RISK' || shouldAppendSafetyFooter(emotion, convoState)) {
+        if (!out.includes(fullFooter)) out = out + '\n\n' + fullFooter;
+      } else if (tone.includeSoftDisclaimer) {
+        if (!out.includes(mildFooter)) out = out + '\n\n' + mildFooter;
+      }
     }
 
     // Final gentle polish: avoid overly long replies
