@@ -4719,3 +4719,25 @@ div[id*="section"],
 .asrar-container {
  
 }
+
+.asrar-section--features {
+  padding-bottom:0px;
+}
+
+@media (max-width: 600px) {
+    .asrar-companions-section {
+        padding-bottom:0px;
+        margin-bottom:0px;
+    }
+}
+.asrar-companions-shell{padding-top:0px;}
+
+@media (max-width: 767px) {
+    .asrar-companion-hero-slide {
+        
+        padding-bottom: 0px;
+    }
+}
+.asrar-section--features {
+    padding-top: 0px;
+}

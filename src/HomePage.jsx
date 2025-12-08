@@ -1361,7 +1361,7 @@ export default function HomePage() {
             </>
           )}
         </section>
-
+<div class="asrar-section-divider" aria-hidden="true"></div>
         {/* PRICING */}
         <section id="pricing" className="asrar-section asrar-section--pricing">
           <h2 className="asrar-section-title">
