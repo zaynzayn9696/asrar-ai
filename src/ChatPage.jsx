@@ -739,7 +739,7 @@ export default function ChatPage() {
 const renderSidebarContent = () => (
   <>
     <button
-      className="asrar-new-chat-btn"
+      className="asrar-conv-title"
       onClick={handleStartNewChat}
       type="button"
     >
@@ -781,7 +781,7 @@ const renderSidebarContent = () => (
             <circle cx="20" cy="8" r="1.4" fill="currentColor" />
           </svg>
         </span>
-        <span className="asrar-timeline-badge-label">
+        <span className="asrar-conv-title">
           {isAr ? "رحلة مشاعرك" : "Mood Journey"}
         </span>
       </button>

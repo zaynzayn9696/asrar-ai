@@ -43,7 +43,7 @@ export default function WhispersBadge({ isAr, hasNew, onClick }) {
           />
         </svg>
       </span>
-      <span className="asrar-whispers-badge-label">{label}</span>
+      <span className="asrar-conv-title">{label}</span>
       {hasNew && <span className="asrar-whispers-badge-dot" />}
     </button>
   );
