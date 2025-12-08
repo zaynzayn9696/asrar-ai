@@ -388,6 +388,104 @@ function getCharacterRecommendation(message) {
   return "daloua";
 }
 
+function formatMoodBotReply({ character, isAr }) {
+  const id = character.id;
+
+  if (isAr) {
+    if (id === "sheikh-al-hara") {
+      return {
+        title: "سمعتك كويس، وكلامك مهم.",
+        match: `برأيي ${character.nameAr} (${character.roleAr}) الأنسب لهالمرحلة.`,
+        hint: "خذ دقيقة ورتّب أفكارك معه خطوة بخطوة.",
+      };
+    }
+
+    if (id === "daloua") {
+      return {
+        title: "سمعتك… و إحساسك حقيقي.",
+        match: `أعتقد ${character.nameAr} (${character.roleAr}) الأنسب لهاللحظة.`,
+        hint: "احكي معها لما تكون جاهز.",
+      };
+    }
+
+    if (id === "abu-mukh") {
+      return {
+        title: "واضح إن الوضع مو مريح.",
+        match: `${character.nameAr} (${character.roleAr}) بيشدّك للطريق الصح بدون لف ودوران.`,
+        hint: "ابدأ معه بخطوة صغيرة الآن.",
+      };
+    }
+
+    if (id === "walaa") {
+      return {
+        title: "شايف إن عندك طاقة تتغيّر.",
+        match: `${character.nameAr} (${character.roleAr}) الأنسب يعطيك دفعة لقدّام.`,
+        hint: "احكي معها وخليّنا نرتّب الخطة سوا.",
+      };
+    }
+
+    if (id === "hiba") {
+      return {
+        title: "حاس فيك… ويمكن تحتاج شوية خفّة.",
+        match: `${character.nameAr} (${character.roleAr}) بتخفّف الجو بدون ما تستهين بشعورك.`,
+        hint: "ابدأ معها وخلّينا نخفّف الحمل شوي.",
+      };
+    }
+
+    return {
+      title: "سمعتك… و إحساسك مهم.",
+      match: `${character.nameAr} (${character.roleAr}) مناسب لهالوقت.`,
+      hint: "احكي معه لما تحس نفسك جاهز.",
+    };
+  }
+
+  if (id === "sheikh-al-hara") {
+    return {
+      title: "I hear you, and this is serious.",
+      match: `${character.nameEn} (${character.roleEn}) is the grounded voice you need right now.`,
+      hint: "Talk to him when you're ready to sort things out.",
+    };
+  }
+
+  if (id === "daloua") {
+    return {
+      title: "I hear you. That feeling is real.",
+      match: `I think ${character.nameEn} (${character.roleEn}) is the right companion for this moment.`,
+      hint: "Talk to her when you're ready.",
+    };
+  }
+
+  if (id === "abu-mukh") {
+    return {
+      title: "Okay. This needs structure, not drama.",
+      match: `${character.nameEn} (${character.roleEn}) will push you to focus and move.`,
+      hint: "Start a chat and take the first clear step.",
+    };
+  }
+
+  if (id === "walaa") {
+    return {
+      title: "You’re ready to be honest with yourself.",
+      match: `${character.nameEn} (${character.roleEn}) is the right push to get you unstuck.`,
+      hint: "Open a chat and let’s fix this together.",
+    };
+  }
+
+  if (id === "hiba") {
+    return {
+      title: "I feel the heaviness—and a bit of chaos too.",
+      match: `${character.nameEn} (${character.roleEn}) is here to lighten things up with you.`,
+      hint: "Talk to her when you need a softer, brighter moment.",
+    };
+  }
+
+  return {
+    title: "I hear you. What you’re feeling is valid.",
+    match: `${character.nameEn} (${character.roleEn}) is a good fit for you right now.`,
+    hint: "Talk to them when you're ready.",
+  };
+}
+
 function getMiniChatReply(message, isAr) {
   const raw = message || "";
   const trimmed = raw.trim();
@@ -396,8 +494,8 @@ function getMiniChatReply(message, isAr) {
     return {
       charId: null,
       text: isAr
-        ? "اكتب لي جملة أو جملتين عن يومك أو الشيء اللي مضايقك، عشان أقدر أساعدك أكثر."
-        : "Try writing one or two sentences about your day or what's bothering you so I can actually help.",
+        ? "اكتب جملة أو جملتين عن شعورك الآن عشان أقدر أساعدك صح."
+        : "Write one or two sentences about how you feel right now so I can actually help.",
     };
   }
 
@@ -509,8 +607,8 @@ function getMiniChatReply(message, isAr) {
     return {
       charId: null,
       text: isAr
-        ? "ما قدرت أفهم الكلمة اللي كتبتها. جرّب تكتب بجملك البسيطة عن شعورك أو عن الشيء اللي صاير معك عشان أقدر أفهمك أكثر."
-        : "I couldn’t really understand what you wrote. Try using simple words to describe how you feel or what’s happening so I can follow you.",
+        ? "ما فهمت الجملة. جرّب تكتب ببساطة عن شعورك أو اللي صاير معك."
+        : "I couldn’t understand that. Try a simple sentence about how you feel or what’s happening.",
     };
   }
 
@@ -521,28 +619,16 @@ function getMiniChatReply(message, isAr) {
     return {
       charId: null,
       text: isAr
-        ? "أشعر بثقل الكلام الذي كتبته، وهذا مكان آمن تماماً لفضفضتك. حتى لو شعرت أنك وحدك، أنت لست وحدك هنا."
-        : "I can feel there’s a lot in what you wrote. This is a safe place to unload – even if it feels like you’re alone, you’re not alone here.",
+        ? "أحس إن اللي كتبته مو سهل، وهذا المكان آمن لك."
+        : "I can tell what you shared isn’t light, and this space is safe for you.",
     };
   }
 
-  if (isAr) {
-    const intro = "أفهم أن ما كتبته ليس سهلاً، وشعورك مُهم هنا.";
-    const body = `من بين رفقاء أسرار، أرى أن ${char.nameAr} (${char.roleAr}) أنسب رفيق لك الآن. ${char.descriptionAr}`;
-    const ctaHint = "تقدر تبدأ محادثة كاملة معه/معها من الزر بالأسفل.";
-    return {
-      charId: recId,
-      text: `${intro} ${body} ${ctaHint}`,
-    };
-  }
-
-  const intro = "I can tell what you shared isn't easy, and your feelings matter here.";
-  const body = `Out of the Asrar companions, I'd match you with ${char.nameEn} (${char.roleEn}) right now. ${char.descriptionEn}`;
-  const ctaHint = "You can start a full conversation with them using the button below.";
+  const formatted = formatMoodBotReply({ character: char, isAr });
 
   return {
     charId: recId,
-    text: `${intro} ${body} ${ctaHint}`,
+    text: `${formatted.title} ${formatted.match} ${formatted.hint}`,
   };
 }
 
