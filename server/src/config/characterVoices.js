@@ -28,13 +28,13 @@ const CHARACTER_VOICES = {
     defaultTone: "soft",
   },
 
-  // Abu Mukh – educated, mid‑20s MALE, teacher‑like.
-  // Voice choice: "fable" – narrative male voice that feels like a calm,
-  // articulate storyteller or lecturer; good fit for a structured teacher.
+  // Abu Mukh – educated, early‑30s MALE, Gulf teacher‑like and focused.
+  // Voice choice: "alloy" – confident, warm male voice that reads as early‑30s
+  // and works well for structured, motivational guidance in Arabic/Gulf context.
   "abu-mukh": {
-    voiceId: "fable",
+    voiceId: "alloy",
     styleDescription:
-      "Male, mid 20s, confident and educated. Clear, structured, teacher-like storyteller tone.",
+      "Male, early 30s, Gulf-leaning, confident and focused. Clear, structured, motivational teacher tone.",
     defaultTone: "energetic",
   },
 
