@@ -137,7 +137,34 @@ async function generateVoiceReply(text, options = {}) {
   }
 }
 
+/**
+ * Ensure we always have a safe string to send to TTS.
+ * Falls back to a short reassurance line if the reply is null/empty/non-string.
+ * @param {any} reply
+ * @param {'ar'|'en'|'mixed'} language
+ * @returns {string}
+ */
+function normalizeAssistantReplyForTTS(reply, language) {
+  let assistantReply = reply;
+
+  if (typeof assistantReply !== "string") {
+    assistantReply = String(assistantReply || "");
+  }
+
+  const trimmed = assistantReply.trim();
+
+  if (!trimmed) {
+    console.error("[voiceService] Invalid assistant reply:", reply);
+    const lang = String(language || "").toLowerCase();
+    const isAr = lang === "ar" || lang === "mixed";
+    assistantReply = isAr ? "أنا هنا وأسمعك." : "I am here and listening.";
+  }
+
+  return String(assistantReply);
+}
+
 module.exports = {
   transcribeAudio,
   generateVoiceReply,
+  normalizeAssistantReplyForTTS,
 };

@@ -10,7 +10,11 @@ const prisma = require('../prisma');
 const { LIMITS, getPlanLimits } = require('../config/limits');
 const { CHARACTER_VOICES } = require('../config/characterVoices');
 const { TONES } = require('../config/tones');
-const { transcribeAudio, generateVoiceReply } = require('../services/voiceService');
+const {
+  transcribeAudio,
+  generateVoiceReply,
+  normalizeAssistantReplyForTTS,
+} = require('../services/voiceService');
 const {
   runEmotionalEngine,
   selectModelForResponse,
@@ -1136,7 +1140,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     if (Array.isArray(limitedContext) && limitedContext.length) {
       openAIMessages.push(...limitedContext);
     }
-    openAIMessages.push({ role: 'user', content: body.text });
+    openAIMessages.push({ role: 'user', content: userText });
 
     const routedModel = selectModelForResponse({
       emotion: emo,
@@ -1189,6 +1193,11 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     // Voice mode: keep spoken reply compact while preserving any safety footer.
     aiMessage = trimForVoiceReply(aiMessage, severityLevel || 'CASUAL');
+
+    const assistantReplyForTTS = normalizeAssistantReplyForTTS(
+      aiMessage,
+      languageForEngine
+    );
 
     const voiceProfile =
       CHARACTER_VOICES[characterId] || CHARACTER_VOICES.default;
@@ -1249,7 +1258,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     }
 
     // 6) Text-to-speech for the final reply text.
-    const spokenText = prepareTextForTTS(aiMessage);
+    const spokenText = prepareTextForTTS(assistantReplyForTTS);
 
     const tTtsStart = Date.now();
     const ttsResult = await generateVoiceReply(spokenText, {
@@ -1265,8 +1274,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         type: 'voice',
         audio: null,
         audioMimeType: 'audio/mpeg',
-        text: aiMessage,
-        assistantText: aiMessage,
+        text: assistantReplyForTTS,
+        assistantText: assistantReplyForTTS,
         userText,
         usage: buildUsageSummary(dbUser, usage),
       };
@@ -1347,8 +1356,8 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       type: 'voice',
       audio: ttsResult.base64,
       audioMimeType: ttsResult.mimeType,
-      text: aiMessage,
-      assistantText: aiMessage,
+      text: assistantReplyForTTS,
+      assistantText: assistantReplyForTTS,
       userText,
       usage: buildUsageSummary(dbUser, usage),
     };
