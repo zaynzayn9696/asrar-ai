@@ -85,404 +85,141 @@ function getCharacterRecommendation(message) {
   const text = message.toLowerCase();
   const hasAny = (words) => words.some((w) => text.includes(w));
 
+  // Abu Mo5 – study, work, discipline, focus, motivation
   if (
     hasAny([
-      // English sadness / loneliness
-      "sad",
-      "sadness",
-      "lonely",
-      "loneliness",
-      "alone",
-      "heartbroken",
-      "broken heart",
-      "empty",
-      "numb",
-      "down",
-      "upset",
-      "hurt",
-      "depressed",
-      "depression",
-      "grief",
-      "grieving",
-      "anxious",
-      "anxiety",
-      "stressed",
-      "stressed out",
-      "overthinking",
-      "overthink",
-      "overwhelmed",
-      "panic",
-      "panic attack",
-      "worried",
-      "worry",
-      "nervous",
-      "tired",
-      "exhausted",
-      "drained",
-      "burnout",
-      "burned out",
-      "burnt out",
-      "bored",
-      "boring",
-      "boredom",
-      "funny",
-      "laugh",
-      "laughing",
-      "angry",
-      "mad",
-      "pissed",
-      "frustrated",
-      "jealous",
-      "jealousy",
-      "envy",
-      "envious",
-      "insecure",
-      "worthless",
-      "hopeless",
-      "guilty",
-      "guilt",
-      "ashamed",
-      "shame",
-      "fear",
-      "scared",
-      // Arabic emotion words (common)
-      "حزين",
-      "حزينة",
-      "حزن",
-      "زعلان",
-      "زعل",
-      "مكسور",
-      "مقهور",
-      "قهر",
-      "وحدة",
-      "وحيد",
-      "وحيدة",
-      "مهموم",
-      "ضيق",
-      "ضيقة",
-      "اكتئاب",
-      "مكتئب",
-      "قلق",
-      "قلقان",
-      "توتر",
-      "متوتر",
-      "خوف",
-      "خايف",
-      "مرعوب",
-      "تعبان",
-      "تعب",
-      "مرهق",
-      "منهك",
-      "طفشان",
-      "طفش",
-      "زهقان",
-      "ملل",
-      "معصب",
-      "عصبية",
-      "غضبان",
-      "غضب",
-    ])
-  ) {
-    return "daloua";
-  }
-  if (
-    hasAny([
-      // English anxiety / stress
-      "anxious",
-      "anxiety",
-      "overthinking",
-      "overthink",
-      "panic",
-      "panic attack",
-      "worried",
-      "worry",
-      "nervous",
-      "overwhelmed",
-      "stressed",
-      "stressed out",
-      "pressure",
-      "under pressure",
-      // Arabic anxiety / stress
-      "قلق",
-      "قلقان",
-      "توتر",
-      "متوتر",
-      "خوف",
-      "خايف",
-      "مرعوب",
-      "مضغوط",
-      "ضغط",
-    ])
-  ) {
-    return "hana";
-  }
-  if (
-    hasAny([
-      // English low motivation / stuck
-      "unmotivated",
-      "no motivation",
-      "lazy",
-      "stuck",
-      "no energy",
-      "low energy",
-      "procrastinate",
-      "procrastinating",
-      "procrastination",
-      "can't focus",
-      "cant focus",
-      "hard to focus",
-      // Arabic low motivation
-      "كسل",
-      "كسلان",
-      "بدون طاقة",
-      "مافي طاقة",
-      "ما في طاقة",
-      "خمول",
-      "مو مركز",
-      "مش مركز",
+      "study",
+      "homework",
+      "focus",
+      "discipline",
+      "productivity",
+      "exam",
+      "exams",
+      "school",
+      "university",
+      "work",
+      "job",
+      "fix my life",
+      "organize",
+      "ادرس",
+      "دراسة",
+      "امتحان",
+      "امتحانات",
+      "جامعة",
+      "شغل",
+      "تركيز",
+      "ترتيب",
+      "تنظيم",
+      "بدي اركز",
+      "بدي ادرس",
+      "مذاكرة",
     ])
   ) {
     return "abu-mukh";
   }
+
+  // HHHiba – fun, laugh, mood, lighten the vibe
   if (
     hasAny([
-      // English study / work
-      "study",
-      "studying",
-      "homework",
-      "assignment",
-      "exam",
-      "exams",
-      "test",
-      "university",
-      "college",
-      "school",
-      "focus",
-      "concentrate",
-      "work",
-      "job",
-      "career",
-      "project",
-      "deadline",
-      // Arabic study / work
-     "دراسة",
-      "ادرس",
-      "أدرس",
-      "امتحان",
-      "امتحانات",
-      "جامعة",
-      "مدرسة",
-      "شغل",
-      "وظيفة",
-      "مشروع",
-      "دوام",
-    ])
-  ) {
-    return "rashid";
-  }
-  if (
-    hasAny([
-      // English brutal honesty / roast
-      "truth",
-      "be honest",
-      "honest",
-      "no bullshit",
-      "no bs",
-      "no filter",
-      "brutal",
-      "brutally honest",
-      "roast",
-      "roast me",
-      // Arabic directness
-         "صارحني",
-      "بدون مجاملة",
-      "بدون مجاملات",
-      "جلد",
-    ])
-  ) {
-    return "walaa";
-  }
-  if (
-    hasAny([
-      // English fun / boredom
-      "bored",
-      "boring",
-      "boredom",
-      "need fun",
-      "something fun",
-      "funny",
       "laugh",
-      "laughing",
+      "funny",
+      "bored",
+      "entertainment",
+      "fun",
       "joke",
-      "jokes",
-      "meme",
-      "memes",
-      "lol",
-      // Arabic fun / boredom
-       "طفشان",
-      "طفش",
-      "زهقان",
-      "ملل",
-      "نكت",
+      "cheer me up",
       "ضحك",
-      "اضحك",
-      "أضحك",
-      "ميمز",
+      "اضحكني",
+      "ملان",
+      "زهقان",
+      "نكتة",
+      "نكت",
     ])
   ) {
     return "hiba";
   }
+
+  // Walaa – motivation, self-improvement, change, goals
   if (
     hasAny([
-      // English family / life guidance
-      "family",
-      "father",
-      "dad",
-      "mother",
-      "mom",
-      "parents",
-      "marriage",
-      "married",
-      "wife",
-      "husband",
-      "relationship",
-      "relationships",
-      // Arabic family / life guidance
-       "أب",
-      "ابو",
-      "أبو",
-      "أم",
-      "امي",
-      "أمي",
-      "أهل",
-      "عائلة",
-      "زواج",
-      "متزوج",
-      "زوجتي",
-      "زوجي",
-      "خطوبة",
+      "change",
+      "improve",
+      "better",
+      "goals",
+      "habits",
+      "new life",
+      "motivation",
+      "تغيير",
+      "تطوير",
+      "تحسين",
+      "هدفي",
+      "أهدافي",
+      "عادة",
+      "عادات",
     ])
   ) {
-    return "sheikh-al-hara";
+    return "walaa";
   }
+
+  // Sheikh Al-Hara – burnout, exhaustion, overwhelmed, life problems
   if (
     hasAny([
-      // English exhaustion / burnout
       "tired",
       "exhausted",
-      "drained",
+      "overwhelmed",
       "burnout",
-      "burned out",
-      "burnt out",
-      // Arabic exhaustion / burnout
+      "stressed",
+      "drained",
       "تعبان",
-      "تعب",
       "مرهق",
+      "ضغط",
+      "متضايق",
+      "مخنوق",
       "منهك",
     ])
   ) {
     return "sheikh-al-hara";
   }
 
-  // default soft landing
+  // Daloua – sadness, emotional heaviness, loneliness
+  if (
+    hasAny([
+      "sad",
+      "depressed",
+      "lonely",
+      "hurt",
+      "emotional",
+      "crying",
+      "حزين",
+      "زعلان",
+      "مكتئب",
+      "وحيد",
+      "بكيت",
+      "مضغوط عاطفياً",
+    ])
+  ) {
+    return "daloua";
+  }
+
+  // default soft landing when nothing matches
   return "daloua";
 }
 
 function formatMoodBotReply({ character, isAr }) {
-  const id = character.id;
+  const name = isAr ? character.nameAr : character.nameEn;
 
   if (isAr) {
-    if (id === "sheikh-al-hara") {
-      return {
-        title: "سمعتك كويس، وكلامك مهم.",
-        match: `برأيي ${character.nameAr} (${character.roleAr}) الأنسب لهالمرحلة.`,
-        hint: "خذ دقيقة ورتّب أفكارك معه خطوة بخطوة.",
-      };
-    }
-
-    if (id === "daloua") {
-      return {
-        title: "سمعتك… و إحساسك حقيقي.",
-        match: `أعتقد ${character.nameAr} (${character.roleAr}) الأنسب لهاللحظة.`,
-        hint: "احكي معها لما تكون جاهز.",
-      };
-    }
-
-    if (id === "abu-mukh") {
-      return {
-        title: "واضح إن الوضع مو مريح.",
-        match: `${character.nameAr} (${character.roleAr}) بيشدّك للطريق الصح بدون لف ودوران.`,
-        hint: "ابدأ معه بخطوة صغيرة الآن.",
-      };
-    }
-
-    if (id === "walaa") {
-      return {
-        title: "شايف إن عندك طاقة تتغيّر.",
-        match: `${character.nameAr} (${character.roleAr}) الأنسب يعطيك دفعة لقدّام.`,
-        hint: "احكي معها وخليّنا نرتّب الخطة سوا.",
-      };
-    }
-
-    if (id === "hiba") {
-      return {
-        title: "حاس فيك… ويمكن تحتاج شوية خفّة.",
-        match: `${character.nameAr} (${character.roleAr}) بتخفّف الجو بدون ما تستهين بشعورك.`,
-        hint: "ابدأ معها وخلّينا نخفّف الحمل شوي.",
-      };
-    }
-
     return {
-      title: "سمعتك… و إحساسك مهم.",
-      match: `${character.nameAr} (${character.roleAr}) مناسب لهالوقت.`,
-      hint: "احكي معه لما تحس نفسك جاهز.",
-    };
-  }
-
-  if (id === "sheikh-al-hara") {
-    return {
-      title: "I hear you, and this is serious.",
-      match: `${character.nameEn} (${character.roleEn}) is the grounded voice you need right now.`,
-      hint: "Talk to him when you're ready to sort things out.",
-    };
-  }
-
-  if (id === "daloua") {
-    return {
-      title: "I hear you. That feeling is real.",
-      match: `I think ${character.nameEn} (${character.roleEn}) is the right companion for this moment.`,
-      hint: "Talk to her when you're ready.",
-    };
-  }
-
-  if (id === "abu-mukh") {
-    return {
-      title: "Okay. This needs structure, not drama.",
-      match: `${character.nameEn} (${character.roleEn}) will push you to focus and move.`,
-      hint: "Start a chat and take the first clear step.",
-    };
-  }
-
-  if (id === "walaa") {
-    return {
-      title: "You’re ready to be honest with yourself.",
-      match: `${character.nameEn} (${character.roleEn}) is the right push to get you unstuck.`,
-      hint: "Open a chat and let’s fix this together.",
-    };
-  }
-
-  if (id === "hiba") {
-    return {
-      title: "I feel the heaviness—and a bit of chaos too.",
-      match: `${character.nameEn} (${character.roleEn}) is here to lighten things up with you.`,
-      hint: "Talk to her when you need a softer, brighter moment.",
+      title: "سمعتك.",
+      match: `أعتقد أن ${name} الأنسب لك الآن.`,
+      hint: "تقدر تبدأ محادثة معه/معها من الزر بالأسفل.",
     };
   }
 
   return {
-    title: "I hear you. What you’re feeling is valid.",
-    match: `${character.nameEn} (${character.roleEn}) is a good fit for you right now.`,
-    hint: "Talk to them when you're ready.",
+    title: "I hear you.",
+    match: `I think ${name} is the right match for you right now.`,
+    hint: "You can talk to them using the button below.",
   };
 }
 
