@@ -17,6 +17,7 @@ export default function EmotionalTimelineMap({
   const [data, setData] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showMirror, setShowMirror] = useState(false);
+  const [range, setRange] = useState("30d");
 
   useEffect(() => {
     if (!isOpen || !personaId) return;
@@ -85,6 +86,15 @@ export default function EmotionalTimelineMap({
 
   const points = Array.isArray(data?.points) ? data.points : [];
 
+  const visiblePoints = React.useMemo(() => {
+    if (!points.length) return [];
+    if (range === "7d") {
+      // Show the most recent 7 mood snapshots client-side
+      return points.slice(-7);
+    }
+    return points;
+  }, [points, range]);
+
   const title = personaName
     ? isAr
       ? `رحلة مشاعرك مع ${personaName}`
@@ -105,6 +115,27 @@ export default function EmotionalTimelineMap({
     setRefreshKey((k) => k + 1);
   };
 
+  const trendPolylinePoints = React.useMemo(() => {
+    if (!visiblePoints.length) return "";
+    const n = visiblePoints.length;
+    if (n === 1) {
+      const intensity = Number(visiblePoints[0].avgIntensity) || 0;
+      const clamped = Math.max(0, Math.min(1, intensity));
+      const y = 90 - clamped * 60;
+      return `0,${y} 100,${y}`;
+    }
+
+    return visiblePoints
+      .map((p, idx) => {
+        const x = (idx / (n - 1)) * 100;
+        const intensity = Number(p.avgIntensity) || 0;
+        const clamped = Math.max(0, Math.min(1, intensity));
+        const y = 90 - clamped * 60; // higher intensity sits higher on the chart
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(" ");
+  }, [visiblePoints]);
+
   return (
     <div className="asrar-timeline-layer" onClick={handleBackdropClick}>
       <div
@@ -116,14 +147,38 @@ export default function EmotionalTimelineMap({
             <h2 className="asrar-timeline-title">{title}</h2>
             <p className="asrar-timeline-subtitle">{subtitle}</p>
           </div>
-          <button
-            type="button"
-            className="asrar-timeline-close"
-            onClick={onClose}
-            aria-label={isAr ? "إغلاق" : "Close"}
-          >
-            ×
-          </button>
+          <div className="asrar-timeline-header-right">
+            <div className="asrar-timeline-range-toggle">
+              <button
+                type="button"
+                className={
+                  "asrar-timeline-range-btn" +
+                  (range === "7d" ? " asrar-timeline-range-btn--active" : "")
+                }
+                onClick={() => setRange("7d")}
+              >
+                {isAr ? "آخر ٧ أيام" : "Last 7 days"}
+              </button>
+              <button
+                type="button"
+                className={
+                  "asrar-timeline-range-btn" +
+                  (range === "30d" ? " asrar-timeline-range-btn--active" : "")
+                }
+                onClick={() => setRange("30d")}
+              >
+                {isAr ? "آخر ٣٠ يومًا" : "Last 30 days"}
+              </button>
+            </div>
+            <button
+              type="button"
+              className="asrar-timeline-close"
+              onClick={onClose}
+              aria-label={isAr ? "إغلاق" : "Close"}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {loading && (
@@ -156,8 +211,18 @@ export default function EmotionalTimelineMap({
         {!loading && !error && points.length > 0 && (
           <div className="asrar-timeline-body">
             <div className="asrar-timeline-scroll">
-              <div className="asrar-timeline-track">
-                {points.map((p, idx) => {
+              <div className="asrar-timeline-track-wrapper">
+                {trendPolylinePoints && (
+                  <svg
+                    className="asrar-timeline-trend"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                  >
+                    <polyline points={trendPolylinePoints} />
+                  </svg>
+                )}
+                <div className="asrar-timeline-track">
+                  {visiblePoints.map((p, idx) => {
                   const date = p.date ? new Date(p.date) : null;
                   const dateLabel = date
                     ? date.toLocaleDateString(undefined, {
@@ -201,14 +266,25 @@ export default function EmotionalTimelineMap({
                       </div>
                       <div className="asrar-timeline-point-label">
                         <div className="asrar-timeline-date">{dateLabel}</div>
-                        <div className="asrar-timeline-emotion">{emotion}</div>
+                        <div className="asrar-timeline-emotion">
+                          <span className="asrar-timeline-mood-pill">{emotion}</span>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
+                </div>
               </div>
             </div>
           </div>
+        )}
+
+        {points.length > 0 && (
+          <p className="asrar-timeline-explainer">
+            {isAr
+              ? "كل عمود يمثّل مزاجك العام في ذلك اليوم، والخط يوضّح كيف يتغيّر نمطك العاطفي مع الوقت."
+              : "Each bar shows your overall mood for that day. The line shows how your emotional tone is shifting over time."}
+          </p>
         )}
 
         <div className="asrar-timeline-footer">

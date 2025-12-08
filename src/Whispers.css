@@ -313,6 +313,53 @@
   color: #ffdf9a;
 }
 
+.asrar-whispers-trust-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.asrar-whispers-trust-level-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #ffe3ae;
+}
+
+.asrar-whispers-trust-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.asrar-whispers-trust-segment {
+  width: 14px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(10, 40, 56, 0.8);
+  box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.16);
+}
+
+.asrar-whispers-trust-segment--active {
+  background: linear-gradient(90deg, #00f4ff, #7c4dff);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 0 12px rgba(0, 240, 255, 0.8);
+}
+
+.asrar-whispers-trust-description {
+  margin: 0.45rem 0 0;
+  font-size: 0.83rem;
+  line-height: 1.6;
+  color: #d6ecff;
+}
+
+.asrar-whispers-explainer {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #95b4d8;
+}
+
 .asrar-whispers-state {
   margin-top: 0.5rem;
   font-size: 0.86rem;

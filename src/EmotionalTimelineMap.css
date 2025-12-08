@@ -104,6 +104,44 @@
   color: #bed8ff;
 }
 
+.asrar-timeline-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.asrar-timeline-range-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem;
+  border-radius: 999px;
+  background: rgba(6, 14, 32, 0.85);
+  border: 1px solid rgba(151, 191, 255, 0.55);
+}
+
+.asrar-timeline-range-btn {
+  border: none;
+  background: transparent;
+  color: #caddff;
+  font-size: 0.72rem;
+  padding: 0.16rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.asrar-timeline-range-btn--active {
+  background: radial-gradient(circle at top, #96baff, #4567ff);
+  color: #05060f;
+  box-shadow:
+    0 0 0 1px rgba(222, 235, 255, 0.85),
+    0 0 14px rgba(136, 176, 255, 0.85);
+}
+
 .asrar-timeline-close {
   border-radius: 999px;
   border: 1px solid rgba(170, 196, 255, 0.8);
@@ -152,6 +190,25 @@
   gap: 1rem;
   min-width: 100%;
   padding: 0.1rem 0.2rem 0.4rem;
+}
+
+.asrar-timeline-track-wrapper {
+  position: relative;
+}
+
+.asrar-timeline-trend {
+  position: absolute;
+  inset: 4px 6px 30px 6px;
+  pointer-events: none;
+}
+
+.asrar-timeline-trend polyline {
+  fill: none;
+  stroke: rgba(185, 212, 255, 0.7);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(150, 190, 255, 0.5));
 }
 
 .asrar-timeline-point {
@@ -255,10 +312,29 @@
   color: #8ea3ff;
 }
 
+.asrar-timeline-mood-pill {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(10, 22, 46, 0.95);
+  border: 1px solid rgba(151, 191, 255, 0.6);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d5e4ff;
+}
+
 .asrar-timeline-footer {
   margin-top: 0.4rem;
   display: flex;
   justify-content: flex-end;
+}
+
+.asrar-timeline-explainer {
+  margin: 0.5rem 0 0.2rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #9fb4de;
 }
 
 .asrar-timeline-mirror-btn {

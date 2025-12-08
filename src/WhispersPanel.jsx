@@ -4,6 +4,73 @@ import "./Whispers.css";
 import { API_BASE } from "./apiBase";
 import { TOKEN_KEY } from "./hooks/useAuth";
 
+const TRUST_LEVELS_UI = {
+  en: [
+    {
+      id: 1,
+      label: "Surface",
+      description:
+        "You're just getting to know each other. Your companion is still staying on the safe side.",
+    },
+    {
+      id: 2,
+      label: "Openness",
+      description:
+        "Your companion is starting to share more personal thoughts and reactions with you.",
+    },
+    {
+      id: 3,
+      label: "Depth",
+      description:
+        "Conversations are getting deeper. Your companion reflects more honestly on your emotions.",
+    },
+    {
+      id: 4,
+      label: "Secrets",
+      description:
+        "You've unlocked more hidden sides. Your companion now reveals private perspectives and vulnerable moments.",
+    },
+    {
+      id: 5,
+      label: "True Bond",
+      description:
+        "You've reached the deepest layer. Your companion speaks to you with full emotional honesty and trust.",
+    },
+  ],
+  ar: [
+    {
+      id: 1,
+      label: "السطح",
+      description:
+        "أنتم فقط في بداية التعارف. ما زال رفيقك يتحدث معك من مساحة آمنة وسطحية.",
+    },
+    {
+      id: 2,
+      label: "الانفتاح",
+      description:
+        "رفيقك بدأ يشاركك أفكارًا وردود فعل شخصية أكثر معك.",
+    },
+    {
+      id: 3,
+      label: "العمق",
+      description:
+        "المحادثات أصبحت أعمق. رفيقك يعكس مشاعرك بصدق أكبر.",
+    },
+    {
+      id: 4,
+      label: "الأسرار",
+      description:
+        "فتحت جوانب أكثر خفاءً. رفيقك يشاركك الآن لحظات خاصة وهشّة.",
+    },
+    {
+      id: 5,
+      label: "الرابطة الحقيقية",
+      description:
+        "وصلتم إلى أعمق طبقة. رفيقك يتحدث معك بصراحة عاطفية كاملة وثقة عالية.",
+    },
+  ],
+};
+
 export default function WhispersPanel({
   isOpen,
   onClose,
@@ -99,20 +166,32 @@ export default function WhispersPanel({
   const subtitle = isAr
     ? "أسرار وجوانب أعمق لهذا الرفيق تنفتح مع الوقت."
     : "Unlocked secrets and deeper sides of this companion.";
+  const rawTrustScore =
+    typeof status?.trustScore === "number" ? status.trustScore : null;
 
-  const trustLabel = (() => {
-    if (!status) return null;
-    const lvl = status.trustLevel ?? 0;
-    if (isAr) {
-      if (lvl <= 0) return "مستوى الثقة: بداية الطريق";
-      if (lvl === 1) return "مستوى الثقة: همسات خفيفة";
-      if (lvl === 2) return "مستوى الثقة: أسرار عميقة";
-      return "مستوى الثقة: ثقة كاملة";
-    }
-    if (lvl <= 0) return "Trust level: just starting";
-    if (lvl === 1) return "Trust level: light whispers";
-    if (lvl === 2) return "Trust level: deeper secrets";
-    return "Trust level: fully trusted";
+  const trustScore =
+    rawTrustScore == null
+      ? null
+      : Math.max(0, Math.min(100, Math.round(rawTrustScore)));
+
+  const trustLevelUi = (() => {
+    if (trustScore == null) return null;
+    const langKey = isAr ? "ar" : "en";
+    const levels = TRUST_LEVELS_UI[langKey] || TRUST_LEVELS_UI.en;
+
+    let levelNumber = 1;
+    if (trustScore <= 20) levelNumber = 1;
+    else if (trustScore <= 40) levelNumber = 2;
+    else if (trustScore <= 60) levelNumber = 3;
+    else if (trustScore <= 80) levelNumber = 4;
+    else levelNumber = 5;
+
+    const meta = levels[levelNumber - 1] || levels[0];
+    return {
+      levelNumber,
+      label: meta.label,
+      description: meta.description,
+    };
   })();
 
   const handleRetry = () => {
@@ -140,16 +219,45 @@ export default function WhispersPanel({
           </button>
         </div>
 
-        {trustLabel && (
+        {trustLevelUi && (
           <div className="asrar-whispers-trust-row">
-            <span className="asrar-whispers-trust-label">{trustLabel}</span>
-            {typeof status?.trustScore === "number" && (
-              <span className="asrar-whispers-trust-score">
-                {Math.round(status.trustScore)}/100
+            <div className="asrar-whispers-trust-main">
+              <span className="asrar-whispers-trust-label">
+                {isAr ? "مستوى الثقة" : "Trust Level"}
               </span>
-            )}
+              <span className="asrar-whispers-trust-level-name">
+                {isAr
+                  ? `المستوى ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`
+                  : `Level ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`}
+              </span>
+            </div>
+            <div className="asrar-whispers-trust-indicator">
+              {[1, 2, 3, 4, 5].map((lvl) => (
+                <div
+                  key={lvl}
+                  className={
+                    "asrar-whispers-trust-segment" +
+                    (trustLevelUi.levelNumber >= lvl
+                      ? " asrar-whispers-trust-segment--active"
+                      : "")
+                  }
+                />
+              ))}
+            </div>
           </div>
         )}
+
+        {trustLevelUi && (
+          <p className="asrar-whispers-trust-description">
+            {trustLevelUi.description}
+          </p>
+        )}
+
+        <p className="asrar-whispers-explainer">
+          {isAr
+            ? "الجانب الخفي لا يغيّر شخصية رفيقك، بل يكشف طبقات أعمق من شخصيته كلما زاد مستوى الثقة بينكما مع الوقت."
+            : "Hidden Side doesn't change who your companion is. It simply reveals deeper layers of their personality as trust grows over time."}
+        </p>
 
         {loading && (
           <div className="asrar-whispers-state">

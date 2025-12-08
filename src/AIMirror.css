@@ -67,6 +67,39 @@
   cursor: pointer;
 }
 
+.asrar-mirror-tabs {
+  margin-top: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem;
+  border-radius: 999px;
+  background: rgba(10, 6, 26, 0.96);
+  border: 1px solid rgba(210, 192, 255, 0.7);
+}
+
+.asrar-mirror-tab {
+  border: none;
+  background: transparent;
+  color: #d8ccff;
+  font-size: 0.78rem;
+  padding: 0.22rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.asrar-mirror-tab--active {
+  background: radial-gradient(circle at top, #e4d6ff, #bda0ff);
+  color: #16051f;
+  box-shadow:
+    0 0 0 1px rgba(255, 245, 255, 0.75),
+    0 0 16px rgba(215, 190, 255, 0.85);
+}
+
 .asrar-mirror-state {
   margin-top: 0.6rem;
   font-size: 0.86rem;
@@ -87,8 +120,15 @@
   cursor: pointer;
 }
 
+.asrar-mirror-content {
+  margin-top: 0.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  animation: asrar-mirror-fade-slide 200ms ease-out;
+}
+
 .asrar-mirror-body {
-  margin-top: 0.6rem;
   padding: 0.3rem 0.1rem 0.1rem;
   flex: 1;
   overflow-y: auto;
@@ -99,4 +139,15 @@
   font-size: 0.9rem;
   line-height: 1.8;
   color: #f7f3ff;
+}
+
+@keyframes asrar-mirror-fade-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

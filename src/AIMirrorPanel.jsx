@@ -16,6 +16,7 @@ export default function AIMirrorPanel({
   const [summaryText, setSummaryText] = useState(null);
   const [insights, setInsights] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeMode, setActiveMode] = useState("persona"); // "persona" | "global"
 
   useEffect(() => {
     if (!isOpen || !personaId) return;
@@ -92,11 +93,21 @@ export default function AIMirrorPanel({
     setRefreshKey((k) => k + 1);
   };
 
-  const title = isAr
+  const isGlobal = activeMode === "global";
+
+  const title = isGlobal
+    ? isAr
+      ? "مرآة أسرار العاطفية – كل المحادثات"
+      : "Asrar AI Mirror – All Conversations"
+    : isAr
     ? "مرآة أسرار العاطفية"
     : "Asrar AI Mirror";
 
-  const subtitle = personaName
+  const subtitle = isGlobal
+    ? isAr
+      ? "تأمل لطيف في نمطك العاطفي عبر كل محادثاتك في أسرار AI."
+      : "A gentle reflection on your emotional pattern across all your chats in Asrar AI."
+    : personaName
     ? isAr
       ? `نظرة لطيفة على نمط مشاعرك مع ${personaName}.`
       : `A gentle reflection on your emotional pattern with ${personaName}.`
@@ -128,43 +139,86 @@ export default function AIMirrorPanel({
             ×
           </button>
         </div>
+        <div className="asrar-mirror-tabs">
+          <button
+            type="button"
+            className={
+              "asrar-mirror-tab" +
+              (activeMode === "persona" ? " asrar-mirror-tab--active" : "")
+            }
+            onClick={() => setActiveMode("persona")}
+          >
+            {isAr ? "هذا الرفيق" : "This Companion"}
+          </button>
+          <button
+            type="button"
+            className={
+              "asrar-mirror-tab" +
+              (activeMode === "global" ? " asrar-mirror-tab--active" : "")
+            }
+            onClick={() => setActiveMode("global")}
+          >
+            {isAr ? "كل المحادثات" : "All Conversations"}
+          </button>
+        </div>
 
-        {loading && (
-          <div className="asrar-mirror-state">
-            {isAr ? "جارٍ توليد ملخص عاطفي…" : "Generating a gentle emotional summary…"}
-          </div>
-        )}
+        <div
+          key={activeMode}
+          className="asrar-mirror-content"
+        >
+          {activeMode === "persona" && (
+            <>
+              {loading && (
+                <div className="asrar-mirror-state">
+                  {isAr
+                    ? "جارٍ توليد ملخص عاطفي…"
+                    : "Generating a gentle emotional summary…"}
+                </div>
+              )}
 
-        {error && !loading && (
-          <div className="asrar-mirror-state asrar-mirror-state--error">
-            <p>
-              {isAr
-                ? "تعذر توليد المرآة الآن."
-                : "We couldn’t generate the mirror right now."}
-            </p>
-            <button
-              type="button"
-              className="asrar-mirror-retry"
-              onClick={handleRetry}
-            >
-              {isAr ? "حاول مرة أخرى" : "Try again"}
-            </button>
-          </div>
-        )}
+              {error && !loading && (
+                <div className="asrar-mirror-state asrar-mirror-state--error">
+                  <p>
+                    {isAr
+                      ? "تعذر توليد المرآة الآن."
+                      : "We couldn’t generate the mirror right now."}
+                  </p>
+                  <button
+                    type="button"
+                    className="asrar-mirror-retry"
+                    onClick={handleRetry}
+                  >
+                    {isAr ? "حاول مرة أخرى" : "Try again"}
+                  </button>
+                </div>
+              )}
 
-        {!loading && !error && !summaryText && (
-          <div className="asrar-mirror-state">{noDataLabel}</div>
-        )}
+              {!loading && !error && !summaryText && (
+                <div className="asrar-mirror-state">{noDataLabel}</div>
+              )}
 
-        {!loading && !error && summaryText && (
-          <div className="asrar-mirror-body">
-            {summaryText.split(/\n+/).map((para, idx) => (
-              <p key={idx} className="asrar-mirror-paragraph">
-                {para}
+              {!loading && !error && summaryText && (
+                <div className="asrar-mirror-body">
+                  {summaryText.split(/\n+/).map((para, idx) => (
+                    <p key={idx} className="asrar-mirror-paragraph">
+                      {para}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {activeMode === "global" && (
+            <div className="asrar-mirror-body">
+              <p className="asrar-mirror-paragraph">
+                {isAr
+                  ? "نحن ما زلنا نتعلم من محادثاتك. استمر في الحديث، وسنعرض لك هنا قريبًا نمطك العاطفي عبر كل المحادثات."
+                  : "We’re still learning from your conversations. Keep chatting, and we’ll reflect back your emotional pattern here soon."}
               </p>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
