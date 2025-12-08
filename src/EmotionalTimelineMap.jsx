@@ -84,15 +84,22 @@ export default function EmotionalTimelineMap({
     }
   };
 
-  const points = Array.isArray(data?.points) ? data.points : [];
+  const points = React.useMemo(() => {
+    if (Array.isArray(data?.points)) return data.points;
+    // Also support a plain array response shape: [ { date, topEmotion, avgIntensity, keyEvents } ]
+    if (Array.isArray(data)) return data;
+    return [];
+  }, [data]);
 
   const visiblePoints = React.useMemo(() => {
     if (!points.length) return [];
+    const normalized = points.filter((p) => p && typeof p === "object");
+    if (!normalized.length) return [];
     if (range === "7d") {
       // Show the most recent 7 mood snapshots client-side
-      return points.slice(-7);
+      return normalized.slice(-7);
     }
-    return points;
+    return normalized;
   }, [points, range]);
 
   const title = personaName
@@ -108,31 +115,29 @@ export default function EmotionalTimelineMap({
     : "A visual map of how your feelings change over time.";
 
   const emptyLabel = isAr
-    ? "لا توجد بيانات كافية بعد لرسم خريطة المشاعر. استمر في التحدث مع رفيقك."
-    : "Not enough history yet to draw a timeline. Keep talking with your companion.";
+    ? "لا توجد بيانات للمشاعر بعد."
+    : "No mood data available yet.";
 
   const handleRetry = () => {
     setRefreshKey((k) => k + 1);
   };
 
   const trendPolylinePoints = React.useMemo(() => {
-    if (!visiblePoints.length) return "";
+    if (!visiblePoints || visiblePoints.length < 2) return "";
     const n = visiblePoints.length;
-    if (n === 1) {
-      const intensity = Number(visiblePoints[0].avgIntensity) || 0;
-      const clamped = Math.max(0, Math.min(1, intensity));
-      const y = 90 - clamped * 60;
-      return `0,${y} 100,${y}`;
-    }
 
     return visiblePoints
       .map((p, idx) => {
+        if (!p || typeof p !== "object") return null;
         const x = (idx / (n - 1)) * 100;
-        const intensity = Number(p.avgIntensity) || 0;
+        const rawIntensity = Number(p.avgIntensity);
+        const intensity = Number.isFinite(rawIntensity) ? rawIntensity : 0;
         const clamped = Math.max(0, Math.min(1, intensity));
         const y = 90 - clamped * 60; // higher intensity sits higher on the chart
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       })
+      .filter(Boolean)
       .join(" ");
   }, [visiblePoints]);
 
@@ -223,56 +228,69 @@ export default function EmotionalTimelineMap({
                 )}
                 <div className="asrar-timeline-track">
                   {visiblePoints.map((p, idx) => {
-                  const date = p.date ? new Date(p.date) : null;
-                  const dateLabel = date
-                    ? date.toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })
-                    : "";
-                  const emotion = (p.topEmotion || "NEUTRAL").toUpperCase();
-                  const barHeight = 28 + 80 * (Number(p.avgIntensity) || 0);
-                  const keyEvents = Array.isArray(p.keyEvents)
-                    ? p.keyEvents
-                    : [];
+                    if (!p || typeof p !== "object") return null;
 
-                  return (
-                    <div
-                      key={idx}
-                      className="asrar-timeline-point"
-                    >
-                      <div className="asrar-timeline-bar-wrapper">
-                        <div
-                          className={
-                            "asrar-timeline-bar asrar-timeline-bar--" +
-                            emotion.toLowerCase()
-                          }
-                          style={{ height: `${barHeight}px` }}
-                        />
-                        {keyEvents.length > 0 && (
-                          <div className="asrar-timeline-events-dots">
-                            {keyEvents.map((ev, j) => (
-                              <span
-                                key={j}
-                                className={
-                                  "asrar-timeline-event-dot asrar-timeline-event-dot--" +
-                                  (ev.type || "event")
-                                }
-                                title={ev.label || ev.type}
-                              />
-                            ))}
+                    let dateLabel = "";
+                    if (p.date) {
+                      const date = new Date(p.date);
+                      if (!Number.isNaN(date.getTime())) {
+                        dateLabel = date.toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        });
+                      }
+                    }
+
+                    const rawEmotion = p.topEmotion || "NEUTRAL";
+                    const emotion = String(rawEmotion).toUpperCase();
+
+                    const rawIntensity = Number(p.avgIntensity);
+                    const safeIntensity = Number.isFinite(rawIntensity)
+                      ? Math.max(0, Math.min(1, rawIntensity))
+                      : 0;
+                    const barHeight = 28 + 80 * safeIntensity;
+
+                    const keyEvents = Array.isArray(p.keyEvents)
+                      ? p.keyEvents
+                      : [];
+
+                    return (
+                      <div
+                        key={idx}
+                        className="asrar-timeline-point"
+                      >
+                        <div className="asrar-timeline-bar-wrapper">
+                          <div
+                            className={
+                              "asrar-timeline-bar asrar-timeline-bar--" +
+                              emotion.toLowerCase()
+                            }
+                            style={{ height: `${barHeight}px` }}
+                          />
+                          {keyEvents.length > 0 && (
+                            <div className="asrar-timeline-events-dots">
+                              {keyEvents.map((ev, j) => (
+                                <span
+                                  key={j}
+                                  className={
+                                    "asrar-timeline-event-dot asrar-timeline-event-dot--" +
+                                    (ev?.type || "event")
+                                  }
+                                  title={ev?.label || ev?.type}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="asrar-timeline-point-label">
+                          <div className="asrar-timeline-date">{dateLabel}</div>
+                          <div className="asrar-timeline-emotion">
+                            <span className="asrar-timeline-mood-pill">{emotion}</span>
                           </div>
-                        )}
-                      </div>
-                      <div className="asrar-timeline-point-label">
-                        <div className="asrar-timeline-date">{dateLabel}</div>
-                        <div className="asrar-timeline-emotion">
-                          <span className="asrar-timeline-mood-pill">{emotion}</span>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
                 </div>
               </div>
             </div>
