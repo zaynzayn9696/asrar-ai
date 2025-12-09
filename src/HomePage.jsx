@@ -482,7 +482,7 @@ function getMiniChatReply(message, isAr) {
 
 export default function HomePage() {
   // language + mood gate
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthLoading } = useAuth();
   const [language, setLanguage] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("asrar-lang") || "ar";
@@ -724,6 +724,10 @@ export default function HomePage() {
   const getName = (c) => (isAr ? c.nameAr : c.nameEn);
   const getRole = (c) => (isAr ? c.roleAr : c.roleEn);
   const getDesc = (c) => (isAr ? c.descriptionAr : c.descriptionEn);
+
+  if (isAuthLoading) {
+    return null;
+  }
 
   return (
     <div className={`asrar-page ${isAr ? "asrar-page--ar" : ""}`}>
