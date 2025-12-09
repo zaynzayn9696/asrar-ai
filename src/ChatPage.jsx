@@ -2043,9 +2043,6 @@ useEffect(() => {
                         <span></span>
                         <span></span>
                       </div>
-                      <span className="asrar-typing-label">
-                        {isArabicConversation ? "جارٍ التفكير…" : "Thinking…"}
-                      </span>
                     </div>
                   </div>
                 </div>
