@@ -198,7 +198,6 @@ export default function Dashboard() {
   }
 
   const [lang, setLang] = useState(getInitialLang);
-  const [isPageLoading, setIsPageLoading] = useState(true);
   const [selectedCharacterId, setSelectedCharacterId] = useState(
     initialSelectedId
   );
@@ -262,12 +261,7 @@ export default function Dashboard() {
   const isTablet = windowWidth >= 768 && windowWidth < 1200;
   const isMobile = windowWidth < 768;
 
-  useEffect(() => {
-    const tId = setTimeout(() => setIsPageLoading(false), 900);
-    return () => clearTimeout(tId);
-  }, []);
-
-  if (isPageLoading) {
+  if (isAuthLoading) {
     return <HomeSplash />;
   }
 
