@@ -32,6 +32,7 @@ const allowedOrigins = [
   "https://asrarai.com",
   "https://www.asrarai.com",
   "https://asrar-ai.vercel.app",
+  "https://staging.asrarai.com",
 ];
 
 if (FRONTEND_URL && !allowedOrigins.includes(FRONTEND_URL)) {
