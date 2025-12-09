@@ -7,11 +7,10 @@ export default function HomeSplash() {
       <div className="asrar-home-splash-inner">
         <div className="asrar-home-logo">ASRAR AI</div>
         <div className="asrar-home-loader">
-          <div className="asrar-home-loader-ring">
-            <div className="asrar-home-loader-orbit">
-              <div className="asrar-home-loader-dot" />
-            </div>
+          <div className="asrar-home-loader-track">
+            <div className="asrar-home-loader-pulse" />
           </div>
+          <div className="asrar-home-loader-echo" />
         </div>
       </div>
     </div>

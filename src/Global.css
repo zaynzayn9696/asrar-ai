@@ -322,41 +322,55 @@ html, body {
 
 .asrar-home-loader {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
 }
 
-.asrar-home-loader-ring {
+.asrar-home-loader-track {
   position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.4) inset;
-  background: radial-gradient(circle at 30% 0%, rgba(0, 255, 255, 0.18), transparent 70%);
+  width: 140px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(0, 255, 255, 0.16);
+  overflow: hidden;
 }
 
-.asrar-home-loader-orbit {
+.asrar-home-loader-pulse {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  animation: asrar-home-orbit 1.3s linear infinite;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 255, 0),
+    rgba(0, 255, 255, 0.9),
+    rgba(0, 255, 255, 0)
+  );
+  box-shadow: 0 0 22px rgba(0, 255, 255, 0.9);
+  animation: asrar-home-loader-sweep 1.15s ease-in-out infinite;
 }
 
-.asrar-home-loader-dot {
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #0ff;
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.9);
+.asrar-home-loader-echo {
+  width: 100px;
+  height: 22px;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, rgba(0, 255, 255, 0.28), transparent 70%);
+  opacity: 0.85;
+  filter: blur(3px);
+  animation: asrar-home-loader-echo 1.6s ease-in-out infinite;
 }
 
-@keyframes asrar-home-orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes asrar-home-loader-sweep {
+  0% { transform: translateX(-60%); opacity: 0.1; }
+  30% { opacity: 1; }
+  100% { transform: translateX(160%); opacity: 0.2; }
+}
+
+@keyframes asrar-home-loader-echo {
+  0% { transform: scale(0.98); opacity: 0.4; }
+  40% { transform: scale(1.02); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 0.45; }
 }
 
 @keyframes asrar-home-splash-fade-in {
