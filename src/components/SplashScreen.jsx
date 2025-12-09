@@ -8,7 +8,12 @@ export default function SplashScreen() {
       <div className="asrar-splash-core">
         <div className="asrar-splash-tagline">Asrar AI</div>
         <div className="asrar-splash-loading-row" aria-hidden="true">
-          <div className="asrar-loading-spinner" />
+          <div className="asrar-splash-loader">
+            <div className="asrar-splash-loader-ring" />
+            <div className="asrar-splash-loader-orbit">
+              <div className="asrar-splash-loader-dot" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
