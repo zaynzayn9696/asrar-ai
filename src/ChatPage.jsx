@@ -276,9 +276,14 @@ export default function ChatPage() {
   const [hasHydratedHistory, setHasHydratedHistory] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [aiTypingBuffer, setAiTypingBuffer] = useState("");
+  const [aiTypingMessageId, setAiTypingMessageId] = useState(null);
+
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const engineMenuRef = useRef(null);
+  const aiTypingIntervalRef = useRef(null);
 
   // helper: pick any available mic deviceId
   const getAnyMicDeviceId = async () => {
@@ -1086,6 +1091,15 @@ useEffect(() => {
     const trimmed = source.trim();
     if (!trimmed || isSending) return;
 
+    // Reset any in-progress AI typing animation when a new text send starts
+    if (aiTypingIntervalRef.current) {
+      clearInterval(aiTypingIntervalRef.current);
+      aiTypingIntervalRef.current = null;
+    }
+    setIsAiTyping(false);
+    setAiTypingBuffer("");
+    setAiTypingMessageId(null);
+
     setIsEngineMenuOpen(false);
 
     const userMessage = {
@@ -1217,7 +1231,7 @@ useEffect(() => {
         return;
       }
 
-      // 1) Build and append assistant message immediately so the UI updates first.
+      // 1) Build and append assistant message, then animate it with a fast typing effect.
       const aiText = data.reply || (isArabicConversation
         ? `واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل.`
         : "I had a small issue connecting. Please try again in a moment.");
@@ -1246,6 +1260,28 @@ useEffect(() => {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      const fullText = String(finalText || "");
+      if (fullText) {
+        setAiTypingBuffer("");
+        setIsAiTyping(true);
+        setAiTypingMessageId(aiMessage.id);
+
+        let i = 0;
+        const typingInterval = setInterval(() => {
+          i++;
+          setAiTypingBuffer(fullText.slice(0, i));
+          if (i >= fullText.length) {
+            clearInterval(typingInterval);
+            aiTypingIntervalRef.current = null;
+            setIsAiTyping(false);
+            setAiTypingBuffer("");
+            setAiTypingMessageId(null);
+          }
+        }, 12);
+
+        aiTypingIntervalRef.current = typingInterval;
+      }
 
       // 2) Non-critical UI updates (usage, whispers, limit banner) in a follow-up tick.
       setTimeout(() => {
@@ -1925,15 +1961,24 @@ useEffect(() => {
               const isUserVoice = msg.from === "user" && !!msg.audioBase64;
               const isTextOnly = !msg.audioBase64; // any message without audio uses text bubble
 
+              const isArabicDialect = selectedDialect !== "en";
+              const isText = !msg.audioBase64;
+              const aiShouldAlignRight =
+                msg.from === "ai" && isText && isArabicDialect;
+              const isCurrentAiTyping =
+                isAiTyping && msg.id === aiTypingMessageId;
+
               return (
                 <div
                   key={msg.id}
-                  className={`asrar-chat-row asrar-chat-row--${
+                  className={`asrar-chat-row ${
                     msg.from === "ai"
-                      ? "assistant"
+                      ? aiShouldAlignRight
+                        ? "asrar-chat-row--assistant-rtl"
+                        : "asrar-chat-row--assistant"
                       : msg.from === "user"
-                      ? "user"
-                      : "system"
+                      ? "asrar-chat-row--user"
+                      : "asrar-chat-row--system"
                   }`}
                 >
                   <div className="asrar-chat-bubble">
@@ -1963,7 +2008,7 @@ useEffect(() => {
                         className="asrar-chat-text"
                         dir={isArabicConversation ? "rtl" : "ltr"}
                       >
-                        {msg.text}
+                        {isCurrentAiTyping ? aiTypingBuffer : msg.text}
                       </span>
                     )}
 

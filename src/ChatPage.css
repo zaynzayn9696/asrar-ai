@@ -638,6 +638,19 @@
   justify-content: center;
 }
 
+.asrar-chat-row--assistant-rtl {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.asrar-chat-row--assistant-rtl .asrar-chat-bubble {
+  background: radial-gradient(circle at top left, #051b30, #02040d);
+  color: #e8f8ff;
+  text-align: right;
+  direction: rtl;
+  align-self: flex-end;
+}
+
 /* Avatar */
 .asrar-chat-avatar {
   width: 40px;
