@@ -651,6 +651,18 @@
   align-self: flex-end;
 }
 
+.asrar-chat-row--assistant-ar {
+  justify-content: flex-end;
+  direction: rtl;
+  text-align: right;
+}
+
+.asrar-chat-row--assistant-en {
+  justify-content: flex-start;
+  direction: ltr;
+  text-align: left;
+}
+
 /* Avatar */
 .asrar-chat-avatar {
   width: 40px;

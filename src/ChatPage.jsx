@@ -187,6 +187,10 @@ const TEXT = {
   },
 };
 
+function isArabicText(str) {
+  return /[\u0600-\u06FF]/.test(str || "");
+}
+
 function getSupportedMimeType() {
   if (typeof window === 'undefined' || !window.MediaRecorder) return '';
 
@@ -1135,6 +1139,13 @@ useEffect(() => {
 
       const detectedLang = detectMessageLanguage(trimmed);
 
+      let payloadLang = "en";
+      let payloadDialect = "en";
+      if (detectedLang === "ar") {
+        payloadLang = "ar";
+        payloadDialect = selectedDialect || "msa";
+      }
+
       const token =
         typeof window !== "undefined"
           ? localStorage.getItem(TOKEN_KEY)
@@ -1159,9 +1170,8 @@ useEffect(() => {
           conversationId,
           content: trimmed,
           // Dynamic per-message language routing
-          lang: detectedLang,
-          dialect:
-            detectedLang === "ar" ? selectedDialect || "msa" : "en",
+          lang: payloadLang,
+          dialect: payloadDialect,
           save: user?.saveHistoryEnabled !== false,
           tone: selectedTone,
           engine: selectedEngine,
@@ -1977,26 +1987,44 @@ useEffect(() => {
               const isUserVoice = msg.from === "user" && !!msg.audioBase64;
               const isTextOnly = !msg.audioBase64; // any message without audio uses text bubble
 
-              const isArabicDialect = selectedDialect !== "en";
-              const isText = !msg.audioBase64;
-              const aiShouldAlignRight =
-                msg.from === "ai" && isText && isArabicDialect;
               const isCurrentAiTyping =
                 isAiTyping && msg.id === aiTypingMessageId;
 
+              let rowClass = "asrar-chat-row";
+              if (msg.from === "ai") {
+                const isVoice = !!msg.audioBase64;
+                if (isVoice) {
+                  // Keep existing alignment for voice replies
+                  rowClass += " asrar-chat-row--assistant";
+                } else {
+                  // Text AI message: choose alignment based on actual text language
+                  if (isArabicText(msg.text)) {
+                    rowClass += " asrar-chat-row--assistant-ar";
+                  } else {
+                    rowClass += " asrar-chat-row--assistant-en";
+                  }
+                }
+              } else if (msg.from === "user") {
+                rowClass += " asrar-chat-row--user";
+              } else {
+                rowClass += " asrar-chat-row--system";
+              }
+
+              const isAiTextMessage =
+                msg.from === "ai" && isTextOnly && !isAiVoice;
+              const currentRenderedText =
+                isCurrentAiTyping ? aiTypingBuffer : msg.text;
+              const textDir =
+                isAiTextMessage
+                  ? isArabicText(currentRenderedText)
+                    ? "rtl"
+                    : "ltr"
+                  : isArabicConversation
+                  ? "rtl"
+                  : "ltr";
+
               return (
-                <div
-                  key={msg.id}
-                  className={`asrar-chat-row ${
-                    msg.from === "ai"
-                      ? aiShouldAlignRight
-                        ? "asrar-chat-row--assistant-rtl"
-                        : "asrar-chat-row--assistant"
-                      : msg.from === "user"
-                      ? "asrar-chat-row--user"
-                      : "asrar-chat-row--system"
-                  }`}
-                >
+                <div key={msg.id} className={rowClass}>
                   <div className="asrar-chat-bubble">
                     {/* AI voice replies: voice bubble only */}
                     {isAiVoice && (
@@ -2022,9 +2050,9 @@ useEffect(() => {
                     {isTextOnly && (
                       <span
                         className="asrar-chat-text"
-                        dir={isArabicConversation ? "rtl" : "ltr"}
+                        dir={textDir}
                       >
-                        {isCurrentAiTyping ? aiTypingBuffer : msg.text}
+                        {currentRenderedText}
                       </span>
                     )}
 
