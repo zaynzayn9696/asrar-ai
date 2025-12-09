@@ -187,6 +187,10 @@ const TEXT = {
   },
 };
 
+function isArabicText(str) {
+  return /[\u0600-\u06FF]/.test(str || "");
+}
+
 function getSupportedMimeType() {
   if (typeof window === 'undefined' || !window.MediaRecorder) return '';
 
@@ -276,9 +280,14 @@ export default function ChatPage() {
   const [hasHydratedHistory, setHasHydratedHistory] = useState(false);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
+  const [isAiTyping, setIsAiTyping] = useState(false);
+  const [aiTypingBuffer, setAiTypingBuffer] = useState("");
+  const [aiTypingMessageId, setAiTypingMessageId] = useState(null);
+
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const engineMenuRef = useRef(null);
+  const aiTypingIntervalRef = useRef(null);
 
   // helper: pick any available mic deviceId
   const getAnyMicDeviceId = async () => {
@@ -418,6 +427,18 @@ export default function ChatPage() {
     }
     return finalMsgs;
   };
+
+  function detectMessageLanguage(text) {
+    if (!text) return "en";
+    const arabicRegex = /[\u0600-\u06FF]/; // Arabic characters
+    const arabiziRegex = /\b(3|7|5|6|2|9)\b|kh|sh|gh|aa|oo|ee/i;
+
+    const hasArabic = arabicRegex.test(text);
+    const hasArabizi = arabiziRegex.test(text);
+
+    if (hasArabic || hasArabizi) return "ar";
+    return "en";
+  }
 
   useEffect(() => {
     const loadConversations = async () => {
@@ -735,26 +756,63 @@ export default function ChatPage() {
     }
   };
 
-  const handleStartNewChat = () => {
+  const handleStartNewChat = async () => {
     try {
       setIsMobileSidebarOpen(false);
-      // Clear UI and reset conversation pointer; backend will create on next send
-      setConversationId(null);
+
+      // Create a fresh conversation so the next message is always saved
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const headers = token
+        ? {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          }
+        : { "Content-Type": "application/json" };
+
+      let newConv = null;
+      try {
+        const createRes = await fetch(`${API_BASE}/api/chat/conversations`, {
+          method: "POST",
+          credentials: "include",
+          headers,
+          body: JSON.stringify({ characterId: selectedCharacterId }),
+        });
+        newConv = await createRes.json().catch(() => null);
+        if (!createRes.ok || !newConv || !newConv.id) {
+          newConv = null;
+        }
+      } catch (_) {
+        newConv = null;
+      }
+
+      if (newConv && newConv.id) {
+        setConversationId(newConv.id);
+        setConversations((prev) => {
+          const list = Array.isArray(prev) ? prev : [];
+          const without = list.filter((c) => c.id !== newConv.id);
+          return [newConv, ...without];
+        });
+      } else {
+        // Fallback: clear pointer; backend will still attach, but may reuse
+        setConversationId(null);
+      }
+
       const now = new Date().toISOString();
       setMessages([
         {
           id: 1,
-          from: 'system',
+          from: "system",
           text: isArabicConversation
-              ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+            ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
             : "This is your private space. Nothing you say here is judged.",
           createdAt: now,
         },
         {
           id: 2,
-          from: 'ai',
+          from: "ai",
           text: isArabicConversation
-              ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+            ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
             : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
           createdAt: now,
         },
@@ -762,7 +820,7 @@ export default function ChatPage() {
       const el = messagesContainerRef.current;
       if (el) el.scrollTop = 0;
     } catch (e) {
-      console.error('[ChatPage] start new chat failed', e);
+      console.error("[ChatPage] start new chat failed", e);
     }
   };
 
@@ -1086,6 +1144,15 @@ useEffect(() => {
     const trimmed = source.trim();
     if (!trimmed || isSending) return;
 
+    // Reset any in-progress AI typing animation when a new text send starts
+    if (aiTypingIntervalRef.current) {
+      clearInterval(aiTypingIntervalRef.current);
+      aiTypingIntervalRef.current = null;
+    }
+    setIsAiTyping(false);
+    setAiTypingBuffer("");
+    setAiTypingMessageId(null);
+
     setIsEngineMenuOpen(false);
 
     const userMessage = {
@@ -1106,6 +1173,15 @@ useEffect(() => {
 
     try {
       const payloadMessages = [...messages, userMessage].map((m) => ({ from: m.from, text: m.text }));
+
+      const detectedLang = detectMessageLanguage(trimmed);
+
+      let payloadLang = "en";
+      let payloadDialect = "en";
+      if (detectedLang === "ar") {
+        payloadLang = "ar";
+        payloadDialect = selectedDialect || "msa";
+      }
 
       const token =
         typeof window !== "undefined"
@@ -1130,9 +1206,10 @@ useEffect(() => {
           characterId: selectedCharacterId,
           conversationId,
           content: trimmed,
+          // Dynamic per-message language routing
+          lang: payloadLang,
+          dialect: payloadDialect,
           save: user?.saveHistoryEnabled !== false,
-          lang: conversationLang,
-          dialect: selectedDialect || "msa",
           tone: selectedTone,
           engine: selectedEngine,
         }),
@@ -1217,7 +1294,7 @@ useEffect(() => {
         return;
       }
 
-      // 1) Build and append assistant message immediately so the UI updates first.
+      // 1) Build and append assistant message, then animate it with a fast typing effect.
       const aiText = data.reply || (isArabicConversation
         ? `واجهت مشكلة بسيطة في الاتصال. حاول مرة أخرى بعد قليل.`
         : "I had a small issue connecting. Please try again in a moment.");
@@ -1246,6 +1323,28 @@ useEffect(() => {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+
+      const fullText = String(finalText || "");
+      if (fullText) {
+        setAiTypingBuffer("");
+        setIsAiTyping(true);
+        setAiTypingMessageId(aiMessage.id);
+
+        let i = 0;
+        const typingInterval = setInterval(() => {
+          i++;
+          setAiTypingBuffer(fullText.slice(0, i));
+          if (i >= fullText.length) {
+            clearInterval(typingInterval);
+            aiTypingIntervalRef.current = null;
+            setIsAiTyping(false);
+            setAiTypingBuffer("");
+            setAiTypingMessageId(null);
+          }
+        }, 12);
+
+        aiTypingIntervalRef.current = typingInterval;
+      }
 
       // 2) Non-critical UI updates (usage, whispers, limit banner) in a follow-up tick.
       setTimeout(() => {
@@ -1925,17 +2024,44 @@ useEffect(() => {
               const isUserVoice = msg.from === "user" && !!msg.audioBase64;
               const isTextOnly = !msg.audioBase64; // any message without audio uses text bubble
 
+              const isCurrentAiTyping =
+                isAiTyping && msg.id === aiTypingMessageId;
+
+              let rowClass = "asrar-chat-row";
+              if (msg.from === "ai") {
+                const isVoice = !!msg.audioBase64;
+                if (isVoice) {
+                  // Keep existing alignment for voice replies
+                  rowClass += " asrar-chat-row--assistant";
+                } else {
+                  // Text AI message: choose alignment based on actual text language
+                  if (isArabicText(msg.text)) {
+                    rowClass += " asrar-chat-row--assistant-ar";
+                  } else {
+                    rowClass += " asrar-chat-row--assistant-en";
+                  }
+                }
+              } else if (msg.from === "user") {
+                rowClass += " asrar-chat-row--user";
+              } else {
+                rowClass += " asrar-chat-row--system";
+              }
+
+              const isAiTextMessage =
+                msg.from === "ai" && isTextOnly && !isAiVoice;
+              const currentRenderedText =
+                isCurrentAiTyping ? aiTypingBuffer : msg.text;
+              const textDir =
+                isAiTextMessage
+                  ? isArabicText(currentRenderedText)
+                    ? "rtl"
+                    : "ltr"
+                  : isArabicConversation
+                  ? "rtl"
+                  : "ltr";
+
               return (
-                <div
-                  key={msg.id}
-                  className={`asrar-chat-row asrar-chat-row--${
-                    msg.from === "ai"
-                      ? "assistant"
-                      : msg.from === "user"
-                      ? "user"
-                      : "system"
-                  }`}
-                >
+                <div key={msg.id} className={rowClass}>
                   <div className="asrar-chat-bubble">
                     {/* AI voice replies: voice bubble only */}
                     {isAiVoice && (
@@ -1961,9 +2087,9 @@ useEffect(() => {
                     {isTextOnly && (
                       <span
                         className="asrar-chat-text"
-                        dir={isArabicConversation ? "rtl" : "ltr"}
+                        dir={textDir}
                       >
-                        {msg.text}
+                        {currentRenderedText}
                       </span>
                     )}
 

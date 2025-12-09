@@ -629,6 +629,60 @@
   margin-right: auto;
 }
 
+.asrar-chat-row--assistant-rtl {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.asrar-chat-row--assistant-rtl .asrar-chat-bubble {
+  background: radial-gradient(circle at top left, #051b30, #02040d);
+  color: #e8f8ff;
+  text-align: right;
+  direction: rtl;
+  align-self: flex-end;
+}
+
+.asrar-chat-row--assistant-ar {
+  justify-content: flex-end;
+  direction: rtl;
+  text-align: right;
+}
+
+.asrar-chat-row--assistant-en {
+  justify-content: flex-start;
+  direction: ltr;
+  text-align: left;
+}
+
+.asrar-chat-row--assistant-ar .asrar-chat-bubble,
+.asrar-chat-row--assistant-en .asrar-chat-bubble {
+  background: radial-gradient(circle at top left, #051b30, #02040d);
+  color: #e8f8ff;
+}
+
+.asrar-chat-row--assistant-ar .asrar-chat-bubble {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.asrar-chat-row--assistant-en .asrar-chat-bubble {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.asrar-chat-row--assistant {
+  width: 100%;
+}
+
+.asrar-chat-row--user {
+  width: 100%;
+}
+
+.asrar-chat-row--assistant .asrar-chat-bubble {
+  margin-left: 0;
+  margin-right: auto;
+}
+
 .asrar-chat-row--user .asrar-chat-bubble {
   margin-left: auto;
   margin-right: 0;
@@ -636,6 +690,17 @@
 
 .asrar-chat-row--system {
   justify-content: center;
+}
+
+/* Desktop specific adjustments */
+@media (min-width: 901px) {
+  .asrar-chat-row--user .asrar-chat-bubble {
+    margin-right: 15%;
+  }
+  
+  .asrar-chat-row--assistant .asrar-chat-bubble {
+    margin-left: 15%;
+  }
 }
 
 /* Avatar */
