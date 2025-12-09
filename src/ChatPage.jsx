@@ -258,6 +258,7 @@ export default function ChatPage() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedEngine, setSelectedEngine] = useState(getInitialEngine);
+  const [isEngineMenuOpen, setIsEngineMenuOpen] = useState(false);
 
   // Whispers / timeline UI state
   const [recentWhispers, setRecentWhispers] = useState([]);
@@ -275,6 +276,7 @@ export default function ChatPage() {
 
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
+  const engineMenuRef = useRef(null);
 
   // helper: pick any available mic deviceId
   const getAnyMicDeviceId = async () => {
@@ -686,6 +688,25 @@ export default function ChatPage() {
     el.style.overflowY = el.scrollHeight > maxPx ? 'auto' : 'hidden';
   }, [inputValue]);
 
+  useEffect(() => {
+    if (!isEngineMenuOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (!engineMenuRef.current) return;
+      if (!engineMenuRef.current.contains(event.target)) {
+        setIsEngineMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isEngineMenuOpen]);
+
   const handleLangSwitch = (newLang) => {
     setLang(newLang);
     if (typeof window !== "undefined") {
@@ -1063,6 +1084,8 @@ useEffect(() => {
     const trimmed = source.trim();
     if (!trimmed || isSending) return;
 
+    setIsEngineMenuOpen(false);
+
     const userMessage = {
       id: messages.length ? messages[messages.length - 1].id + 1 : 1,
       from: "user",
@@ -1288,6 +1311,7 @@ useEffect(() => {
 
   const handleSend = (e) => {
     e.preventDefault();
+    setIsEngineMenuOpen(false);
     if (isRecording) {
       stopRecording("send");
       return;
@@ -2052,6 +2076,88 @@ useEffect(() => {
             </div>
 
             <form className="asrar-chat-composer-inner" onSubmit={handleSend}>
+              <div
+                className="asrar-engine-toggle-wrapper"
+                ref={engineMenuRef}
+              >
+                <button
+                  type="button"
+                  className={
+                    "asrar-engine-toggle-btn" +
+                    (isEngineMenuOpen ? " asrar-engine-toggle-btn--open" : "")
+                  }
+                  onClick={() => setIsEngineMenuOpen((prev) => !prev)}
+                  disabled={isSending || isBlocked || limitExceeded}
+                  aria-haspopup="menu"
+                  aria-expanded={isEngineMenuOpen}
+                  aria-label={
+                    isAr ? "تغيير وضع المحرك" : "Change engine mode"
+                  }
+                >
+                  <span className="asrar-engine-toggle-glyph" aria-hidden="true">
+                    ✨
+                  </span>
+                </button>
+                {isEngineMenuOpen && (
+                  <div
+                    className={
+                      "asrar-engine-menu" +
+                      (isAr ? " asrar-engine-menu--rtl" : "")
+                    }
+                    role="menu"
+                  >
+                    <div className="asrar-engine-menu-header">
+                      <span className="asrar-engine-menu-title">
+                        {isAr ? "وضع المحرك" : "Engine Mode"}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className={
+                        "asrar-engine-option" +
+                        (selectedEngine === "lite"
+                          ? " asrar-engine-option--active"
+                          : "")
+                      }
+                      onClick={() => {
+                        setSelectedEngine("lite");
+                        setIsEngineMenuOpen(false);
+                      }}
+                      role="menuitemradio"
+                      aria-checked={selectedEngine === "lite"}
+                    >
+                      <span className="asrar-engine-option-icon" aria-hidden="true">
+                        ⚡
+                      </span>
+                      <span className="asrar-engine-option-label">
+                        {isAr ? "خفيف – سريع" : "Lite – Fast"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className={
+                        "asrar-engine-option" +
+                        (selectedEngine === "balanced"
+                          ? " asrar-engine-option--active"
+                          : "")
+                      }
+                      onClick={() => {
+                        setSelectedEngine("balanced");
+                        setIsEngineMenuOpen(false);
+                      }}
+                      role="menuitemradio"
+                      aria-checked={selectedEngine === "balanced"}
+                    >
+                      <span className="asrar-engine-option-icon" aria-hidden="true">
+                        🧠
+                      </span>
+                      <span className="asrar-engine-option-label">
+                        {isAr ? "عميق – تفاعلي" : "Deep – Emotional"}
+                      </span>
+                    </button>
+                  </div>
+                )}
+              </div>
               <textarea
                 ref={inputRef}
                 className="asrar-chat-input asrar-room-input-field"
@@ -2116,24 +2222,6 @@ useEffect(() => {
                   ? "قد يخطئ الذكاء الاصطناعي أحياناً، فلا تعتمد عليه وحده في القرارات الحساسة."
                   : "AI may make mistakes sometimes. Do not rely on it alone for sensitive decisions."}
               </p>
-              <div className="asrar-chat-engine-row">
-                <label className="asrar-chat-engine-label">
-                  {isAr ? "عمق الرد" : "Response Depth"}
-                  <select
-                    className="asrar-chat-engine-select"
-                    value={selectedEngine}
-                    onChange={(e) => setSelectedEngine(e.target.value)}
-                  >
-                    <option value="lite">
-                      {isAr ? "خفيف (سريع)" : "Lite (Fast)"}
-                    </option>
-                    <option value="balanced">
-                      {isAr ? "متوازن (افتراضي)" : "Balanced (Default)"}
-                    </option>
-                 
-                  </select>
-                </label>
-              </div>
               {(() => {
                 const isPrem = !!(
                   user?.isPremium || user?.plan === "premium" || user?.plan === "pro"
