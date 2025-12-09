@@ -756,26 +756,63 @@ export default function ChatPage() {
     }
   };
 
-  const handleStartNewChat = () => {
+  const handleStartNewChat = async () => {
     try {
       setIsMobileSidebarOpen(false);
-      // Clear UI and reset conversation pointer; backend will create on next send
-      setConversationId(null);
+
+      // Create a fresh conversation so the next message is always saved
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const headers = token
+        ? {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          }
+        : { "Content-Type": "application/json" };
+
+      let newConv = null;
+      try {
+        const createRes = await fetch(`${API_BASE}/api/chat/conversations`, {
+          method: "POST",
+          credentials: "include",
+          headers,
+          body: JSON.stringify({ characterId: selectedCharacterId }),
+        });
+        newConv = await createRes.json().catch(() => null);
+        if (!createRes.ok || !newConv || !newConv.id) {
+          newConv = null;
+        }
+      } catch (_) {
+        newConv = null;
+      }
+
+      if (newConv && newConv.id) {
+        setConversationId(newConv.id);
+        setConversations((prev) => {
+          const list = Array.isArray(prev) ? prev : [];
+          const without = list.filter((c) => c.id !== newConv.id);
+          return [newConv, ...without];
+        });
+      } else {
+        // Fallback: clear pointer; backend will still attach, but may reuse
+        setConversationId(null);
+      }
+
       const now = new Date().toISOString();
       setMessages([
         {
           id: 1,
-          from: 'system',
+          from: "system",
           text: isArabicConversation
-              ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+            ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
             : "This is your private space. Nothing you say here is judged.",
           createdAt: now,
         },
         {
           id: 2,
-          from: 'ai',
+          from: "ai",
           text: isArabicConversation
-              ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+            ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
             : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
           createdAt: now,
         },
@@ -783,7 +820,7 @@ export default function ChatPage() {
       const el = messagesContainerRef.current;
       if (el) el.scrollTop = 0;
     } catch (e) {
-      console.error('[ChatPage] start new chat failed', e);
+      console.error("[ChatPage] start new chat failed", e);
     }
   };
 
