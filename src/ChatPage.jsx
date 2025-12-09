@@ -424,6 +424,18 @@ export default function ChatPage() {
     return finalMsgs;
   };
 
+  function detectMessageLanguage(text) {
+    if (!text) return "en";
+    const arabicRegex = /[\u0600-\u06FF]/; // Arabic characters
+    const arabiziRegex = /\b(3|7|5|6|2|9)\b|kh|sh|gh|aa|oo|ee/i;
+
+    const hasArabic = arabicRegex.test(text);
+    const hasArabizi = arabiziRegex.test(text);
+
+    if (hasArabic || hasArabizi) return "ar";
+    return "en";
+  }
+
   useEffect(() => {
     const loadConversations = async () => {
       try {
@@ -1121,6 +1133,8 @@ useEffect(() => {
     try {
       const payloadMessages = [...messages, userMessage].map((m) => ({ from: m.from, text: m.text }));
 
+      const detectedLang = detectMessageLanguage(trimmed);
+
       const token =
         typeof window !== "undefined"
           ? localStorage.getItem(TOKEN_KEY)
@@ -1144,9 +1158,11 @@ useEffect(() => {
           characterId: selectedCharacterId,
           conversationId,
           content: trimmed,
+          // Dynamic per-message language routing
+          lang: detectedLang,
+          dialect:
+            detectedLang === "ar" ? selectedDialect || "msa" : "en",
           save: user?.saveHistoryEnabled !== false,
-          lang: conversationLang,
-          dialect: selectedDialect || "msa",
           tone: selectedTone,
           engine: selectedEngine,
         }),
