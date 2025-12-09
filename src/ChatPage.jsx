@@ -153,6 +153,13 @@ const TONES_UI = [
 
 const CHAT_HISTORY_KEY = "asrar-chat-history";
 
+const buildHistoryStorageKey = (userId, characterId, convId) => {
+  const uid = userId == null ? "anon" : String(userId);
+  const char = characterId || "unknown";
+  const conv = convId == null ? "none" : String(convId);
+  return `asrar-chat-history-${uid}-${char}-${conv}`;
+};
+
 const TEXT = {
   en: {
     typingPlaceholder: "Type how you feel right now…",
@@ -331,6 +338,68 @@ export default function ChatPage() {
 
   const [reloadConversationsToken, setReloadConversationsToken] = useState(0);
 
+  const mergeServerMessagesWithLocalVoiceHistory = (serverMsgs, convId) => {
+    let finalMsgs = serverMsgs;
+    try {
+      if (typeof window !== "undefined" && user && user.id) {
+        const storageKey = buildHistoryStorageKey(
+          user.id,
+          selectedCharacterId,
+          convId
+        );
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length) {
+            const localMsgs = parsed;
+            const merged = [];
+            let localIndex = 0;
+
+            for (const m of serverMsgs) {
+              const from = m.from || "system";
+              const text = (m.text || "").trim();
+              let overlay = null;
+              for (; localIndex < localMsgs.length; localIndex++) {
+                const lm = localMsgs[localIndex];
+                if (!lm) continue;
+                const lFrom = lm.from || "system";
+                const lText = (lm.text || "").trim();
+                if (lFrom === from && lText === text) {
+                  overlay = lm;
+                  localIndex++;
+                  break;
+                }
+              }
+              if (overlay && overlay.audioBase64) {
+                merged.push({
+                  ...m,
+                  audioBase64: overlay.audioBase64,
+                  audioMimeType: overlay.audioMimeType || null,
+                });
+              } else {
+                merged.push(m);
+              }
+            }
+
+            for (; localIndex < localMsgs.length; localIndex++) {
+              const lm = localMsgs[localIndex];
+              if (!lm) continue;
+              merged.push(lm);
+            }
+
+            finalMsgs = merged;
+          }
+        }
+      }
+    } catch (mergeErr) {
+      console.error(
+        "[ChatPage] Failed to merge server messages with local voice history",
+        mergeErr
+      );
+    }
+    return finalMsgs;
+  };
+
   useEffect(() => {
     const loadConversations = async () => {
       try {
@@ -374,7 +443,11 @@ export default function ChatPage() {
               let finalMsgs = serverMsgs;
               try {
                 if (typeof window !== "undefined" && user && user.id) {
-                  const storageKey = `asrar-chat-history-${user.id}-${selectedCharacterId}`;
+                  const storageKey = buildHistoryStorageKey(
+                    user.id,
+                    selectedCharacterId,
+                    cid
+                  );
                   const raw = localStorage.getItem(storageKey);
                   if (raw) {
                     const parsed = JSON.parse(raw);
@@ -448,17 +521,20 @@ export default function ChatPage() {
     console.log("[ChatPage] selectedCharacterId", selectedCharacterId);
   }, [selectedCharacterId]);
 
-  // Load any existing history for this user + character on mount.
-  // Only depend on user.id so usage/plan updates on the user object
-  // dont re-trigger hydration and overwrite fresh messages.
+  // Load any existing history for this user + character + conversation on mount.
   useEffect(() => {
     if (!user) return;
     if (typeof window === "undefined") return;
+    if (!conversationId) return;
 
     const userId = user.id;
     if (!userId) return;
 
-    const storageKey = `asrar-chat-history-${userId}-${selectedCharacterId}`;
+    const storageKey = buildHistoryStorageKey(
+      userId,
+      selectedCharacterId,
+      conversationId
+    );
 
     try {
       const raw = localStorage.getItem(storageKey);
@@ -476,6 +552,7 @@ export default function ChatPage() {
               text: m.text || "",
               createdAt: m.createdAt || new Date().toISOString(),
               audioBase64: m.audioBase64 || null,
+              audioMimeType: m.audioMimeType || null,
             }))
           );
         } else {
@@ -490,7 +567,7 @@ export default function ChatPage() {
       // Mark that we attempted to hydrate from storage (even if nothing was there)
       setHasHydratedHistory(true);
     }
-  }, [user && user.id, selectedCharacterId]);
+  }, [user && user.id, selectedCharacterId, conversationId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -663,7 +740,15 @@ export default function ChatPage() {
       });
       if (msgRes.ok) {
         const serverMsgs = await msgRes.json().catch(() => []);
-        setMessages(Array.isArray(serverMsgs) && serverMsgs.length ? serverMsgs : []);
+        if (Array.isArray(serverMsgs) && serverMsgs.length) {
+          const finalMsgs = mergeServerMessagesWithLocalVoiceHistory(
+            serverMsgs,
+            id
+          );
+          setMessages(finalMsgs);
+        } else {
+          setMessages([]);
+        }
       }
     } catch (e) {
       console.error('[ChatPage] select conversation failed', e);
@@ -724,7 +809,11 @@ export default function ChatPage() {
 
         if (user && typeof window !== 'undefined') {
           try {
-            const storageKey = `asrar-chat-history-${user.id}-${selectedCharacterId}`;
+            const storageKey = buildHistoryStorageKey(
+              user.id,
+              selectedCharacterId,
+              id
+            );
             localStorage.removeItem(storageKey);
           } catch (e) {
             console.error('[ChatPage] failed to clear deleted conversation history', e);
@@ -832,23 +921,27 @@ useEffect(() => {
   if (!user) return;
   if (!hasHydratedHistory) return; // avoid overwriting stored history before hydration
   if (typeof window === "undefined") return;
-    if (typeof window === "undefined") return;
+  if (!conversationId) return;
 
-    const userId = user.id;
-    if (!userId) return;
+  const userId = user.id;
+  if (!userId) return;
 
-    const storageKey = `asrar-chat-history-${userId}-${selectedCharacterId}`;
+  const storageKey = buildHistoryStorageKey(
+    userId,
+    selectedCharacterId,
+    conversationId
+  );
 
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
-      console.log("[ChatPage] saved history", {
-        storageKey,
-        count: messages.length,
-      });
-    } catch (e) {
-      console.error("[ChatPage] Failed to persist chat history", e);
-    }
-  }, [messages, selectedCharacterId, user, hasHydratedHistory]);
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(messages));
+    console.log("[ChatPage] saved history", {
+      storageKey,
+      count: messages.length,
+    });
+  } catch (e) {
+    console.error("[ChatPage] Failed to persist chat history", e);
+  }
+}, [messages, selectedCharacterId, user, hasHydratedHistory, conversationId]);
 
   const suggestBetterCompanion = (lastUserText, currentCharacterId) => {
     if (!lastUserText) {
