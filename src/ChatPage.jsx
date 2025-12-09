@@ -2130,9 +2130,7 @@ useEffect(() => {
                     <option value="balanced">
                       {isAr ? "متوازن (افتراضي)" : "Balanced (Default)"}
                     </option>
-                    <option value="deep">
-                      {isAr ? "عميق (عاطفي)" : "Deep (Emotional)"}
-                    </option>
+                 
                   </select>
                 </label>
               </div>
