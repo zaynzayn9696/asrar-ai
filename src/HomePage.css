@@ -93,6 +93,8 @@ body,
   color: var(--asrar-text-main);
   overflow-x: hidden;
   padding-top: 0; /* remove top gap so header sits flush at top */
+  display: flex;
+  flex-direction: column;
 }
 
 .asrar-page--ar {
@@ -131,7 +133,12 @@ body,
 
 /* Offset main content so it doesn't sit under the fixed header + nav */
 .asrar-page > main {
+  flex: 1 0 auto;
   padding-top: 70px; /* Reduced from 120px to 90px */
+}
+
+.asrar-page > .asrar-footer {
+  flex-shrink: 0;
 }
 
 /* LANGUAGE + BUTTONS -------------------------------------------------- */

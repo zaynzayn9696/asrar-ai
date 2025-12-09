@@ -2006,8 +2006,8 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
 .asrar-history-page {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
 }
 
 .asrar-history-panel {
@@ -2017,6 +2017,7 @@ background: linear-gradient( 90deg, rgba(44, 246, 255, 0.7), rgba(120, 92, 255, 
   padding: 40px 20px;
   width: 100%;
   padding-top:0px;
+  margin-bottom: 60px;
 }
 
 .asrar-dash-eyebrow {
