@@ -14,7 +14,7 @@ import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
 import AsrarHeader from "./AsrarHeader";
 import FeaturesAccordion from "./components/FeaturesAccordion";
-import SplashScreen from "./components/SplashScreen";
+import HomeSplash from "./components/HomeSplash";
 
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
@@ -483,13 +483,14 @@ function getMiniChatReply(message, isAr) {
 
 export default function HomePage() {
   // language + mood gate
-  const { user, logout, isAuthLoading, loading } = useAuth();
+  const { user, logout } = useAuth();
   const [language, setLanguage] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("asrar-lang") || "ar";
     }
     return "ar";
   });
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [moodInput, setMoodInput] = useState("");
   const [submittedMood, setSubmittedMood] = useState("");
   const [recommendedId, setRecommendedId] = useState(null);
@@ -512,6 +513,11 @@ export default function HomePage() {
   const navigate = useNavigate();
   const selectedCharacter =
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[0];
+
+  useEffect(() => {
+    const t = setTimeout(() => setIsPageLoading(false), 900);
+    return () => clearTimeout(t);
+  }, []);
 
   // Safe hash-based scroll after mount (e.g., arrive via /#emotional-engine)
   useEffect(() => {
@@ -726,9 +732,8 @@ export default function HomePage() {
   const getRole = (c) => (isAr ? c.roleAr : c.roleEn);
   const getDesc = (c) => (isAr ? c.descriptionAr : c.descriptionEn);
 
-  const authPending = (typeof user === "undefined") || isAuthLoading || loading;
-  if (authPending) {
-    return <SplashScreen />;
+  if (isPageLoading) {
+    return <HomeSplash />;
   }
 
   return (
