@@ -24,6 +24,8 @@ const {
   updateConversationEmotionState,
   buildSystemPrompt,
   getDialectGuidance,
+  isQuickPhrase,
+  buildInstantReply,
 } = require('../services/emotionalEngine');
 const {
   logEmotionalTimelineEvent,
@@ -931,6 +933,10 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const rawToneKey = body.tone;
     const bodyConversationId = body.conversationId;
     const saveFlag = body.save !== false;
+    const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
+    const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
+      ? engineRaw
+      : 'balanced';
 
     console.log(
       '[Diagnostic] Incoming Request: route="/api/chat/voice" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
@@ -1008,6 +1014,55 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const personaText = isArabicConversation ? persona.ar : persona.en;
     const languageForEngine =
       lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en';
+
+    // Ultra-fast path: trivial greetings / acknowledgements.
+    if (isQuickPhrase(userText)) {
+      const instant = buildInstantReply(userText, { language: languageForEngine });
+      const aiTextQuick =
+        (instant && typeof instant.text === 'string' && instant.text.trim()) ||
+        (isArabicConversation ? 'أنا معك.' : "I'm right here with you.");
+
+      const assistantReplyForTTSQuick = normalizeAssistantReplyForTTS(
+        aiTextQuick,
+        languageForEngine
+      );
+      const spokenTextQuick = prepareTextForTTS(assistantReplyForTTSQuick);
+
+      const tTtsStartQuick = Date.now();
+      const ttsResultQuick = await generateVoiceReply(spokenTextQuick, {
+        characterId,
+        format: 'mp3',
+      });
+      ttsMs = Date.now() - tTtsStartQuick;
+
+      if (!ttsResultQuick) {
+        const fallback = {
+          type: 'voice',
+          audio: null,
+          audioMimeType: 'audio/mpeg',
+          text: assistantReplyForTTSQuick,
+          assistantText: assistantReplyForTTSQuick,
+          userText,
+          usage: buildUsageSummary(dbUser, usage),
+          instantReply: instant,
+        };
+        return res.json(fallback);
+      }
+
+      const quickPayload = {
+        type: 'voice',
+        audio: ttsResultQuick.base64,
+        audioMimeType: ttsResultQuick.mimeType,
+        text: assistantReplyForTTSQuick,
+        assistantText: assistantReplyForTTSQuick,
+        userText,
+        usage: buildUsageSummary(dbUser, usage),
+        instantReply: instant,
+        engine: 'instant-shallow',
+      };
+
+      return res.json(quickPayload);
+    }
 
     // Resolve conversation
     let cid = null;
@@ -1120,12 +1175,22 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     const engineTimings = engineResult.timings || {};
 
-    const engineMode = decideEngineMode({
+    let engineMode = decideEngineMode({
       isPremiumUser: isPremiumUser || isTester,
       primaryEmotion: emo.primaryEmotion,
       intensity: emo.intensity,
       conversationLength: recentMessagesForEngine.length,
     });
+
+    if (engine === 'lite') {
+      engineMode = ENGINE_MODES.CORE_FAST;
+    } else if (engine === 'deep') {
+      if (isPremiumUser || isTester) {
+        engineMode = ENGINE_MODES.PREMIUM_DEEP;
+      } else {
+        engineMode = ENGINE_MODES.CORE_DEEP;
+      }
+    }
 
     const systemMessage = systemPrompt;
 
@@ -1429,6 +1494,10 @@ router.post('/message', async (req, res) => {
     const saveFlag = body.save !== false;
     const userText =
       typeof body.content === 'string' ? body.content.trim() : '';
+    const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
+    const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
+      ? engineRaw
+      : 'balanced';
 
     console.log(
       '[Diagnostic] Incoming Request: route="/api/chat/message" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
@@ -1510,6 +1579,23 @@ router.post('/message', async (req, res) => {
     const personaText = isArabicConversation ? persona.ar : persona.en;
     const languageForEngine =
       lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en';
+
+    // Ultra-fast path: trivial greetings / acknowledgements.
+    if (isQuickPhrase(userText)) {
+      const instant = buildInstantReply(userText, { language: languageForEngine });
+      const quickText =
+        (instant && typeof instant.text === 'string' && instant.text.trim()) ||
+        (isArabicConversation ? 'أنا معك.' : "I'm right here with you.");
+
+      const responsePayloadQuick = {
+        reply: quickText,
+        usage: buildUsageSummary(dbUser, usage),
+        instantReply: instant,
+        engine: 'instant-shallow',
+      };
+
+      return res.json(responsePayloadQuick);
+    }
 
     // Resolve conversation
     let cid = null;
@@ -1628,12 +1714,22 @@ router.post('/message', async (req, res) => {
     stateReadMs = engineTimings.stateReadMs ?? 0;
     engineTotalMs = engineTimings.totalMs ?? 0;
 
-    const engineMode = decideEngineMode({
+    let engineMode = decideEngineMode({
       isPremiumUser: isPremiumUser || isTester,
       primaryEmotion: emo.primaryEmotion,
       intensity: emo.intensity,
       conversationLength: recentMessagesForEngine.length,
     });
+
+    if (engine === 'lite') {
+      engineMode = ENGINE_MODES.CORE_FAST;
+    } else if (engine === 'deep') {
+      if (isPremiumUser || isTester) {
+        engineMode = ENGINE_MODES.PREMIUM_DEEP;
+      } else {
+        engineMode = ENGINE_MODES.CORE_DEEP;
+      }
+    }
 
     const systemMessage = systemPrompt;
 

@@ -20,11 +20,148 @@ const {
 const { buildPhase4MemoryBlock } = require('../pipeline/memory/Phase4PromptBuilder');
 const { getIdentityMemory } = require('../pipeline/memory/memoryKernel');
 
+// Engine mode runners (lite/balanced/deep)
+let runLiteEngine = null;
+let runBalancedEngine = null;
+let runDeepEngine = null;
+try {
+  // Lazy require so older deployments without these files still boot
+  // (routes will only call them when files exist).
+  // eslint-disable-next-line global-require, import/no-unresolved
+  runLiteEngine = require('./emotionalEngine/modes/liteEngine');
+  // eslint-disable-next-line global-require, import/no-unresolved
+  runBalancedEngine = require('./emotionalEngine/modes/balancedEngine');
+  // eslint-disable-next-line global-require, import/no-unresolved
+  runDeepEngine = require('./emotionalEngine/modes/deepEngine');
+} catch (_) {
+  // Best-effort: if mode files are missing, engine dispatcher will fall back.
+}
+
 const ENGINE_MODES = {
   CORE_FAST: 'CORE_FAST',
   CORE_DEEP: 'CORE_DEEP',
   PREMIUM_DEEP: 'PREMIUM_DEEP',
 };
+
+// Ultra-fast path for trivial greetings/acknowledgements.
+// This is intentionally conservative and only fires for very short, common
+// phrases so that deeper emotional logic is not bypassed unnecessarily.
+function isQuickPhrase(content) {
+  if (!content) return false;
+  const raw = String(content).trim();
+  if (!raw) return false;
+
+  // Hard limit: only 1–3 very short tokens, overall length small.
+  if (raw.length > 32) return false;
+
+  const lower = raw.toLowerCase();
+
+  // Normalize common punctuation/emojis away for matching.
+  const normalized = lower
+    .replace(/[!.,؟?\u061F]+/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!normalized) return false;
+
+  // Single- and two-word English quick phrases.
+  const quickSetEn = new Set([
+    'hi',
+    'hi there',
+    'hello',
+    'hey',
+    'hey there',
+    'yo',
+    'sup',
+    'good morning',
+    'good night',
+    'bye',
+    'goodbye',
+    'ok',
+    'okay',
+    'k',
+    'kk',
+    'thanks',
+    'thank you',
+    'thx',
+    'thanks a lot',
+  ]);
+
+  // Arabic and Arabizi quick phrases (greetings / light check-ins).
+  const quickSetAr = new Set([
+    'مرحبا',
+    'هلا',
+    'هلا والله',
+    'اهلا',
+    'اهلا وسهلا',
+    'اهلين',
+    'أهلين',
+    'السلام عليكم',
+    'وعليكم السلام',
+    'شلونك',
+    'شلونج',
+    'كيفك',
+    'كيف الحال',
+    'شو الاخبار',
+    'شو الأخبار',
+    'شو الاخبار؟',
+    'شو الأخبار؟',
+    'تمام',
+    'تمام الحمدلله',
+    'الحمدلله',
+    'اوكي',
+    'أوكي',
+    'اوكيه',
+    'شكرا',
+    'شكراً',
+    'يسلمو',
+    'تسلم',
+  ]);
+
+  if (quickSetEn.has(normalized) || quickSetAr.has(normalized)) {
+    return true;
+  }
+
+  // Very small heuristic for Arabizi/mixtures like "salam", "marhaba", etc.
+  const quickRegexes = [
+    /^(hi+|hey+|yo+|helo+|heloo+)$/i,
+    /^(ok+|oki+|okay+)$/i,
+    /^(thx|thanx)$/i,
+    /^(salam|salam alaikum|salam alikom)$/i,
+    /^(marhaba|ahlan|ahla+|hala+|hala wallah)$/i,
+  ];
+
+  for (const re of quickRegexes) {
+    if (re.test(normalized)) return true;
+  }
+
+  return false;
+}
+
+function buildInstantReply(text, opts = {}) {
+  const isAr = opts.language === 'ar' || opts.language === 'mixed';
+  const repliesEn = [
+    "Hi! I'm here with you ❤️",
+    'Hey! How can I support you right now?',
+    "I'm right here.",
+    'Everything okay?',
+  ];
+  const repliesAr = [
+    'هلا فيك ❤️',
+    'أهلاً! كيف أقدر أساعدك؟',
+    'أنا معك.',
+    'شو صاير؟',
+  ];
+
+  const pool = isAr ? repliesAr : repliesEn;
+  const idx = Math.floor(Math.random() * pool.length);
+
+  return {
+    role: 'assistant',
+    text: pool[idx] || pool[0],
+    model: 'instant-shallow',
+  };
+}
 
 function decideEngineMode({ isPremiumUser, primaryEmotion, intensity, conversationLength }) {
   const safeIntensity = Number.isFinite(Number(intensity)) ? Number(intensity) : 2;
@@ -864,4 +1001,6 @@ module.exports = {
   ENGINE_MODES,
   decideEngineMode,
   getDialectGuidance,
+  isQuickPhrase,
+  buildInstantReply,
 };

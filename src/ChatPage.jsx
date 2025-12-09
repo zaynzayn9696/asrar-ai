@@ -153,6 +153,13 @@ const TONES_UI = [
 
 const CHAT_HISTORY_KEY = "asrar-chat-history";
 
+const getInitialEngine = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("asrar-engine-mode") || "balanced";
+  }
+  return "balanced";
+};
+
 const buildHistoryStorageKey = (userId, characterId, convId) => {
   const uid = userId == null ? "anon" : String(userId);
   const char = characterId || "unknown";
@@ -250,6 +257,7 @@ export default function ChatPage() {
   const [modalText, setModalText] = useState("");
   const [isBlocked, setIsBlocked] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [selectedEngine, setSelectedEngine] = useState(getInitialEngine);
 
   // Whispers / timeline UI state
   const [recentWhispers, setRecentWhispers] = useState([]);
@@ -311,6 +319,13 @@ export default function ChatPage() {
   useEffect(() => {
     setUsageInfo(user?.usage || null);
   }, [user]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem("asrar-engine-mode", selectedEngine);
+    } catch (_) {}
+  }, [selectedEngine]);
 
   // If the user has already hit their daily limit (e.g. 5/5) when the
   // page loads or after a refresh, show the same limit banner and timer
@@ -1094,6 +1109,7 @@ useEffect(() => {
           lang: conversationLang,
           dialect: selectedDialect || "msa",
           tone: selectedTone,
+          engine: selectedEngine,
         }),
       });
 
@@ -1538,6 +1554,7 @@ useEffect(() => {
           form.append("lang", conversationLang);
           form.append("dialect", selectedDialect || "msa");
           form.append("tone", selectedTone);
+          form.append("engine", selectedEngine);
           if (conversationId) {
             form.append("conversationId", String(conversationId));
           }
@@ -2099,6 +2116,26 @@ useEffect(() => {
                   ? "قد يخطئ الذكاء الاصطناعي أحياناً، فلا تعتمد عليه وحده في القرارات الحساسة."
                   : "AI may make mistakes sometimes. Do not rely on it alone for sensitive decisions."}
               </p>
+              <div className="asrar-chat-engine-row">
+                <label className="asrar-chat-engine-label">
+                  {isAr ? "عمق الرد" : "Response Depth"}
+                  <select
+                    className="asrar-chat-engine-select"
+                    value={selectedEngine}
+                    onChange={(e) => setSelectedEngine(e.target.value)}
+                  >
+                    <option value="lite">
+                      {isAr ? "خفيف (سريع)" : "Lite (Fast)"}
+                    </option>
+                    <option value="balanced">
+                      {isAr ? "متوازن (افتراضي)" : "Balanced (Default)"}
+                    </option>
+                    <option value="deep">
+                      {isAr ? "عميق (عاطفي)" : "Deep (Emotional)"}
+                    </option>
+                  </select>
+                </label>
+              </div>
               {(() => {
                 const isPrem = !!(
                   user?.isPremium || user?.plan === "premium" || user?.plan === "pro"
