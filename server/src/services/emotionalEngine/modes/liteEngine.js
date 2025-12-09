@@ -17,10 +17,20 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * @param {string} params.personaText
  * @param {('ar'|'en'|'mixed')} params.language
  * @param {string} params.dialect
+ * @param {string=} params.model         Explicit model override (e.g. gpt-4o-mini / gpt-4o)
+ * @param {boolean=} params.isPremiumUser Whether the caller is premium/tester
  * @returns {Promise<{ role: 'assistant', text: string, model: string }>}
  */
-async function runLiteEngine({ userMessage, recentMessages, personaText, language, dialect }) {
+async function runLiteEngine({ userMessage, recentMessages, personaText, language, dialect, model, isPremiumUser }) {
   const coreModel = process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
+  const premiumModel = process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o';
+
+  const routedModel =
+    typeof model === 'string' && model.trim()
+      ? model.trim()
+      : isPremiumUser
+        ? premiumModel
+        : coreModel;
 
   const isAr = language === 'ar';
   const sysLines = [];
@@ -58,7 +68,7 @@ async function runLiteEngine({ userMessage, recentMessages, personaText, languag
   messages.push({ role: 'user', content: String(userMessage || '').slice(0, 400) });
 
   const completion = await openai.chat.completions.create({
-    model: coreModel,
+    model: routedModel,
     temperature: 0.6,
     max_tokens: 40,
     messages,
@@ -69,7 +79,7 @@ async function runLiteEngine({ userMessage, recentMessages, personaText, languag
   return {
     role: 'assistant',
     text: text || (isAr ? 'أنا معك، احكي لي أكثر لو حابب.' : "I'm here with you, tell me a bit more if you want."),
-    model: coreModel,
+    model: routedModel,
   };
 }
 

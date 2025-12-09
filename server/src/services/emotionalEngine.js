@@ -51,32 +51,26 @@ function isQuickPhrase(content) {
   const raw = String(content).trim();
   if (!raw) return false;
 
-  // Hard limit: only 1–3 very short tokens, overall length small.
-  if (raw.length > 32) return false;
+  // Only treat short, greeting/small-talk style messages as quick phrases.
+  if (raw.length >= 40) return false;
 
   const lower = raw.toLowerCase();
 
   // Normalize common punctuation/emojis away for matching.
   const normalized = lower
-    .replace(/[!.,؟?\u061F]+/g, '')
+    .replace(/[!.,؟?\u061F]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
   if (!normalized) return false;
 
-  // Single- and two-word English quick phrases.
-  const quickSetEn = new Set([
+  // Exact short acknowledgements and fillers.
+  const simpleEn = [
     'hi',
-    'hi there',
     'hello',
     'hey',
-    'hey there',
     'yo',
     'sup',
-    'good morning',
-    'good night',
-    'bye',
-    'goodbye',
     'ok',
     'okay',
     'k',
@@ -84,42 +78,61 @@ function isQuickPhrase(content) {
     'thanks',
     'thank you',
     'thx',
-    'thanks a lot',
-  ]);
-
-  // Arabic and Arabizi quick phrases (greetings / light check-ins).
-  const quickSetAr = new Set([
+  ];
+  const simpleAr = [
     'مرحبا',
     'هلا',
-    'هلا والله',
     'اهلا',
     'اهلا وسهلا',
     'اهلين',
     'أهلين',
-    'السلام عليكم',
-    'وعليكم السلام',
-    'شلونك',
-    'شلونج',
-    'كيفك',
-    'كيف الحال',
-    'شو الاخبار',
-    'شو الأخبار',
-    'شو الاخبار؟',
-    'شو الأخبار؟',
+    'سلام',
+    'سلامات',
+    'هاي',
     'تمام',
     'تمام الحمدلله',
     'الحمدلله',
-    'اوكي',
-    'أوكي',
-    'اوكيه',
     'شكرا',
     'شكراً',
     'يسلمو',
     'تسلم',
-  ]);
+  ];
 
-  if (quickSetEn.has(normalized) || quickSetAr.has(normalized)) {
+  if (simpleEn.includes(normalized) || simpleAr.includes(normalized)) {
     return true;
+  }
+
+  // Multi-word greetings / small talk, including Arabic phrases.
+  const phrases = [
+    'hi how are you',
+    'hi how r u',
+    'hello how are you',
+    'hey how are you',
+    "hey what's up",
+    'hey whats up',
+    "what's up",
+    'whats up',
+    'مرحبا كيفك',
+    'هلا كيف الحال',
+    'هلا شو الاخبار',
+    'هلا شو الأخبار',
+    'مراحب',
+    'اخبارك',
+    'أخبارك',
+    'اخبارك؟',
+    'أخبارك؟',
+    'يسعد صباحك',
+    'يسعد مساك',
+    'شلونك',
+    'شلونج',
+    'سلام عليكم',
+    'السلام عليكم',
+  ];
+
+  for (const phrase of phrases) {
+    if (normalized.includes(phrase)) {
+      return true;
+    }
   }
 
   // Very small heuristic for Arabizi/mixtures like "salam", "marhaba", etc.
@@ -147,10 +160,10 @@ function buildInstantReply(text, opts = {}) {
     'Everything okay?',
   ];
   const repliesAr = [
-    'هلا فيك ❤️',
-    'أهلاً! كيف أقدر أساعدك؟',
-    'أنا معك.',
-    'شو صاير؟',
+    'هلا فيك يا قلبي ❤️',
+    'هلا والله، كيفك اليوم؟',
+    'شو أخبارك؟ طمّني عنك شوي.',
+    'أنا هون معك يا قلبي، احكي لي أكثر.',
   ];
 
   const pool = isAr ? repliesAr : repliesEn;
@@ -754,13 +767,14 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
 }
 
 /**
- * Phase 3 — Multi-model router: choose model based on intensity and state.
+ * Phase 3 — Multi-model router for user-facing chat replies.
+ * Only distinguishes between free vs premium; engine selection is handled
+ * at the route level (lite vs balanced).
  * @param {Object} params
- * @param {{ intensity:number }} params.emotion
- * @param {{ currentState?:string }|null} params.convoState
+ * @param {('lite'|'balanced')=} params.engine
  * @param {boolean} params.isPremiumUser
  */
-function selectModelForResponse({ emotion, convoState, engineMode, isPremiumUser }) {
+function selectModelForResponse({ engine, isPremiumUser }) {
   const coreModel = process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
   const premiumModel = process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o';
 
@@ -1001,6 +1015,7 @@ module.exports = {
   ENGINE_MODES,
   decideEngineMode,
   getDialectGuidance,
+  runLiteEngine,
   isQuickPhrase,
   buildInstantReply,
 };

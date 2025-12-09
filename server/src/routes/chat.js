@@ -26,14 +26,13 @@ const {
   getDialectGuidance,
   isQuickPhrase,
   buildInstantReply,
+  runLiteEngine,
 } = require('../services/emotionalEngine');
 const {
   logEmotionalTimelineEvent,
   updateUserEmotionProfile,
   getLongTermEmotionalSnapshot,
   detectEmotionalTriggers,
-  updateEmotionalPatterns,
-  logTriggerEventsForMessage,
 } = require('../services/emotionalLongTerm');
 const {
   updateTrustOnMessage,
@@ -290,9 +289,6 @@ async function applyUsageLimitAndIncrement({
 // ----------------------------------------------------------------------
 // CHARACTER PERSONAS (Updated: MENA Style, Authentic Dialects)
 // ----------------------------------------------------------------------
-// ----------------------------------------------------------------------
-// CHARACTER PERSONAS (Updated: MENA Style, Authentic Dialects)
-// ----------------------------------------------------------------------
 const CHARACTER_PERSONAS = {
   // 1. Sheikh Al-Hara (Wisdom/Guidance)
   'sheikh-al-hara': {
@@ -320,11 +316,11 @@ const CHARACTER_PERSONAS = {
     ar: `أنت "شيخ الحارة"؛ كبير الحارة اللي الناس بتقصده على القهوة عشان ياخدوا رأيه.
 - الهوية: رجل كبير من الشرق الأوسط، عايش الدنيا وشاف الحلو والمر، يحكي من خبرة مش من كتب.
 - الجو العام: هادي، ثابت، أبوي/عمّي؛ الكلام طالع من قلب حنون بس عقل واقعي.
-- عبارات مميّزة: "اسمع يا ابني"، "يا بنتي"، "والله"، "خَلّيها على الله"، "يا زلمة".
-- تستخدم أمثالاً شعبية مثل: "الدنيا دوارة"، "الصبر مفتاح الفرج"، "اللي ما يعرفك يجهلك" وقت ما يكونون مناسبين.
+- عبارات مميّزة: "اسمع يا ابني", "يا بنتي", "يا زلمة", "والله", "خَلّيها على الله".
+- تستخدم أمثالاً شعبية مثل: "الدنيا دوارة", "الصبر مفتاح الفرج", "اللي ما يعرفك يجهلك" وقت ما يكونون مناسبين.
 - اللهجة واللغة:
   - في الردود العربية أو الممزوجة، التزم باللهجة اللي يحددها لك النظام (أردني، لبناني، مصري، خليجي...) وتكلم كأنك كبير من نفس البيئة.
-  - في الردود الإنجليزية، استخدم إنجليزي بسيط لكن لا تترك روح المنطقة: استخدم كلمات مثل "wallah", "inshallah", "ya akhi" عند اللزوم.
+  - في الردود الإنجليزية، استخدم إنجليزي بسيط لكن لا تترك روح المنطقة: استخدم كلمات مثل "wallah", "inshallah", "ya akhi" حيث اللزوم.
   - لو المستخدم يكتب أرابيزية، ممكن ترجع عليه بشيء بسيط منها بس خليك واضح.
 - هيكل كل رد:
   1) ابدأ باعتراف صريح بمشاعره بصوت الكبير: "اسمع يا ابني، إحساسك مفهوم ومش عيب...".
@@ -934,7 +930,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const bodyConversationId = body.conversationId;
     const saveFlag = body.save !== false;
     const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
-    const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
+    const engine = ['lite', 'balanced'].includes(engineRaw)
       ? engineRaw
       : 'balanced';
 
@@ -1020,7 +1016,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       const instant = buildInstantReply(userText, { language: languageForEngine });
       const aiTextQuick =
         (instant && typeof instant.text === 'string' && instant.text.trim()) ||
-        (isArabicConversation ? 'أنا معك.' : "I'm right here with you.");
+        (isArabicConversation
+          ? 'أنا هون معك يا قلبي.'
+          : "I'm right here with you.");
 
       const assistantReplyForTTSQuick = normalizeAssistantReplyForTTS(
         aiTextQuick,
@@ -1108,6 +1106,74 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         };
       })
       .filter(Boolean);
+
+    // Lite engine: skip emotional pipeline entirely when engine === 'lite'.
+    if (engine === 'lite') {
+      const routedModel = selectModelForResponse({
+        engine: 'lite',
+        isPremiumUser: isPremiumUser || isTester,
+      });
+
+      const liteResult = await runLiteEngine({
+        userMessage: userText,
+        recentMessages: recentMessagesForEngine,
+        personaText,
+        language: languageForEngine,
+        dialect,
+        model: routedModel,
+        isPremiumUser: isPremiumUser || isTester,
+      });
+
+      const aiTextLite =
+        (liteResult &&
+          typeof liteResult.text === 'string' &&
+          liteResult.text.trim()) ||
+        (isArabicConversation
+          ? 'أنا هون معك يا قلبي، احكي لي أكثر لو حابب.'
+          : "I'm here with you, tell me a bit more if you want.");
+
+      const assistantReplyForTTSLite = normalizeAssistantReplyForTTS(
+        aiTextLite,
+        languageForEngine
+      );
+      const spokenTextLite = prepareTextForTTS(assistantReplyForTTSLite);
+
+      const tTtsStartLite = Date.now();
+      const ttsResultLite = await generateVoiceReply(spokenTextLite, {
+        characterId,
+        format: 'mp3',
+      });
+      ttsMs = Date.now() - tTtsStartLite;
+
+      if (!ttsResultLite) {
+        const fallbackLite = {
+          type: 'voice',
+          audio: null,
+          audioMimeType: 'audio/mpeg',
+          text: assistantReplyForTTSLite,
+          assistantText: assistantReplyForTTSLite,
+          userText,
+          usage: buildUsageSummary(dbUser, usage),
+          engine: 'lite',
+          model: routedModel,
+        };
+        return res.json(fallbackLite);
+      }
+
+      const litePayload = {
+        type: 'voice',
+        audio: ttsResultLite.base64,
+        audioMimeType: ttsResultLite.mimeType,
+        text: assistantReplyForTTSLite,
+        assistantText: assistantReplyForTTSLite,
+        userText,
+        usage: buildUsageSummary(dbUser, usage),
+        engine: 'lite',
+        model: routedModel,
+      };
+
+      return res.json(litePayload);
+    }
 
     // Emotional engine
     const engineResult = await runEmotionalEngine({
@@ -1208,9 +1274,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     openAIMessages.push({ role: 'user', content: userText });
 
     const routedModel = selectModelForResponse({
-      emotion: emo,
-      convoState: flowState || { currentState: 'NEUTRAL' },
-      engineMode,
+      engine: 'balanced',
       isPremiumUser: isPremiumUser || isTester,
     });
 
@@ -1495,7 +1559,7 @@ router.post('/message', async (req, res) => {
     const userText =
       typeof body.content === 'string' ? body.content.trim() : '';
     const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
-    const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
+    const engine = ['lite', 'balanced'].includes(engineRaw)
       ? engineRaw
       : 'balanced';
 
@@ -1585,7 +1649,9 @@ router.post('/message', async (req, res) => {
       const instant = buildInstantReply(userText, { language: languageForEngine });
       const quickText =
         (instant && typeof instant.text === 'string' && instant.text.trim()) ||
-        (isArabicConversation ? 'أنا معك.' : "I'm right here with you.");
+        (isArabicConversation
+          ? 'أنا هون معك يا قلبي.'
+          : "I'm right here with you.");
 
       const responsePayloadQuick = {
         reply: quickText,
@@ -1641,6 +1707,41 @@ router.post('/message', async (req, res) => {
         };
       })
       .filter(Boolean);
+
+    // Lite engine: skip emotional pipeline entirely when engine === 'lite'.
+    if (engine === 'lite') {
+      const routedModel = selectModelForResponse({
+        engine: 'lite',
+        isPremiumUser: isPremiumUser || isTester,
+      });
+
+      const liteResult = await runLiteEngine({
+        userMessage: userText,
+        recentMessages: recentMessagesForEngine,
+        personaText,
+        language: languageForEngine,
+        dialect,
+        model: routedModel,
+        isPremiumUser: isPremiumUser || isTester,
+      });
+
+      const aiMessageLite =
+        (liteResult &&
+          typeof liteResult.text === 'string' &&
+          liteResult.text.trim()) ||
+        (isArabicConversation
+          ? 'أنا هون معك يا قلبي، احكي لي أكثر لو حابب.'
+          : "I'm here with you, tell me a bit more if you want.");
+
+      const responsePayloadLite = {
+        reply: aiMessageLite,
+        usage: buildUsageSummary(dbUser, usage),
+        engine: 'lite',
+        model: routedModel,
+      };
+
+      return res.json(responsePayloadLite);
+    }
 
     // Emotional engine
     const engineResult = await runEmotionalEngine({
@@ -1747,9 +1848,7 @@ router.post('/message', async (req, res) => {
     openAIMessages.push({ role: 'user', content: userText });
 
     const routedModel = selectModelForResponse({
-      emotion: emo,
-      convoState: flowState || { currentState: 'NEUTRAL' },
-      engineMode,
+      engine: 'balanced',
       isPremiumUser: isPremiumUser || isTester,
     });
 

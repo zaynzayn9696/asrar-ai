@@ -15,11 +15,20 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * @param {string} params.userMessage
  * @param {Array<{role:string, content:string}>} params.recentMessages
  * @param {string} params.systemPrompt
- * @param {string} params.model
+ * @param {string=} params.model         Explicit model override (e.g. gpt-4o-mini / gpt-4o)
+ * @param {boolean=} params.isPremiumUser Whether the caller is premium/tester
  * @returns {Promise<{ role: 'assistant', text: string, model: string }>}
  */
-async function runBalancedEngine({ userMessage, recentMessages, systemPrompt, model }) {
-  const routedModel = model || process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
+async function runBalancedEngine({ userMessage, recentMessages, systemPrompt, model, isPremiumUser }) {
+  const coreModel = process.env.OPENAI_CORE_MODEL || 'gpt-4o-mini';
+  const premiumModel = process.env.OPENAI_PREMIUM_MODEL || 'gpt-4o';
+
+  const routedModel =
+    typeof model === 'string' && model.trim()
+      ? model.trim()
+      : isPremiumUser
+        ? premiumModel
+        : coreModel;
 
   const messages = [];
   messages.push({ role: 'system', content: systemPrompt });
