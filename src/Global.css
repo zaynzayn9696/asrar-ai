@@ -151,3 +151,75 @@ html, body {
   font-weight: 500;
   text-align: center;
 }
+
+/* GLOBAL AUTH SPLASH ---------------------------------------------------- */
+
+.asrar-splash {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #05080b 0%, #020309 60%, #000000 100%);
+}
+
+.asrar-splash-orbit {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(24, 209, 218, 0.18), transparent 60%),
+    radial-gradient(circle at 70% 100%, rgba(133, 76, 255, 0.15), transparent 60%);
+  filter: blur(12px);
+  opacity: 0.9;
+}
+
+.asrar-splash-core {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 42px;
+  border-radius: 999px;
+  background: radial-gradient(circle at top, rgba(7, 19, 32, 0.96), rgba(2, 5, 12, 0.98));
+  box-shadow:
+    0 0 40px rgba(24, 209, 218, 0.55),
+    0 0 140px rgba(3, 10, 24, 1);
+  border: 1px solid rgba(24, 209, 218, 0.5);
+}
+
+.asrar-splash-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: 10px;
+  animation: asrar-splash-pulse 1.5s ease-in-out infinite;
+}
+
+.asrar-splash-tagline {
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: #eaf6ff;
+  opacity: 0.9;
+}
+
+@keyframes asrar-splash-pulse {
+  0% { transform: scale(0.98); opacity: 0.7; }
+  50% { transform: scale(1.03); opacity: 1; }
+  100% { transform: scale(0.98); opacity: 0.7; }
+}
+
+/* PAGE FADE-IN ---------------------------------------------------------- */
+
+.asrar-page-fade-in {
+  opacity: 0;
+  animation: asrar-page-fade-in 0.2s ease-out forwards;
+}
+
+@keyframes asrar-page-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

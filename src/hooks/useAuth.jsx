@@ -12,7 +12,7 @@ export const TOKEN_KEY = "asrar_token";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   // Load current user from /api/auth/me using the cookie
@@ -102,7 +102,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isAuthLoading, logout }}>
+    <AuthContext.Provider
+      value={{ user, setUser, isAuthLoading, loading: isAuthLoading, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

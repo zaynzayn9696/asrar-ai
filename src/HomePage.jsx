@@ -14,6 +14,7 @@ import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
 import AsrarHeader from "./AsrarHeader";
 import FeaturesAccordion from "./components/FeaturesAccordion";
+import SplashScreen from "./components/SplashScreen";
 
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
 const CHARACTERS = [
@@ -482,7 +483,7 @@ function getMiniChatReply(message, isAr) {
 
 export default function HomePage() {
   // language + mood gate
-  const { user, logout, isAuthLoading } = useAuth();
+  const { user, logout, isAuthLoading, loading } = useAuth();
   const [language, setLanguage] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("asrar-lang") || "ar";
@@ -725,12 +726,17 @@ export default function HomePage() {
   const getRole = (c) => (isAr ? c.roleAr : c.roleEn);
   const getDesc = (c) => (isAr ? c.descriptionAr : c.descriptionEn);
 
-  if (isAuthLoading) {
-    return null;
+  const authPending = (typeof user === "undefined") || isAuthLoading || loading;
+  if (authPending) {
+    return <SplashScreen />;
   }
 
   return (
-    <div className={`asrar-page ${isAr ? "asrar-page--ar" : ""}`}>
+    <div
+      className={`asrar-page asrar-page-fade-in ${
+        isAr ? "asrar-page--ar" : ""
+      }`}
+    >
       {/* CUSTOM HOME PAGE HEADER */}
      <header className="asrar-home-header">
   {/* LEFT: Logo */}
