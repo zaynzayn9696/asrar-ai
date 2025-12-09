@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import "./Dashboard.css";
 import AsrarFooter from "./AsrarFooter";
 import CharacterCarousel from "./CharacterCarousel";
+import HomeSplash from "./components/HomeSplash";
 
 import abuZainAvatar from "./assets/abu_zain_2.png";
 import hanaAvatar from "./assets/nour_2.png";
@@ -260,18 +261,8 @@ export default function Dashboard() {
   const isTablet = windowWidth >= 768 && windowWidth < 1200;
   const isMobile = windowWidth < 768;
 
-  // Show loading state while checking auth
   if (isAuthLoading) {
-    return (
-      <div className={`asrar-dash-page ${isAr ? "asrar-dash-page--ar" : ""}`}>
-        <div className="asrar-dash-orbit asrar-dash-orbit--top" />
-        <div className="asrar-dash-orbit asrar-dash-orbit--bottom" />
-        <div className="asrar-dash-loading">
-          <div className="asrar-loading-spinner"></div>
-          <p>{isAr ? "جاري تحميل لوحة التحكم..." : "Loading your dashboard..."}</p>
-        </div>
-      </div>
-    );
+    return <HomeSplash />;
   }
 
   // If not authenticated, redirect to login

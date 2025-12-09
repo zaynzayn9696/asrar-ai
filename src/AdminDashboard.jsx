@@ -6,6 +6,7 @@ import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
 import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
+import HomeSplash from "./components/HomeSplash";
 
 // Stat Card Component
 function StatCard({ label, value, subtext, isAr }) {
@@ -132,6 +133,8 @@ export default function AdminDashboard() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const [isPageLoading, setIsPageLoading] = useState(true);
+
   useEffect(() => {
     let aborted = false;
     async function load() {
@@ -193,6 +196,15 @@ export default function AdminDashboard() {
     if (typeof window !== "undefined") localStorage.setItem("asrar-lang", newLang);
     setLang(newLang);
   };
+
+  useEffect(() => {
+    const tId = setTimeout(() => setIsPageLoading(false), 900);
+    return () => clearTimeout(tId);
+  }, []);
+
+  if (isPageLoading) {
+    return <HomeSplash />;
+  }
 
   return (
     <div className={`asrar-page admin-page ${isAr ? "asrar-page--ar" : ""}`} dir={isAr ? "rtl" : "ltr"}>

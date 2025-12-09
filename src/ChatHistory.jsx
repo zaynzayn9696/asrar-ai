@@ -7,6 +7,7 @@ import AsrarFooter from "./AsrarFooter";
 import { useAuth, TOKEN_KEY } from "./hooks/useAuth";
 import { API_BASE } from "./apiBase";
 import CharacterCarousel from "./CharacterCarousel";
+import HomeSplash from "./components/HomeSplash";
 
 import abuZainAvatar from "./assets/abu_zain_2.png";
 import hanaAvatar from "./assets/hana_2.png";
@@ -320,6 +321,17 @@ export default function ChatHistory() {
     if (text.length <= 120) return text;
     return text.slice(0, 120) + "…";
   };
+
+  const [isPageLoading, setIsPageLoading] = useState(true);
+
+  useEffect(() => {
+    const tId = setTimeout(() => setIsPageLoading(false), 900);
+    return () => clearTimeout(tId);
+  }, []);
+
+  if (isPageLoading) {
+    return <HomeSplash />;
+  }
 
   return (
     <div

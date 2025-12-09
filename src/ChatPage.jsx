@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./ChatPage.css";
 import AsrarHeader from "./AsrarHeader";
+import HomeSplash from "./components/HomeSplash";
 
 import VoiceMessageBubble from "./VoiceMessageBubble"; // tap-to-play audio bubble for voice replies
 import WhispersBadge from "./WhispersBadge";
@@ -259,6 +260,7 @@ export default function ChatPage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedEngine, setSelectedEngine] = useState(getInitialEngine);
   const [isEngineMenuOpen, setIsEngineMenuOpen] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   // Whispers / timeline UI state
   const [recentWhispers, setRecentWhispers] = useState([]);
@@ -1812,6 +1814,15 @@ useEffect(() => {
     } catch (_) {}
     setIsRecording(false);
   };
+
+  useEffect(() => {
+    const tId = setTimeout(() => setIsPageLoading(false), 900);
+    return () => clearTimeout(tId);
+  }, []);
+
+  if (isPageLoading) {
+    return <HomeSplash />;
+  }
 
   return (
     <div

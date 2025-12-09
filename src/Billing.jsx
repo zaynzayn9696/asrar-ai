@@ -1,11 +1,12 @@
 // src/Billing.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Billing.css";
 import AsrarHeader from "./AsrarHeader";
 import AsrarFooter from "./AsrarFooter";
 import { useAuth } from "./hooks/useAuth";
 import { createCheckoutSession, getSubscriptionDetails, cancelSubscriptionAtPeriodEnd } from "./api/billing";
+import HomeSplash from "./components/HomeSplash";
 
 // --- LANGUAGE ----------------------------------------------------
 const getInitialLang = () => {
@@ -75,6 +76,8 @@ export default function Billing() {
   const [lang, setLang] = useState(getInitialLang);
   const isAr = lang === "ar";
   const t = BILLING_TEXT[isAr ? "ar" : "en"];
+
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   const plan = user?.plan || "free";
   const usage = user?.usage || null;
@@ -244,6 +247,15 @@ export default function Billing() {
         : "Adding a payment method will be enabled later."
     );
   };
+
+  useEffect(() => {
+    const tId = setTimeout(() => setIsPageLoading(false), 900);
+    return () => clearTimeout(tId);
+  }, []);
+
+  if (isPageLoading) {
+    return <HomeSplash />;
+  }
 
   return (
     <div
