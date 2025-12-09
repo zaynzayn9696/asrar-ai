@@ -19,6 +19,7 @@ import GoogleAuthComplete from "./GoogleAuthComplete";
 import AdminDashboard from "./AdminDashboard";
 import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
+import HomeSplash from "./components/HomeSplash";
 
 
 import { AuthProvider, useAuth } from "./hooks/useAuth"; // <-- make sure path is correct
@@ -49,13 +50,8 @@ function ProtectedRoute({ children }) {
     import.meta.env.VITE_ASRAR_DEV_BYPASS_AUTH === "true";
 
   if (isAuthLoading) {
-    // Show loading spinner while checking auth
-    return (
-      <div className="asrar-fullpage-loading">
-        <div className="asrar-loading-spinner"></div>
-        <p>Loading...</p>
-      </div>
-    );
+    // Use cinematic splash while checking auth
+    return <HomeSplash />;
   }
 
   if (!user) {
@@ -75,12 +71,7 @@ function AdminRoute({ children }) {
   const { user, isAuthLoading } = useAuth();
 
   if (isAuthLoading) {
-    return (
-      <div className="asrar-fullpage-loading">
-        <div className="asrar-loading-spinner"></div>
-        <p>Loading...</p>
-      </div>
-    );
+    return <HomeSplash />;
   }
 
   if (!user) {
@@ -100,12 +91,7 @@ function GuestOnlyRoute({ children }) {
   const { user, isAuthLoading } = useAuth();
 
   if (isAuthLoading) {
-    return (
-      <div className="asrar-fullpage-loading">
-        <div className="asrar-loading-spinner"></div>
-        <p>Loading...</p>
-      </div>
-    );
+    return <HomeSplash />;
   }
 
   if (user) {
