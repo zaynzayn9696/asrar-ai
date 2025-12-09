@@ -201,9 +201,10 @@ html, body {
   font-family: "Cinzel", serif;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  font-size: 0.78rem;
+  font-size: 1.15rem;
   color: #eaf6ff;
-  opacity: 0.9;
+  opacity: 0.95;
+  text-align: center;
 }
 
 @keyframes asrar-splash-pulse {
