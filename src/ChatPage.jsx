@@ -2100,10 +2100,7 @@ useEffect(() => {
                 </button>
                 {isEngineMenuOpen && (
                   <div
-                    className={
-                      "asrar-engine-menu" +
-                      (isAr ? " asrar-engine-menu--rtl" : "")
-                    }
+                    className="asrar-engine-menu"
                     role="menu"
                   >
                     <div className="asrar-engine-menu-header">

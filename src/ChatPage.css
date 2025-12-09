@@ -1047,11 +1047,12 @@
   padding: 8px 9px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
   cursor: pointer;
   color: #d7e9ff;
   font-size: 0.84rem;
-  text-align: start;
+  text-align: center;
   width: 100%;
   transition:
     background 140ms ease,
@@ -1089,7 +1090,7 @@
 }
 
 .asrar-engine-option-label {
-  flex: 1;
+  flex: 0 1 auto;
   font-family: "Tajawal", sans-serif;
 }
 
