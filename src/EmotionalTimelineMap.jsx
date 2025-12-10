@@ -272,13 +272,9 @@ export default function EmotionalTimelineMap({
 
                   return (
                     <div key={idx} className="asrar-mood-day">
-                      <div
-                        className={
-                          "mood-emoji" + moodClass
-                        }
-                      >
-                        {emoji}
-                      </div>
+                   <div className={"mood-orb" + moodClass}>
+  <div className="mood-orb-emoji">{emoji}</div>
+</div>
                       <div className="asrar-mood-labels">
                         <div className="asrar-timeline-date">{dateLabel}</div>
                         <div className="asrar-timeline-emotion">
