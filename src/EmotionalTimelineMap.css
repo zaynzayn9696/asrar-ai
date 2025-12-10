@@ -58,6 +58,13 @@
   justify-content: center;
 }
 
+@media (max-width: 900px) {
+  .asrar-timeline-layer {
+    align-items: flex-start;
+    justify-content: center;
+  }
+}
+
 .asrar-timeline-panel {
   width: min(760px, 100% - 2.5rem);
   max-height: min(560px, 100% - 3rem);
@@ -186,8 +193,8 @@
 
 .asrar-timeline-body {
   margin-top: 0.3rem;
-  flex: 1;
-  min-height: 140px;
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -300,11 +307,6 @@
 }
 
 @media (max-width: 480px) {
-  .asrar-timeline-layer {
-    align-items: flex-start;
-    justify-content: center;
-  }
-
   .asrar-timeline-panel {
     height: auto;
     max-height: calc(100vh - 20px);
@@ -319,10 +321,6 @@
     min-height: auto;
   }
 
-  .asrar-timeline-track {
-    padding-bottom: 0.15rem;
-  }
-
   .asrar-timeline-explainer {
     margin-top: 0.3rem;
   }
@@ -332,272 +330,83 @@
   }
 }
 
-/* Emotion Energy Stream – cinematic neon pillars + orbs */
+/* Daily Mood Icons Timeline */
 
-.asrar-energy-stream {
+.asrar-mood-timeline {
   position: relative;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 1.1rem;
   min-width: 100%;
-  padding: 0.1rem 0.35rem 0.55rem;
+  padding: 0.1rem 0.4rem 0.4rem;
   box-sizing: border-box;
 }
 
-.asrar-energy-base-line {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 32px;
-  height: 3px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgba(9, 32, 54, 0.95), rgba(29, 77, 119, 0.98));
-  box-shadow:
-    0 0 0 1px rgba(92, 196, 255, 0.45),
-    0 0 20px rgba(54, 178, 255, 0.96),
-    0 0 32px rgba(71, 148, 255, 0.9);
-  overflow: hidden;
-}
-
-.asrar-energy-base-line::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(180, 232, 255, 0.95) 25%,
-      transparent 50%,
-      rgba(180, 232, 255, 0.95) 75%,
-      transparent 100%);
-  background-size: 220px 100%;
-  animation: asrar-energy-base-shimmer 9s linear infinite;
-  opacity: 0.9;
-}
-
-@keyframes asrar-energy-base-shimmer {
-  0% {
-    background-position-x: -220px;
-  }
-  100% {
-    background-position-x: 220px;
-  }
-}
-
-.asrar-energy-pillar {
-  position: relative;
+.asrar-mood-day {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  min-width: 54px;
+  justify-content: flex-start;
+  min-width: 60px;
 }
 
-.asrar-energy-beam-wrapper {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 30px;
-}
-
-.asrar-energy-beam {
-  position: relative;
-  width: 14px;
-  border-radius: 999px 999px 10px 10px;
-  background: linear-gradient(180deg, #4af2ff, #7c4dff);
-  box-shadow:
-    0 0 18px rgba(44, 246, 255, 0.9),
-    0 0 32px rgba(123, 92, 255, 0.95);
-  overflow: hidden;
-}
-
-.asrar-energy-beam-core {
-  position: absolute;
-  inset: 10% 2px 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.9), transparent 55%);
-  opacity: 0.9;
-  mix-blend-mode: screen;
-}
-
-.asrar-energy-particles {
-  position: absolute;
-  inset: 8% 3px 4px;
-  background-image:
-    radial-gradient(circle at 50% 0%, rgba(214, 244, 255, 0.85), transparent 55%),
-    radial-gradient(circle at 20% 40%, rgba(190, 238, 255, 0.75), transparent 55%),
-    radial-gradient(circle at 80% 70%, rgba(170, 228, 255, 0.7), transparent 55%);
-  background-size: 5px 26px;
-  background-repeat: no-repeat;
-  opacity: 0.8;
-  mix-blend-mode: screen;
-  animation: asrar-energy-particles-drift 7s ease-in-out infinite;
-}
-
-@keyframes asrar-energy-particles-drift {
-  0% {
-    transform: translateY(8px);
-    opacity: 0.65;
-  }
-  50% {
-    transform: translateY(-10px);
-    opacity: 0.95;
-  }
-  100% {
-    transform: translateY(8px);
-    opacity: 0.65;
-  }
-}
-
-.asrar-energy-orb {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  width: 16px;
-  height: 16px;
+.asrar-mood-emoji {
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
-  transform: translateX(-50%);
-  background: radial-gradient(circle at 40% 20%, #ffffff, #9be7ff 55%, transparent 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.9rem;
+  background: radial-gradient(circle at 30% 20%, rgba(16, 46, 90, 0.98), rgba(3, 9, 20, 0.98));
   box-shadow:
-    0 0 0 2px rgba(218, 246, 255, 0.9),
-    0 0 22px rgba(160, 234, 255, 0.98),
-    0 0 38px rgba(160, 210, 255, 0.95);
-  animation:
-    asrar-energy-orb-float 4.2s ease-in-out infinite,
-    asrar-energy-orb-pulse 3.3s ease-in-out infinite;
+    0 0 0 1px rgba(151, 191, 255, 0.7),
+    0 0 20px rgba(92, 196, 255, 0.85),
+    0 0 36px rgba(111, 148, 255, 0.9);
 }
 
-@keyframes asrar-energy-orb-float {
-  0%,
-  100% {
-    transform: translate(-50%, 0);
-  }
-  50% {
-    transform: translate(-50%, -4px);
-  }
+.asrar-mood-emoji--sad {
+  background: radial-gradient(circle at 30% 20%, rgba(40, 64, 120, 0.98), rgba(10, 18, 40, 0.98));
 }
 
-@keyframes asrar-energy-orb-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 1px rgba(218, 246, 255, 0.85),
-      0 0 22px rgba(160, 234, 255, 0.95),
-      0 0 34px rgba(160, 210, 255, 0.9);
-  }
-  50% {
-    box-shadow:
-      0 0 0 2px rgba(230, 252, 255, 1),
-      0 0 28px rgba(196, 242, 255, 1),
-      0 0 42px rgba(172, 216, 255, 0.98);
-  }
+.asrar-mood-emoji--angry {
+  background: radial-gradient(circle at 30% 20%, rgba(140, 40, 40, 0.98), rgba(40, 8, 16, 0.98));
 }
 
-/* Emotion-specific tints for beams + orbs */
-
-.asrar-energy-beam--sad {
-  background: linear-gradient(180deg, #7fb3ff, #345dff);
-  box-shadow:
-    0 0 18px rgba(116, 178, 255, 0.9),
-    0 0 30px rgba(80, 130, 255, 0.95);
+.asrar-mood-emoji--anxious,
+.asrar-mood-emoji--stressed {
+  background: radial-gradient(circle at 30% 20%, rgba(160, 96, 40, 0.98), rgba(36, 14, 8, 0.98));
 }
 
-.asrar-energy-orb--sad {
-  background: radial-gradient(circle at 40% 20%, #ffffff, #b4d4ff 55%, transparent 72%);
+.asrar-mood-emoji--lonely {
+  background: radial-gradient(circle at 30% 20%, rgba(88, 56, 140, 0.98), rgba(20, 10, 40, 0.98));
 }
 
-.asrar-energy-beam--anxious {
-  background: linear-gradient(180deg, #ffc192, #ff5b5b);
-  box-shadow:
-    0 0 18px rgba(255, 170, 120, 0.95),
-    0 0 32px rgba(255, 110, 110, 0.95);
+.asrar-mood-emoji--hopeful,
+.asrar-mood-emoji--warm,
+.asrar-mood-emoji--grateful {
+  background: radial-gradient(circle at 30% 20%, rgba(40, 116, 120, 0.98), rgba(8, 28, 30, 0.98));
 }
 
-.asrar-energy-orb--anxious {
-  background: radial-gradient(circle at 40% 20%, #fff4ec, #ffd0b0 55%, transparent 72%);
+.asrar-mood-emoji--neutral {
+  background: radial-gradient(circle at 30% 20%, rgba(70, 90, 120, 0.98), rgba(16, 22, 32, 0.98));
 }
 
-.asrar-energy-beam--angry {
-  background: linear-gradient(180deg, #ff9b9b, #ff3030);
-  box-shadow:
-    0 0 18px rgba(255, 140, 140, 0.95),
-    0 0 32px rgba(255, 76, 76, 0.98);
-}
-
-.asrar-energy-orb--angry {
-  background: radial-gradient(circle at 40% 20%, #fff3f3, #ffb0b0 55%, transparent 72%);
-}
-
-.asrar-energy-beam--lonely {
-  background: linear-gradient(180deg, #cda7ff, #7b3dff);
-  box-shadow:
-    0 0 18px rgba(197, 158, 255, 0.96),
-    0 0 34px rgba(144, 102, 255, 0.95);
-}
-
-.asrar-energy-orb--lonely {
-  background: radial-gradient(circle at 40% 20%, #fdf5ff, #e3c8ff 55%, transparent 72%);
-}
-
-.asrar-energy-beam--stressed {
-  background: linear-gradient(180deg, #ffd58a, #ff8b36);
-  box-shadow:
-    0 0 18px rgba(255, 210, 140, 0.96),
-    0 0 32px rgba(255, 150, 72, 0.95);
-}
-
-.asrar-energy-orb--stressed {
-  background: radial-gradient(circle at 40% 20%, #fff9ed, #ffe0b3 55%, transparent 72%);
-}
-
-.asrar-energy-beam--hopeful {
-  background: linear-gradient(180deg, #9effdd, #1fd1a0);
-  box-shadow:
-    0 0 18px rgba(144, 255, 210, 0.96),
-    0 0 32px rgba(42, 210, 160, 0.95);
-}
-
-.asrar-energy-orb--hopeful {
-  background: radial-gradient(circle at 40% 20%, #f5fffb, #b8ffe4 55%, transparent 72%);
-}
-
-.asrar-energy-beam--grateful {
-  background: linear-gradient(180deg, #ffe68c, #ffb347);
-  box-shadow:
-    0 0 18px rgba(255, 228, 140, 0.95),
-    0 0 32px rgba(255, 190, 90, 0.95);
-}
-
-.asrar-energy-orb--grateful {
-  background: radial-gradient(circle at 40% 20%, #fffbed, #ffe2a8 55%, transparent 72%);
-}
-
-.asrar-energy-beam--neutral {
-  background: linear-gradient(180deg, #b3c6dd, #566a86);
-  box-shadow:
-    0 0 18px rgba(180, 205, 230, 0.9),
-    0 0 30px rgba(110, 135, 165, 0.95);
-}
-
-.asrar-energy-orb--neutral {
-  background: radial-gradient(circle at 40% 20%, #f7fbff, #d4e4f5 55%, transparent 72%);
-}
-
-.asrar-energy-label {
+.asrar-mood-labels {
   margin-top: 0.35rem;
   text-align: center;
 }
 
 @media (max-width: 900px) {
-  .asrar-energy-stream {
+  .asrar-mood-timeline {
     gap: 0.9rem;
-    padding-bottom: 0.45rem;
+    padding-bottom: 0.3rem;
   }
 }
 
 @media (max-width: 480px) {
-  .asrar-energy-stream {
+  .asrar-mood-timeline {
     gap: 0.8rem;
   }
 }

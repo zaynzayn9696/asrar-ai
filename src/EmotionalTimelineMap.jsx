@@ -137,6 +137,38 @@ export default function EmotionalTimelineMap({
     }
   };
 
+  const emotionEmoji = (emotionCode) => {
+    const code = String(emotionCode || "NEUTRAL").toUpperCase();
+    switch (code) {
+      case "HAPPY":
+        return "😊";
+      case "NEUTRAL":
+        return "😐";
+      case "SAD":
+        return "😢";
+      case "ANGRY":
+        return "😡";
+      case "ANXIOUS":
+        return "😰";
+      case "LONELY":
+        return "😔";
+      case "STRESSED":
+        return "😰";
+      case "EXCITED":
+        return "🤩";
+      case "TIRED":
+        return "😴";
+      case "WARM":
+        return "❤️";
+      case "HOPEFUL":
+        return "🌈";
+      case "GRATEFUL":
+        return "🙏";
+      default:
+        return "💭";
+    }
+  };
+
   const handleRetry = () => {
     setRefreshKey((k) => k + 1);
   };
@@ -218,8 +250,7 @@ export default function EmotionalTimelineMap({
         {!loading && !error && points.length > 0 && (
           <div className="asrar-timeline-body">
             <div className="asrar-timeline-scroll">
-              <div className="asrar-energy-stream">
-                <div className="asrar-energy-base-line" />
+              <div className="asrar-mood-timeline">
                 {visiblePoints.map((p, idx) => {
                   if (!p || typeof p !== "object") return null;
 
@@ -236,55 +267,19 @@ export default function EmotionalTimelineMap({
 
                   const rawEmotion = p.topEmotion || "NEUTRAL";
                   const emotion = String(rawEmotion).toUpperCase();
-
-                  const rawIntensity = Number(p.avgIntensity);
-                  const safeIntensity = Number.isFinite(rawIntensity)
-                    ? Math.max(0, Math.min(1, rawIntensity))
-                    : 0;
-                  const pillarHeight = 40 + 110 * safeIntensity;
-
-                  const keyEvents = Array.isArray(p.keyEvents)
-                    ? p.keyEvents
-                    : [];
+                  const emoji = emotionEmoji(emotion);
 
                   return (
-                    <div
-                      key={idx}
-                      className="asrar-energy-pillar"
-                    >
-                      <div className="asrar-energy-beam-wrapper">
-                        <div
-                          className={
-                            "asrar-energy-beam asrar-energy-beam--" +
-                            emotion.toLowerCase()
-                          }
-                          style={{ height: `${pillarHeight}px` }}
-                        >
-                          <div
-                            className={
-                              "asrar-energy-orb asrar-energy-orb--" +
-                              emotion.toLowerCase()
-                            }
-                          />
-                          <div className="asrar-energy-beam-core" />
-                          <div className="asrar-energy-particles" />
-                        </div>
-                        {keyEvents.length > 0 && (
-                          <div className="asrar-timeline-events-dots">
-                            {keyEvents.map((ev, j) => (
-                              <span
-                                key={j}
-                                className={
-                                  "asrar-timeline-event-dot asrar-timeline-event-dot--" +
-                                  (ev?.type || "event")
-                                }
-                                title={ev?.label || ev?.type}
-                              />
-                            ))}
-                          </div>
-                        )}
+                    <div key={idx} className="asrar-mood-day">
+                      <div
+                        className={
+                          "asrar-mood-emoji asrar-mood-emoji--" +
+                          emotion.toLowerCase()
+                        }
+                      >
+                        {emoji}
                       </div>
-                      <div className="asrar-energy-label">
+                      <div className="asrar-mood-labels">
                         <div className="asrar-timeline-date">{dateLabel}</div>
                         <div className="asrar-timeline-emotion">
                           <span className="asrar-timeline-mood-pill">
@@ -303,8 +298,8 @@ export default function EmotionalTimelineMap({
         {points.length > 0 && (
           <p className="asrar-timeline-explainer">
             {isAr
-              ? "كل عمود يمثّل مزاجك العام في ذلك اليوم، مع توضيح بسيط لكيفية تغيّر نمطك العاطفي عبر الأيام."
-              : "Each bar shows your overall mood for that day and gives a simple sense of how your emotional pattern shifts over time."}
+              ? "كل أيقونة تمثّل مزاجك العام في ذلك اليوم، وتمنحك لمحة بسيطة عن كيف يتغيّر نمطك العاطفي عبر الأيام."
+              : "Each icon shows your overall mood for that day and gives a simple sense of how your emotional pattern shifts over time."}
           </p>
         )}
 

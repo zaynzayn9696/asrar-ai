@@ -613,6 +613,9 @@
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
+  max-width: min(80%, 26rem);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .asrar-whispers-now-list li {
@@ -620,6 +623,9 @@
   margin: 0.1rem 0;
   color: #d6ecff;
   position: relative;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-now-list li::before {
@@ -651,6 +657,9 @@
   max-width: 26rem;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-level-detail-icon {
@@ -675,7 +684,7 @@
   flex-direction: column;
   gap: 0.16rem;
   align-items: center;
-  max-width: 21rem;
+  max-width: min(80%, 26rem);
   margin-left: auto;
   margin-right: auto;
 }
@@ -684,6 +693,9 @@
   font-size: 0.84rem;
   color: #d6ecff;
   text-align: center;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-level-detail-list li::before {
@@ -703,6 +715,8 @@
   color: #b5cff5;
   max-width: min(80%, 26rem);
   text-align: center;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-howto {
@@ -714,6 +728,10 @@
   max-width: 26rem;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-howto-title {
@@ -738,6 +756,9 @@
 
 .asrar-whispers-howto-list li {
   margin: 0.12rem 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-explainer {
@@ -747,6 +768,8 @@
   color: #95b4d8;
   text-align: center;
   max-width: 26rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-state {
