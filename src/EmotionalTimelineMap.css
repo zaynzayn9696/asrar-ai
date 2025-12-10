@@ -377,6 +377,64 @@
   animation: moodGlowPulse 3.5s ease-in-out infinite;
 }
 
+/* CINEMATIC EMOJI ANIMATION ------------------------------------------------ */
+
+/* main wrapper */
+.mood-emoji {
+  position: relative;
+  font-size: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* subtle float animation */
+  animation: emojiFloat 4.5s ease-in-out infinite;
+}
+
+/* glow behind emoji */
+.mood-emoji::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+
+  background: var(--mood-glow-color, rgba(255,255,255,0.22));
+  filter: blur(18px);
+  opacity: 0.65;
+
+  animation: glowPulse 3.4s ease-in-out infinite;
+  z-index: -1;
+}
+
+/* Emoji FLOAT (premium) */
+@keyframes emojiFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(-1deg);
+  }
+}
+
+/* Glow Pulse (cinematic) */
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.45;
+    filter: blur(15px);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    filter: blur(22px);
+    transform: scale(1.15);
+  }
+}
+
+
 /* The micro-pulse animation */
 @keyframes moodGlowPulse {
   0%,
