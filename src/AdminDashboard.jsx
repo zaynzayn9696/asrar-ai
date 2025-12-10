@@ -22,7 +22,7 @@ function StatCard({ label, value, subtext, isAr }) {
 }
 
 // Users Table Component
-function UsersTable({ users, selectedUser, onSelectUser, isAr }) {
+function UsersTable({ users, selectedUser, onSelectUser, onDeleteUser, deletingUserId, isAr }) {
   if (users.length === 0) {
     return (
       <div className="admin-table-empty">
@@ -37,13 +37,19 @@ function UsersTable({ users, selectedUser, onSelectUser, isAr }) {
         <div className="admin-table-header-cell">{isAr ? "البريد" : "Email"}</div>
         <div className="admin-table-header-cell">{isAr ? "الاسم" : "Name"}</div>
         <div className="admin-table-header-cell">{isAr ? "الخطة" : "Plan"}</div>
-        <div className="admin-table-header-cell">{isAr ? "تاريخ الإنشاء" : "Created"}</div>
+        <div className="admin-table-header-cell">{isAr ? "الدولة" : "Country"}</div>
+        <div className="admin-table-header-cell">{isAr ? "الجهاز" : "Device"}</div>
+        <div className="admin-table-header-cell">{isAr ? "المتصفح" : "Browser"}</div>
+        <div className="admin-table-header-cell">{isAr ? "آخر نشاط" : "Last Active"}</div>
+        <div className="admin-table-header-cell">{isAr ? "الجلسات" : "Sessions"}</div>
         <div className="admin-table-header-cell">{isAr ? "الاستخدام" : "Usage"}</div>
+        <div className="admin-table-header-cell">{isAr ? "حذف" : "Delete"}</div>
       </div>
       {users.map((u) => {
         const isSelected = selectedUser && selectedUser.id === u.id;
         const planLabel = u.plan || (u.isPremium ? "premium" : "free");
         const isPremium = !!(u.isPremium || u.plan === "premium" || u.plan === "pro");
+        const isDeleting = deletingUserId === u.id;
 
         return (
           <button
@@ -62,11 +68,51 @@ function UsersTable({ users, selectedUser, onSelectUser, isAr }) {
             <div className={`admin-table-cell ${isPremium ? "premium" : "muted"}`} data-label={isAr ? "الخطة" : "Plan"}>
               {planLabel}
             </div>
-            <div className="admin-table-cell muted" data-label={isAr ? "تاريخ الإنشاء" : "Created"}>
-              {new Date(u.createdAt).toISOString().slice(0, 10)}
+            <div className="admin-table-cell" data-label={isAr ? "الدولة" : "Country"}>
+              {u.country || "—"}
+            </div>
+            <div className="admin-table-cell" data-label={isAr ? "الجهاز" : "Device"}>
+              {u.deviceType === "mobile"
+                ? isAr
+                  ? "جوال"
+                  : "Mobile"
+                : u.deviceType === "desktop"
+                ? isAr
+                  ? "كمبيوتر"
+                  : "Desktop"
+                : "—"}
+            </div>
+            <div className="admin-table-cell" data-label={isAr ? "المتصفح" : "Browser"}>
+              {u.browser || "—"}
+            </div>
+            <div className="admin-table-cell" data-label={isAr ? "آخر نشاط" : "Last Active"}>
+              {u.lastActiveAt ? new Date(u.lastActiveAt).toISOString().slice(0, 10) : "—"}
+            </div>
+            <div className="admin-table-cell" data-label={isAr ? "الجلسات" : "Sessions"}>
+              {u.totalSessions ?? 0}
             </div>
             <div className="admin-table-cell" data-label={isAr ? "الاستخدام" : "Usage"}>
               {u.dailyUsed ?? 0} / {u.dailyLimit && u.dailyLimit > 0 ? u.dailyLimit : ""}
+            </div>
+            <div className="admin-table-cell" data-label={isAr ? "حذف" : "Delete"}>
+              <button
+                type="button"
+                className="admin-delete-button"
+                disabled={isDeleting}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!onDeleteUser) return;
+                  onDeleteUser(u);
+                }}
+              >
+                {isDeleting
+                  ? isAr
+                    ? "جاري الحذف..."
+                    : "Deleting..."
+                  : isAr
+                  ? "حذف"
+                  : "Delete"}
+              </button>
             </div>
           </button>
         );
@@ -105,10 +151,39 @@ function UserDetailsPanel({ user, isAr }) {
       <div className="admin-details-label">{isAr ? "تاريخ الإنشاء" : "Created at"}</div>
       <div className="admin-details-value">{new Date(user.createdAt).toISOString().slice(0, 10)}</div>
 
-      <div className="admin-details-label">{isAr ? "آخر دخول" : "Last login"}</div>
+      <div className="admin-details-label">{isAr ? "الدولة" : "Country"}</div>
+      <div className="admin-details-value">{user.country || "—"}</div>
+
+      <div className="admin-details-label">{isAr ? "الجهاز" : "Device"}</div>
       <div className="admin-details-value">
-        {user.lastLoginAt ? new Date(user.lastLoginAt).toISOString().slice(0, 10) : "—"}
+        {user.deviceType === "mobile"
+          ? isAr
+            ? "جوال"
+            : "Mobile"
+          : user.deviceType === "desktop"
+          ? isAr
+            ? "كمبيوتر"
+            : "Desktop"
+          : "—"}
       </div>
+
+      <div className="admin-details-label">{isAr ? "المتصفح" : "Browser"}</div>
+      <div className="admin-details-value">{user.browser || "—"}</div>
+
+      <div className="admin-details-label">{isAr ? "أول ظهور" : "First seen"}</div>
+      <div className="admin-details-value">
+        {(user.firstSeenAt || user.createdAt)
+          ? new Date(user.firstSeenAt || user.createdAt).toISOString().slice(0, 10)
+          : "—"}
+      </div>
+
+      <div className="admin-details-label">{isAr ? "آخر ظهور" : "Last seen"}</div>
+      <div className="admin-details-value">
+        {user.lastActiveAt ? new Date(user.lastActiveAt).toISOString().slice(0, 10) : "—"}
+      </div>
+
+      <div className="admin-details-label">{isAr ? "إجمالي الجلسات" : "Total sessions"}</div>
+      <div className="admin-details-value">{user.totalSessions ?? 0}</div>
 
       <div className="admin-details-label">{isAr ? "الاستخدام اليومي" : "Daily usage"}</div>
       <div className="admin-details-value">{user.dailyUsed ?? 0}</div>
@@ -134,6 +209,8 @@ export default function AdminDashboard() {
   const [pageSize, setPageSize] = useState(10);
 
   const [isPageLoading, setIsPageLoading] = useState(true);
+  const [deletingUserId, setDeletingUserId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     let aborted = false;
@@ -201,6 +278,91 @@ export default function AdminDashboard() {
     const tId = setTimeout(() => setIsPageLoading(false), 900);
     return () => clearTimeout(tId);
   }, []);
+
+  const handleDeleteUser = async (userToDelete) => {
+    if (!userToDelete) return;
+
+    const confirmMessageEn = "Are you sure you want to delete this user? This action cannot be undone.";
+    const confirmMessageAr = "هل أنت متأكد أنك تريد حذف هذا المستخدم؟ لا يمكن التراجع عن هذا الإجراء.";
+    const confirmed = window.confirm(isAr ? confirmMessageAr : confirmMessageEn);
+    if (!confirmed) return;
+
+    setDeleteError("");
+    setDeletingUserId(userToDelete.id);
+
+    try {
+      const headers = {
+        Accept: "application/json",
+      };
+      try {
+        if (typeof window !== "undefined") {
+          const token = window.localStorage.getItem(TOKEN_KEY);
+          if (token) {
+            headers.Authorization = `Bearer ${token}`;
+          }
+        }
+      } catch (_) {}
+
+      const res = await fetch(`${API_BASE}/api/admin/users/${userToDelete.id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers,
+      });
+
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (_) {}
+
+      if (!res.ok || !data || data.success !== true) {
+        const msg =
+          (data && (data.error || data.message)) ||
+          (isAr ? "فشل حذف المستخدم" : "Failed to delete user");
+        setDeleteError(msg);
+        return;
+      }
+
+      setStats((prev) => {
+        if (!prev || !Array.isArray(prev.users)) return prev;
+
+        const remainingUsers = prev.users.filter((u) => u.id !== userToDelete.id);
+        const removedUser = prev.users.find((u) => u.id === userToDelete.id) || userToDelete;
+
+        const isPrem = !!(removedUser.isPremium || removedUser.plan === "premium" || removedUser.plan === "pro");
+
+        const prevTotalUsers = prev.totalUsers || 0;
+        const prevPremiumUsers =
+          prev.totalPremiumUsers ?? prev.premiumUsersCount ?? 0;
+        const prevFreeUsers =
+          prev.totalFreeUsers ?? (prev.totalUsers - prevPremiumUsers);
+
+        const totalUsers = Math.max(0, prevTotalUsers - 1);
+        const premiumUsers = Math.max(0, prevPremiumUsers - (isPrem ? 1 : 0));
+        const freeUsers = Math.max(0, prevFreeUsers - (isPrem ? 0 : 1));
+
+        return {
+          ...prev,
+          users: remainingUsers,
+          totalUsers,
+          premiumUsers,
+          freeUsers,
+          totalPremiumUsers: premiumUsers,
+          premiumUsersCount: premiumUsers,
+          totalFreeUsers: freeUsers,
+        };
+      });
+
+      setSelectedUser((prev) =>
+        prev && prev.id === userToDelete.id ? null : prev
+      );
+    } catch (err) {
+      setDeleteError(
+        isAr ? "فشل حذف المستخدم" : "Failed to delete user"
+      );
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
 
   if (isPageLoading) {
     return <HomeSplash />;
@@ -272,9 +434,9 @@ export default function AdminDashboard() {
               {/* Users Table Card */}
               <div className="admin-card">
                 <div className="admin-card-inner">
-                  <div className="admin-card-header">
-                    <h2 className="admin-card-title">{isAr ? "المستخدمون" : "Users"}</h2>
-                  </div>
+                <div className="admin-card-header">
+                  <h2 className="admin-card-title">{isAr ? "المستخدمون" : "Users"}</h2>
+                </div>
 
                   {/* Filters */}
                   <div className="admin-filters">
@@ -296,11 +458,19 @@ export default function AdminDashboard() {
                     </select>
                   </div>
 
+                  {deleteError && (
+                    <div className="admin-delete-error">
+                      {deleteError}
+                    </div>
+                  )}
+
                   {/* Table */}
                   <UsersTable
                     users={currentUsers}
                     selectedUser={selectedUser}
                     onSelectUser={setSelectedUser}
+                    onDeleteUser={handleDeleteUser}
+                    deletingUserId={deletingUserId}
                     isAr={isAr}
                   />
 
