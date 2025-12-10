@@ -268,13 +268,15 @@ export default function EmotionalTimelineMap({
                   const rawEmotion = p.topEmotion || "NEUTRAL";
                   const emotion = String(rawEmotion).toUpperCase();
                   const emoji = emotionEmoji(emotion);
+                  const moodClass = " mood-" + emotion.toLowerCase();
 
                   return (
                     <div key={idx} className="asrar-mood-day">
                       <div
                         className={
                           "asrar-mood-emoji asrar-mood-emoji--" +
-                          emotion.toLowerCase()
+                          emotion.toLowerCase() +
+                          moodClass
                         }
                       >
                         {emoji}

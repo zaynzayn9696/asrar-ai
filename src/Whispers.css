@@ -840,3 +840,27 @@
   font-size: 0.75rem;
   color: #8da5c7;
 }
+
+/* --- FIX PANEL HEIGHT & SCROLL --- */
+.asrar-whispers-panel {
+  max-height: calc(100vh - 4rem) !important;
+  overflow-y: auto !important;
+}
+
+/* --- FIX LEVEL DETAIL BLOCK CENTERING --- */
+.asrar-whispers-level-detail {
+  margin-top: 0.9rem !important;
+  padding: 0 1rem;
+  max-width: 26rem;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+.asrar-whispers-howto {
+  margin-top: 1.2rem !important;
+}
+
+/* --- FIX EXPLAINER SPACING --- */
+.asrar-whispers-explainer {
+  margin-top: 1rem !important;
+}
