@@ -356,11 +356,138 @@
     0 0 12px rgba(0, 240, 255, 0.8);
 }
 
+.asrar-whispers-trust-path {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.asrar-whispers-trust-meta {
+  text-align: center;
+}
+
+.asrar-whispers-trust-meta-line {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #f0fbff;
+}
+
+.asrar-whispers-trust-meta-sub {
+  margin: 0.18rem 0 0;
+  font-size: 0.78rem;
+  color: #d0e4ff;
+  opacity: 0.9;
+}
+
+.asrar-whispers-trust-meta-sub--max {
+  color: #ffe3ae;
+}
+
+.asrar-whispers-rail-wrapper {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.asrar-whispers-rail {
+  position: relative;
+  width: 100%;
+  height: 14px;
+}
+
+.asrar-whispers-rail-track {
+  position: absolute;
+  inset: 5px 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(2, 10, 22, 0.96), rgba(2, 6, 16, 0.98));
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.26),
+    0 0 12px rgba(0, 24, 56, 0.95);
+}
+
+.asrar-whispers-rail-fill {
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00f4ff, #7c4dff);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 0 18px rgba(0, 244, 255, 0.9);
+  transform-origin: left center;
+  transition: width 220ms ease-out;
+}
+
+.asrar-whispers-rail-particles {
+  position: absolute;
+  inset: 3px 0;
+  border-radius: 999px;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 0 50%, rgba(255, 255, 255, 0.5), transparent 55%);
+  background-size: 46px 10px;
+  mix-blend-mode: screen;
+  opacity: 0.8;
+  animation: asrar-whispers-rail-flow 2.7s linear infinite;
+}
+
+@keyframes asrar-whispers-rail-flow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 92px 0;
+  }
+}
+
+.asrar-whispers-progress-top {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.asrar-whispers-progress-label {
+  font-size: 0.8rem;
+  color: #d0e4ff;
+  text-align: center;
+}
+
+.asrar-whispers-progress-label--max {
+  color: #ffe3ae;
+}
+
+.asrar-whispers-progress-bar {
+  width: 100%;
+  max-width: 260px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(4, 16, 30, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.18);
+  overflow: hidden;
+}
+
+.asrar-whispers-progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00f4ff, #7c4dff);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.8);
+  transition: width 220ms ease-out;
+}
+
 .asrar-whispers-level-badges {
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
   display: flex;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .asrar-whispers-level-badge {
@@ -395,11 +522,20 @@
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.7),
     0 0 14px rgba(0, 255, 255, 0.8);
+  transform: scale(1.15);
+  animation: asrar-whispers-level-breath 2.1s ease-in-out infinite;
 }
 
 .asrar-whispers-level-badge--current {
   opacity: 1;
   transform: translateY(-1px);
+}
+
+.asrar-whispers-level-badge--completed .asrar-whispers-level-dot {
+  background: radial-gradient(circle at top, #00b8ff, #0b172c);
+  box-shadow:
+    0 0 0 1px rgba(200, 236, 255, 0.6),
+    0 0 10px rgba(0, 210, 255, 0.7);
 }
 
 .asrar-whispers-level-badge--preview .asrar-whispers-level-dot {
@@ -410,6 +546,38 @@
 
 .asrar-whispers-level-badge--preview .asrar-whispers-level-label {
   text-decoration: underline;
+}
+
+.asrar-whispers-level-badge--locked {
+  opacity: 0.35;
+}
+
+.asrar-whispers-level-badge--locked .asrar-whispers-level-dot {
+  position: relative;
+}
+
+.asrar-whispers-level-badge--locked .asrar-whispers-level-dot::after {
+  content: "🔒";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+}
+
+@keyframes asrar-whispers-level-breath {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.6),
+      0 0 16px rgba(0, 255, 255, 0.9);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.85),
+      0 0 22px rgba(0, 255, 255, 1);
+  }
 }
 
 .asrar-whispers-level-label {
@@ -445,6 +613,9 @@
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
+  max-width: min(75%, 26rem);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .asrar-whispers-now-list li {
@@ -452,6 +623,9 @@
   margin: 0.1rem 0;
   color: #d6ecff;
   position: relative;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-now-list li::before {
@@ -473,33 +647,129 @@
   color: #b5cff5;
 }
 
-.asrar-whispers-progress-line {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
+.asrar-whispers-level-detail {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
   text-align: center;
-  color: #d0e4ff;
+  max-width: 26rem;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.asrar-whispers-progress-howto {
-  margin-top: 0.2rem;
+.asrar-whispers-level-detail-icon {
+  padding: 0.18rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.65);
+  background: radial-gradient(circle at top, rgba(0, 240, 255, 0.2), rgba(4, 12, 26, 0.98));
+  font-size: 0.74rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #e5f6ff;
+  box-shadow:
+    0 0 0 1px rgba(0, 240, 255, 0.4),
+    0 10px 22px rgba(0, 0, 0, 0.95);
+}
+
+.asrar-whispers-level-detail-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.16rem;
+  align-items: center;
+  max-width: min(75%, 26rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.asrar-whispers-level-detail-list li {
+  font-size: 0.84rem;
+  color: #d6ecff;
+  text-align: center;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.asrar-whispers-level-detail-list li::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  margin-inline-end: 0.45rem;
+  background: radial-gradient(circle at center, #00f4ff, #7c4dff);
+  box-shadow: 0 0 8px rgba(0, 244, 255, 0.8);
+}
+
+.asrar-whispers-level-detail-next {
+  margin: 0.35rem auto 0;
+  font-size: 0.8rem;
+  color: #b5cff5;
+  max-width: min(70%, 26rem);
+  text-align: center;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.asrar-whispers-howto {
+  margin-top: 2rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(3, 14, 30, 0.92);
+  border: 1px solid rgba(0, 240, 255, 0.24);
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.asrar-whispers-howto-title {
+  margin: 0 0 0.35rem;
   font-size: 0.78rem;
+  font-weight: 600;
   text-align: center;
-  color: #9fbce6;
+  color: #cbe9ff;
 }
 
-.asrar-whispers-progress-max {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
+.asrar-whispers-howto-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  color: #d0e4ff;
+  font-size: 0.8rem;
+  color: #d6ecff;
+}
+
+.asrar-whispers-howto-list li {
+  margin: 0.12rem 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-explainer {
-  margin: 0.4rem 0 0;
+  margin: 1.5rem auto 0;
   font-size: 0.8rem;
   line-height: 1.5;
   color: #95b4d8;
   text-align: center;
+  max-width: min(70%, 26rem);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .asrar-whispers-state {
@@ -569,4 +839,28 @@
   margin-top: 0.3rem;
   font-size: 0.75rem;
   color: #8da5c7;
+}
+
+/* --- FIX PANEL HEIGHT & SCROLL --- */
+.asrar-whispers-panel {
+  max-height: calc(100vh - 4rem) !important;
+  overflow-y: auto !important;
+}
+
+/* --- FIX LEVEL DETAIL BLOCK CENTERING --- */
+.asrar-whispers-level-detail {
+  margin-top: 0.9rem !important;
+  padding: 0 1rem;
+  max-width: 26rem;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+.asrar-whispers-howto {
+  margin-top: 1.2rem !important;
+}
+
+/* --- FIX EXPLAINER SPACING --- */
+.asrar-whispers-explainer {
+  margin-top: 1rem !important;
 }

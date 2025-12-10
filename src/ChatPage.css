@@ -317,6 +317,10 @@
   border-color: rgba(0, 244, 255, 0.8);
 }
 
+.asrar-conv-item--deleting {
+  opacity: 0.6;
+}
+
 .asrar-conv-title {
   font-size: 0.9rem;
   font-weight: 600;
@@ -384,6 +388,35 @@
 
 .asrar-conv-item--active .asrar-conv-delete-btn {
   color: rgba(235, 245, 255, 0.98);
+}
+
+.asrar-conv-delete-btn[disabled] {
+  cursor: default;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.asrar-conv-delete-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(200, 210, 230, 0.6);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  animation: asrar-conv-spinner 0.6s linear infinite;
+}
+
+@keyframes asrar-conv-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.asrar-conv-delete-error {
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: #ff9ca7;
+  text-align: center;
 }
 
 /* ============ MAIN CHAT COLUMN ============ */
@@ -612,15 +645,12 @@
   }
   
   .asrar-chat-row--assistant .asrar-chat-bubble {
-    margin-left: 15%;
+    margin-left: 0;
+    margin-right: auto;
   }
 }
 
 .asrar-chat-row--assistant {
-  width: 100%;
-}
-
-.asrar-chat-row--user {
   width: 100%;
 }
 
@@ -629,40 +659,28 @@
   margin-right: auto;
 }
 
-.asrar-chat-row--assistant-rtl {
-  display: flex;
-  justify-content: flex-end;
+.asrar-chat-row--assistant-ar, .asrar-chat-row--assistant-en {
+  justify-content: center;
 }
 
-.asrar-chat-row--assistant-rtl .asrar-chat-bubble {
-  background: radial-gradient(circle at top left, #051b30, #02040d);
-  color: #e8f8ff;
-  text-align: right;
-  direction: rtl;
-  align-self: flex-end;
+.asrar-chat-row--assistant-ar .asrar-chat-bubble, .asrar-chat-row--assistant-en .asrar-chat-bubble {
+  margin-left: 0;
+  margin-right: auto;
 }
 
-.asrar-chat-row--assistant-ar {
-  justify-content: flex-end;
-  direction: rtl;
-  text-align: right;
-}
-
-.asrar-chat-row--assistant-en {
-  justify-content: flex-start;
+.asrar-chat-row--assistant-ar, .asrar-chat-row--assistant-en {
   direction: ltr;
   text-align: left;
 }
 
-.asrar-chat-row--assistant-ar .asrar-chat-bubble,
-.asrar-chat-row--assistant-en .asrar-chat-bubble {
+.asrar-chat-row--assistant-ar .asrar-chat-bubble, .asrar-chat-row--assistant-en .asrar-chat-bubble {
   background: radial-gradient(circle at top left, #051b30, #02040d);
   color: #e8f8ff;
 }
 
 .asrar-chat-row--assistant-ar .asrar-chat-bubble {
-  margin-left: auto;
-  margin-right: 0;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .asrar-chat-row--assistant-en .asrar-chat-bubble {

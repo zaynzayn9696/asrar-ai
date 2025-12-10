@@ -187,8 +187,12 @@ const TEXT = {
   },
 };
 
+function isArabic(text) {
+  return /[\u0600-\u06FF]/.test(text || "");
+}
+
 function isArabicText(str) {
-  return /[\u0600-\u06FF]/.test(str || "");
+  return isArabic(str);
 }
 
 function getSupportedMimeType() {
@@ -236,6 +240,10 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [convLoading, setConvLoading] = useState(false);
   const [convError, setConvError] = useState(null);
+  const [deletingConversationId, setDeletingConversationId] = useState(null);
+  const [convDeleteError, setConvDeleteError] = useState(null);
+  const [pendingDeleteConversationId, setPendingDeleteConversationId] =
+    useState(null);
 
   const character =
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[1];
@@ -857,67 +865,105 @@ export default function ChatPage() {
     setIsMobileSidebarOpen(false);
   };
 
-  const handleDeleteConversation = async (id, event) => {
-    if (event && typeof event.stopPropagation === 'function') {
+  const handleDeleteConversation = (id, event) => {
+    if (event && typeof event.stopPropagation === "function") {
       event.stopPropagation();
     }
 
+    if (deletingConversationId && deletingConversationId !== id) {
+      return;
+    }
+
+    setConvDeleteError(null);
+    setPendingDeleteConversationId(id);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (!pendingDeleteConversationId) return;
+
+    const id = pendingDeleteConversationId;
+
+    setPendingDeleteConversationId(null);
+    setConvDeleteError(null);
+    setDeletingConversationId(id);
+
+    const prevConversations = conversations;
+    const prevConversationId = conversationId;
+    const prevMessages = messages;
+
+    setConversations((prev) =>
+      Array.isArray(prev) ? prev.filter((c) => c.id !== id) : prev
+    );
+
+    if (conversationId === id) {
+      setConversationId(null);
+      const now = new Date().toISOString();
+      setMessages([
+        {
+          id: 1,
+          from: "system",
+          text: isArabicConversation
+            ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+            : "This is your private space. Nothing you say here is judged.",
+          createdAt: now,
+        },
+        {
+          id: 2,
+          from: "ai",
+          text: isArabicConversation
+            ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+            : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
+          createdAt: now,
+        },
+      ]);
+    }
+
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
-      const headers = token
-        ? { Authorization: `Bearer ${token}` }
-        : undefined;
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
       const res = await fetch(`${API_BASE}/api/chat/conversations/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
         headers,
       });
 
       if (!res.ok) {
-        console.error('[ChatPage] delete conversation failed', { status: res.status });
-        return;
+        throw new Error(`Delete failed with status ${res.status || "unknown"}`);
       }
 
-      setConversations((prev) => (Array.isArray(prev) ? prev.filter((c) => c.id !== id) : []));
-
-      if (conversationId === id) {
-        setConversationId(null);
-        const now = new Date().toISOString();
-        setMessages([
-          {
-            id: 1,
-            from: 'system',
-            text: isArabicConversation
-              ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
-              : "This is your private space. Nothing you say here is judged.",
-            createdAt: now,
-          },
-          {
-            id: 2,
-            from: 'ai',
-            text: isArabicConversation
-              ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
-              : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
-            createdAt: now,
-          },
-        ]);
-
-        if (user && typeof window !== 'undefined') {
-          try {
-            const storageKey = buildHistoryStorageKey(
-              user.id,
-              selectedCharacterId,
-              id
-            );
-            localStorage.removeItem(storageKey);
-          } catch (e) {
-            console.error('[ChatPage] failed to clear deleted conversation history', e);
-          }
+      if (prevConversationId === id && user && typeof window !== "undefined") {
+        try {
+          const storageKey = buildHistoryStorageKey(
+            user.id,
+            selectedCharacterId,
+            id
+          );
+          localStorage.removeItem(storageKey);
+        } catch (e) {
+          console.error(
+            "[ChatPage] failed to clear deleted conversation history",
+            e
+          );
         }
       }
     } catch (e) {
-      console.error('[ChatPage] delete conversation error', e);
+      console.error("[ChatPage] delete conversation error", e);
+
+      setConversations(
+        Array.isArray(prevConversations) ? prevConversations : []
+      );
+      setConversationId(prevConversationId || null);
+      setMessages(Array.isArray(prevMessages) ? prevMessages : []);
+
+      setConvDeleteError(
+        isArabicConversation
+          ? "تعذر حذف هذه المحادثة. يرجى المحاولة مرة أخرى."
+          : "We couldn't delete this conversation. Please try again."
+      );
+    } finally {
+      setDeletingConversationId(null);
     }
   };
 
@@ -980,32 +1026,46 @@ const renderSidebarContent = () => (
       {!convLoading &&
         !convError &&
         Array.isArray(conversations) &&
-        conversations.map((conv) => (
-          <div
-            key={conv.id}
-            className={
-              "asrar-conv-item" +
-              (conv.id === conversationId ? " asrar-conv-item--active" : "")
-            }
-            onClick={() => handleConversationClick(conv.id)}
-          >
-            <div className="asrar-conv-title-row">
-              <span className="asrar-conv-title">{getName(character)}</span>
-              <button
-                type="button"
-                className="asrar-conv-delete-btn"
-                onClick={(e) => handleDeleteConversation(conv.id, e)}
-              >
-                ×
-              </button>
+        conversations.map((conv) => {
+          const isActive = conv.id === conversationId;
+          const isDeleting = conv.id === deletingConversationId;
+
+          return (
+            <div
+              key={conv.id}
+              className={
+                "asrar-conv-item" +
+                (isActive ? " asrar-conv-item--active" : "") +
+                (isDeleting ? " asrar-conv-item--deleting" : "")
+              }
+              onClick={() => handleConversationClick(conv.id)}
+            >
+              <div className="asrar-conv-title-row">
+                <span className="asrar-conv-title">{getName(character)}</span>
+                <button
+                  type="button"
+                  className="asrar-conv-delete-btn"
+                  onClick={(e) => handleDeleteConversation(conv.id, e)}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <span className="asrar-conv-delete-spinner" />
+                  ) : (
+                    "×"
+                  )}
+                </button>
+              </div>
+              <div className="asrar-conv-preview">
+                {conv.firstUserMessage && conv.firstUserMessage.trim()
+                  ? conv.firstUserMessage.slice(0, 60)
+                  : "No messages yet"}
+              </div>
             </div>
-            <div className="asrar-conv-preview">
-              {conv.firstUserMessage && conv.firstUserMessage.trim()
-                ? conv.firstUserMessage.slice(0, 60)
-                : "No messages yet"}
-            </div>
-          </div>
-        ))}
+          );
+        })}
+      {convDeleteError && (
+        <div className="asrar-conv-delete-error">{convDeleteError}</div>
+      )}
     </div>
   </>
 );
@@ -2029,18 +2089,7 @@ useEffect(() => {
 
               let rowClass = "asrar-chat-row";
               if (msg.from === "ai") {
-                const isVoice = !!msg.audioBase64;
-                if (isVoice) {
-                  // Keep existing alignment for voice replies
-                  rowClass += " asrar-chat-row--assistant";
-                } else {
-                  // Text AI message: choose alignment based on actual text language
-                  if (isArabicText(msg.text)) {
-                    rowClass += " asrar-chat-row--assistant-ar";
-                  } else {
-                    rowClass += " asrar-chat-row--assistant-en";
-                  }
-                }
+                rowClass += " asrar-chat-row--assistant";
               } else if (msg.from === "user") {
                 rowClass += " asrar-chat-row--user";
               } else {
@@ -2053,7 +2102,7 @@ useEffect(() => {
                 isCurrentAiTyping ? aiTypingBuffer : msg.text;
               const textDir =
                 isAiTextMessage
-                  ? isArabicText(currentRenderedText)
+                  ? isArabic(currentRenderedText)
                     ? "rtl"
                     : "ltr"
                   : isArabicConversation
@@ -2380,6 +2429,50 @@ useEffect(() => {
           </footer>
         </div>
       </main>
+
+      {pendingDeleteConversationId && (
+        <div
+          className="asrar-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setPendingDeleteConversationId(null);
+            }
+          }}
+        >
+          <div className="asrar-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="asrar-modal-body">
+              <h3 style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+                {isArabicConversation
+                  ? "حذف المحادثة؟"
+                  : "Delete this conversation?"}
+              </h3>
+              <p style={{ margin: 0, opacity: 0.9 }}>
+                {isArabicConversation
+                  ? "سيتم إزالة هذه المحادثة من سجل محادثاتك في أسرار. لا يمكن التراجع عن هذا الإجراء."
+                  : "This will remove this chat from your Asrar history. This action can't be undone."}
+              </p>
+            </div>
+            <div className="asrar-modal-actions">
+              <button
+                type="button"
+                className="asrar-btn ghost"
+                onClick={() => setPendingDeleteConversationId(null)}
+              >
+                {isAr ? "إلغاء" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                className="asrar-btn primary"
+                onClick={confirmDeleteConversation}
+              >
+                {isArabicConversation
+                  ? "حذف المحادثة"
+                  : "Delete conversation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Existing plan/character modals */}
       {(showLockedModal || showLimitModal) && (

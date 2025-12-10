@@ -18,6 +18,7 @@ export default function EmotionalTimelineMap({
   const [refreshKey, setRefreshKey] = useState(0);
   const [showMirror, setShowMirror] = useState(false);
   const [range, setRange] = useState("30d");
+  const [selectedIndex, setSelectedIndex] = useState(null);
 
   useEffect(() => {
     if (!isOpen || !personaId) return;
@@ -100,6 +101,99 @@ export default function EmotionalTimelineMap({
     return normalized;
   }, [points, range]);
 
+  useEffect(() => {
+    if (visiblePoints.length > 0) {
+      setSelectedIndex(visiblePoints.length - 1);
+    } else {
+      setSelectedIndex(null);
+    }
+  }, [visiblePoints]);
+
+  const selectedPoint =
+    selectedIndex != null &&
+    selectedIndex >= 0 &&
+    selectedIndex < visiblePoints.length
+      ? visiblePoints[selectedIndex]
+      : null;
+
+  const getIntensityMeta = (avgIntensityRaw) => {
+    const v = Number.isFinite(avgIntensityRaw)
+      ? Math.max(0, Math.min(1, avgIntensityRaw))
+      : 0.5;
+    let level = "medium";
+    if (v < 0.35) level = "low";
+    else if (v >= 0.7) level = "high";
+
+    const label = isAr
+      ? level === "low"
+        ? "منخفضة"
+        : level === "high"
+        ? "مرتفعة"
+        : "متوسطة"
+      : level === "low"
+      ? "Low"
+      : level === "high"
+      ? "High"
+      : "Medium";
+
+    return { value: v, level, label };
+  };
+
+  const describeDayCopy = (emotionCode, intensityLevel) => {
+    const code = String(emotionCode || "NEUTRAL").toUpperCase();
+    const heavy =
+      code === "ANGRY" || code === "STRESSED" || code === "ANXIOUS";
+    const low = intensityLevel === "low";
+    const high = intensityLevel === "high";
+
+    if (isAr) {
+      if (high && heavy) {
+        return "يبدو أن هذا اليوم كان مُحمّلًا بمشاعر قوية وثقيلة.";
+      }
+      if (high && !heavy) {
+        return "يوم مليء بالمشاعر الواضحة والحضور العاطفي القوي.";
+      }
+      if (low) {
+        return "يوم هادئ نسبيًا، بمشاعر خفيفة ومتوازنة.";
+      }
+      return "يوم بمستوى متوسط من الشدة العاطفية، لا هو ثقيل ولا خفيف تمامًا.";
+    }
+
+    if (high && heavy) {
+      return "This day carried a lot of emotional weight and tension.";
+    }
+    if (high && !heavy) {
+      return "A vivid, emotionally present day with strong feelings.";
+    }
+    if (low) {
+      return "A comparatively gentle day with softer emotional energy.";
+    }
+    return "A day with a moderate emotional load — neither very heavy nor completely light.";
+  };
+
+  const mapEventLabel = (evt) => {
+    if (!evt) return null;
+    if (typeof evt === "string") {
+      const s = evt.toLowerCase();
+      if (s.includes("whisper")) {
+        return isAr ? "وِسواس / هَمْسَة" : "Whisper moment";
+      }
+      if (s.includes("voice")) {
+        return isAr ? "جلسة صوتية" : "Voice session";
+      }
+      if (s.includes("mirror")) {
+        return isAr ? "استخدام المرآة" : "Mirror used";
+      }
+      return evt;
+    }
+    if (typeof evt === "object") {
+      const base = evt.label || evt.type || "";
+      if (!base) return null;
+      return base;
+    }
+    return null;
+  };
+
   const title = personaName
     ? isAr
       ? `رحلة مشاعرك مع ${personaName}`
@@ -137,28 +231,41 @@ export default function EmotionalTimelineMap({
     }
   };
 
+  const emotionEmoji = (emotionCode) => {
+    const code = String(emotionCode || "NEUTRAL").toUpperCase();
+    switch (code) {
+      case "HAPPY":
+        return "😊";
+      case "NEUTRAL":
+        return "😐";
+      case "SAD":
+        return "😢";
+      case "ANGRY":
+        return "😡";
+      case "ANXIOUS":
+        return "😰";
+      case "LONELY":
+        return "😔";
+      case "STRESSED":
+        return "😰";
+      case "EXCITED":
+        return "🤩";
+      case "TIRED":
+        return "😴";
+      case "WARM":
+        return "❤️";
+      case "HOPEFUL":
+        return "🌈";
+      case "GRATEFUL":
+        return "🙏";
+      default:
+        return "💭";
+    }
+  };
+
   const handleRetry = () => {
     setRefreshKey((k) => k + 1);
   };
-
-  const trendPolylinePoints = React.useMemo(() => {
-    if (!visiblePoints || visiblePoints.length < 2) return "";
-    const n = visiblePoints.length;
-
-    return visiblePoints
-      .map((p, idx) => {
-        if (!p || typeof p !== "object") return null;
-        const x = (idx / (n - 1)) * 100;
-        const rawIntensity = Number(p.avgIntensity);
-        const intensity = Number.isFinite(rawIntensity) ? rawIntensity : 0;
-        const clamped = Math.max(0, Math.min(1, intensity));
-        const y = 90 - clamped * 60; // higher intensity sits higher on the chart
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .filter(Boolean)
-      .join(" ");
-  }, [visiblePoints]);
 
   if (!isOpen) return null;
 
@@ -237,84 +344,166 @@ export default function EmotionalTimelineMap({
         {!loading && !error && points.length > 0 && (
           <div className="asrar-timeline-body">
             <div className="asrar-timeline-scroll">
-              <div className="asrar-timeline-track-wrapper">
-                {trendPolylinePoints && (
-                  <svg
-                    className="asrar-timeline-trend"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                  >
-                    <polyline points={trendPolylinePoints} />
-                  </svg>
-                )}
-                <div className="asrar-timeline-track">
+              <div className="asrar-timeline-visual">
+                <div className="asrar-mood-stream-rail" />
+                <div
+                  className={
+                    "asrar-mood-stream " +
+                    (range === "7d"
+                      ? "asrar-mood-stream--focus"
+                      : "asrar-mood-stream--overview")
+                  }
+                >
                   {visiblePoints.map((p, idx) => {
                     if (!p || typeof p !== "object") return null;
 
-                    let dateLabel = "";
+                    let shortDate = "";
                     if (p.date) {
-                      const date = new Date(p.date);
-                      if (!Number.isNaN(date.getTime())) {
-                        dateLabel = date.toLocaleDateString(undefined, {
+                      const d = new Date(p.date);
+                      if (!Number.isNaN(d.getTime())) {
+                        shortDate = d.toLocaleDateString(undefined, {
                           month: "short",
                           day: "numeric",
                         });
                       }
                     }
 
-                    const rawEmotion = p.topEmotion || "NEUTRAL";
-                    const emotion = String(rawEmotion).toUpperCase();
+                    const emotion = String(p.topEmotion || "NEUTRAL").toUpperCase();
+                    let famClass = "mood-neutral";
+                    if (
+                      emotion === "HAPPY" ||
+                      emotion === "EXCITED" ||
+                      emotion === "WARM" ||
+                      emotion === "GRATEFUL" ||
+                      emotion === "HOPEFUL"
+                    ) {
+                      famClass = "mood-happy";
+                    } else if (emotion === "SAD" || emotion === "LONELY") {
+                      famClass = "mood-sad";
+                    } else if (
+                      emotion === "ANGRY" ||
+                      emotion === "STRESSED" ||
+                      emotion === "ANXIOUS"
+                    ) {
+                      famClass = "mood-angry";
+                    }
 
-                    const rawIntensity = Number(p.avgIntensity);
-                    const safeIntensity = Number.isFinite(rawIntensity)
-                      ? Math.max(0, Math.min(1, rawIntensity))
-                      : 0;
-                    const barHeight = 28 + 80 * safeIntensity;
+                    const { value: intensityValue } = getIntensityMeta(
+                      p.avgIntensity
+                    );
+                    const isSelected = idx === selectedIndex;
 
-                    const keyEvents = Array.isArray(p.keyEvents)
-                      ? p.keyEvents
-                      : [];
+                    const nodeClass =
+                      "asrar-mood-node " +
+                      famClass +
+                      (isSelected ? " asrar-mood-node--selected" : "");
 
                     return (
-                      <div
+                      <button
                         key={idx}
-                        className="asrar-timeline-point"
+                        type="button"
+                        className={nodeClass}
+                        style={{ "--intensity-scale": intensityValue }}
+                        onClick={() => setSelectedIndex(idx)}
+                        aria-pressed={isSelected}
                       >
-                        <div className="asrar-timeline-bar-wrapper">
-                          <div
-                            className={
-                              "asrar-timeline-bar asrar-timeline-bar--" +
-                              emotion.toLowerCase()
-                            }
-                            style={{ height: `${barHeight}px` }}
-                          />
-                          {keyEvents.length > 0 && (
-                            <div className="asrar-timeline-events-dots">
-                              {keyEvents.map((ev, j) => (
-                                <span
-                                  key={j}
-                                  className={
-                                    "asrar-timeline-event-dot asrar-timeline-event-dot--" +
-                                    (ev?.type || "event")
-                                  }
-                                  title={ev?.label || ev?.type}
-                                />
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="asrar-timeline-point-label">
-                          <div className="asrar-timeline-date">{dateLabel}</div>
-                          <div className="asrar-timeline-emotion">
-                            <span className="asrar-timeline-mood-pill">
-                              {emotionLabel(emotion)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                        <div className="asrar-mood-node-core" />
+                        <span className="asrar-mood-node-day">{shortDate}</span>
+                      </button>
                     );
                   })}
                 </div>
+              </div>
+            </div>
+
+            <div className="asrar-timeline-details">
+              {selectedPoint && (() => {
+                const fullDate =
+                  selectedPoint.date &&
+                  !Number.isNaN(new Date(selectedPoint.date).getTime())
+                    ? new Date(selectedPoint.date).toLocaleDateString(
+                        undefined,
+                        {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        }
+                      )
+                    : "";
+                const { level, label } = getIntensityMeta(
+                  selectedPoint.avgIntensity
+                );
+                const description = describeDayCopy(
+                  selectedPoint.topEmotion,
+                  level
+                );
+                const events = Array.isArray(selectedPoint.keyEvents)
+                  ? selectedPoint.keyEvents.map(mapEventLabel).filter(Boolean)
+                  : [];
+
+                return (
+                  <div className="asrar-timeline-detail-card">
+                    <div className="asrar-timeline-detail-header">
+                      <div className="asrar-timeline-detail-main">
+                        <div className="asrar-timeline-detail-date">
+                          {fullDate}
+                        </div>
+                        <div className="asrar-timeline-detail-emotion-row">
+                          <span className="asrar-timeline-mood-pill">
+                            {emotionLabel(selectedPoint.topEmotion)}
+                          </span>
+                          <span className="asrar-timeline-detail-emoji">
+                            {emotionEmoji(selectedPoint.topEmotion)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div
+                        className={
+                          "asrar-timeline-intensity asrar-timeline-intensity--" +
+                          level
+                        }
+                      >
+                        <span className="asrar-timeline-intensity-ring" />
+                        <span className="asrar-timeline-intensity-label">
+                          {label}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="asrar-timeline-detail-body">
+                      <p className="asrar-timeline-detail-copy">
+                        {description}
+                      </p>
+
+                      {events.length > 0 && (
+                        <div className="asrar-timeline-detail-events">
+                          {events.slice(0, 2).map((label, idx) => (
+                            <span
+                              key={idx}
+                              className="asrar-timeline-event-chip"
+                            >
+                              {label}
+                            </span>
+                          ))}
+                          {events.length > 2 && (
+                            <span className="asrar-timeline-detail-events-more">
+                              {isAr
+                                ? "وأحداث أخرى في هذا اليوم."
+                                : "Plus other moments on this day."}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="asrar-timeline-legend">
+                {isAr
+                  ? "اللون يمثّل نوع الشعور، والسطوع وارتفاع النقطة يمثّلان شدّة المشاعر."
+                  : "Color reflects the emotion family; glow and height reflect how intense the day felt."}
               </div>
             </div>
           </div>
@@ -323,8 +512,8 @@ export default function EmotionalTimelineMap({
         {points.length > 0 && (
           <p className="asrar-timeline-explainer">
             {isAr
-              ? "كل عمود يمثّل مزاجك العام في ذلك اليوم، والخط يوضّح كيف يتغيّر نمطك العاطفي مع الوقت."
-              : "Each bar shows your overall mood for that day. The line shows how your emotional tone is shifting over time."}
+              ? "كل نقطة مضيئة تمثّل مزاجك العام في ذلك اليوم، لتمنحك خريطة هادئة لكيف يتغيّر نمطك العاطفي عبر الأيام."
+              : "Each glowing point shows your overall mood for that day, giving you a calm map of how your emotional pattern shifts over time."}
           </p>
         )}
 

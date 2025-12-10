@@ -346,6 +346,7 @@ export default function WhispersPanel({
   let progressToNext = null;
   let progressPercent = null;
   let nextLevelNumberForProgress = null;
+  let railFillPercent = null;
 
   if (trustScore != null && trustLevelUi) {
     if (trustLevelUi.levelNumber >= 5) {
@@ -362,6 +363,27 @@ export default function WhispersPanel({
       progressPercent = Math.round(clamped * 100);
       nextLevelNumberForProgress = currentNumber + 1;
     }
+
+    const segmentsBetweenLevels = 4;
+    const completedSegments = Math.max(
+      0,
+      Math.min(segmentsBetweenLevels, trustLevelUi.levelNumber - 1)
+    );
+    const partial =
+      progressToNext != null
+        ? progressToNext < 0
+          ? 0
+          : progressToNext > 1
+          ? 1
+          : progressToNext
+        : 0;
+    const totalSegments = Math.min(
+      segmentsBetweenLevels,
+      completedSegments + partial
+    );
+    railFillPercent = Math.round(
+      (totalSegments / segmentsBetweenLevels) * 100
+    );
   }
 
   const handleRetry = () => {
@@ -388,125 +410,154 @@ export default function WhispersPanel({
             ×
           </button>
         </div>
-
         {trustLevelUi && (
-          <div className="asrar-whispers-trust-row">
-            <div className="asrar-whispers-trust-main">
-              <span className="asrar-whispers-trust-label">
-                {isAr ? "مستوى الثقة" : "Trust Level"}
-              </span>
-              <span className="asrar-whispers-trust-level-name">
+          <div className="asrar-whispers-trust-path">
+            <div className="asrar-whispers-trust-meta">
+              <p className="asrar-whispers-trust-meta-line">
                 {isAr
-                  ? `المستوى ${
-                      (previewLevelUi || trustLevelUi).levelNumber
-                    } — ${(previewLevelUi || trustLevelUi).label}`
-                  : `Level ${
-                      (previewLevelUi || trustLevelUi).levelNumber
-                    } — ${(previewLevelUi || trustLevelUi).label}`}
-              </span>
-            </div>
-            <div className="asrar-whispers-trust-indicator">
-              {[1, 2, 3, 4, 5].map((lvl) => (
-                <div
-                  key={lvl}
-                  className={
-                    "asrar-whispers-trust-segment" +
-                    (trustLevelUi.levelNumber >= lvl
-                      ? " asrar-whispers-trust-segment--active"
-                      : "")
-                  }
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {trustLevelUi && (
-          <div className="asrar-whispers-level-badges">
-            {levelsForUi.map((lvl) => {
-              const isCurrent =
-                trustLevelUi &&
-                Number(lvl.id) === Number(trustLevelUi.levelNumber);
-              const isPreview =
-                previewLevelUi &&
-                Number(lvl.id) === Number(previewLevelUi.levelNumber);
-              return (
-                <div
-                  key={lvl.id}
-                  className={
-                    "asrar-whispers-level-badge" +
-                    (isCurrent
-                      ? " asrar-whispers-level-badge--current"
-                      : "") +
-                    (isPreview
-                      ? " asrar-whispers-level-badge--preview"
-                      : "")
-                  }
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setPreviewLevelId(lvl.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setPreviewLevelId(lvl.id);
-                    }
-                  }}
-                >
-                  <div className="asrar-whispers-level-dot">{lvl.id}</div>
-                  <span className="asrar-whispers-level-label">
-                    {lvl.shortLabel || lvl.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {previewLevelUi && (
-          <>
-            <p className="asrar-whispers-section-heading">
-              {isAr
-                ? "ماذا يفتح لك هذا المستوى؟"
-                : "What this level gives you"}
-            </p>
-            <ul className="asrar-whispers-now-list">
-              {previewLevelUi.nowBullets.map((line, idx) => (
-                <li key={idx}>{line}</li>
-              ))}
-            </ul>
-            <p className="asrar-whispers-next-hint">
-              {nextLevelUi
-                ? isAr
-                  ? `المستوى التالي يفتح: ${nextLevelUi.nextHint}`
-                  : `Next level unlocks: ${nextLevelUi.nextHint}`
-                : isAr
-                ? "في هذا المستوى يكون الجانب الخفي مفتوحًا بالكامل ويستمر بمشاركة أعمق انعكاساته عن رحلتك العاطفية."
-                : "At this level, Hidden Side is fully unlocked and keeps offering its deepest, long-term reflections about your emotional journey."}
-            </p>
-            {trustLevelUi &&
-              trustLevelUi.levelNumber < 5 &&
-              progressPercent != null && (
-                <>
-                  <p className="asrar-whispers-progress-line">
-                    {isAr
-                      ? `التقدّم نحو المستوى ${nextLevelNumberForProgress}: ${progressPercent}% تقريبًا`
-                      : `Progress to Level ${nextLevelNumberForProgress}: ${progressPercent}%`}
-                  </p>
-                  <p className="asrar-whispers-progress-howto">
-                    {isAr
-                      ? "للترقية: استمر بالفضفضة بصدق مع هذا الرفيق، خصوصًا عن مشاعرك، وعلى أكثر من يوم."
-                      : "To level up: keep having honest conversations with this companion, especially about how you actually feel, over multiple days."}
-                  </p>
-                </>
-              )}
-            {trustLevelUi && trustLevelUi.levelNumber >= 5 && (
-              <p className="asrar-whispers-progress-max">
-                {isAr
+                  ? `مستوى الثقة · المستوى ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`
+                  : `Trust Level · Level ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`}
+              </p>
+              <p
+                className={
+                  "asrar-whispers-trust-meta-sub" +
+                  (trustLevelUi.levelNumber >= 5
+                    ? " asrar-whispers-trust-meta-sub--max"
+                    : "")
+                }
+              >
+                {trustLevelUi.levelNumber < 5 && progressPercent != null
+                  ? isAr
+                    ? `التقدّم نحو المستوى ${nextLevelNumberForProgress}: ${progressPercent}%`
+                    : `Progress to Level ${nextLevelNumberForProgress}: ${progressPercent}%`
+                  : isAr
                   ? "وصلت لأعلى مستوى ثقة مع هذا الرفيق. تم فتح الجانب الخفي بالكامل."
                   : "You've reached the highest trust level with this companion. Hidden Side is fully unlocked."}
               </p>
+            </div>
+
+            <div className="asrar-whispers-rail-wrapper">
+              <div className="asrar-whispers-rail">
+                <div className="asrar-whispers-rail-track" />
+                <div
+                  className="asrar-whispers-rail-fill"
+                  style={{
+                    width: `${railFillPercent != null ? railFillPercent : 0}%`,
+                  }}
+                />
+                {progressPercent != null && (
+                  <div
+                    className="asrar-whispers-rail-particles"
+                    key={progressPercent}
+                  />
+                )}
+              </div>
+              <div className="asrar-whispers-level-badges">
+                {levelsForUi.map((lvl) => {
+                  const levelNumber = Number(lvl.id);
+                  const isCurrent =
+                    trustLevelUi &&
+                    levelNumber === Number(trustLevelUi.levelNumber);
+                  const isPreview =
+                    previewLevelUi &&
+                    levelNumber === Number(previewLevelUi.levelNumber);
+                  const isLocked =
+                    trustLevelUi &&
+                    Number(trustLevelUi.levelNumber) < levelNumber;
+                  const isCompleted =
+                    trustLevelUi &&
+                    Number(trustLevelUi.levelNumber) > levelNumber;
+
+                  return (
+                    <div
+                      key={lvl.id}
+                      className={
+                        "asrar-whispers-level-badge" +
+                        (isCurrent
+                          ? " asrar-whispers-level-badge--current"
+                          : "") +
+                        (isCompleted
+                          ? " asrar-whispers-level-badge--completed"
+                          : "") +
+                        (isPreview
+                          ? " asrar-whispers-level-badge--preview"
+                          : "") +
+                        (isLocked
+                          ? " asrar-whispers-level-badge--locked"
+                          : "")
+                      }
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setPreviewLevelId(lvl.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setPreviewLevelId(lvl.id);
+                        }
+                      }}
+                    >
+                      <div className="asrar-whispers-level-dot">{lvl.id}</div>
+                      <span className="asrar-whispers-level-label">
+                        {lvl.shortLabel || lvl.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {previewLevelUi && (
+              <div className="asrar-whispers-level-detail">
+                <div className="asrar-whispers-level-detail-icon">
+                  {previewLevelUi.shortLabel || previewLevelUi.label}
+                </div>
+                <ul className="asrar-whispers-level-detail-list">
+                  {previewLevelUi.nowBullets.slice(0, 3).map((line, idx) => (
+                    <li key={idx}>{line}</li>
+                  ))}
+                </ul>
+                <p className="asrar-whispers-level-detail-next">
+                  {nextLevelUi
+                    ? isAr
+                      ? `المستوى التالي يفتح: ${nextLevelUi.nextHint}`
+                      : `Next level unlocks: ${nextLevelUi.nextHint}`
+                    : isAr
+                    ? "في هذا المستوى يكون الجانب الخفي مفتوحًا بالكامل ويستمر بمشاركة أعمق انعكاساته عن رحلتك العاطفية."
+                    : "At this level, Hidden Side is fully unlocked and keeps offering its deepest, long-term reflections about your emotional journey."}
+                </p>
+              </div>
             )}
-          </>
+          </div>
+        )}
+
+        {trustLevelUi && (
+          <div className="asrar-whispers-howto">
+            <p className="asrar-whispers-howto-title">
+              {isAr ? "كيف ترتقي في المستويات" : "How to level up"}
+            </p>
+            <ul className="asrar-whispers-howto-list">
+              <li>
+                {isAr
+                  ? "محادثات حقيقية وليست سطحية فقط."
+                  : "Real conversations, not just small talk."}
+              </li>
+              <li>
+                {isAr
+                  ? "صدق عاطفي عندما تتحدث عن شعورك."
+                  : "Emotional honesty when you talk about how you feel."}
+              </li>
+              <li>
+                {isAr
+                  ? "استمرارية في أيام مختلفة، وليس في جلسة واحدة فقط."
+                  : "Consistency across different days, not just one session."}
+              </li>
+              <li>
+                {isAr
+                  ? "الرد على فحوصات ومتابعات المزاج من الرفيق."
+                  : "Responding to emotional check-ins from your companion."}
+              </li>
+            </ul>
+          </div>
         )}
 
         <p className="asrar-whispers-explainer">
