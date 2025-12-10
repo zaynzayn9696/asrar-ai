@@ -2097,19 +2097,14 @@ useEffect(() => {
               const isCurrentAiTyping =
                 isAiTyping && msg.id === aiTypingMessageId;
 
-              let rowClass = "asrar-chat-row";
-              if (msg.from === "ai") {
-                rowClass += " asrar-chat-row--assistant";
-              } else if (msg.from === "user") {
-                rowClass += " asrar-chat-row--user";
-              } else {
-                rowClass += " asrar-chat-row--system";
-              }
-
               const isAiTextMessage =
                 msg.from === "ai" && isTextOnly && !isAiVoice;
               const currentRenderedText =
                 isCurrentAiTyping ? aiTypingBuffer : msg.text;
+
+              // Decide text direction per message. For AI, we derive from the
+              // actual text content; for user/system we fall back to the
+              // overall conversation language.
               const textDir =
                 isAiTextMessage
                   ? isArabic(currentRenderedText)
@@ -2119,9 +2114,30 @@ useEffect(() => {
                   ? "rtl"
                   : "ltr";
 
+              // When an assistant text reply is Arabic, align its bubble to the
+              // right (like user messages) while keeping English replies
+              // left-aligned. This preserves existing logic and styling while
+              // fixing Arabic AI alignment only.
+              const isArabicAiText =
+                isAiTextMessage && isArabic(currentRenderedText);
+
+              let rowClass = "asrar-chat-row";
+              if (msg.from === "ai") {
+                rowClass += " asrar-chat-row--assistant";
+              } else if (msg.from === "user") {
+                rowClass += " asrar-chat-row--user";
+              } else {
+                rowClass += " asrar-chat-row--system";
+              }
+
+              const bubbleStyle =
+                msg.from === "ai" && isArabicAiText
+                  ? { marginLeft: "auto", marginRight: 0 }
+                  : undefined;
+
               return (
                 <div key={msg.id} className={rowClass}>
-                  <div className="asrar-chat-bubble">
+                  <div className="asrar-chat-bubble" style={bubbleStyle}>
                     {/* AI voice replies: voice bubble only */}
                     {isAiVoice && (
                       <VoiceMessageBubble
