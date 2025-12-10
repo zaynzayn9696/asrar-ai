@@ -356,6 +356,43 @@
     0 0 12px rgba(0, 240, 255, 0.8);
 }
 
+.asrar-whispers-progress-top {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.asrar-whispers-progress-label {
+  font-size: 0.8rem;
+  color: #d0e4ff;
+  text-align: center;
+}
+
+.asrar-whispers-progress-label--max {
+  color: #ffe3ae;
+}
+
+.asrar-whispers-progress-bar {
+  width: 100%;
+  max-width: 260px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(4, 16, 30, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.18);
+  overflow: hidden;
+}
+
+.asrar-whispers-progress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00f4ff, #7c4dff);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.8);
+  transition: width 220ms ease-out;
+}
+
 .asrar-whispers-level-badges {
   margin-top: 0.5rem;
   display: flex;
@@ -410,6 +447,24 @@
 
 .asrar-whispers-level-badge--preview .asrar-whispers-level-label {
   text-decoration: underline;
+}
+
+.asrar-whispers-level-badge--locked {
+  opacity: 0.35;
+}
+
+.asrar-whispers-level-badge--locked .asrar-whispers-level-dot {
+  position: relative;
+}
+
+.asrar-whispers-level-badge--locked .asrar-whispers-level-dot::after {
+  content: "🔒";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
 }
 
 .asrar-whispers-level-label {
@@ -473,25 +528,31 @@
   color: #b5cff5;
 }
 
-.asrar-whispers-progress-line {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  text-align: center;
-  color: #d0e4ff;
+.asrar-whispers-howto {
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(3, 14, 30, 0.92);
+  border: 1px solid rgba(0, 240, 255, 0.24);
 }
 
-.asrar-whispers-progress-howto {
-  margin-top: 0.2rem;
+.asrar-whispers-howto-title {
+  margin: 0 0 0.35rem;
   font-size: 0.78rem;
+  font-weight: 600;
   text-align: center;
-  color: #9fbce6;
+  color: #cbe9ff;
 }
 
-.asrar-whispers-progress-max {
-  margin-top: 0.5rem;
+.asrar-whispers-howto-list {
+  margin: 0;
+  padding-left: 1.1rem;
   font-size: 0.8rem;
-  text-align: center;
-  color: #d0e4ff;
+  color: #d6ecff;
+}
+
+.asrar-whispers-howto-list li {
+  margin: 0.12rem 0;
 }
 
 .asrar-whispers-explainer {

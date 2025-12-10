@@ -397,12 +397,8 @@ export default function WhispersPanel({
               </span>
               <span className="asrar-whispers-trust-level-name">
                 {isAr
-                  ? `المستوى ${
-                      (previewLevelUi || trustLevelUi).levelNumber
-                    } — ${(previewLevelUi || trustLevelUi).label}`
-                  : `Level ${
-                      (previewLevelUi || trustLevelUi).levelNumber
-                    } — ${(previewLevelUi || trustLevelUi).label}`}
+                  ? `المستوى ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`
+                  : `Level ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`}
               </span>
             </div>
             <div className="asrar-whispers-trust-indicator">
@@ -422,6 +418,62 @@ export default function WhispersPanel({
         )}
 
         {trustLevelUi && (
+          <div className="asrar-whispers-progress-top">
+            {trustLevelUi.levelNumber < 5 && progressPercent != null ? (
+              <>
+                <p className="asrar-whispers-progress-label">
+                  {isAr
+                    ? `التقدّم نحو المستوى ${nextLevelNumberForProgress}: ${progressPercent}%`
+                    : `Progress to Level ${nextLevelNumberForProgress}: ${progressPercent}%`}
+                </p>
+                <div className="asrar-whispers-progress-bar">
+                  <div
+                    className="asrar-whispers-progress-bar-fill"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="asrar-whispers-progress-label asrar-whispers-progress-label--max">
+                {isAr
+                  ? "وصلت لأعلى مستوى ثقة مع هذا الرفيق. تم فتح الجانب الخفي بالكامل."
+                  : "You've reached the highest trust level with this companion. Hidden Side is fully unlocked."}
+              </p>
+            )}
+          </div>
+        )}
+
+        {trustLevelUi && (
+          <div className="asrar-whispers-howto">
+            <p className="asrar-whispers-howto-title">
+              {isAr ? "كيف ترتقي في المستويات" : "How to level up"}
+            </p>
+            <ul className="asrar-whispers-howto-list">
+              <li>
+                {isAr
+                  ? "محادثات حقيقية وليست سطحية فقط."
+                  : "Real conversations, not just small talk."}
+              </li>
+              <li>
+                {isAr
+                  ? "صدق عاطفي عندما تتحدث عن شعورك."
+                  : "Emotional honesty when you talk about how you feel."}
+              </li>
+              <li>
+                {isAr
+                  ? "استمرارية في أيام مختلفة، وليس في جلسة واحدة فقط."
+                  : "Consistency across different days, not just one session."}
+              </li>
+              <li>
+                {isAr
+                  ? "الرد على فحوصات ومتابعات المزاج من الرفيق."
+                  : "Responding to emotional check-ins from your companion."}
+              </li>
+            </ul>
+          </div>
+        )}
+
+        {trustLevelUi && (
           <div className="asrar-whispers-level-badges">
             {levelsForUi.map((lvl) => {
               const isCurrent =
@@ -430,6 +482,7 @@ export default function WhispersPanel({
               const isPreview =
                 previewLevelUi &&
                 Number(lvl.id) === Number(previewLevelUi.levelNumber);
+              const isLocked = trustLevelUi.levelNumber < lvl.id;
               return (
                 <div
                   key={lvl.id}
@@ -440,6 +493,9 @@ export default function WhispersPanel({
                       : "") +
                     (isPreview
                       ? " asrar-whispers-level-badge--preview"
+                      : "") +
+                    (isLocked
+                      ? " asrar-whispers-level-badge--locked"
                       : "")
                   }
                   role="button"
@@ -483,29 +539,6 @@ export default function WhispersPanel({
                 ? "في هذا المستوى يكون الجانب الخفي مفتوحًا بالكامل ويستمر بمشاركة أعمق انعكاساته عن رحلتك العاطفية."
                 : "At this level, Hidden Side is fully unlocked and keeps offering its deepest, long-term reflections about your emotional journey."}
             </p>
-            {trustLevelUi &&
-              trustLevelUi.levelNumber < 5 &&
-              progressPercent != null && (
-                <>
-                  <p className="asrar-whispers-progress-line">
-                    {isAr
-                      ? `التقدّم نحو المستوى ${nextLevelNumberForProgress}: ${progressPercent}% تقريبًا`
-                      : `Progress to Level ${nextLevelNumberForProgress}: ${progressPercent}%`}
-                  </p>
-                  <p className="asrar-whispers-progress-howto">
-                    {isAr
-                      ? "للترقية: استمر بالفضفضة بصدق مع هذا الرفيق، خصوصًا عن مشاعرك، وعلى أكثر من يوم."
-                      : "To level up: keep having honest conversations with this companion, especially about how you actually feel, over multiple days."}
-                  </p>
-                </>
-              )}
-            {trustLevelUi && trustLevelUi.levelNumber >= 5 && (
-              <p className="asrar-whispers-progress-max">
-                {isAr
-                  ? "وصلت لأعلى مستوى ثقة مع هذا الرفيق. تم فتح الجانب الخفي بالكامل."
-                  : "You've reached the highest trust level with this companion. Hidden Side is fully unlocked."}
-              </p>
-            )}
           </>
         )}
 

@@ -187,8 +187,12 @@ const TEXT = {
   },
 };
 
+function isArabic(text) {
+  return /[\u0600-\u06FF]/.test(text || "");
+}
+
 function isArabicText(str) {
-  return /[\u0600-\u06FF]/.test(str || "");
+  return isArabic(str);
 }
 
 function getSupportedMimeType() {
@@ -2029,18 +2033,7 @@ useEffect(() => {
 
               let rowClass = "asrar-chat-row";
               if (msg.from === "ai") {
-                const isVoice = !!msg.audioBase64;
-                if (isVoice) {
-                  // Keep existing alignment for voice replies
-                  rowClass += " asrar-chat-row--assistant";
-                } else {
-                  // Text AI message: choose alignment based on actual text language
-                  if (isArabicText(msg.text)) {
-                    rowClass += " asrar-chat-row--assistant-ar";
-                  } else {
-                    rowClass += " asrar-chat-row--assistant-en";
-                  }
-                }
+                rowClass += " asrar-chat-row--assistant";
               } else if (msg.from === "user") {
                 rowClass += " asrar-chat-row--user";
               } else {
@@ -2053,7 +2046,7 @@ useEffect(() => {
                 isCurrentAiTyping ? aiTypingBuffer : msg.text;
               const textDir =
                 isAiTextMessage
-                  ? isArabicText(currentRenderedText)
+                  ? isArabic(currentRenderedText)
                     ? "rtl"
                     : "ltr"
                   : isArabicConversation

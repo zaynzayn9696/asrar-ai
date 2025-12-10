@@ -189,6 +189,13 @@
   min-height: 160px;
 }
 
+@media (max-width: 900px) {
+  .asrar-timeline-body {
+    min-height: 0;
+    margin-top: 0.25rem;
+  }
+}
+
 .asrar-timeline-scroll {
   width: 100%;
   overflow-x: auto;

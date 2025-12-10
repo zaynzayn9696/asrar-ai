@@ -141,25 +141,6 @@ export default function EmotionalTimelineMap({
     setRefreshKey((k) => k + 1);
   };
 
-  const trendPolylinePoints = React.useMemo(() => {
-    if (!visiblePoints || visiblePoints.length < 2) return "";
-    const n = visiblePoints.length;
-
-    return visiblePoints
-      .map((p, idx) => {
-        if (!p || typeof p !== "object") return null;
-        const x = (idx / (n - 1)) * 100;
-        const rawIntensity = Number(p.avgIntensity);
-        const intensity = Number.isFinite(rawIntensity) ? rawIntensity : 0;
-        const clamped = Math.max(0, Math.min(1, intensity));
-        const y = 90 - clamped * 60; // higher intensity sits higher on the chart
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .filter(Boolean)
-      .join(" ");
-  }, [visiblePoints]);
-
   if (!isOpen) return null;
 
   return (
@@ -238,15 +219,6 @@ export default function EmotionalTimelineMap({
           <div className="asrar-timeline-body">
             <div className="asrar-timeline-scroll">
               <div className="asrar-timeline-track-wrapper">
-                {trendPolylinePoints && (
-                  <svg
-                    className="asrar-timeline-trend"
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                  >
-                    <polyline points={trendPolylinePoints} />
-                  </svg>
-                )}
                 <div className="asrar-timeline-track">
                   {visiblePoints.map((p, idx) => {
                     if (!p || typeof p !== "object") return null;
@@ -323,8 +295,8 @@ export default function EmotionalTimelineMap({
         {points.length > 0 && (
           <p className="asrar-timeline-explainer">
             {isAr
-              ? "كل عمود يمثّل مزاجك العام في ذلك اليوم، والخط يوضّح كيف يتغيّر نمطك العاطفي مع الوقت."
-              : "Each bar shows your overall mood for that day. The line shows how your emotional tone is shifting over time."}
+              ? "كل عمود يمثّل مزاجك العام في ذلك اليوم، مع توضيح بسيط لكيفية تغيّر نمطك العاطفي عبر الأيام."
+              : "Each bar shows your overall mood for that day and gives a simple sense of how your emotional pattern shifts over time."}
           </p>
         )}
 
