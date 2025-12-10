@@ -379,3 +379,21 @@
     0 0 0 1px rgba(255, 230, 255, 0.8),
     0 18px 40px rgba(0, 0, 0, 0.98);
 }
+
+@media (max-width: 480px) {
+  .asrar-timeline-layer {
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .asrar-timeline-panel {
+    height: auto;
+    max-height: calc(100% - 1.25rem);
+    margin-top: 0.5rem;
+  }
+
+  .asrar-timeline-body {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+}
