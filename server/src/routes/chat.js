@@ -173,8 +173,8 @@ function buildUsageSummary(user, usage) {
 
 // Atomic usage limiter for both text and voice.
 // Ensures that each valid request (text or voice) counts as exactly one message
-// and that free users cannot exceed their daily limit and premium users cannot
-// exceed their monthly limit, even under concurrent requests.
+// and that all non-tester users respect their configured monthly limit, even
+// under concurrent requests.
 async function applyUsageLimitAndIncrement({
   userId,
   usage,
@@ -184,125 +184,53 @@ async function applyUsageLimitAndIncrement({
   isFreePlanUser,
   isTester,
 }) {
-  const now = new Date();
-
   // Testers bypass all limits and are not counted.
   if (isTester) {
     return { ok: true, usage, limitType: null };
   }
+  // All non-tester users share the same semantics: a single monthly cap based on
+  // getPlanLimits. Daily counters remain in the schema for compatibility but no
+  // longer drive any quota behavior.
+  const limit = monthlyLimit || 0;
 
-  // Premium / paid users: enforce monthly limit only.
-  if (isPremiumUser) {
-    const limit = monthlyLimit || 0;
-
-    // If no configured monthly limit, treat as unlimited but still track usage.
-    if (limit <= 0) {
-      const updated = await prisma.usage.update({
-        where: { userId },
-        data: { monthlyCount: { increment: 1 } },
-      });
-      return { ok: true, usage: updated, limitType: 'monthly' };
-    }
-
-    // Atomic check+increment: only increment if current monthlyCount < limit.
-    const result = await prisma.usage.updateMany({
-      where: { userId, monthlyCount: { lt: limit } },
+  // If no configured monthly limit, treat as unlimited but still track usage.
+  if (limit <= 0) {
+    const updated = await prisma.usage.update({
+      where: { userId },
       data: { monthlyCount: { increment: 1 } },
     });
+    return { ok: true, usage: updated, limitType: 'monthly' };
+  }
 
-    if (result.count === 0) {
-      // Already at or above the monthly limit.
-      const freshUsage = await prisma.usage.findUnique({ where: { userId } });
-      const used = freshUsage?.monthlyCount || 0;
-      const remaining = Math.max(0, limit - used);
+  // Atomic check+increment: only increment if current monthlyCount < limit.
+  const result = await prisma.usage.updateMany({
+    where: { userId, monthlyCount: { lt: limit } },
+    data: { monthlyCount: { increment: 1 } },
+  });
 
-      return {
-        ok: false,
-        limitType: 'monthly',
-        used,
-        limit,
-        remaining,
-        usage: freshUsage,
-      };
-    }
-
-    // Successful increment; fetch the latest usage row so summaries are accurate.
+  if (result.count === 0) {
+    // Already at or above the monthly limit.
     const freshUsage = await prisma.usage.findUnique({ where: { userId } });
+    const used = freshUsage?.monthlyCount || 0;
+    const remaining = Math.max(0, limit - used);
+
     return {
-      ok: true,
+      ok: false,
       limitType: 'monthly',
+      used,
+      limit,
+      remaining,
       usage: freshUsage,
     };
   }
 
-  // Free-plan users: enforce daily limit only.
-  if (isFreePlanUser) {
-    const limit = dailyLimit || 0;
-
-    // If for some reason the free plan has no daily limit configured, treat as
-    // unlimited but still track usage.
-    if (limit <= 0) {
-      const updated = await prisma.usage.update({
-        where: { userId },
-        data: { dailyCount: { increment: 1 } },
-      });
-      return { ok: true, limitType: 'daily', usage: updated };
-    }
-
-    // Atomic check+increment for dailyCount.
-    const result = await prisma.usage.updateMany({
-      where: { userId, dailyCount: { lt: limit } },
-      data: { dailyCount: { increment: 1 } },
-    });
-
-    if (result.count === 0) {
-      // Already at or above the daily limit: compute or set the 24h reset.
-      let freshUsage = await prisma.usage.findUnique({ where: { userId } });
-      const used = freshUsage?.dailyCount || 0;
-
-      let resetAtDate;
-      if (freshUsage?.dailyResetAt && freshUsage.dailyResetAt > now) {
-        resetAtDate = new Date(freshUsage.dailyResetAt);
-      } else {
-        resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        try {
-          freshUsage = await prisma.usage.update({
-            where: { userId },
-            data: { dailyResetAt: resetAtDate },
-          });
-        } catch (_) {}
-      }
-
-      const resetInSeconds = Math.max(
-        0,
-        Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
-      );
-
-      const remaining = Math.max(0, limit - used);
-
-      return {
-        ok: false,
-        limitType: 'daily',
-        used,
-        limit,
-        remaining,
-        resetAt: resetAtDate.toISOString(),
-        resetInSeconds,
-        usage: freshUsage,
-      };
-    }
-
-    // Successful increment; fetch the latest usage row.
-    const freshUsage = await prisma.usage.findUnique({ where: { userId } });
-    return {
-      ok: true,
-      limitType: 'daily',
-      usage: freshUsage,
-    };
-  }
-
-  // Fallback for unexpected plan combinations: no limits applied.
-  return { ok: true, usage, limitType: null };
+  // Successful increment; fetch the latest usage row so summaries are accurate.
+  const freshUsage = await prisma.usage.findUnique({ where: { userId } });
+  return {
+    ok: true,
+    limitType: 'monthly',
+    usage: freshUsage,
+  };
 }
 
 // ----------------------------------------------------------------------
@@ -974,46 +902,25 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     if (!limitResultVoice.ok) {
       const {
-        limitType,
         used,
         limit,
         remaining,
-        resetAt,
-        resetInSeconds,
         usage: freshUsage,
       } = limitResultVoice;
 
       usage = freshUsage || usage;
 
-      if (limitType === 'monthly') {
-        return res.status(429).json({
-          error: 'limit_reached',
-          code: 'LIMIT_EXCEEDED',
-          message: 'Monthly message limit reached.',
-          scope: 'monthly',
-          plan: 'premium',
-          used,
-          limit,
-          remaining: typeof remaining === 'number' ? remaining : 0,
-          usage: buildUsageSummary(dbUser, usage),
-          limitType: 'monthly',
-        });
-      }
-
-      // Daily free-plan limit.
       return res.status(429).json({
-        error: 'limit_reached',
-        code: 'LIMIT_REACHED',
-        message: 'Daily message limit reached.',
-        scope: 'daily',
+        error: 'usage_limit_reached',
+        code: 'LIMIT_EXCEEDED',
+        message: 'Monthly message limit reached.',
+        scope: 'monthly',
         plan: dbUser.plan,
         used,
         limit,
         remaining: typeof remaining === 'number' ? remaining : 0,
         usage: buildUsageSummary(dbUser, usage),
-        limitType: 'daily',
-        resetAt,
-        resetInSeconds,
+        limitType: 'monthly',
       });
     }
 
@@ -1607,46 +1514,25 @@ router.post('/message', async (req, res) => {
 
     if (!limitResultMessage.ok) {
       const {
-        limitType,
         used,
         limit,
         remaining,
-        resetAt,
-        resetInSeconds,
         usage: freshUsage,
       } = limitResultMessage;
 
       usage = freshUsage || usage;
 
-      if (limitType === 'monthly') {
-        return res.status(429).json({
-          error: 'limit_reached',
-          code: 'LIMIT_EXCEEDED',
-          message: 'Monthly message limit reached.',
-          scope: 'monthly',
-          plan: 'premium',
-          used,
-          limit,
-          remaining: typeof remaining === 'number' ? remaining : 0,
-          usage: buildUsageSummary(dbUser, usage),
-          limitType: 'monthly',
-        });
-      }
-
-      // Daily free-plan limit.
       return res.status(429).json({
-        error: 'limit_reached',
-        code: 'LIMIT_REACHED',
-        message: 'Daily message limit reached.',
-        scope: 'daily',
+        error: 'usage_limit_reached',
+        code: 'LIMIT_EXCEEDED',
+        message: 'Monthly message limit reached.',
+        scope: 'monthly',
         plan: dbUser.plan,
         used,
         limit,
         remaining: typeof remaining === 'number' ? remaining : 0,
         usage: buildUsageSummary(dbUser, usage),
-        limitType: 'daily',
-        resetAt,
-        resetInSeconds,
+        limitType: 'monthly',
       });
     }
 

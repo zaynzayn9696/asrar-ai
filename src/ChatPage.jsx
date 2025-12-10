@@ -252,6 +252,10 @@ export default function ChatPage() {
   const conversationLang = isArabicConversation ? "ar" : "en";
   const characterDisplayName = isAr ? character.nameAr : character.nameEn;
 
+  const isPremiumUser = !!(
+    user?.isPremium || user?.plan === "premium" || user?.plan === "pro"
+  );
+
   const getName = (c) => (isAr ? c.nameAr : c.nameEn);
   const getRole = (c) => (isAr ? c.roleAr : c.roleEn);
 
@@ -356,19 +360,15 @@ export default function ChatPage() {
   useEffect(() => {
     if (!usageInfo) return;
 
-    const dailyLimit = usageInfo.dailyLimit;
-    const dailyUsed = usageInfo.dailyUsed;
+    const monthlyLimit = usageInfo.monthlyLimit;
+    const monthlyUsed = usageInfo.monthlyUsed;
 
-    if (
-      dailyLimit &&
-      dailyLimit > 0 &&
-      dailyUsed >= dailyLimit &&
-      typeof usageInfo.dailyResetInSeconds === "number" &&
-      usageInfo.dailyResetInSeconds >= 0
-    ) {
+    if (monthlyLimit && monthlyLimit > 0 && monthlyUsed >= monthlyLimit) {
       setLimitExceeded(true);
       setLimitUsage(usageInfo);
-      setLimitResetSeconds(usageInfo.dailyResetInSeconds);
+      setLimitResetSeconds(null);
+    } else {
+      setLimitExceeded(false);
     }
   }, [usageInfo]);
 
@@ -988,8 +988,22 @@ const renderSidebarContent = () => (
       />
       <button
         type="button"
-        className="asrar-timeline-badge"
-        onClick={() => setIsTimelineOpen(true)}
+        className={
+          "asrar-timeline-badge" +
+          (!isPremiumUser ? " asrar-timeline-badge--locked" : "")
+        }
+        onClick={() => {
+          if (!isPremiumUser) {
+            setModalText(
+              isAr
+                ? "ميزة الرحلة العاطفية متاحة فقط في الخطة المدفوعة."
+                : "Emotional Journey is available on the Premium plan only."
+            );
+            setShowLockedModal(true);
+            return;
+          }
+          setIsTimelineOpen(true);
+        }}
       >
         <span className="asrar-timeline-badge-icon" aria-hidden="true">
           <svg
@@ -1796,12 +1810,8 @@ useEffect(() => {
               }
               setModalText(
                 isArabicConversation
-                  ? data.limitType === "monthly"
-                    ? "وصلت للحد الشهري للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
-                    : "وصلت للحد اليومي للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
-                  : data.limitType === "monthly"
-                  ? "You have reached your monthly message limit. Upgrade to Pro for higher limits."
-                  : "You have reached your daily message limit. Upgrade to Pro for higher limits."
+                  ? "وصلت للحد الشهري للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
+                  : "You have reached your monthly message limit. Upgrade to Pro for higher limits."
               );
               setShowLimitModal(true);
               return;
@@ -2175,35 +2185,18 @@ useEffect(() => {
               <div className="asrar-limit-banner-text">
                 <p>
                   {isAr
-                    ? "وصلت إلى حد ٥ رسائل اليوم في الخطة المجانية."
-                    : "You’ve reached your daily 5-message limit on the free plan."}
+                    ? "وصلت إلى حد الرسائل الشهري."
+                    : "You’ve reached your monthly message limit."}
                 </p>
-                {typeof limitResetSeconds === "number" &&
-                  limitResetSeconds > 0 &&
-                  (() => {
-                    const total = limitResetSeconds;
-                    const hours = Math.floor(total / 3600);
-                    const minutes = Math.floor((total % 3600) / 60);
-                    let text;
-                    if (hours > 0 && minutes > 0) {
-                      text = isAr
-                        ? `يمكنك إرسال رسائل جديدة بعد ${hours} ساعة و ${minutes} دقيقة، أو الترقية للمتابعة في الدردشة.`
-                        : `You can send new messages in ${hours} hours ${minutes} minutes, or upgrade to keep chatting.`;
-                    } else if (hours > 0) {
-                      text = isAr
-                        ? `يمكنك إرسال رسائل جديدة بعد ${hours} ساعة، أو الترقية للمتابعة في الدردشة.`
-                        : `You can send new messages in ${hours} hours, or upgrade to keep chatting.`;
-                    } else if (minutes > 0) {
-                      text = isAr
-                        ? `يمكنك إرسال رسائل جديدة بعد ${minutes} دقيقة، أو الترقية للمتابعة في الدردشة.`
-                        : `You can send new messages in ${minutes} minutes, or upgrade to keep chatting.`;
-                    } else {
-                      text = isAr
-                        ? "يمكنك إرسال رسائل جديدة قريباً جداً، أو الترقية للمتابعة في الدردشة."
-                        : "You’ll be able to send new messages very soon, or upgrade to keep chatting.";
-                    }
-                    return <p>{text}</p>;
-                  })()}
+                <p>
+                  {isAr
+                    ? isPremiumUser
+                      ? "وصلت إلى حد ٥٠٠ رسالة لهذا الشهر. سيتمّ إعادة التعيين مع بداية الشهر القادم."
+                      : "يمكنك الترقية للمتابعة في الدردشة مع أصحابك العاطفيين."
+                    : isPremiumUser
+                    ? "You’ve reached your 500 monthly messages. Your limit will reset next month."
+                    : "You can upgrade to keep chatting with your companions."}
+                </p>
               </div>
               <button
                 type="button"
@@ -2332,7 +2325,7 @@ useEffect(() => {
                         🧠
                       </span>
                       <span className="asrar-engine-option-label">
-                        {isAr ? "عميق – تفاعلي" : "Deep – Emotional"}
+                        {isAr ? "العميق – المحرك العاطفي V6" : "Deep – Engine V6"}
                       </span>
                     </button>
                   </div>
@@ -2406,12 +2399,8 @@ useEffect(() => {
                 const isPrem = !!(
                   user?.isPremium || user?.plan === "premium" || user?.plan === "pro"
                 );
-                const limit = isPrem
-                  ? usageInfo?.monthlyLimit ?? 3000
-                  : usageInfo?.dailyLimit ?? 5;
-                const usedFromUsage = isPrem
-                  ? usageInfo?.monthlyUsed ?? null
-                  : usageInfo?.dailyUsed ?? null;
+                const limit = usageInfo?.monthlyLimit ?? (isPrem ? 500 : 50);
+                const usedFromUsage = usageInfo?.monthlyUsed ?? null;
                 const userMsgs = messages.filter((m) => m.from === "user").length;
                 const used = usedFromUsage ?? userMsgs;
                 const counterText = `${used} / ${limit}`;

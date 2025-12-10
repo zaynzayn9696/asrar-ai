@@ -1325,7 +1325,13 @@ export default function HomePage() {
                 <p className="asrar-pricing-price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
                 <ul className="asrar-pricing-features">
                   <li>{isAr ? "ثلاث شخصيات اساسية" : "3 core character"}</li>
-                  <li>{isAr ? "٥ رسائل يومياً" : "5 messages per day"}</li>
+                  <li>{isAr ? "٥٠ رسالة شهرياً" : "50 messages per month"}</li>
+                  <li>{isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
+                  <li>
+                    {isAr
+                      ? "وصول إلى الجانب الخفي™ فقط"
+                      : "Hidden Side™ access only (no Emotional Journey or Mirror Me)"}
+                  </li>
                   <li>
                     {isAr
                       ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)"
@@ -1349,7 +1355,7 @@ export default function HomePage() {
               <div className="asrar-pricing-card asrar-pricing-card--pro">
                 <div className="asrar-pricing-badge">{isAr ? "الأكثر شيوعاً" : "Most Popular"}</div>
                 <h3>{isAr ? "برو" : "Pro"}</h3>
-                <p className="asrar-pricing-price">{isAr ? "$9.85 / شهرياً" : "$9.85 / month"}</p>
+                <p className="asrar-pricing-price">{isAr ? "$7.99 / شهرياً" : "$7.99 / month"}</p>
                 <ul className="asrar-pricing-features">
                   <li>
                     {isAr
@@ -1357,7 +1363,13 @@ export default function HomePage() {
                       : "All 5 Asrar characters"}
                   </li>
                   <li>
-                    {isAr ? "٣٠٠٠ رسالة شهرياً" : "3,000 messages per month"}
+                    {isAr ? "٥٠٠ رسالة شهرياً" : "500 messages per month"}
+                  </li>
+                  <li>{isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
+                  <li>
+                    {isAr
+                      ? "الجانب الخفي™، الرحلة العاطفية™، ومرآتي™"
+                      : "Hidden Side™, Emotional Journey™ & Mirror Me™"}
                   </li>
                   <li>
                     {isAr

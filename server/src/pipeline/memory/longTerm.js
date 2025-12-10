@@ -147,6 +147,210 @@ async function detectNameUsingLLM(messageText) {
   }
 }
 
+function extractSemanticFactsFromMessage(messageText) {
+  const raw = String(messageText || '').trim();
+  if (!raw) return [];
+  const text = raw;
+  const lower = raw.toLowerCase();
+  const hasArabic = /[\u0600-\u06FF]/u.test(text);
+  const facts = [];
+
+  function pushFact(kind, value, confidence) {
+    if (!kind || !value) return;
+    const v = String(value || '').trim();
+    if (!v) return;
+    const conf = typeof confidence === 'number' && Number.isFinite(confidence)
+      ? confidence
+      : 0.9;
+    facts.push({ kind, value: v, confidence: conf });
+  }
+
+  function hasNear(haystack, a, b, maxDistance) {
+    if (!haystack || !a || !b) return false;
+    const ia = haystack.indexOf(a);
+    if (ia === -1) return false;
+    const ib = haystack.indexOf(b);
+    if (ib === -1) return false;
+    return Math.abs(ia - ib) <= maxDistance;
+  }
+
+  const seasonTokensEn = {
+    winter: ['winter'],
+    summer: ['summer'],
+    spring: ['spring'],
+    autumn: ['autumn', 'fall'],
+  };
+
+  const seasonTokensAr = {
+    winter: ['شتاء', 'شتاء'],
+    summer: ['صيف'],
+    spring: ['ربيع'],
+    autumn: ['خريف', 'خريف'],
+  };
+
+  const weatherTokensEn = {
+    rain: ['rain', 'rainy'],
+    snow: ['snow', 'snowy'],
+    sun: ['sun', 'sunny', 'sunshine'],
+  };
+
+  const weatherTokensAr = {
+    rain: ['مطر', 'المطر', 'أمطار', 'ماطر', 'ماطرة'],
+    snow: ['ثلج', 'الثلج', 'ثلجية'],
+    sun: ['شمس', 'الشمس', 'مشمس'],
+  };
+
+  const petTokensEn = {
+    cats: ['cat', 'cats'],
+    dogs: ['dog', 'dogs'],
+  };
+
+  const petTokensAr = {
+    cats: ['قطة', 'قطط', 'القطط'],
+    dogs: ['كلب', 'كلاب', 'الكلاب'],
+  };
+
+  const likeVerbsEn = ['love', 'like', 'enjoy', 'adore'];
+  const dislikeVerbsEn = ['hate', 'dislike', 'detest'];
+  const likeVerbsAr = ['احب', 'أحب', 'بحب', 'بعشق', 'اعشق', 'أعشق'];
+  const dislikeVerbsAr = ['اكره', 'أكره', 'بكره', 'ما بحب', 'ما احب', 'ما أحب'];
+
+  function detectPrefsFromMap(tokensMapEn, tokensMapAr, kindLike, kindDislike) {
+    const isArabicContext = hasArabic;
+    const srcEn = lower;
+    const srcAr = text;
+    const maxDist = 40;
+    Object.keys(tokensMapEn).forEach((code) => {
+      let liked = false;
+      let disliked = false;
+
+      const enTokens = tokensMapEn[code] || [];
+      for (const token of enTokens) {
+        for (const v of likeVerbsEn) {
+          if (hasNear(srcEn, v, token, maxDist)) {
+            liked = true;
+            break;
+          }
+        }
+        for (const v of dislikeVerbsEn) {
+          if (hasNear(srcEn, v, token, maxDist)) {
+            disliked = true;
+            break;
+          }
+        }
+      }
+
+      if (isArabicContext) {
+        const arTokens = tokensMapAr[code] || [];
+        for (const token of arTokens) {
+          for (const v of likeVerbsAr) {
+            if (hasNear(srcAr, v, token, maxDist)) {
+              liked = true;
+              break;
+            }
+          }
+          for (const v of dislikeVerbsAr) {
+            if (hasNear(srcAr, v, token, maxDist)) {
+              disliked = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (liked && !disliked) {
+        pushFact(kindLike, code, 0.95);
+      } else if (disliked && !liked) {
+        pushFact(kindDislike, code, 0.95);
+      }
+    });
+  }
+
+  detectPrefsFromMap(seasonTokensEn, seasonTokensAr, 'preference.season.like', 'preference.season.dislike');
+  detectPrefsFromMap(weatherTokensEn, weatherTokensAr, 'preference.weather.like', 'preference.weather.dislike');
+  detectPrefsFromMap(petTokensEn, petTokensAr, 'preference.pets.like', 'preference.pets.dislike');
+
+  const socialIntrovertEn = ['introvert', 'introverted'];
+  const socialExtrovertEn = ['extrovert', 'extroverted'];
+  const socialAmbivertEn = ['ambivert'];
+  const socialIntrovertAr = ['', ''];
+  const socialExtrovertAr = ['', ''];
+
+  let socialStyle = null;
+
+  for (const token of socialIntrovertEn) {
+    if (lower.includes(token)) {
+      socialStyle = 'introvert';
+      break;
+    }
+  }
+
+  if (!socialStyle) {
+    for (const token of socialExtrovertEn) {
+      if (lower.includes(token)) {
+        socialStyle = 'extrovert';
+        break;
+      }
+    }
+  }
+
+  if (!socialStyle) {
+    for (const token of socialAmbivertEn) {
+      if (lower.includes(token)) {
+        socialStyle = 'ambivert';
+        break;
+      }
+    }
+  }
+
+  if (!socialStyle && hasArabic) {
+    for (const token of socialIntrovertAr) {
+      if (text.includes(token)) {
+        socialStyle = 'introvert';
+        break;
+      }
+    }
+  }
+
+  if (!socialStyle && hasArabic) {
+    for (const token of socialExtrovertAr) {
+      if (text.includes(token)) {
+        socialStyle = 'extrovert';
+        break;
+      }
+    }
+  }
+
+  if (socialStyle) {
+    pushFact('trait.social.style', socialStyle, 0.95);
+  }
+
+  const crowdTokensEn = ['crowd', 'crowds', 'crowded'];
+  const crowdNegEn = ['anxious', 'anxiety', 'panic', 'overwhelmed', 'hate', 'dislike'];
+
+  let dislikesCrowds = false;
+  for (const t of crowdTokensEn) {
+    if (!lower.includes(t)) continue;
+    let hasNegative = false;
+    for (const v of crowdNegEn) {
+      if (hasNear(lower, v, t, 40)) {
+        hasNegative = true;
+        break;
+      }
+    }
+    if (hasNegative) {
+      dislikesCrowds = true;
+      break;
+    }
+  }
+
+  if (dislikesCrowds) {
+    pushFact('preference.crowds', 'dislike', 0.9);
+  }
+
+  return facts;
+}
+
 /**
  * Update long-term emotional profile for a user.
  *
@@ -346,6 +550,53 @@ async function updateLongTerm(userId, event, outcome) {
     } catch (err) {
       console.error(
         '[LongTermMemory] identity.name update error',
+        err && err.message ? err.message : err
+      );
+    }
+  }
+
+  if (messageText) {
+    try {
+      const semanticFacts = extractSemanticFactsFromMessage(messageText);
+      if (Array.isArray(semanticFacts) && semanticFacts.length) {
+        for (const fact of semanticFacts) {
+          if (!fact || !fact.kind || !fact.value) continue;
+          const kind = String(fact.kind || '').trim();
+          const value = String(fact.value || '').trim();
+          if (!kind || !value) continue;
+          let existingFact = null;
+          try {
+            existingFact = await prisma.userMemoryFact.findFirst({
+              where: { userId, kind, value },
+              select: { id: true },
+            });
+          } catch (_) {
+            existingFact = null;
+          }
+          const confidence =
+            typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
+              ? fact.confidence
+              : 0.9;
+          const data = {
+            userId,
+            kind,
+            value,
+            confidence,
+            sourceMessageId: event.messageId || null,
+          };
+          if (existingFact && existingFact.id) {
+            await prisma.userMemoryFact.update({
+              where: { id: existingFact.id },
+              data,
+            });
+          } else {
+            await prisma.userMemoryFact.create({ data });
+          }
+        }
+      }
+    } catch (err) {
+      console.error(
+        '[LongTermMemory] semantic preferences update error',
         err && err.message ? err.message : err
       );
     }

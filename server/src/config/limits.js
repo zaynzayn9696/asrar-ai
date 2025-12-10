@@ -14,7 +14,8 @@ const LIMITS = {
   PROHIBITED_FOR_FREE_IDS: ['walaa', 'hiba'],
   FREE_DAILY: toInt(process.env.FREE_DAILY, 5),
   PRO_DAILY: toInt(process.env.PRO_DAILY, 0),
-  PRO_MONTHLY: toInt(process.env.PRO_MONTHLY, 3000),
+  FREE_MONTHLY: toInt(process.env.FREE_MONTHLY, 50),
+  PRO_MONTHLY: toInt(process.env.PRO_MONTHLY, 500),
   PREMIUM_TESTER_EMAIL:
     (process.env.PREMIUM_TESTER_EMAIL || 'zaynzayn9696@gmail.com').toLowerCase(),
   TESTER_LIMIT: toInt(process.env.TESTER_LIMIT, 999999),
@@ -44,7 +45,7 @@ function getPlanLimits(email, plan) {
   }
   return {
     dailyLimit: LIMITS.FREE_DAILY,
-    monthlyLimit: 0,
+    monthlyLimit: LIMITS.FREE_MONTHLY,
     freeCharacterId: LIMITS.FREE_CHARACTER_ID,
     freeCharacterIds: LIMITS.FREE_CHARACTER_IDS,
     premiumOnlyCharacterIds: LIMITS.PROHIBITED_FOR_FREE_IDS,

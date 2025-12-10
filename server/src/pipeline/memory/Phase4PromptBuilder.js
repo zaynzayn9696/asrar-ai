@@ -302,6 +302,183 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     }
   }
 
+  // Semantic preference profile (UserMemoryFact-based, internal-only).
+  try {
+    const model = prisma && prisma.userMemoryFact;
+    if (model && typeof model.findMany === 'function') {
+      const semanticFacts = await model.findMany({
+        where: {
+          userId,
+          kind: {
+            in: [
+              'preference.season.like',
+              'preference.season.dislike',
+              'preference.weather.like',
+              'preference.weather.dislike',
+              'preference.pets.like',
+              'preference.pets.dislike',
+              'preference.crowds',
+              'trait.social.style',
+            ],
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 40,
+      });
+
+      const grouped = {};
+      for (const f of semanticFacts || []) {
+        if (!f || !f.kind || typeof f.value !== 'string') continue;
+        const k = String(f.kind).trim();
+        const v = String(f.value).trim();
+        if (!k || !v) continue;
+        if (!grouped[k]) {
+          grouped[k] = [];
+        }
+        if (!grouped[k].includes(v)) {
+          grouped[k].push(v);
+        }
+      }
+
+      const prefLines = [];
+
+      const seasonsLike = grouped['preference.season.like'] || [];
+      const seasonsDislike = grouped['preference.season.dislike'] || [];
+      const weatherLike = grouped['preference.weather.like'] || [];
+      const petsLike = grouped['preference.pets.like'] || [];
+      const petsDislike = grouped['preference.pets.dislike'] || [];
+      const crowdPrefs = grouped['preference.crowds'] || [];
+      const socialStyles = grouped['trait.social.style'] || [];
+
+      const crowdValue = crowdPrefs[0] || null;
+      const socialStyle = socialStyles[0] || null;
+
+      if (!isArabic) {
+        const seasonLabel = (code) => {
+          if (code === 'winter') return 'winter';
+          if (code === 'summer') return 'summer';
+          if (code === 'spring') return 'spring';
+          if (code === 'autumn') return 'autumn';
+          return code;
+        };
+        const weatherLabel = (code) => {
+          if (code === 'rain') return 'rainy weather';
+          if (code === 'snow') return 'snowy days';
+          if (code === 'sun') return 'sunny weather';
+          return code;
+        };
+        const petLabel = (code) => {
+          if (code === 'cats') return 'cats';
+          if (code === 'dogs') return 'dogs';
+          return code;
+        };
+
+        if (seasonsLike.length) {
+          const items = seasonsLike.map(seasonLabel).join(', ');
+          prefLines.push(`- They tend to prefer seasons like ${items}.`);
+        }
+        if (weatherLike.length) {
+          const items = weatherLike.map(weatherLabel).join(', ');
+          prefLines.push(`- They enjoy ${items}.`);
+        }
+        if (petsLike.length || petsDislike.length) {
+          const liked = petsLike.map(petLabel).join(', ');
+          const disliked = petsDislike.map(petLabel).join(', ');
+          if (liked && disliked) {
+            prefLines.push(`- They love ${liked} and tend not to enjoy ${disliked}.`);
+          } else if (liked) {
+            prefLines.push(`- They love ${liked}.`);
+          } else if (disliked) {
+            prefLines.push(`- They tend not to enjoy ${disliked}.`);
+          }
+        }
+        if (socialStyle === 'introvert') {
+          prefLines.push('- They describe themselves as more on the introverted side.');
+        } else if (socialStyle === 'extrovert') {
+          prefLines.push('- They seem more naturally extroverted and social.');
+        } else if (socialStyle === 'ambivert') {
+          prefLines.push('- They feel somewhere between introvert and extrovert.');
+        }
+        if (crowdValue === 'dislike') {
+          prefLines.push('- Crowded places can feel uncomfortable; be gentle when talking about big gatherings or busy environments.');
+        }
+      } else {
+        const seasonLabelAr = {
+          winter: 'الشتاء',
+          summer: 'الصيف',
+          spring: 'الربيع',
+          autumn: 'الخريف',
+        };
+        const weatherLabelAr = {
+          rain: 'الأجواء الماطرة',
+          snow: 'الأيام الثلجية',
+          sun: 'الأيام المشمسة',
+        };
+        const petLabelAr = {
+          cats: 'القطط',
+          dogs: 'الكلاب',
+        };
+
+        if (seasonsLike.length) {
+          const items = seasonsLike
+            .map((code) => seasonLabelAr[code] || code)
+            .join('، ');
+          prefLines.push(`- يميل أكثر لفصول مثل ${items}.`);
+        }
+        if (weatherLike.length) {
+          const items = weatherLike
+            .map((code) => weatherLabelAr[code] || code)
+            .join('، ');
+          prefLines.push(`- يحب أجواء مثل: ${items}.`);
+        }
+        if (petsLike.length || petsDislike.length) {
+          const liked = petsLike
+            .map((code) => petLabelAr[code] || code)
+            .join('، ');
+          const disliked = petsDislike
+            .map((code) => petLabelAr[code] || code)
+            .join('، ');
+          if (liked && disliked) {
+            prefLines.push(`- يحب ${liked} وغالباً لا يرتاح مع ${disliked}.`);
+          } else if (liked) {
+            prefLines.push(`- يحب ${liked}.`);
+          } else if (disliked) {
+            prefLines.push(`- غالباً لا يرتاح مع ${disliked}.`);
+          }
+        }
+        if (socialStyle === 'introvert') {
+          prefLines.push('- يصف نفسه بأنه أقرب للانطوائي أو الهادئ اجتماعياً.');
+        } else if (socialStyle === 'extrovert') {
+          prefLines.push('- يصف نفسه بأنه اجتماعي أكثر ويميل للتواجد مع الناس.');
+        } else if (socialStyle === 'ambivert') {
+          prefLines.push('- يشعر أنه بين الانطوائي والانبساطي من ناحية الاجتماعية.');
+        }
+        if (crowdValue === 'dislike') {
+          prefLines.push('- الأماكن المزدحمة قد تكون متعبة له؛ كن ألطف عند الحديث عن الزحام أو التجمعات الكبيرة.');
+        }
+      }
+
+      if (prefLines.length) {
+        if (isArabic) {
+          lines.push(
+            'ملامح تفضيلات المستخدم (داخلية):',
+            ...prefLines
+          );
+        } else {
+          lines.push(
+            'User preference hints (semantic, internal only):',
+            ...prefLines
+          );
+        }
+      }
+    }
+  } catch (err) {
+    console.error(
+      '[Phase4] semantic profile error',
+      err && err.message ? err.message : err
+    );
+  }
+
   if (!lines.length) return '';
 
   const safetyHints = [

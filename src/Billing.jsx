@@ -83,7 +83,7 @@ export default function Billing() {
   const usage = user?.usage || null;
   const isPremium = !!(user && (user.isPremium || plan === "premium" || plan === "pro"));
   const planName = isAr ? (isPremium ? "بريميوم" : "مجانية") : (isPremium ? "Premium" : "Free");
-  const planPrice = isPremium ? "$9.85" : "$0";
+  const planPrice = isPremium ? "$7.99" : "$0";
   const planTagline = isAr
     ? isPremium
       ? "كل شيء في أسرار بحدود سخية."
@@ -95,24 +95,36 @@ export default function Billing() {
     ? isPremium
       ? [
           "كل رفاق أسرار الخمسة",
-          "٣٠٠٠ رسالة شهرياً",
+          "٥٠٠ رسالة شهرياً",
+          "رسائل صوتية متاحة",
           "ذاكرة محادثة ودعم ذو أولوية",
           "بدون إعلانات ووصول مبكر",
           "إلغاء الاشتراك في أي وقت",
         ]
-      : ["شخصية أساسية واحدة", "٥ رسائل يومياً", "دعم أساسي"]
+      : [
+          "شخصية أساسية واحدة",
+          "٥٠ رسالة شهرياً",
+          "رسائل صوتية متاحة",
+          "دعم أساسي",
+        ]
     : isPremium
     ? [
         "All 5 Asrar characters",
-        "3,000 messages per month",
+        "500 messages per month",
+        "Voice messages included",
         "Chat memory & priority support",
         "Ad‑free, priority access",
         "Cancel anytime",
       ]
-    : ["1 core character", "5 messages/day", "Basic support"];
+    : [
+        "1 core character",
+        "50 messages per month",
+        "Voice messages included",
+        "Basic support",
+      ];
   const upgradeCtaText = isPremium
     ? (isAr ? "أنت على بريميوم" : "You’re on Premium")
-    : (isAr ? "الترقية إلى بريميوم — $9.85 شهرياً" : "Upgrade to Premium — $9.85/month");
+    : (isAr ? "الترقية إلى بريميوم — $14.99 شهرياً" : "Upgrade to Premium — $14.99/month");
 
   const handleLangSwitch = (newLang) => {
     setLang(newLang);
