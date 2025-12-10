@@ -184,9 +184,9 @@
 }
 
 .asrar-timeline-body {
-  margin-top: 0.35rem;
+  margin-top: 0.3rem;
   flex: 1;
-  min-height: 160px;
+  min-height: 140px;
 }
 
 @media (max-width: 900px) {
@@ -221,12 +221,13 @@
   left: 6px;
   right: 6px;
   bottom: 30px;
-  height: 3px;
+  height: 4px;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(18, 40, 82, 0.98), rgba(9, 20, 46, 0.95));
   box-shadow:
     0 0 0 1px rgba(151, 191, 255, 0.4),
-    0 0 18px rgba(102, 153, 255, 0.9);
+    0 0 20px rgba(102, 153, 255, 1),
+    0 0 32px rgba(40, 120, 255, 0.85);
   pointer-events: none;
 }
 
@@ -254,17 +255,19 @@
 
 .asrar-timeline-bar-wrapper {
   position: relative;
-  width: 10px;
+  width: 14px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
 }
 
 .asrar-timeline-bar {
-  width: 6px;
+  width: 8px;
   border-radius: 999px;
   background: linear-gradient(180deg, #2cf6ff, #a55cff);
-  box-shadow: 0 0 16px rgba(44, 246, 255, 0.75);
+  box-shadow:
+    0 0 18px rgba(44, 246, 255, 0.9),
+    0 0 26px rgba(113, 176, 255, 0.9);
   position: relative;
   animation: asrar-timeline-pulse 2.4s ease-in-out infinite;
 }
@@ -388,7 +391,7 @@
 }
 
 .asrar-timeline-point-label {
-  margin-top: 0.55rem;
+  margin-top: 0.35rem;
   text-align: center;
 }
 
@@ -461,8 +464,8 @@
 
   .asrar-timeline-panel {
     height: auto;
-    max-height: calc(100% - 1.25rem);
-    margin-top: 0.5rem;
+    max-height: calc(100vh - 20px);
+    margin-top: 10px;
     gap: 0.55rem;
     padding: 0.95rem 0.85rem 1.1rem;
   }
@@ -474,7 +477,7 @@
   }
 
   .asrar-timeline-track {
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.15rem;
   }
 
   .asrar-timeline-explainer {

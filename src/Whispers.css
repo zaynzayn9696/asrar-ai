@@ -648,6 +648,9 @@
   align-items: center;
   gap: 0.4rem;
   text-align: center;
+  max-width: 26rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .asrar-whispers-level-detail-icon {
@@ -679,7 +682,7 @@
 }
 
 .asrar-whispers-level-detail-next {
-  margin: 0.35rem 0 0;
+  margin: 0.35rem auto 0;
   font-size: 0.8rem;
   color: #b5cff5;
   max-width: 26rem;
@@ -691,6 +694,9 @@
   border-radius: 12px;
   background: rgba(3, 14, 30, 0.92);
   border: 1px solid rgba(0, 240, 255, 0.24);
+  max-width: 26rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .asrar-whispers-howto-title {
@@ -713,11 +719,12 @@
 }
 
 .asrar-whispers-explainer {
-  margin: 0.4rem 0 0;
+  margin: 0.5rem auto 0;
   font-size: 0.8rem;
   line-height: 1.5;
   color: #95b4d8;
   text-align: center;
+  max-width: 26rem;
 }
 
 .asrar-whispers-state {

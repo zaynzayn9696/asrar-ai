@@ -241,7 +241,7 @@ export default function EmotionalTimelineMap({
                     const safeIntensity = Number.isFinite(rawIntensity)
                       ? Math.max(0, Math.min(1, rawIntensity))
                       : 0;
-                    const pulseHeight = 26 + 70 * safeIntensity;
+                    const pulseHeight = 40 + 110 * safeIntensity;
 
                     const keyEvents = Array.isArray(p.keyEvents)
                       ? p.keyEvents
