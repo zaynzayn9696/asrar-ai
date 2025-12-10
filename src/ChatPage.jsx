@@ -242,6 +242,8 @@ export default function ChatPage() {
   const [convError, setConvError] = useState(null);
   const [deletingConversationId, setDeletingConversationId] = useState(null);
   const [convDeleteError, setConvDeleteError] = useState(null);
+  const [pendingDeleteConversationId, setPendingDeleteConversationId] =
+    useState(null);
 
   const character =
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[1];
@@ -863,7 +865,7 @@ export default function ChatPage() {
     setIsMobileSidebarOpen(false);
   };
 
-  const handleDeleteConversation = async (id, event) => {
+  const handleDeleteConversation = (id, event) => {
     if (event && typeof event.stopPropagation === "function") {
       event.stopPropagation();
     }
@@ -872,15 +874,16 @@ export default function ChatPage() {
       return;
     }
 
-    if (typeof window !== "undefined") {
-      const confirmed = window.confirm(
-        isArabicConversation
-          ? "هل أنت متأكد أنك تريد حذف هذه المحادثة؟"
-          : "Are you sure you want to delete this conversation?"
-      );
-      if (!confirmed) return;
-    }
+    setConvDeleteError(null);
+    setPendingDeleteConversationId(id);
+  };
 
+  const confirmDeleteConversation = async () => {
+    if (!pendingDeleteConversationId) return;
+
+    const id = pendingDeleteConversationId;
+
+    setPendingDeleteConversationId(null);
     setConvDeleteError(null);
     setDeletingConversationId(id);
 
@@ -957,7 +960,7 @@ export default function ChatPage() {
       setConvDeleteError(
         isArabicConversation
           ? "تعذر حذف هذه المحادثة. يرجى المحاولة مرة أخرى."
-          : "We couldnt delete this conversation. Please try again."
+          : "We couldn't delete this conversation. Please try again."
       );
     } finally {
       setDeletingConversationId(null);
@@ -2426,6 +2429,50 @@ useEffect(() => {
           </footer>
         </div>
       </main>
+
+      {pendingDeleteConversationId && (
+        <div
+          className="asrar-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setPendingDeleteConversationId(null);
+            }
+          }}
+        >
+          <div className="asrar-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="asrar-modal-body">
+              <h3 style={{ marginTop: 0, marginBottom: "0.5rem" }}>
+                {isArabicConversation
+                  ? "حذف المحادثة؟"
+                  : "Delete this conversation?"}
+              </h3>
+              <p style={{ margin: 0, opacity: 0.9 }}>
+                {isArabicConversation
+                  ? "سيتم إزالة هذه المحادثة من سجل محادثاتك في أسرار. لا يمكن التراجع عن هذا الإجراء."
+                  : "This will remove this chat from your Asrar history. This action can't be undone."}
+              </p>
+            </div>
+            <div className="asrar-modal-actions">
+              <button
+                type="button"
+                className="asrar-btn ghost"
+                onClick={() => setPendingDeleteConversationId(null)}
+              >
+                {isAr ? "إلغاء" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                className="asrar-btn primary"
+                onClick={confirmDeleteConversation}
+              >
+                {isArabicConversation
+                  ? "حذف المحادثة"
+                  : "Delete conversation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Existing plan/character modals */}
       {(showLockedModal || showLimitModal) && (
