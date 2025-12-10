@@ -2399,10 +2399,16 @@ useEffect(() => {
                 const isPrem = !!(
                   user?.isPremium || user?.plan === "premium" || user?.plan === "pro"
                 );
-                const limit = usageInfo?.monthlyLimit ?? (isPrem ? 500 : 50);
-                const usedFromUsage = usageInfo?.monthlyUsed ?? null;
+                const baseLimit = isPrem ? 500 : 50;
+                const rawLimit = usageInfo && typeof usageInfo.monthlyLimit === "number"
+                  ? usageInfo.monthlyLimit
+                  : null;
+                const limit = rawLimit && rawLimit > 0 ? rawLimit : baseLimit;
+                const rawUsed = usageInfo && typeof usageInfo.monthlyUsed === "number"
+                  ? usageInfo.monthlyUsed
+                  : null;
                 const userMsgs = messages.filter((m) => m.from === "user").length;
-                const used = usedFromUsage ?? userMsgs;
+                const used = rawUsed != null && rawUsed >= 0 ? rawUsed : userMsgs;
                 const counterText = `${used} / ${limit}`;
                 const modelText = isPrem ? "gpt-4o" : "gpt-4o-mini";
                 return (

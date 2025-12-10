@@ -117,7 +117,7 @@ export default function Billing() {
         "Cancel anytime",
       ]
     : [
-        "1 core character",
+        "3 core character",
         "50 messages per month",
         "Voice messages included",
         "Basic support",

@@ -23,6 +23,11 @@ const LIMITS = {
 
 function getPlanLimits(email, plan) {
   const isTester = (email || '').toLowerCase() === LIMITS.PREMIUM_TESTER_EMAIL;
+  // Ensure monthly limits never collapse to 0 due to misconfigured env vars.
+  // Free plan: minimum 50 messages/month.
+  // Pro/Premium: minimum 500 messages/month.
+  const freeMonthlyLimit = LIMITS.FREE_MONTHLY > 0 ? LIMITS.FREE_MONTHLY : 50;
+  const proMonthlyLimit = LIMITS.PRO_MONTHLY > 0 ? LIMITS.PRO_MONTHLY : 500;
   if (isTester) {
     return {
       dailyLimit: LIMITS.TESTER_LIMIT,
@@ -36,7 +41,7 @@ function getPlanLimits(email, plan) {
   if (plan === 'pro' || plan === 'premium') {
     return {
       dailyLimit: LIMITS.PRO_DAILY,
-      monthlyLimit: LIMITS.PRO_MONTHLY,
+      monthlyLimit: proMonthlyLimit,
       freeCharacterId: LIMITS.FREE_CHARACTER_ID,
       freeCharacterIds: LIMITS.FREE_CHARACTER_IDS,
       premiumOnlyCharacterIds: LIMITS.PROHIBITED_FOR_FREE_IDS,
@@ -45,7 +50,7 @@ function getPlanLimits(email, plan) {
   }
   return {
     dailyLimit: LIMITS.FREE_DAILY,
-    monthlyLimit: LIMITS.FREE_MONTHLY,
+    monthlyLimit: freeMonthlyLimit,
     freeCharacterId: LIMITS.FREE_CHARACTER_ID,
     freeCharacterIds: LIMITS.FREE_CHARACTER_IDS,
     premiumOnlyCharacterIds: LIMITS.PROHIBITED_FOR_FREE_IDS,

@@ -1327,6 +1327,11 @@ export default function HomePage() {
                   <li>{isAr ? "ثلاث شخصيات اساسية" : "3 core character"}</li>
                   <li>{isAr ? "٥٠ رسالة شهرياً" : "50 messages per month"}</li>
                   <li>{isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
+                   <li>
+                    {isAr
+                      ? "محرك المشاعر العميق V6 (إرشاد أعمق وخطوات عملية)"
+                      : "Powered by the Asrar Emotional Engine V6 for longer, structured guidance."}
+                  </li>
                   <li>
                     {isAr
                       ? "وصول إلى الجانب الخفي™ فقط"
