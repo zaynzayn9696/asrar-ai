@@ -613,7 +613,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
-  max-width: min(80%, 26rem);
+  max-width: min(75%, 26rem);
   margin-left: auto;
   margin-right: auto;
 }
@@ -684,7 +684,7 @@
   flex-direction: column;
   gap: 0.16rem;
   align-items: center;
-  max-width: min(80%, 26rem);
+  max-width: min(75%, 26rem);
   margin-left: auto;
   margin-right: auto;
 }
@@ -713,7 +713,7 @@
   margin: 0.35rem auto 0;
   font-size: 0.8rem;
   color: #b5cff5;
-  max-width: min(80%, 26rem);
+  max-width: min(70%, 26rem);
   text-align: center;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -725,7 +725,7 @@
   border-radius: 12px;
   background: rgba(3, 14, 30, 0.92);
   border: 1px solid rgba(0, 240, 255, 0.24);
-  max-width: 26rem;
+  max-width: 90%;
   margin-left: auto;
   margin-right: auto;
   width: 100%;
@@ -767,7 +767,7 @@
   line-height: 1.5;
   color: #95b4d8;
   text-align: center;
-  max-width: 26rem;
+  max-width: min(70%, 26rem);
   overflow-wrap: break-word;
   word-break: break-word;
 }
