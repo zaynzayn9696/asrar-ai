@@ -2130,9 +2130,15 @@ useEffect(() => {
                 rowClass += " asrar-chat-row--system";
               }
 
+              const isDesktopViewport =
+                typeof window !== "undefined" && window.innerWidth > 900;
+
               const bubbleStyle =
                 msg.from === "ai" && isArabicAiText
-                  ? { marginLeft: "auto", marginRight: 0 }
+                  ? {
+                      marginLeft: "auto",
+                      marginRight: isDesktopViewport ? "15%" : 0,
+                    }
                   : undefined;
 
               return (
