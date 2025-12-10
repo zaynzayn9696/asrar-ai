@@ -241,7 +241,7 @@ export default function EmotionalTimelineMap({
                     const safeIntensity = Number.isFinite(rawIntensity)
                       ? Math.max(0, Math.min(1, rawIntensity))
                       : 0;
-                    const barHeight = 28 + 80 * safeIntensity;
+                    const pulseHeight = 26 + 70 * safeIntensity;
 
                     const keyEvents = Array.isArray(p.keyEvents)
                       ? p.keyEvents
@@ -258,7 +258,7 @@ export default function EmotionalTimelineMap({
                               "asrar-timeline-bar asrar-timeline-bar--" +
                               emotion.toLowerCase()
                             }
-                            style={{ height: `${barHeight}px` }}
+                            style={{ height: `${pulseHeight}px` }}
                           />
                           {keyEvents.length > 0 && (
                             <div className="asrar-timeline-events-dots">

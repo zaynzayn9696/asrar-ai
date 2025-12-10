@@ -215,6 +215,21 @@
   position: relative;
 }
 
+.asrar-timeline-track-wrapper::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 30px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(18, 40, 82, 0.98), rgba(9, 20, 46, 0.95));
+  box-shadow:
+    0 0 0 1px rgba(151, 191, 255, 0.4),
+    0 0 18px rgba(102, 153, 255, 0.9);
+  pointer-events: none;
+}
+
 .asrar-timeline-trend {
   position: absolute;
   inset: 4px 6px 30px 6px;
@@ -250,6 +265,37 @@
   border-radius: 999px;
   background: linear-gradient(180deg, #2cf6ff, #a55cff);
   box-shadow: 0 0 16px rgba(44, 246, 255, 0.75);
+  position: relative;
+  animation: asrar-timeline-pulse 2.4s ease-in-out infinite;
+}
+
+.asrar-timeline-bar::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, #e8f8ff, #7bc9ff);
+  box-shadow:
+    0 0 0 1px rgba(214, 236, 255, 0.8),
+    0 0 14px rgba(160, 210, 255, 0.95);
+}
+
+.asrar-timeline-bar::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(248, 252, 255, 0.95);
+  transform: translateX(-50%);
+  opacity: 0;
+  animation: asrar-timeline-spark 3.2s ease-in-out infinite;
 }
 
 .asrar-timeline-bar--sad {
@@ -282,6 +328,33 @@
 
 .asrar-timeline-bar--neutral {
   background: linear-gradient(180deg, #9fb4d6, #50607a);
+}
+
+@keyframes asrar-timeline-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 14px rgba(44, 246, 255, 0.65);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(44, 246, 255, 0.95);
+  }
+}
+
+@keyframes asrar-timeline-spark {
+  0% {
+    transform: translate(-50%, 0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  55% {
+    transform: translate(-50%, -70%);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 .asrar-timeline-events-dots {
@@ -390,10 +463,25 @@
     height: auto;
     max-height: calc(100% - 1.25rem);
     margin-top: 0.5rem;
+    gap: 0.55rem;
+    padding: 0.95rem 0.85rem 1.1rem;
   }
 
   .asrar-timeline-body {
     flex: 0 0 auto;
     margin-top: 0;
+    min-height: auto;
+  }
+
+  .asrar-timeline-track {
+    padding-bottom: 0.25rem;
+  }
+
+  .asrar-timeline-explainer {
+    margin-top: 0.3rem;
+  }
+
+  .asrar-timeline-footer {
+    margin-top: 0.3rem;
   }
 }
