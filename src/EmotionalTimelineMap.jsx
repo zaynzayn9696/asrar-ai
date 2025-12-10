@@ -274,9 +274,7 @@ export default function EmotionalTimelineMap({
                     <div key={idx} className="asrar-mood-day">
                       <div
                         className={
-                          "asrar-mood-emoji asrar-mood-emoji--" +
-                          emotion.toLowerCase() +
-                          moodClass
+                          "mood-emoji" + moodClass
                         }
                       >
                         {emoji}
