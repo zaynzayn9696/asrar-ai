@@ -195,6 +195,9 @@
   margin-top: 0.25rem;
   flex: 0 0 auto;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 @media (max-width: 900px) {
@@ -330,131 +333,306 @@
   }
 }
 
-/* Daily Mood Icons Timeline */
-
-.asrar-mood-timeline {
+.asrar-timeline-visual {
   position: relative;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 0.95rem;
+  padding: 0.6rem 0.4rem 0.8rem;
+  border-radius: 18px;
+  background: radial-gradient(circle at top, #050c20, #020109);
+  box-shadow:
+    0 0 0 1px rgba(50, 90, 180, 0.7),
+    0 18px 38px rgba(0, 0, 0, 0.9);
   min-width: 100%;
-  padding: 0.1rem 0.4rem 0.4rem;
   box-sizing: border-box;
 }
 
-.asrar-mood-day {
+.asrar-mood-stream-rail {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 50%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(91, 146, 255, 0.1),
+    rgba(165, 104, 255, 0.5),
+    rgba(91, 146, 255, 0.1)
+  );
+  box-shadow:
+    0 0 12px rgba(140, 180, 255, 0.5),
+    0 0 26px rgba(50, 30, 120, 0.7);
+  pointer-events: none;
+}
+
+.asrar-mood-stream {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.9rem;
+  padding: 0.15rem 0.7rem 0.5rem;
+  min-width: 100%;
+  box-sizing: border-box;
+  animation: timelineFadeSlideIn 220ms ease-out;
+}
+
+.asrar-mood-stream--focus {
+  gap: 1.1rem;
+}
+
+.asrar-mood-stream--overview {
+  gap: 0.55rem;
+}
+
+@keyframes timelineFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.asrar-mood-node {
+  position: relative;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  min-width: 38px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  min-width: 60px;
+  gap: 0.2rem;
+  color: #c9ddff;
+  outline-offset: 2px;
 }
- 
-/* EMOTION ORB (new premium style) */
-.mood-orb {
-  position: relative;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), rgba(0,0,10,0.9));
+.asrar-mood-node-core {
+  width: calc(24px + (var(--intensity-scale, 0.5) * 16px));
+  height: calc(24px + (var(--intensity-scale, 0.5) * 16px));
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255, 255, 255, 0.16),
+    rgba(5, 7, 18, 0.96)
+  );
   box-shadow:
-    0 0 22px var(--mood-orb-glow),
-    0 0 38px var(--mood-orb-glow);
-
-  animation: orbPulse 4.5s ease-in-out infinite;
+    0 0 0 1px rgba(130, 170, 255, 0.35),
+    0 0 18px var(--mood-glow-color, rgba(150, 190, 255, 0.45)),
+    0 0 36px var(--mood-glow-color, rgba(150, 190, 255, 0.45));
+  transform: translateY(calc((1 - var(--intensity-scale, 0.5)) * 10px));
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease,
+    background 200ms ease,
+    border-color 200ms ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* emoji inside or below */
-.mood-orb-emoji {
-  font-size: 22px;
+.asrar-mood-node-core::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at 20% 0,
+    rgba(255, 255, 255, 0.2),
+    transparent 55%
+  );
+  opacity: 0.85;
+}
+
+.asrar-mood-node-core::after {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle,
+    transparent 40%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  mix-blend-mode: soft-light;
+}
+
+.asrar-mood-node--selected .asrar-mood-node-core {
+  box-shadow:
+    0 0 0 1px rgba(230, 240, 255, 0.9),
+    0 0 22px var(--mood-glow-color, rgba(160, 200, 255, 0.7)),
+    0 0 46px var(--mood-glow-color, rgba(160, 200, 255, 0.8));
+  transform: translateY(calc((1 - var(--intensity-scale, 0.5)) * 6px))
+    scale(1.06);
+}
+
+.asrar-mood-node-day {
+  font-size: 0.72rem;
+  color: #c9ddff;
   opacity: 0.9;
-  transform: translateY(2px);
 }
 
-/* Orb pulse animation */
-@keyframes orbPulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow:
-      0 0 18px var(--mood-orb-glow),
-      0 0 34px var(--mood-orb-glow);
-  }
-  50% {
-    transform: scale(1.08);
-    box-shadow:
-      0 0 28px var(--mood-orb-glow),
-      0 0 48px var(--mood-orb-glow);
-  }
-}
-
-/* Emotion colors --------------------------------- */
-.mood-happy        { --mood-orb-glow: rgba(255,215,90,0.55); }
-.mood-neutral      { --mood-orb-glow: rgba(120,200,255,0.45); }
-.mood-sad          { --mood-orb-glow: rgba(90,130,255,0.45); }
-.mood-angry        { --mood-orb-glow: rgba(255,90,110,0.6); }
-.mood-anxious      { --mood-orb-glow: rgba(180,90,255,0.55); }
-.mood-lonely       { --mood-orb-glow: rgba(160,180,255,0.4); }
-.mood-warm         { --mood-orb-glow: rgba(255,160,200,0.55); }
-
-
-
-/* The micro-pulse animation */
-@keyframes moodGlowPulse {
-  0%,
-  100% {
-    opacity: 0.45;
-    filter: blur(11px);
-  }
-  50% {
-    opacity: 0.7; /* only 20% stronger */
-    filter: blur(13px); /* tiny blur variation */
-  }
-}
-
-/* Mood-specific glow color */
+/* Mood color families for the Energy Stream */
 .mood-happy {
-  --mood-glow-color: rgba(255, 215, 90, 0.45);
+  --mood-glow-color: rgba(255, 215, 120, 0.7);
 }
 
 .mood-neutral {
-  --mood-glow-color: rgba(120, 200, 255, 0.4);
+  --mood-glow-color: rgba(120, 200, 255, 0.55);
 }
 
 .mood-sad {
-  --mood-glow-color: rgba(90, 130, 255, 0.4);
+  --mood-glow-color: rgba(100, 140, 255, 0.6);
 }
 
 .mood-angry {
-  --mood-glow-color: rgba(255, 90, 110, 0.45);
+  --mood-glow-color: rgba(255, 110, 140, 0.7);
 }
 
-.mood-anxious {
-  --mood-glow-color: rgba(180, 90, 255, 0.4);
+.asrar-timeline-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
 }
 
-.mood-warm {
-  --mood-glow-color: rgba(255, 160, 200, 0.4);
+.asrar-timeline-detail-card {
+  border-radius: 16px;
+  padding: 0.5rem 0.6rem 0.55rem;
+  background: radial-gradient(
+    circle at top left,
+    rgba(90, 140, 255, 0.18),
+    rgba(4, 7, 16, 0.98)
+  );
+  border: 1px solid rgba(140, 180, 255, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(40, 70, 150, 0.4),
+    0 12px 30px rgba(0, 0, 0, 0.95);
+  font-size: 0.8rem;
+  color: #dce7ff;
 }
 
-.asrar-mood-labels {
-  margin-top: 0.28rem;
-  text-align: center;
+.asrar-timeline-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
 }
 
-@media (max-width: 900px) {
-  .asrar-mood-timeline {
-    gap: 0.75rem;
-    padding-bottom: 0.3rem;
-  }
+.asrar-timeline-detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.asrar-timeline-detail-date {
+  font-size: 0.8rem;
+  color: #e4eeff;
+}
+
+.asrar-timeline-detail-emotion-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.asrar-timeline-detail-emoji {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.asrar-timeline-intensity {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(8, 14, 36, 0.96);
+  border: 1px solid rgba(170, 196, 255, 0.85);
+}
+
+.asrar-timeline-intensity-ring {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.asrar-timeline-intensity-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #dde8ff;
+}
+
+.asrar-timeline-intensity--low {
+  color: #7dd3fc;
+}
+
+.asrar-timeline-intensity--medium {
+  color: #a5b4fc;
+}
+
+.asrar-timeline-intensity--high {
+  color: #fca5a5;
+}
+
+.asrar-timeline-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.asrar-timeline-detail-copy {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #d3e0ff;
+}
+
+.asrar-timeline-detail-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.asrar-timeline-event-chip {
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  background: rgba(35, 19, 60, 0.95);
+  border: 1px solid rgba(210, 190, 255, 0.85);
+  color: #f4edff;
+}
+
+.asrar-timeline-detail-events-more {
+  font-size: 0.7rem;
+  color: #cfdcff;
+}
+
+.asrar-timeline-legend {
+  font-size: 0.72rem;
+  color: #9fb4de;
+  text-align: left;
+  opacity: 0.9;
+}
+
+[dir="rtl"] .asrar-timeline-legend {
+  text-align: right;
 }
 
 @media (max-width: 480px) {
-  .asrar-mood-timeline {
-    gap: 0.7rem;
+  .asrar-timeline-visual {
+    padding: 0.55rem 0.3rem 0.75rem;
+  }
+
+  .asrar-mood-stream {
+    padding-inline: 0.6rem;
   }
 }
