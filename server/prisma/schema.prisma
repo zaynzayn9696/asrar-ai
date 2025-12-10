@@ -46,6 +46,7 @@ model User {
   emotionalDailySummaries EmotionalDailySummary[]
   mirrorSessions          MirrorSession[]
   passwordResetTokens     PasswordResetToken[]
+  sessions                UserSession[]
 }
 
 model Usage {
@@ -387,6 +388,18 @@ model MirrorSession {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, personaId, generatedAt])
+}
+
+model UserSession {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  country    String?
+  deviceType String?
+  browser    String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model PasswordResetToken {

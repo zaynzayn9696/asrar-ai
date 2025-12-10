@@ -7,6 +7,8 @@ const express = require('express');
 const requireAuth = require('../middleware/requireAuth');
 const OpenAI = require('openai');
 const prisma = require('../prisma');
+const { recordUserSession } = require('../services/userSessionService');
+
 const { LIMITS, getPlanLimits } = require('../config/limits');
 const { CHARACTER_VOICES } = require('../config/characterVoices');
 const { TONES } = require('../config/tones');
@@ -49,6 +51,23 @@ const router = express.Router();
 
 // every chat route needs login
 router.use(requireAuth);
+
+// Best-effort session tracking for chat usage (no message content is stored)
+router.use(async (req, res, next) => {
+  try {
+    if (req.user && req.user.id) {
+      await recordUserSession({ userId: req.user.id, req });
+    }
+  } catch (err) {
+    // Only log non-sensitive error information; never block chat on analytics.
+    console.error(
+      '[chat] session error',
+      err && err.message ? err.message : err
+    );
+  }
+
+  return next();
+});
 
 // Character access helpers (free vs premium companions)
 const FREE_CHARACTER_IDS = Array.isArray(LIMITS.FREE_CHARACTER_IDS)

@@ -4,6 +4,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const requestMetadata = require('./middleware/requestMetadata');
 
 const { globalLimiter, authLimiter, chatLimiter } = require('./middleware/rateLimit');
 
@@ -65,6 +66,7 @@ app.use(express.json({
 
 app.use(cookieParser());
 app.use(morgan('dev'));
+app.use(requestMetadata);
 
 // Global rate limit for all API routes
 app.use('/api', globalLimiter);

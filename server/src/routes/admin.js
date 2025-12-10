@@ -42,6 +42,66 @@ router.get('/stats', async (req, res) => {
       }),
     ]);
 
+    const userIds = recentUsers.map((u) => u.id);
+
+    let sessionAggregates = [];
+    let latestSessions = [];
+
+    if (userIds.length > 0) {
+      sessionAggregates = await prisma.userSession.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds } },
+        _count: { _all: true },
+        _max: { createdAt: true },
+      });
+
+      latestSessions = await prisma.userSession.findMany({
+        where: { userId: { in: userIds } },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          userId: true,
+          country: true,
+          deviceType: true,
+          browser: true,
+          createdAt: true,
+        },
+      });
+    }
+
+    const sessionsByUserId = new Map();
+
+    if (Array.isArray(sessionAggregates) && sessionAggregates.length > 0) {
+      sessionAggregates.forEach((row) => {
+        sessionsByUserId.set(row.userId, {
+          totalSessions: row._count?._all || 0,
+          lastActiveAt: row._max?.createdAt || null,
+          country: null,
+          deviceType: null,
+          browser: null,
+        });
+      });
+    }
+
+    if (Array.isArray(latestSessions) && latestSessions.length > 0) {
+      for (const s of latestSessions) {
+        const existing = sessionsByUserId.get(s.userId) || {
+          totalSessions: 0,
+          lastActiveAt: s.createdAt || null,
+          country: null,
+          deviceType: null,
+          browser: null,
+        };
+
+        sessionsByUserId.set(s.userId, {
+          totalSessions: existing.totalSessions,
+          lastActiveAt: existing.lastActiveAt || s.createdAt || null,
+          country: s.country || existing.country,
+          deviceType: s.deviceType || existing.deviceType,
+          browser: s.browser || existing.browser,
+        });
+      }
+    }
+
     // Build a date -> count map for the last 14 days
     const toDateKey = (d) => new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
       .toISOString().slice(0, 10);
@@ -59,9 +119,11 @@ router.get('/stats', async (req, res) => {
       usersByDayLast14Days.push({ date: key, count: counts.get(key) || 0 });
     }
 
-    // Map recent users to a compact shape with usage
+    // Map recent users to a compact shape with usage + safe session metadata
     const users = recentUsers.map((u) => {
       const { dailyLimit, monthlyLimit } = getPlanLimits(u.email, u.plan);
+      const session = sessionsByUserId.get(u.id) || null;
+
       return {
         id: u.id,
         email: u.email,
@@ -69,11 +131,17 @@ router.get('/stats', async (req, res) => {
         plan: u.plan,
         isPremium: !!u.isPremium,
         createdAt: u.createdAt,
+        firstSeenAt: u.createdAt,
         lastLoginAt: null,
         dailyUsed: u.usage ? u.usage.dailyCount : 0,
         dailyLimit,
         monthlyUsed: u.usage ? u.usage.monthlyCount : 0,
         monthlyLimit: monthlyLimit || 0,
+        country: session ? session.country : null,
+        deviceType: session ? session.deviceType : null,
+        browser: session ? session.browser : null,
+        lastActiveAt: session ? session.lastActiveAt : null,
+        totalSessions: session ? session.totalSessions : 0,
       };
     });
 
@@ -170,6 +238,35 @@ router.get('/user/:id', async (req, res) => {
     return res.json({ user });
   } catch (err) {
     console.error('[admin/user/:id] error', err && err.message ? err.message : err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/admin/users/:id
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const email = (req.user?.email || '').toLowerCase();
+    if (!isAdminEmail(email)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+
+    try {
+      await prisma.user.delete({
+        where: { id },
+      });
+    } catch (err) {
+      console.error('[admin/users/:id DELETE] error', err && err.message ? err.message : err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[admin/users/:id DELETE] error', err && err.message ? err.message : err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

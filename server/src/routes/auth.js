@@ -7,6 +7,7 @@ const prisma = require('../prisma');
 const requireAuth = require('../middleware/requireAuth');
 const { LIMITS, getPlanLimits } = require('../config/limits');
 const { sendWelcomeEmail, sendPasswordResetEmail } = require('../utils/email');
+const { recordUserSession } = require('../services/userSessionService');
 
 const router = express.Router();
 
@@ -213,6 +214,14 @@ router.post('/register', async (req, res) => {
     } catch (_) {}
 
     setTokenCookie(res, token);
+    try {
+      await recordUserSession({ userId: newUser.id, req });
+    } catch (sessionErr) {
+      console.error(
+        '[auth/register] session error',
+        sessionErr && sessionErr.message ? sessionErr.message : sessionErr
+      );
+    }
 
     return res.status(201).json({
       message: 'Account created successfully',
@@ -281,6 +290,14 @@ router.post('/login', async (req, res) => {
     } catch (_) {}
 
     setTokenCookie(res, token);
+    try {
+      await recordUserSession({ userId: user.id, req });
+    } catch (sessionErr) {
+      console.error(
+        '[auth/login] session error',
+        sessionErr && sessionErr.message ? sessionErr.message : sessionErr
+      );
+    }
 
     return res.json({
       message: 'Logged in successfully',
