@@ -642,7 +642,7 @@
 }
 
 .asrar-whispers-level-detail {
-  margin-top: 0.6rem;
+  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -674,22 +674,39 @@
   display: flex;
   flex-direction: column;
   gap: 0.16rem;
+  align-items: center;
+  max-width: 21rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .asrar-whispers-level-detail-list li {
   font-size: 0.84rem;
   color: #d6ecff;
+  text-align: center;
+}
+
+.asrar-whispers-level-detail-list li::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  margin-inline-end: 0.45rem;
+  background: radial-gradient(circle at center, #00f4ff, #7c4dff);
+  box-shadow: 0 0 8px rgba(0, 244, 255, 0.8);
 }
 
 .asrar-whispers-level-detail-next {
   margin: 0.35rem auto 0;
   font-size: 0.8rem;
   color: #b5cff5;
-  max-width: 26rem;
+  max-width: min(80%, 26rem);
+  text-align: center;
 }
 
 .asrar-whispers-howto {
-  margin-top: 0.6rem;
+  margin-top: 2rem;
   padding: 0.55rem 0.75rem;
   border-radius: 12px;
   background: rgba(3, 14, 30, 0.92);
@@ -709,7 +726,12 @@
 
 .asrar-whispers-howto-list {
   margin: 0;
-  padding-left: 1.1rem;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   font-size: 0.8rem;
   color: #d6ecff;
 }
@@ -719,7 +741,7 @@
 }
 
 .asrar-whispers-explainer {
-  margin: 0.5rem auto 0;
+  margin: 1.5rem auto 0;
   font-size: 0.8rem;
   line-height: 1.5;
   color: #95b4d8;

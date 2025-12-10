@@ -28,7 +28,7 @@ const CHARACTERS = [
     descriptionEn:
       "Sit down, let's talk. I've seen this before.\nThat wise voice when life's confusing and you need someone who's been around the block.",
     descriptionAr:
-      "اقعد، خلينا نحكي. أنا شفت هالحكي قبل هيك.\nالصوت الحكيم لما تكون الدنيا معقدة ومحتاج حد عنده خبرة.",
+      "اقعد، خلينا نحكي.\nأنا شفت هالأيام قبل هيك. الصوت الحكيم لما الدنيا تخربط حوالينك ومحتاج حدا أكبر منك بالعقل والخبرة يهدّي الجو ويورجيك الطريق الصح.",
   },
   {
     id: "daloua",
@@ -40,7 +40,7 @@ const CHARACTERS = [
     descriptionEn:
       "Yalla habibi, tell me everything. I'm here, I get it.\nFor when you're spiraling, feeling lonely, or just need someone who actually listens.",
     descriptionAr:
-      "يلا حبيبي، قلي كل شي. أنا هون، بفهم عليك.\nلما تكون تايه بأفكارك، حاسس بالوحدة، أو محتاج حد يسمعك فعلاً.",
+      "يلا حبيبي، إحكيلي كل إشي.\nأنا هون عشانك، وبفهم عليك من أول كلمة. لما تكون تايه بأفكارك، حاسس بالوحدة، أو بس بدك حدا يسمعلك من قلبه.",
   },
   {
     id: "abu-mukh",
@@ -52,7 +52,7 @@ const CHARACTERS = [
     descriptionEn:
       "Enough. Open the book. Let's do this properly.\nNo-nonsense study buddy who gets you organized and actually makes you finish stuff.",
     descriptionAr:
-      "خلص. افتح الكتاب. يلا نشتغل صح.\nصاحبك اللي بنظملك حياتك وبخليك تخلص شغلك بدون هبل.",
+      "خلص… افتح الكتاب، يلا نشتغل صح.\nصاحبك اللي بنظّم يومك، بكتبلك خطة، وبخلّيك تخلّص شغلك ودراستك بدون تسويف ولا هبل.",
   },
   {
     id: "walaa",
@@ -60,11 +60,11 @@ const CHARACTERS = [
     nameEn: "Walaaa",
     nameAr: "ولاااء",
     roleEn: "Brutal Honesty",
-    roleAr: "صراحة قاسية",
+    roleAr: "صراحة قاسية ولا شو؟",
     descriptionEn:
       "Walaaa shu? You know what you need to do, stop playing.\nThe truth you don't want to hear but absolutely need—straight up, no sugar.",
     descriptionAr:
-      "ولا شو؟ انت عارف شو لازم تعمل، بطّل لف ودوران.\nالحقيقة اللي ما بدك تسمعها بس محتاجها—مباشرة، بلا سكر زيادة.",
+      "إنت عارف شو لازم تعمل… بس بطّل تلف وتدور.\nالحقيقة اللي يمكن ما بدك تسمعها، بس محتاجها. مباشرة، واضحة، بدون سكر زيادة وبدون مجاملات.",
   },
   {
     id: "hiba",
@@ -76,7 +76,7 @@ const CHARACTERS = [
     descriptionEn:
       "Khalas, enough drama! Let's laugh before we lose our minds.\nYour chaos friend who brings memes, jokes, and reminds you life isn't that serious.",
     descriptionAr:
-      "خلص، كفاية دراما! يلا نضحك قبل ما نجن.\nصاحبتك الفوضوية اللي بتجيبلك ميمز ونكت وبتفكرك إن الحياة مش نهاية العالم.",
+      "خلص، كفاية دراما!\nيلا نضحك قبل ما نِجَن. صاحبتك الفوضوية اللطيفة، بتجيبلك ميمز ونكت، وبتفكّرك إن الحياة مش نهاية العالم، مهما كانت الأمور صعبة.",
   },
 ];
 
@@ -567,7 +567,7 @@ export default function HomePage() {
     ? [
         { href: "#hero", label: "الرئيسية" },
         { href: "#characters", label: "الشخصيات" },
-        { href: "#features", label: "لماذا أسرار؟" },
+        { href: "#features", label: "ليش أسرار؟" },
         { href: "#security-privacy", label: "الأمان والخصوصية" },
         { href: "#pricing", label: "الأسعار" },
         { href: "#contact", label: "تواصل معنا" },
@@ -912,7 +912,7 @@ export default function HomePage() {
             {/* New Headline */}
             <h2 className="asrar-hero-tagline">
               {isAr 
-                ? "الذكاء الاصطناعي العاطفي الأول للشرق الأوسط بخصوصية تامة" 
+                ? " أول ذكاء اصطناعي عاطفي بالشرق الأوسط… بخصوصية تامة" 
                 : "The #1 Fully Private Emotional AI for the Middle East."}
             </h2>
 
@@ -925,7 +925,7 @@ export default function HomePage() {
               </h1>
               <p className="asrar-hero-subtitle-centered">
                 {isAr
-                  ? "التقِ برفيقك الذكي العاطفي. مصمم لك. مبني للشرق الأوسط."
+                  ? "رفيقك اليومي اللي بسمعلك، بفهم عليك، وبيحافظ على أسرارك مثل ما هي: أسرار."
                   : "Meet your emotional AI companion. Designed for you. Built for the Middle East."}
               </p>
             </div>
@@ -939,7 +939,7 @@ export default function HomePage() {
                   {isAr ? "فحص المزاج" : "Mood check-in"}
                 </span>
                 <span className="asrar-mood-capsule-pill">
-                  {isAr ? "دعم عميق" : "Deep Support"}
+                  {isAr ? "دعم عاطفي عميق" : "Deep Support"}
                 </span>
               </div>
 
@@ -947,12 +947,12 @@ export default function HomePage() {
               <div className="asrar-mood-capsule-question">
                 <h2 className="asrar-mood-capsule-title">
                   {isAr
-                    ? "كيف شعورك اليوم ؟"
+                    ? "كيف حاسس اليوم؟"
                     : "How do you really feel today?"}
                 </h2>
                 <p className="asrar-mood-capsule-subtitle">
                   {isAr
-                    ? "اكتب شيئاً عن مشاعرك…"
+                    ? "اكتب شوي عن مشاعرك عشان نقدر نساعدك أحسن."
                     : "Tell me what's been sitting on your chest lately…"}
                 </p>
               </div>
@@ -964,7 +964,7 @@ export default function HomePage() {
                     className="asrar-mood-capsule-input"
                     placeholder={
                       isAr
-                        ? "اكتب كيف تشعر الآن…"
+                        ? "اكتبلي شو حاسّ بهاللحظة…"
                         : "Type how you feel right now…"
                     }
                     value={miniChatInput}
@@ -1022,10 +1022,10 @@ export default function HomePage() {
           <div className="asrar-companions-shell">
             <div className="asrar-companions-header">
               <h2 class="asrar-section-title">
-                {isAr ? "رفقاؤك الذكيون العاطفيون" : "Your Emotional AI Companions"}
+                {isAr ? "صحابك العاطفيين" : "Your Emotional AI Companions"}
               </h2>
               <p>
-                {isAr ? "خمس شخصيات مختلفة. رسالة واحدة مشتركة: فهمك." : "Five distinct personalities. One shared mission: to understand you."}
+                {isAr ? "خمس شخصيات مختلفة… ورسالة وحدة: يفهموك عن جد." : "Five distinct personalities. One shared mission: to understand you."}
               </p>
             </div>
 
@@ -1218,7 +1218,7 @@ export default function HomePage() {
                 {"خصوصيتك مقدسة"}
               </h2>
               <p className="asrar-section-subtitle">
-                {"لا نبيع أو ندرب أو نشارك بياناتك. أبداً."}
+                {"ما بنبيع او بندرب بياناتك ابدا."}
               </p>
 
               <div className="asrar-trust-grid">
@@ -1233,7 +1233,7 @@ export default function HomePage() {
                 </div>
                 <div className="asrar-trust-item">
                   <div className="asrar-trust-icon">👤</div>
-                  <h3>{"أنت تتحكم"}</h3>
+                  <h3>{"أنت بتتحكم"}</h3>
                   <p>
                     {
                       "بياناتك، قواعدك"
@@ -1254,7 +1254,7 @@ export default function HomePage() {
                   <h3>{"لك"}</h3>
                   <p>
                     {
-                      "بياناتك تبقى لك"
+                     "بياناتك بتضل الك"
                     }
                   </p>
                 </div>
@@ -1328,7 +1328,7 @@ export default function HomePage() {
                   </li>
                   <li>
                     {isAr
-                      ? "نموذج GPT-4o mini سريع ومناسب للاستخدام اليومي"
+                      ? "موديل GPT-4o mini سريع ومناسب للاستخدام اليومي"
                       : "Fast and reliable GPT-4o mini model for everyday use."}
                   </li>
                 </ul>
@@ -1361,7 +1361,7 @@ export default function HomePage() {
                   </li>
                   <li>
   {isAr
-    ? "نموذج ذكاء أعلى GPT-4o لاستجابات أدق وأعمق"
+    ? "موديل ذكاء أعلى GPT-4o لاستجابات أدق وأعمق"
     : "Higher-intelligence GPT-4o model for smarter, deeper responses."}
 </li>
                   <li>
@@ -1406,7 +1406,7 @@ export default function HomePage() {
   </h2>
   <p className="asrar-section-subtitle">
     {isAr
-      ? "إذا كان لديك أي أسئلة، مشاكل في الحساب، أو اقتراحات لتحسين أسرار AI، يسعدنا سماعك."
+      ? "اذا عندك اي سؤال, مشاكل في الحساب او اقتراحات النا الشرف نسمع منك."
       : "For support, ideas, or partnerships — we’d love to hear from you."}
   </p>
 
@@ -1451,7 +1451,7 @@ export default function HomePage() {
       <h3>{isAr ? "الاقتراحات والملاحظات" : "Feedback & Ideas"}</h3>
       <p>
         {isAr
-          ? "شاركنا رأيك في تجربة أسرار AI أو أي ميزات تحب أن تراها في المستقبل."
+          ? "شاركنا رأيك في تجربة أسرار AI أو أي ميزات تحب تشوفها  في المستقبل."
           : "Share how Asrar feels to use and what you’d love to see next."}
       </p>
       <a href="mailto:ideas@asrarai.com?subject=Asrar%20AI%20Feedback" className="asrar-contact-email">

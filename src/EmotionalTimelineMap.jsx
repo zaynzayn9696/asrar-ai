@@ -218,75 +218,83 @@ export default function EmotionalTimelineMap({
         {!loading && !error && points.length > 0 && (
           <div className="asrar-timeline-body">
             <div className="asrar-timeline-scroll">
-              <div className="asrar-timeline-track-wrapper">
-                <div className="asrar-timeline-track">
-                  {visiblePoints.map((p, idx) => {
-                    if (!p || typeof p !== "object") return null;
+              <div className="asrar-energy-stream">
+                <div className="asrar-energy-base-line" />
+                {visiblePoints.map((p, idx) => {
+                  if (!p || typeof p !== "object") return null;
 
-                    let dateLabel = "";
-                    if (p.date) {
-                      const date = new Date(p.date);
-                      if (!Number.isNaN(date.getTime())) {
-                        dateLabel = date.toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        });
-                      }
+                  let dateLabel = "";
+                  if (p.date) {
+                    const date = new Date(p.date);
+                    if (!Number.isNaN(date.getTime())) {
+                      dateLabel = date.toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                      });
                     }
+                  }
 
-                    const rawEmotion = p.topEmotion || "NEUTRAL";
-                    const emotion = String(rawEmotion).toUpperCase();
+                  const rawEmotion = p.topEmotion || "NEUTRAL";
+                  const emotion = String(rawEmotion).toUpperCase();
 
-                    const rawIntensity = Number(p.avgIntensity);
-                    const safeIntensity = Number.isFinite(rawIntensity)
-                      ? Math.max(0, Math.min(1, rawIntensity))
-                      : 0;
-                    const pulseHeight = 40 + 110 * safeIntensity;
+                  const rawIntensity = Number(p.avgIntensity);
+                  const safeIntensity = Number.isFinite(rawIntensity)
+                    ? Math.max(0, Math.min(1, rawIntensity))
+                    : 0;
+                  const pillarHeight = 40 + 110 * safeIntensity;
 
-                    const keyEvents = Array.isArray(p.keyEvents)
-                      ? p.keyEvents
-                      : [];
+                  const keyEvents = Array.isArray(p.keyEvents)
+                    ? p.keyEvents
+                    : [];
 
-                    return (
-                      <div
-                        key={idx}
-                        className="asrar-timeline-point"
-                      >
-                        <div className="asrar-timeline-bar-wrapper">
+                  return (
+                    <div
+                      key={idx}
+                      className="asrar-energy-pillar"
+                    >
+                      <div className="asrar-energy-beam-wrapper">
+                        <div
+                          className={
+                            "asrar-energy-beam asrar-energy-beam--" +
+                            emotion.toLowerCase()
+                          }
+                          style={{ height: `${pillarHeight}px` }}
+                        >
                           <div
                             className={
-                              "asrar-timeline-bar asrar-timeline-bar--" +
+                              "asrar-energy-orb asrar-energy-orb--" +
                               emotion.toLowerCase()
                             }
-                            style={{ height: `${pulseHeight}px` }}
                           />
-                          {keyEvents.length > 0 && (
-                            <div className="asrar-timeline-events-dots">
-                              {keyEvents.map((ev, j) => (
-                                <span
-                                  key={j}
-                                  className={
-                                    "asrar-timeline-event-dot asrar-timeline-event-dot--" +
-                                    (ev?.type || "event")
-                                  }
-                                  title={ev?.label || ev?.type}
-                                />
-                              ))}
-                            </div>
-                          )}
+                          <div className="asrar-energy-beam-core" />
+                          <div className="asrar-energy-particles" />
                         </div>
-                        <div className="asrar-timeline-point-label">
-                          <div className="asrar-timeline-date">{dateLabel}</div>
-                          <div className="asrar-timeline-emotion">
-                            <span className="asrar-timeline-mood-pill">
-                              {emotionLabel(emotion)}
-                            </span>
+                        {keyEvents.length > 0 && (
+                          <div className="asrar-timeline-events-dots">
+                            {keyEvents.map((ev, j) => (
+                              <span
+                                key={j}
+                                className={
+                                  "asrar-timeline-event-dot asrar-timeline-event-dot--" +
+                                  (ev?.type || "event")
+                                }
+                                title={ev?.label || ev?.type}
+                              />
+                            ))}
                           </div>
+                        )}
+                      </div>
+                      <div className="asrar-energy-label">
+                        <div className="asrar-timeline-date">{dateLabel}</div>
+                        <div className="asrar-timeline-emotion">
+                          <span className="asrar-timeline-mood-pill">
+                            {emotionLabel(emotion)}
+                          </span>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
