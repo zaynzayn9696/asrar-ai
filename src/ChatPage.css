@@ -317,6 +317,10 @@
   border-color: rgba(0, 244, 255, 0.8);
 }
 
+.asrar-conv-item--deleting {
+  opacity: 0.6;
+}
+
 .asrar-conv-title {
   font-size: 0.9rem;
   font-weight: 600;
@@ -384,6 +388,35 @@
 
 .asrar-conv-item--active .asrar-conv-delete-btn {
   color: rgba(235, 245, 255, 0.98);
+}
+
+.asrar-conv-delete-btn[disabled] {
+  cursor: default;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
+}
+
+.asrar-conv-delete-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(200, 210, 230, 0.6);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  animation: asrar-conv-spinner 0.6s linear infinite;
+}
+
+@keyframes asrar-conv-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.asrar-conv-delete-error {
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: #ff9ca7;
+  text-align: center;
 }
 
 /* ============ MAIN CHAT COLUMN ============ */

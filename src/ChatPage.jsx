@@ -240,6 +240,8 @@ export default function ChatPage() {
   const [conversations, setConversations] = useState([]);
   const [convLoading, setConvLoading] = useState(false);
   const [convError, setConvError] = useState(null);
+  const [deletingConversationId, setDeletingConversationId] = useState(null);
+  const [convDeleteError, setConvDeleteError] = useState(null);
 
   const character =
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[1];
@@ -862,66 +864,103 @@ export default function ChatPage() {
   };
 
   const handleDeleteConversation = async (id, event) => {
-    if (event && typeof event.stopPropagation === 'function') {
+    if (event && typeof event.stopPropagation === "function") {
       event.stopPropagation();
     }
 
+    if (deletingConversationId && deletingConversationId !== id) {
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(
+        isArabicConversation
+          ? "هل أنت متأكد أنك تريد حذف هذه المحادثة؟"
+          : "Are you sure you want to delete this conversation?"
+      );
+      if (!confirmed) return;
+    }
+
+    setConvDeleteError(null);
+    setDeletingConversationId(id);
+
+    const prevConversations = conversations;
+    const prevConversationId = conversationId;
+    const prevMessages = messages;
+
+    setConversations((prev) =>
+      Array.isArray(prev) ? prev.filter((c) => c.id !== id) : prev
+    );
+
+    if (conversationId === id) {
+      setConversationId(null);
+      const now = new Date().toISOString();
+      setMessages([
+        {
+          id: 1,
+          from: "system",
+          text: isArabicConversation
+            ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+            : "This is your private space. Nothing you say here is judged.",
+          createdAt: now,
+        },
+        {
+          id: 2,
+          from: "ai",
+          text: isArabicConversation
+            ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+            : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
+          createdAt: now,
+        },
+      ]);
+    }
+
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
-      const headers = token
-        ? { Authorization: `Bearer ${token}` }
-        : undefined;
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
       const res = await fetch(`${API_BASE}/api/chat/conversations/${id}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
         headers,
       });
 
       if (!res.ok) {
-        console.error('[ChatPage] delete conversation failed', { status: res.status });
-        return;
+        throw new Error(`Delete failed with status ${res.status || "unknown"}`);
       }
 
-      setConversations((prev) => (Array.isArray(prev) ? prev.filter((c) => c.id !== id) : []));
-
-      if (conversationId === id) {
-        setConversationId(null);
-        const now = new Date().toISOString();
-        setMessages([
-          {
-            id: 1,
-            from: 'system',
-            text: isArabicConversation
-              ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
-              : "This is your private space. Nothing you say here is judged.",
-            createdAt: now,
-          },
-          {
-            id: 2,
-            from: 'ai',
-            text: isArabicConversation
-              ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
-              : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
-            createdAt: now,
-          },
-        ]);
-
-        if (user && typeof window !== 'undefined') {
-          try {
-            const storageKey = buildHistoryStorageKey(
-              user.id,
-              selectedCharacterId,
-              id
-            );
-            localStorage.removeItem(storageKey);
-          } catch (e) {
-            console.error('[ChatPage] failed to clear deleted conversation history', e);
-          }
+      if (prevConversationId === id && user && typeof window !== "undefined") {
+        try {
+          const storageKey = buildHistoryStorageKey(
+            user.id,
+            selectedCharacterId,
+            id
+          );
+          localStorage.removeItem(storageKey);
+        } catch (e) {
+          console.error(
+            "[ChatPage] failed to clear deleted conversation history",
+            e
+          );
         }
       }
     } catch (e) {
-      console.error('[ChatPage] delete conversation error', e);
+      console.error("[ChatPage] delete conversation error", e);
+
+      setConversations(
+        Array.isArray(prevConversations) ? prevConversations : []
+      );
+      setConversationId(prevConversationId || null);
+      setMessages(Array.isArray(prevMessages) ? prevMessages : []);
+
+      setConvDeleteError(
+        isArabicConversation
+          ? "تعذر حذف هذه المحادثة. يرجى المحاولة مرة أخرى."
+          : "We couldnt delete this conversation. Please try again."
+      );
+    } finally {
+      setDeletingConversationId(null);
     }
   };
 
@@ -984,32 +1023,46 @@ const renderSidebarContent = () => (
       {!convLoading &&
         !convError &&
         Array.isArray(conversations) &&
-        conversations.map((conv) => (
-          <div
-            key={conv.id}
-            className={
-              "asrar-conv-item" +
-              (conv.id === conversationId ? " asrar-conv-item--active" : "")
-            }
-            onClick={() => handleConversationClick(conv.id)}
-          >
-            <div className="asrar-conv-title-row">
-              <span className="asrar-conv-title">{getName(character)}</span>
-              <button
-                type="button"
-                className="asrar-conv-delete-btn"
-                onClick={(e) => handleDeleteConversation(conv.id, e)}
-              >
-                ×
-              </button>
+        conversations.map((conv) => {
+          const isActive = conv.id === conversationId;
+          const isDeleting = conv.id === deletingConversationId;
+
+          return (
+            <div
+              key={conv.id}
+              className={
+                "asrar-conv-item" +
+                (isActive ? " asrar-conv-item--active" : "") +
+                (isDeleting ? " asrar-conv-item--deleting" : "")
+              }
+              onClick={() => handleConversationClick(conv.id)}
+            >
+              <div className="asrar-conv-title-row">
+                <span className="asrar-conv-title">{getName(character)}</span>
+                <button
+                  type="button"
+                  className="asrar-conv-delete-btn"
+                  onClick={(e) => handleDeleteConversation(conv.id, e)}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <span className="asrar-conv-delete-spinner" />
+                  ) : (
+                    "×"
+                  )}
+                </button>
+              </div>
+              <div className="asrar-conv-preview">
+                {conv.firstUserMessage && conv.firstUserMessage.trim()
+                  ? conv.firstUserMessage.slice(0, 60)
+                  : "No messages yet"}
+              </div>
             </div>
-            <div className="asrar-conv-preview">
-              {conv.firstUserMessage && conv.firstUserMessage.trim()
-                ? conv.firstUserMessage.slice(0, 60)
-                : "No messages yet"}
-            </div>
-          </div>
-        ))}
+          );
+        })}
+      {convDeleteError && (
+        <div className="asrar-conv-delete-error">{convDeleteError}</div>
+      )}
     </div>
   </>
 );
