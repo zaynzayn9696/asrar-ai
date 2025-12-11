@@ -1784,3 +1784,24 @@
     left: calc(50% + 130px); /* Center in the chat area accounting for sidebar */
   }
 }
+
+/* ================= RTL CHAT FIX ================= */
+
+/* When the whole app is in RTL (Arabic UI), push assistant bubbles to the right */
+[dir="rtl"] .asrar-chat-row--assistant {
+  justify-content: flex-end !important;
+}
+
+[dir="rtl"] .asrar-chat-row--assistant .asrar-chat-bubble {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  text-align: right;
+  direction: rtl;
+}
+
+/* Optional: also make user Arabic text right-aligned & RTL-aware */
+[dir="rtl"] .asrar-chat-row--user .asrar-chat-bubble {
+  text-align: right;
+  direction: rtl;
+}
+
