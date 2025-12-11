@@ -1248,14 +1248,8 @@ useEffect(() => {
     try {
       const payloadMessages = [...messages, userMessage].map((m) => ({ from: m.from, text: m.text }));
 
-      const detectedLang = detectMessageLanguage(trimmed);
-
-      let payloadLang = "en";
-      let payloadDialect = "en";
-      if (detectedLang === "ar") {
-        payloadLang = "ar";
-        payloadDialect = selectedDialect || "msa";
-      }
+      const payloadLang = conversationLang;
+      const payloadDialect = selectedDialect || (conversationLang === "en" ? "en" : "msa");
 
       const token =
         typeof window !== "undefined"

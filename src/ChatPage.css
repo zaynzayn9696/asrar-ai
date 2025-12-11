@@ -645,13 +645,13 @@
   }
   
   .asrar-chat-row--assistant .asrar-chat-bubble {
-    margin-left: 0;
-    margin-right: auto;
+    margin-left: 15%;
   }
 }
 
 .asrar-chat-row--assistant {
   width: 100%;
+  justify-content: flex-start;
 }
 
 .asrar-chat-row--assistant .asrar-chat-bubble {

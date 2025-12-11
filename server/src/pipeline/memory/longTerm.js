@@ -592,6 +592,32 @@ function extractSemanticFactsFromMessage(messageText) {
     // --- Favorite drink ---
     let drinkCandidate = null;
 
+    const pronounValuesEn = ['it', 'this', 'that'];
+    const drinkTokensEn = [
+      'coffee',
+      'tea',
+      'green tea',
+      'black tea',
+      'latte',
+      'cappuccino',
+      'espresso',
+      'americano',
+      'mocha',
+      'hot chocolate',
+      'milk',
+      'juice',
+      'orange juice',
+      'apple juice',
+      'smoothie',
+      'soda',
+      'coke',
+      'pepsi',
+      'water',
+    ];
+    const drinkTokensAr = hasArabic
+      ? ['قهوة', 'نسكافيه', 'شاي', 'لاتيه', 'كابتشينو', 'عصير', 'ماء', 'بيبسي', 'كوكاكولا']
+      : [];
+
     // Forward English patterns: "my favorite drink is X" or "favorite drink: X".
     const drinkMatchEn = raw.match(
       /\bmy favou?rite drink is\s+([^.,!?\n]+)|\bfavou?rite drink\s*[:\-]\s*([^.,!?\n]+)/i
@@ -607,6 +633,39 @@ function extractSemanticFactsFromMessage(messageText) {
       );
       if (drinkMatchEnReverse && drinkMatchEnReverse[1]) {
         drinkCandidate = drinkMatchEnReverse[1].trim();
+      }
+    }
+
+    // Fallback for shapes like: "I love coffee so much it's my favorite drink".
+    // If we see a favorite/favourite drink phrase but no direct X is/=: pattern,
+    // scan the message for known drink tokens and use the first one found.
+    if (!drinkCandidate) {
+      const hasFavDrinkPhrase =
+        lower.includes('favorite drink') || lower.includes('favourite drink');
+      if (hasFavDrinkPhrase) {
+        let tokenCandidate = null;
+        for (const tok of drinkTokensEn) {
+          const t = String(tok || '').toLowerCase();
+          if (!t) continue;
+          if (lower.includes(t)) {
+            tokenCandidate = tok;
+            break;
+          }
+        }
+
+        if (!tokenCandidate && drinkTokensAr.length) {
+          for (const tok of drinkTokensAr) {
+            if (!tok) continue;
+            if (text.includes(tok)) {
+              tokenCandidate = tok;
+              break;
+            }
+          }
+        }
+
+        if (tokenCandidate) {
+          drinkCandidate = tokenCandidate;
+        }
       }
     }
 
@@ -630,7 +689,7 @@ function extractSemanticFactsFromMessage(messageText) {
     }
 
     const normDrink = normalisePreferenceValue(drinkCandidate);
-    if (normDrink) {
+    if (normDrink && !pronounValuesEn.includes(normDrink)) {
       pushFact('preference.drink.like', normDrink, 0.96);
     }
 
