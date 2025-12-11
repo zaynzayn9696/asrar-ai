@@ -1,4 +1,12 @@
 require('dotenv').config();
+const crypto = require('crypto');
+
+// After app is created, before app.listen:
+console.log('[startup] DATABASE_URL hash =', crypto
+  .createHash('md5')
+  .update(process.env.DATABASE_URL || '')
+  .digest('hex')
+);
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
