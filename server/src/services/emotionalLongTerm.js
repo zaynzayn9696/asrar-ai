@@ -216,11 +216,27 @@ async function getLongTermEmotionalSnapshot({ userId }) {
     }
 
     const negTrend = scores.sadness + scores.anxiety + scores.loneliness;
-    const summaryText = negTrend >= 0.9
+    let summaryText = negTrend >= 0.9
       ? 'Over recent weeks, the user often shows sadness and anxiety, with moderate overall intensity.'
       : (scores.hope + scores.gratitude > 0.6
         ? 'Over recent weeks, the user frequently shows hope and gratitude, with generally positive tone.'
         : 'In recent weeks, the user has a mixed emotional pattern, with varied moods.');
+
+    // If we have a recent kernel snapshot, prepend a concise line about the
+    // most recent emotional state so the model can answer questions like
+    // "what is my current mental state?" based on the latest signal.
+    const snap = prof.recentKernelSnapshot && typeof prof.recentKernelSnapshot === 'object'
+      ? prof.recentKernelSnapshot
+      : null;
+    if (snap && snap.lastEmotion) {
+      const lastLabel = String(snap.lastEmotion || 'NEUTRAL').toUpperCase();
+      const lastIntensity = typeof snap.lastIntensity === 'number' ? snap.lastIntensity : 0;
+      const clampedIntensity = Math.max(0, Math.min(5, lastIntensity || 0));
+      const currentLine = clampedIntensity > 0
+        ? `Most recent emotional state they expressed: ${lastLabel} at about ${clampedIntensity}/5 intensity.`
+        : `Most recent emotional state they expressed: ${lastLabel}.`;
+      summaryText = `${currentLine} ${summaryText}`;
+    }
 
     return {
       dominantLongTermEmotion,

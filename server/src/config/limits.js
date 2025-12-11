@@ -26,8 +26,10 @@ function getPlanLimits(email, plan) {
   // Ensure monthly limits never collapse to 0 due to misconfigured env vars.
   // Free plan: minimum 50 messages/month.
   // Pro/Premium: minimum 500 messages/month.
-  const freeMonthlyLimit = LIMITS.FREE_MONTHLY > 0 ? LIMITS.FREE_MONTHLY : 50;
-  const proMonthlyLimit = LIMITS.PRO_MONTHLY > 0 ? LIMITS.PRO_MONTHLY : 500;
+  const rawFreeMonthly = LIMITS.FREE_MONTHLY;
+  const rawProMonthly = LIMITS.PRO_MONTHLY;
+  const freeMonthlyLimit = rawFreeMonthly >= 50 ? rawFreeMonthly : 50;
+  const proMonthlyLimit = rawProMonthly >= 500 ? rawProMonthly : 500;
   if (isTester) {
     return {
       dailyLimit: LIMITS.TESTER_LIMIT,

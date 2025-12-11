@@ -183,6 +183,7 @@ async function applyUsageLimitAndIncrement({
   isPremiumUser,
   isFreePlanUser,
   isTester,
+  plan,
 }) {
   // Testers bypass all limits and are not counted.
   if (isTester) {
@@ -213,6 +214,17 @@ async function applyUsageLimitAndIncrement({
     const freshUsage = await prisma.usage.findUnique({ where: { userId } });
     const used = freshUsage?.monthlyCount || 0;
     const remaining = Math.max(0, limit - used);
+
+    console.error('[UsageLimit] BLOCK', {
+      userId,
+      plan: plan || null,
+      isPremiumUser: !!isPremiumUser,
+      isFreePlanUser: !!isFreePlanUser,
+      isTester: !!isTester,
+      monthlyUsed: used,
+      monthlyLimit: limit,
+      remaining,
+    });
 
     return {
       ok: false,
@@ -898,6 +910,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       isPremiumUser,
       isFreePlanUser,
       isTester,
+      plan: dbUser.plan,
     });
 
     if (!limitResultVoice.ok) {
@@ -1501,7 +1514,7 @@ router.post('/message', async (req, res) => {
       return res.status(400).json({ message: 'content is required' });
     }
 
-    // Quota gating + atomic increment: premium monthly, free daily (24h window).
+    // Quota gating + atomic increment: enforce monthly limits only.
     const limitResultMessage = await applyUsageLimitAndIncrement({
       userId,
       usage,
@@ -1510,6 +1523,7 @@ router.post('/message', async (req, res) => {
       isPremiumUser,
       isFreePlanUser,
       isTester,
+      plan: dbUser.plan,
     });
 
     if (!limitResultMessage.ok) {
@@ -2096,39 +2110,6 @@ router.post('/message', async (req, res) => {
 
     if (whispersUnlocked.length) {
       responsePayload.whispersUnlocked = whispersUnlocked;
-    }
-
-    // If a free-plan user has just used their final daily message (e.g. 5/5),
-    // return a hint so the frontend can immediately show the limit banner.
-    if (!isTester && isFreePlanUser) {
-      const limit = dailyLimit || 5;
-      const usedNow = usage?.dailyCount || 0;
-      if (limit > 0 && usedNow >= limit) {
-        const now = new Date();
-        let resetAtDate;
-
-        if (usage.dailyResetAt && usage.dailyResetAt > now) {
-          resetAtDate = new Date(usage.dailyResetAt);
-        } else {
-          resetAtDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-          try {
-            usage = await prisma.usage.update({
-              where: { userId },
-              data: { dailyResetAt: resetAtDate },
-            });
-          } catch (_) {}
-        }
-
-        const resetInSeconds = Math.max(
-          0,
-          Math.floor((resetAtDate.getTime() - now.getTime()) / 1000)
-        );
-
-        responsePayload.dailyLimitReached = true;
-        responsePayload.limitType = 'daily';
-        responsePayload.resetAt = resetAtDate.toISOString();
-        responsePayload.resetInSeconds = resetInSeconds;
-      }
     }
 
     if (wantsStream) {

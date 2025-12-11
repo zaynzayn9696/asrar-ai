@@ -17,6 +17,40 @@ function ensureObject(val) {
   return { ...val };
 }
 
+// Rule-based name detection fallback for clear first-person introductions
+// in English and Arabic, used alongside the LLM detector.
+function detectNameByPattern(messageText) {
+  const text = String(messageText || '').trim();
+  if (!text) return null;
+
+  // English patterns: "my name is X", "call me X"
+  const enMatch = text.match(/\b(my name is|call me)\s+([A-Za-z]{2,32})/i);
+  if (enMatch && enMatch[2]) {
+    const candidate = enMatch[2].replace(/[.,!?؟،]+$/gu, '').trim();
+    if (candidate.length >= 2 && candidate.length <= 40) {
+      return candidate;
+    }
+  }
+
+  // Basic Arabic patterns: "انا اسمي X", "أنا اسمي X", "اسمي X", "سمّيني X"
+  const arPatterns = [
+    /(?:انا اسمي|أنا اسمي|اسمي)\s+([^\s،.!?]{2,32})/u,
+    /(?:سمّيني|سميني)\s+([^\s،.!?]{2,32})/u,
+  ];
+
+  for (const re of arPatterns) {
+    const m = re.exec(text);
+    if (m && m[1]) {
+      const candidate = String(m[1]).replace(/[.,!?؟،]+$/gu, '').trim();
+      if (candidate.length >= 2 && candidate.length <= 40) {
+        return candidate;
+      }
+    }
+  }
+
+  return null;
+}
+
 // LLM-powered name extraction from a single message text (English + Arabic).
 // Returns a clean name string or null if no explicit new name is present.
 async function detectNameUsingLLM(messageText) {
@@ -489,7 +523,10 @@ async function updateLongTerm(userId, event, outcome) {
   // NEW: best-effort identity (name) detection and persistence to UserMemoryFact.
   if (messageText) {
     try {
-      const detectedName = await detectNameUsingLLM(messageText);
+      let detectedName = detectNameByPattern(messageText);
+      if (!detectedName) {
+        detectedName = await detectNameUsingLLM(messageText);
+      }
       if (detectedName) {
         const kind = 'identity.name';
         const existing = await prisma.userMemoryFact.findFirst({
@@ -509,7 +546,6 @@ async function updateLongTerm(userId, event, outcome) {
               sourceMessageId: event.messageId || null,
             },
           });
-
           console.log('[LongTermMemory] identity.name updated', {
             userId,
             hasName: true,
@@ -529,7 +565,6 @@ async function updateLongTerm(userId, event, outcome) {
               sourceMessageId: event.messageId || null,
             },
           });
-
           console.log('[LongTermMemory] identity.name updated', {
             userId,
             hasName: true,
@@ -540,6 +575,11 @@ async function updateLongTerm(userId, event, outcome) {
             mode: 'create',
           });
         }
+        console.log('[LongTermMemory] identity.name upserted', {
+          userId,
+          value: detectedName,
+          sourceMessageId: event.messageId || null,
+        });
       } else {
         console.log('[LongTermMemory] identity.name detection_skipped_or_rejected', {
           userId,
