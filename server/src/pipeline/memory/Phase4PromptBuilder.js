@@ -474,7 +474,31 @@ async function buildPhase4MemoryBlock({
       if (joined) hobbiesValue = joined;
     }
 
+    const unknownLabel = isArabic ? 'غير معروف' : 'unknown';
+    const identityDisplay = {
+      name: nameValue === 'unknown' ? unknownLabel : nameValue,
+      age: ageValue === 'unknown' ? unknownLabel : ageValue,
+      job: jobTitleValue === 'unknown' ? unknownLabel : jobTitleValue,
+      dream: dreamValue === 'unknown' ? unknownLabel : dreamValue,
+      favoriteWeather: favoriteWeatherValue === 'unknown' ? unknownLabel : favoriteWeatherValue,
+      favoriteDrink: favoriteDrinkValue === 'unknown' ? unknownLabel : favoriteDrinkValue,
+      favoriteFood: favoriteFoodValue === 'unknown' ? unknownLabel : favoriteFoodValue,
+      hobbies: hobbiesValue === 'unknown' ? unknownLabel : hobbiesValue,
+    };
+
     if (isArabic) {
+      lines.push(
+        '## هوية المستخدم وتفضيلاته (حقائق مؤكَّدة)',
+        'هذه حقائق حقيقية عن المستخدم مستخلَصة من محادثات سابقة. يمكنك الاعتماد عليها.',
+        `- الاسم: ${identityDisplay.name}`,
+        `- العمر: ${identityDisplay.age}`,
+        `- العمل / الدور: ${identityDisplay.job}`,
+        `- الهدف أو الحلم الطويل المدى: ${identityDisplay.dream}`,
+        `- الطقس المفضَّل: ${identityDisplay.favoriteWeather}`,
+        `- المشروب المفضَّل: ${identityDisplay.favoriteDrink}`,
+        `- الأكل المفضَّل: ${identityDisplay.favoriteFood}`,
+        `- الهوايات / الاهتمامات: ${identityDisplay.hobbies}`
+      );
       lines.push(
         '[KNOWN_USER_FACTS_START]',
         'Known stored facts about the user (داخلي – استخدمه فقط عندما يسأل المستخدم مباشرة ماذا تعرف عنه). هذه الكتلة هي المصدر الرسمي الوحيد لهذه الحقول:',
@@ -489,6 +513,18 @@ async function buildPhase4MemoryBlock({
         '[KNOWN_USER_FACTS_END]'
       );
     } else {
+      lines.push(
+        '## USER IDENTITY & PREFERENCES (GROUND TRUTH)',
+        'These are real facts about the user, derived from past conversations. You can trust these as accurate.',
+        `- Name: ${identityDisplay.name}`,
+        `- Age: ${identityDisplay.age}`,
+        `- Job / role: ${identityDisplay.job}`,
+        `- Long-term goal / dream: ${identityDisplay.dream}`,
+        `- Favorite weather: ${identityDisplay.favoriteWeather}`,
+        `- Favorite drink: ${identityDisplay.favoriteDrink}`,
+        `- Favorite food: ${identityDisplay.favoriteFood}`,
+        `- Hobbies / interests: ${identityDisplay.hobbies}`
+      );
       lines.push(
         '[KNOWN_USER_FACTS_START]',
         'Known stored facts about the user (internal – ONLY for answering direct questions like "what do you know about me?"). This block is the single source of truth for these fields:',

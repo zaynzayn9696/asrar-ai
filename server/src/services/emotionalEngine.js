@@ -546,22 +546,20 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
   // direct questions and should not change normal reply style.
   const metaMemoryInstruction = isArabic
     ? [
-        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن تفاصيله (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وشغلي وحلمي وجوي ومشروبي المفضل؟"), اعتبر أن كتلة [KNOWN_USER_FACTS_START] ... [KNOWN_USER_FACTS_END] هي المصدر الرسمي الوحيد لهذه الحقول:',
-        '- هذه الكتلة الداخلية تحتوي دائماً على المفاتيح التالية: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
-        '- عندما يطرح المستخدم سؤالاً من نوع "شو بتعرف عني؟" أو يسأل عن هذه الخصائص تحديداً، لا تعتمد على أي ملخصات أخرى (persona profile, long-term summary, triggers). استخدم فقط القيم الموجودة داخل كتلة known_user_facts.',
-        '- لكل خاصية يطلبها المستخدم (الاسم، العمر، العمل، الحلم، الجو المفضل، المشروب المفضل، الأكل المفضل، الهوايات): لو كانت القيمة ليست "unknown" في الكتلة، أجب بها بوضوح وبأسلوب دافئ.',
-        '- لو كانت القيمة "unknown" أو غير مذكورة في الكتلة، يجب أن تقول بوضوح إنك لا تعرف هذه الجزئية بعد (مثلاً: "لسّا ما بعرف مشروبك المفضل"). لا تخمّن ولا تعتمد على انطباعات عامة.',
-        '- لو كانت بعض الحقول معروفة وأخرى "unknown"، أجب بإخلاص جزئي: اذكر فقط الحقول المعروفة، ثم أضف أنك لا تعرف الحقول الباقية بعد. لا تقل أبداً أنك تعرف شيئاً غير موجود في الكتلة.',
-        '- لا تقل "ما بعرف عنك أي شيء" إذا كان عندك بعض القيم المعروفة؛ فرّق بين ما تعرفه وما لا تعرفه، واذكر المعروف بصيغة لطيفة.',
+        'إذا سألَك المستخدم: "ماذا تعرف عني؟" أو "ماذا تتذكّر عني؟" أو "عدِّد ما تعرفه عني"، اتبع الخطوات التالية:',
+        '1) اقرأ قسم "هوية المستخدم وتفضيلاته (حقائق مؤكَّدة)" في كتلة الذاكرة (والكتلة بين [KNOWN_USER_FACTS_START] و [KNOWN_USER_FACTS_END]).',
+        '2) اذكر كُلّ معلومة موجودة لديك فعلياً: الاسم، العمر، العمل/الدور، الهدف أو الحلم الطويل المدى، الطقس المفضَّل، المشروب المفضَّل، الأكل المفضَّل، الهوايات/الاهتمامات.',
+        '3) إذا كانت أي معلومة غير موجودة أو قيمتها "unknown"/"غير معروف"، قل صراحة إنك لا تعرفها بعد أو أن المستخدم لم يخبرك بها.',
+        '4) لا تخترع أو تخمّن أي معلومة غير مذكورة في هذا القسم أو في كتلة known_user_facts.',
+        '5) يمكنك أن تبدو دقيقاً وواثقاً عند استخدام هذه الحقائق المحفوظة، لكن التزم فقط بما هو مذكور فيها.',
       ].join('\n')
     : [
-        'If the user explicitly asks what you know about them or about attributes such as their name, age, job, long-term dream, favorite weather, favorite drink, favorite food, or hobbies (for example: "what do you know about me?" or "what is my job and my favorite drink?"), you MUST treat the block between [KNOWN_USER_FACTS_START] and [KNOWN_USER_FACTS_END] as the ONLY source of truth for those fields:',
-        '- That internal block always exposes these keys: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
-        '- When answering meta-questions of this kind, ignore persona summaries, long-term summaries, triggers, or any other vague hints. Do not pull extra "facts" from them. Use only the explicit values in the known_user_facts block.',
-        '- For each attribute the user asks about: if the value in that block is not "unknown", you MUST answer with that value directly (in your normal warm style).',
-        '- If the value is "unknown" or missing in that block, you MUST say clearly that you do not know that specific part yet (for example: "I don\'t know your favorite drink yet"). Do not guess or infer it from general impressions.',
-        '- If some attributes are known and others are "unknown", give a partial honest answer: state only the known fields from the block, then explicitly say which fields you don\'t know yet. Never claim to know something that is not present in the block as non-"unknown".',
-        '- Do NOT say "I don\'t know anything about you" when some of these keys have non-"unknown" values; clearly separate what you know from what you do not know yet.',
+        'When the user asks what you know or remember about them (e.g., "what do you know about me?", "what do you remember about me?", "list what you know about my age/job/weather/drink/hobbies"), you MUST do the following:',
+        '1) Read the "USER IDENTITY & PREFERENCES (GROUND TRUTH)" section and the block between [KNOWN_USER_FACTS_START] and [KNOWN_USER_FACTS_END].',
+        '2) List every fact you actually have: name, age, job/role, long-term goal or dream, favorite weather, favorite drink, favorite food, hobbies/interests.',
+        '3) For any field that is missing or marked "unknown", explicitly say you don\'t know it yet or that the user hasn\'t told you.',
+        '4) Do NOT invent or guess any fact that is not present there.',
+        '5) It is okay to sound precise and confident when using those stored facts.',
       ].join('\n');
 
   const header = isArabic
@@ -846,9 +844,12 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     dialect: dialect == null ? null : String(dialect),
   });
   try {
-    const snippet =
-      typeof systemPrompt === 'string' ? systemPrompt.substring(0, 200) : '';
-    console.log('[Diagnostic] Final System Prompt Snippet:', `${snippet}...`);
+    console.log('[Diagnostic] Final System Prompt Metadata', {
+      length: typeof systemPrompt === 'string' ? systemPrompt.length : null,
+      hasIdentityBlock: !!identityBlock,
+      hasPersonaBlock: !!personaProfileBlock,
+      hasPhase4: phase4Block ? true : false,
+    });
   } catch (_) {}
 
   return systemPrompt;
