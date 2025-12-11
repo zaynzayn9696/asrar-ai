@@ -2102,37 +2102,22 @@ useEffect(() => {
 
               const isAssistant = msg.from === "ai" || msg.from === "assistant";
 
-              // Prefer the message's own language metadata for alignment; fall
-              // back to simple text detection only when language is missing.
               const messageLangRaw =
                 (msg && (msg.lang || msg.language || msg.finalLanguage)) || null;
+              const messageDirRaw =
+                (msg && (msg.direction || msg.dir || msg.textDirection)) || null;
 
-              let isArabicAssistant = false;
-              if (isAssistant) {
-                if (messageLangRaw) {
-                  const langStr = String(messageLangRaw).toLowerCase();
-                  isArabicAssistant = langStr.startsWith("ar");
-                } else if (isAiTextMessage && currentRenderedText) {
-                  isArabicAssistant = isArabic(currentRenderedText);
-                }
-              }
+              const isArabicMessage =
+                (!!messageLangRaw && String(messageLangRaw).toLowerCase().startsWith("ar")) ||
+                (!!messageDirRaw && String(messageDirRaw).toLowerCase() === "rtl") ||
+                (!!currentRenderedText && /[\u0600-\u06FF]/.test(currentRenderedText));
 
-              // Decide text direction per message. For assistant messages we
-              // follow the assistant language flag; for user/system we fall
-              // back to the overall conversation language.
-              const textDir =
-                isAssistant
-                  ? isArabicAssistant
-                    ? "rtl"
-                    : "ltr"
-                  : isArabicConversation
-                  ? "rtl"
-                  : "ltr";
+              const textDir = isArabicMessage ? "rtl" : "ltr";
 
               let rowClass = "asrar-chat-row";
               if (isAssistant) {
                 rowClass += " asrar-chat-row--assistant";
-                if (isArabicAssistant) {
+                if (isArabicMessage) {
                   rowClass += " asrar-chat-row--assistant-ar";
                 } else {
                   rowClass += " asrar-chat-row--assistant-en";
@@ -2144,7 +2129,7 @@ useEffect(() => {
               }
 
               return (
-                <div key={msg.id} className={rowClass}>
+                <div key={msg.id} className={rowClass} dir={isAssistant || msg.from === "user" ? textDir : undefined}>
                   <div className="asrar-chat-bubble">
                     {/* AI voice replies: voice bubble only */}
                     {isAiVoice && (

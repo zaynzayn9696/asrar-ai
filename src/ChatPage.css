@@ -624,47 +624,38 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  width: 100%;
-  justify-content: center;
   box-sizing: border-box;
-  padding: 0 10%;
-}
-.asrar-chat-row {
-  padding: 0 0; /* remove massive side padding */
+  padding: 0;
   justify-content: center;
-}
-.asrar-chat-row {
   max-width: var(--asrar-chat-width);
   margin: 0 auto;
   width: 100%;
 }
-/* Desktop specific adjustments */
-@media (min-width: 901px) {
-  .asrar-chat-row--user .asrar-chat-bubble {
-    margin-right: 15%;
-  }
-}
 
 .asrar-chat-row--assistant {
   width: 100%;
-  justify-content: flex-start;
-}
-
-.asrar-chat-row--assistant .asrar-chat-bubble {
-  margin-left: 0;
-  margin-right: auto;
 }
 
 .asrar-chat-row--assistant-en {
   justify-content: flex-start;
-  direction: ltr;
+}
+
+.asrar-chat-row--assistant-en .asrar-chat-bubble {
+  margin-left: 0;
+  margin-right: auto;
   text-align: left;
+  direction: ltr;
 }
 
 .asrar-chat-row--assistant-ar {
   justify-content: flex-end;
-  direction: rtl;
+}
+
+.asrar-chat-row--assistant-ar .asrar-chat-bubble {
+  margin-left: auto;
+  margin-right: 0;
   text-align: right;
+  direction: rtl;
 }
 
 .asrar-chat-row--assistant-en .asrar-chat-bubble,
@@ -673,28 +664,9 @@
   color: #e8f8ff;
 }
 
-.asrar-chat-row--assistant-en .asrar-chat-bubble {
-  margin-left: 0;
-  margin-right: auto;
-}
-
-.asrar-chat-row--assistant-ar .asrar-chat-bubble {
-  margin-left: auto;
-  margin-right: 0;
-}
-
-.asrar-chat-row--assistant {
-  width: 100%;
-}
-
 .asrar-chat-row--user {
   width: 100%;
   justify-content: flex-end;
-}
-
-.asrar-chat-row--assistant .asrar-chat-bubble {
-  margin-left: 0;
-  margin-right: auto;
 }
 
 .asrar-chat-row--user .asrar-chat-bubble {
@@ -704,13 +676,6 @@
 
 .asrar-chat-row--system {
   justify-content: center;
-}
-
-/* Desktop specific adjustments */
-@media (min-width: 901px) {
-  .asrar-chat-row--user .asrar-chat-bubble {
-    margin-right: 15%;
-  }
 }
 
 /* Avatar */
@@ -1635,48 +1600,6 @@
 }
 .asrar-chat-messages {
   padding-bottom: 0 !important;
-}
-
-/* === FIX USER BUBBLE RIGHT PADDING === */
-.asrar-chat-row--user {
- padding-right: 0 !important;
-}
-
-@media (max-width: 900px) {
-  .asrar-chat-row--user {
-    padding-right: 1rem; /* smaller on mobile */
-  }
-}
-.asrar-chat-main {
-  position: relative;
-}
-.asrar-chat-messages {
-  overflow-y: auto;
-  position: relative;
-}
-
-/* Ensure the chat main is the anchor for scroll button */
-.asrar-chat-main {
-  position: relative !important;
-}
-
-/* Prevent page scrolling — messages scroll only (desktop only) */
-@media (min-width: 901px) {
-  .asrar-chat-messages {
-    overflow-y: auto !important;
-    position: relative !important;
-    padding-bottom: 0 !important;
-  }
-}
-
-/* === FIX USER BUBBLE SIDE SPACING (clean version) === */
-.asrar-chat-row--user {
-  padding-right: 1.2rem !important;
-}
-@media (max-width: 900px) {
-  .asrar-chat-row--user {
-    padding-right: 0.8rem !important;
-  }
 }
 
 @media (max-width: 900px) {
