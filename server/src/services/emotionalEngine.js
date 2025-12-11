@@ -546,22 +546,22 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
   // direct questions and should not change normal reply style.
   const metaMemoryInstruction = isArabic
     ? [
-        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن تفاصيله (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وشغلي وحلمي وجوي ومشروبي المفضل؟")، استخدم كتلة "Known stored facts about the user" الداخلية:',
-        '- هذه الكتلة تحتوي دائماً على المفاتيح التالية: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
-        '- لكل خاصية يطلبها المستخدم (الاسم، العمر، العمل، الحلم، الجو المفضل، المشروب المفضل، الأكل المفضل، الهوايات): لو كانت القيمة ليست "unknown" في هذه الكتلة، أجب بها بوضوح واطمئنان.',
-        '- لو كانت بعض القيم معروفة وأخرى unknown، أجب بإخلاص جزئي: مثلاً "بعرف إن جَوّك المفضل هو summer، بس ما بعرف مشروبك المفضل أو هواياتك لسه".',
-        '- لا تقل "ما بعرف عنك أي شيء" إذا كان عندك بعض القيم المعروفة؛ فرّق بين ما تعرفه وما لا تعرفه بعد، واذكر المعروف بصيغة لطيفة.',
-        '- لا تختلق قيمة لخاصية لو كانت "unknown" أو غير موجودة؛ في هذه الحالة قل بوضوح إنك لا تعرف هذه الجزئية حتى الآن.',
-        '- مثال جيد: لو عنا name:"Zubaid" و age:"28" و favoriteWeather:"summer" وباقي الحقول unknown، جواب مناسب هو: "بعرف إن اسمك زبيد، عمرك حوالي ٢٨، وبتحب جو الصيف، بس لسا ما بعرف مشروبك أو أكلك المفضلين."',
+        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن تفاصيله (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وشغلي وحلمي وجوي ومشروبي المفضل؟"), اعتبر أن كتلة [KNOWN_USER_FACTS_START] ... [KNOWN_USER_FACTS_END] هي المصدر الرسمي الوحيد لهذه الحقول:',
+        '- هذه الكتلة الداخلية تحتوي دائماً على المفاتيح التالية: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
+        '- عندما يطرح المستخدم سؤالاً من نوع "شو بتعرف عني؟" أو يسأل عن هذه الخصائص تحديداً، لا تعتمد على أي ملخصات أخرى (persona profile, long-term summary, triggers). استخدم فقط القيم الموجودة داخل كتلة known_user_facts.',
+        '- لكل خاصية يطلبها المستخدم (الاسم، العمر، العمل، الحلم، الجو المفضل، المشروب المفضل، الأكل المفضل، الهوايات): لو كانت القيمة ليست "unknown" في الكتلة، أجب بها بوضوح وبأسلوب دافئ.',
+        '- لو كانت القيمة "unknown" أو غير مذكورة في الكتلة، يجب أن تقول بوضوح إنك لا تعرف هذه الجزئية بعد (مثلاً: "لسّا ما بعرف مشروبك المفضل"). لا تخمّن ولا تعتمد على انطباعات عامة.',
+        '- لو كانت بعض الحقول معروفة وأخرى "unknown"، أجب بإخلاص جزئي: اذكر فقط الحقول المعروفة، ثم أضف أنك لا تعرف الحقول الباقية بعد. لا تقل أبداً أنك تعرف شيئاً غير موجود في الكتلة.',
+        '- لا تقل "ما بعرف عنك أي شيء" إذا كان عندك بعض القيم المعروفة؛ فرّق بين ما تعرفه وما لا تعرفه، واذكر المعروف بصيغة لطيفة.',
       ].join('\n')
     : [
-        'If the user explicitly asks what you know about them or for attributes such as their name, age, job, dream, favorite weather, favorite drink, favorite food, or hobbies (for example: "what do you know about me?" or "what is my job and my favorite drink?"), use the internal block "Known stored facts about the user":',
-        '- That block always exposes these keys: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
-        '- For each attribute the user asks about: if the value in that block is not "unknown", you MUST answer with that value directly (in your normal warm style, without pretending not to know).',
-        '- If some attributes are known and others are "unknown", give a partial honest answer (for example: "I know your favorite weather is summer and you love coffee, but I don\'t know your favorite food yet.").',
+        'If the user explicitly asks what you know about them or about attributes such as their name, age, job, long-term dream, favorite weather, favorite drink, favorite food, or hobbies (for example: "what do you know about me?" or "what is my job and my favorite drink?"), you MUST treat the block between [KNOWN_USER_FACTS_START] and [KNOWN_USER_FACTS_END] as the ONLY source of truth for those fields:',
+        '- That internal block always exposes these keys: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
+        '- When answering meta-questions of this kind, ignore persona summaries, long-term summaries, triggers, or any other vague hints. Do not pull extra "facts" from them. Use only the explicit values in the known_user_facts block.',
+        '- For each attribute the user asks about: if the value in that block is not "unknown", you MUST answer with that value directly (in your normal warm style).',
+        '- If the value is "unknown" or missing in that block, you MUST say clearly that you do not know that specific part yet (for example: "I don\'t know your favorite drink yet"). Do not guess or infer it from general impressions.',
+        '- If some attributes are known and others are "unknown", give a partial honest answer: state only the known fields from the block, then explicitly say which fields you don\'t know yet. Never claim to know something that is not present in the block as non-"unknown".',
         '- Do NOT say "I don\'t know anything about you" when some of these keys have non-"unknown" values; clearly separate what you know from what you do not know yet.',
-        '- Never invent a value for any key whose value is "unknown" or missing; instead say that you don\'t know that specific part yet.',
-        '- Example of a good answer: if the block has name:"zubaid", age:"28", favoriteWeather:"summer" and other fields are "unknown", answer like: "I know your name is Zubaid, you\'re around 28, and you enjoy summer weather, but I don\'t know your favorite drink or food yet."',
       ].join('\n');
 
   const header = isArabic

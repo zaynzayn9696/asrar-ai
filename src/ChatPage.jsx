@@ -2100,29 +2100,39 @@ useEffect(() => {
               const currentRenderedText =
                 isCurrentAiTyping ? aiTypingBuffer : msg.text;
 
-              // Decide text direction per message. For AI, we derive from the
-              // actual text content; for user/system we fall back to the
-              // overall conversation language.
+              const isAssistant = msg.from === "ai" || msg.from === "assistant";
+
+              // Prefer the message's own language metadata for alignment; fall
+              // back to simple text detection only when language is missing.
+              const messageLangRaw =
+                (msg && (msg.lang || msg.language || msg.finalLanguage)) || null;
+
+              let isArabicAssistant = false;
+              if (isAssistant) {
+                if (messageLangRaw) {
+                  const langStr = String(messageLangRaw).toLowerCase();
+                  isArabicAssistant = langStr.startsWith("ar");
+                } else if (isAiTextMessage && currentRenderedText) {
+                  isArabicAssistant = isArabic(currentRenderedText);
+                }
+              }
+
+              // Decide text direction per message. For assistant messages we
+              // follow the assistant language flag; for user/system we fall
+              // back to the overall conversation language.
               const textDir =
-                isAiTextMessage
-                  ? isArabic(currentRenderedText)
+                isAssistant
+                  ? isArabicAssistant
                     ? "rtl"
                     : "ltr"
                   : isArabicConversation
                   ? "rtl"
                   : "ltr";
 
-              // When an assistant text reply is Arabic, align its bubble to the
-              // right (like user messages) while keeping English replies
-              // left-aligned. This preserves existing logic and styling while
-              // fixing Arabic AI alignment only.
-              const isArabicAiText =
-                isAiTextMessage && isArabic(currentRenderedText);
-
               let rowClass = "asrar-chat-row";
-              if (msg.from === "ai") {
+              if (isAssistant) {
                 rowClass += " asrar-chat-row--assistant";
-                if (isArabicAiText) {
+                if (isArabicAssistant) {
                   rowClass += " asrar-chat-row--assistant-ar";
                 } else {
                   rowClass += " asrar-chat-row--assistant-en";

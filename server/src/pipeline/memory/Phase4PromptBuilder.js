@@ -349,9 +349,10 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
   }
 
   // Compact "known stored facts" view for explicit meta-questions like
-  // "what do you know about me?". Always expose the same four keys so the
-  // assistant can answer per-attribute: name, age, favoriteWeather,
-  // favoriteDrink. Values may be "unknown" when not present.
+  // "what do you know about me?". Always expose the same eight keys so the
+  // assistant can answer per-attribute: name, age, jobTitle, dream,
+  // favoriteWeather, favoriteDrink, favoriteFood, hobbies. Values may be
+  // "unknown" when not present.
   try {
     let personaFacts = null;
     try {
@@ -454,7 +455,8 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
 
     if (isArabic) {
       lines.push(
-        'Known stored facts about the user (داخلي – استخدمه فقط عندما يسأل المستخدم مباشرة ماذا تعرف عنه):',
+        '[KNOWN_USER_FACTS_START]',
+        'Known stored facts about the user (داخلي – استخدمه فقط عندما يسأل المستخدم مباشرة ماذا تعرف عنه). هذه الكتلة هي المصدر الرسمي الوحيد لهذه الحقول:',
         `- name: ${nameValue}`,
         `- age: ${ageValue}`,
         `- jobTitle: ${jobTitleValue}`,
@@ -462,11 +464,13 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         `- favoriteWeather: ${favoriteWeatherValue}`,
         `- favoriteDrink: ${favoriteDrinkValue}`,
         `- favoriteFood: ${favoriteFoodValue}`,
-        `- hobbies: ${hobbiesValue}`
+        `- hobbies: ${hobbiesValue}`,
+        '[KNOWN_USER_FACTS_END]'
       );
     } else {
       lines.push(
-        'Known stored facts about the user (internal – ONLY for answering direct questions like "what do you know about me?"): ',
+        '[KNOWN_USER_FACTS_START]',
+        'Known stored facts about the user (internal – ONLY for answering direct questions like "what do you know about me?"). This block is the single source of truth for these fields:',
         `- name: ${nameValue}`,
         `- age: ${ageValue}`,
         `- jobTitle: ${jobTitleValue}`,
@@ -474,7 +478,8 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         `- favoriteWeather: ${favoriteWeatherValue}`,
         `- favoriteDrink: ${favoriteDrinkValue}`,
         `- favoriteFood: ${favoriteFoodValue}`,
-        `- hobbies: ${hobbiesValue}`
+        `- hobbies: ${hobbiesValue}`,
+        '[KNOWN_USER_FACTS_END]'
       );
     }
 

@@ -689,6 +689,7 @@
 
 .asrar-chat-row--user {
   width: 100%;
+  justify-content: flex-end;
 }
 
 .asrar-chat-row--assistant .asrar-chat-bubble {
