@@ -967,6 +967,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
         language,
         personaId: personaId || 'hana',
         identityMemory,
+        personaSnapshot,
       });
     } catch (_) {
       phase4Block = '';

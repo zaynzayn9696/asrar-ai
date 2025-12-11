@@ -1357,6 +1357,58 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       }
     }
 
+    const backgroundJobQueued = !!(shouldSave && userRow && userRow.id);
+
+    if (backgroundJobQueued) {
+      const bgUserId = userId;
+      const bgConversationId = cid;
+      const bgCharacterId = characterId;
+      const bgEmotion = emo;
+      const bgMessageId = userRow.id;
+
+      setImmediate(() => {
+        (async () => {
+          try {
+            await prisma.messageEmotion.create({
+              data: {
+                messageId: bgMessageId,
+                primaryEmotion: bgEmotion.primaryEmotion,
+                intensity: bgEmotion.intensity,
+                confidence: bgEmotion.confidence,
+                cultureTag: bgEmotion.cultureTag,
+                notes: bgEmotion.notes || null,
+              },
+            });
+          } catch (err) {
+            console.error(
+              '[EmoEngine][Background][Voice] MessageEmotion error',
+              err && err.message ? err.message : err
+            );
+          }
+
+          try {
+            await recordMemoryEvent({
+              userId: bgUserId,
+              conversationId: bgConversationId,
+              messageId: bgMessageId,
+              characterId: bgCharacterId,
+              emotion: bgEmotion,
+              topics: Array.isArray(bgEmotion.topics) ? bgEmotion.topics : [],
+              secondaryEmotion: bgEmotion.secondaryEmotion || null,
+              emotionVector: bgEmotion.emotionVector || null,
+              detectorVersion: bgEmotion.detectorVersion || null,
+              isKernelRelevant: true,
+            });
+          } catch (err) {
+            console.error(
+              '[EmoEngine][Background][Voice] MemoryKernel error',
+              err && err.message ? err.message : err
+            );
+          }
+        })().catch(() => {});
+      });
+    }
+
     // 6) Text-to-speech for the final reply text.
     const spokenText = prepareTextForTTS(assistantReplyForTTS);
 

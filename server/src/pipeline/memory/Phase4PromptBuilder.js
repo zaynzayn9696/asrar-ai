@@ -21,17 +21,28 @@ function ensureObject(val) {
  * @param {string} params.language  // 'ar' | 'en' | 'mixed'
  * @param {string} params.personaId
  * @param {{ name?: string }} [params.identityMemory]
+ * @param {{ facts:Object, summaryLinesEn:string[], summaryLinesAr:string[] }=} params.personaSnapshot
  * @returns {Promise<string>}
  */
-async function buildPhase4MemoryBlock({ userId, conversationId, language, personaId, identityMemory }) {
+async function buildPhase4MemoryBlock({
+  userId,
+  conversationId,
+  language,
+  personaId,
+  identityMemory,
+  personaSnapshot,
+}) {
   if (!userId) return '';
 
-  const [convoState, profile, personaSnapshot] = await Promise.all([
+  const [convoState, profile, personaSnapshotResultRaw] = await Promise.all([
     conversationId
       ? prisma.conversationEmotionState.findUnique({ where: { conversationId } })
       : Promise.resolve(null),
     prisma.userEmotionProfile.findUnique({ where: { userId } }),
     (async () => {
+      if (personaSnapshot && typeof personaSnapshot === 'object') {
+        return personaSnapshot;
+      }
       try {
         return await getPersonaSnapshot({ userId });
       } catch (err) {
@@ -44,7 +55,17 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     })(),
   ]);
 
-  if (!convoState && !profile && !personaSnapshot) return '';
+  const personaSnapshotResult =
+    personaSnapshotResultRaw && typeof personaSnapshotResultRaw === 'object'
+      ? personaSnapshotResultRaw
+      : { facts: {}, summaryLinesEn: [], summaryLinesAr: [] };
+
+  const hasPersonaContent =
+    (Array.isArray(personaSnapshotResult.summaryLinesEn) && personaSnapshotResult.summaryLinesEn.length) ||
+    (Array.isArray(personaSnapshotResult.summaryLinesAr) && personaSnapshotResult.summaryLinesAr.length) ||
+    (personaSnapshotResult.facts && Object.keys(personaSnapshotResult.facts).length);
+
+  if (!convoState && !profile && !hasPersonaContent) return '';
 
   const isArabic = language === 'ar';
   const lines = [];
@@ -316,13 +337,13 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
 
   // Persona snapshot (profile, goals, themes, traits).
   try {
-    if (personaSnapshot) {
+    if (personaSnapshotResult) {
       const personaLines = isArabic
-        ? Array.isArray(personaSnapshot.summaryLinesAr)
-          ? personaSnapshot.summaryLinesAr
+        ? Array.isArray(personaSnapshotResult.summaryLinesAr)
+          ? personaSnapshotResult.summaryLinesAr
           : []
-        : Array.isArray(personaSnapshot.summaryLinesEn)
-        ? personaSnapshot.summaryLinesEn
+        : Array.isArray(personaSnapshotResult.summaryLinesEn)
+        ? personaSnapshotResult.summaryLinesEn
         : [];
 
       if (personaLines.length) {
@@ -356,8 +377,8 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
   try {
     let personaFacts = null;
     try {
-      personaFacts = personaSnapshot && typeof personaSnapshot.facts === 'object'
-        ? personaSnapshot.facts
+      personaFacts = personaSnapshotResult && typeof personaSnapshotResult.facts === 'object'
+        ? personaSnapshotResult.facts
         : null;
     } catch (_) {
       personaFacts = null;
