@@ -44,9 +44,20 @@ const chatLimiter = rateLimit({
   max: 60, // 60 chat requests per 10 minutes per IP
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (_req, res) => {
+  handler: (req, res) => {
+    try {
+      console.error('[RateLimit] Chat', {
+        ip: req.ip,
+        path: req.originalUrl,
+        userId: req.user && req.user.id ? req.user.id : null,
+        reason: 'too_many_requests',
+      });
+    } catch (_) {}
+
     res.status(429).json({
-      error: 'You are sending messages too quickly. Please slow down.',
+      error: 'rate_limited',
+      code: 'TOO_MANY_REQUESTS',
+      message: 'You are sending messages too quickly. Please slow down.',
     });
   },
 });

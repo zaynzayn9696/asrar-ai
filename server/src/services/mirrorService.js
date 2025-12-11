@@ -31,6 +31,94 @@ function parseRangeToDays(rangeDays) {
   return 30;
 }
 
+async function getIdentityAndPreferencesForUser(userId) {
+  if (!userId) return null;
+
+  try {
+    const facts = await prisma.userMemoryFact.findMany({
+      where: {
+        userId,
+        kind: {
+          in: [
+            'identity.name',
+            'preference.season.like',
+            'preference.season.dislike',
+            'preference.weather.like',
+            'preference.weather.dislike',
+            'preference.pets.like',
+            'preference.pets.dislike',
+            'preference.crowds',
+            'trait.social.style',
+          ],
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 64,
+    });
+
+    if (!facts || !facts.length) {
+      return null;
+    }
+
+    const grouped = {};
+    for (const f of facts) {
+      if (!f || !f.kind || typeof f.value !== 'string') continue;
+      const k = String(f.kind).trim();
+      const v = String(f.value).trim();
+      if (!k || !v) continue;
+      if (!grouped[k]) {
+        grouped[k] = [];
+      }
+      if (!grouped[k].includes(v)) {
+        grouped[k].push(v);
+      }
+    }
+
+    const identityName = (grouped['identity.name'] && grouped['identity.name'][0]) || null;
+
+    const seasonsLike = grouped['preference.season.like'] || [];
+    const seasonsDislike = grouped['preference.season.dislike'] || [];
+    const weatherLike = grouped['preference.weather.like'] || [];
+    const weatherDislike = grouped['preference.weather.dislike'] || [];
+    const petsLike = grouped['preference.pets.like'] || [];
+    const petsDislike = grouped['preference.pets.dislike'] || [];
+    const crowdPrefs = grouped['preference.crowds'] || [];
+    const socialStyles = grouped['trait.social.style'] || [];
+
+    const crowdValue = crowdPrefs[0] || null;
+    const socialStyle = socialStyles[0] || null;
+
+    try {
+      console.log('[Mirror] identity_prefs_snapshot', {
+        userId,
+        hasName: !!identityName,
+        seasonsLikeCount: seasonsLike.length,
+        weatherLikeCount: weatherLike.length,
+        petsLikeCount: petsLike.length,
+        hasCrowdPref: !!crowdValue,
+        hasSocialStyle: !!socialStyle,
+      });
+    } catch (_) {}
+
+    return {
+      identity: identityName ? { name: identityName } : null,
+      preferences: {
+        seasonsLike,
+        seasonsDislike,
+        weatherLike,
+        weatherDislike,
+        petsLike,
+        petsDislike,
+        crowds: crowdValue,
+        socialStyle,
+      },
+    };
+  } catch (err) {
+    console.error('[Mirror] identity/prefs load error', err && err.message ? err.message : err);
+    return null;
+  }
+}
+
 async function generateMirrorInsights({ userId, personaId, rangeDays }) {
   const days = parseRangeToDays(rangeDays);
   const now = new Date();
@@ -227,8 +315,7 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
   };
 }
 
-async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot }) {
-
+async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot, identityProfile }) {
   // Mirror language should follow the UI language from the client.
   // If lang is missing or unknown, fall back to English.
   const rawLang = typeof lang === 'string' ? lang.toLowerCase() : '';
@@ -236,8 +323,10 @@ async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot }
 
   const isAr = language === 'ar';
 
-  const basePromptAr = 'أنت رفيق عاطفي داخل تطبيق "أسرار". وظيفتك أن تعكس للمستخدم نمط مشاعره بلطف، بدون أي لغة طبية أو تشخيصية، وبدون ذكر أمراض نفسية، وبدون إعطاء وعود بالعلاج. تحدّث كصديق مهتم من المنطقة، يستخدم لغة بسيطة ودافئة.';
-  const basePromptEn = 'You are an emotional companion inside an app called Asrar. Your job is to gently reflect emotional patterns back to the user, without using clinical or diagnostic language, without naming disorders, and without promising treatment. Speak like a caring friend from their region in simple, warm language.';
+  const basePromptAr =
+    'أنت رفيق عاطفي داخل تطبيق "أسرار". وظيفتك أن تعكس للمستخدم نمط مشاعره بلطف، بدون أي لغة طبية أو تشخيصية، وبدون ذكر أمراض نفسية، وبدون إعطاء وعود بالعلاج. تحدّث كصديق مهتم من المنطقة، يستخدم لغة بسيطة ودافئة.';
+  const basePromptEn =
+    'You are an emotional companion inside an app called Asrar. Your job is to gently reflect emotional patterns back to the user, without using clinical or diagnostic language, without naming disorders, and without promising treatment. Speak like a caring friend from their region in simple, warm language.';
 
   // Explicitly pin the LLM to the requested language so Mirror Mode always
   // matches the UI language.
@@ -275,6 +364,8 @@ async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot }
     persona: personaMeta || null,
     personaProfile,
     insights,
+    identity: identityProfile && identityProfile.identity ? identityProfile.identity : null,
+    preferences: identityProfile && identityProfile.preferences ? identityProfile.preferences : null,
   });
 
   const userInstruction = isAr
@@ -289,11 +380,15 @@ async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot }
     ? 'انتبه جيدًا لتوزيع المشاعر في insights.topEmotions وشدة avgIntensity. إذا كانت المشاعر السلبية (مثل الحزن أو القلق أو الغضب أو الوحدة أو الضغط) هي الغالبة، فاذكر ذلك بوضوح ولا تصف النمط بأنه هادئ أو محايد.'
     : 'Pay close attention to the distribution of emotions in `insights.topEmotions` and the overall `avgIntensity`. If negative emotions (sad, anxious, angry, lonely, stressed) are dominant, clearly acknowledge this distress or tension instead of calling the pattern calm or neutral.';
 
+  const identityPrefInstruction = isAr
+    ? 'لو تم توفير اسم في الحقل identity.name، استخدمه مرة واحدة في بداية الرد لتنادي المستخدم باسمه بشكل لطيف. لو تم توفير تفضيلات في الحقل preferences (مثل الفصول أو الجو أو الحيوانات الأليفة أو الزحام)، فاذكر واحدة أو اثنتين من هذه التفضيلات في الوصف بطريقة طبيعية (مثلاً: أنه يحب الشتاء والأجواء الماطرة، أو أنه لا يرتاح في الأماكن المزدحمة)، ولا تخترع تفضيلات غير موجودة في البيانات.'
+    : 'If a name is provided in `identity.name`, address the user by this name once near the start of your reflection in a warm, natural way. If preferences are present in `preferences` (for example seasons, weather, pets, or crowds), mention one or two of these real preferences explicitly in your summary (e.g. that they love winter and rainy weather, or that crowded places can feel draining), but do not invent preferences that are not present in the data.';
+
   const personaInstruction = isAr
     ? 'ستصلك ملامح داخلية تقريبية عن حياة المستخدم في الحقل personaProfile.summaryLines (مثل عمر تقريبي، بلد، دور دراسي/عملي، أهداف طويلة المدى، وبعض السمات). استخدم هذه الملاحظات فقط لاختيار طريقة الكلام والأمثلة الأقرب لواقع حياته، بدون أن تذكر هذه الجمل حرفيًا للمستخدم أو تقول إن عندك "ملف شخصي" عنه أو أرقام عن شخصيته. لو كانت personaProfile = null أو لا تحوي جملًا، تجاهلها ببساطة.'
     : 'You may receive a small internal persona profile in `personaProfile.summaryLines` (approximate age, country/city, role, long-term goals, themes, traits). Use these hints only to choose tone and examples that fit the user’s life. Do NOT list them back as analytics, do NOT say you have a "profile" about them, and do NOT quote the lines word-for-word. If `personaProfile` is null or empty, just ignore it.';
 
-  const userPrompt = `${userInstruction}\n\n${timeInstruction}\n\n${emotionInstruction}\n\n${personaInstruction}\n\nJSON:\n${userContent}`;
+  const userPrompt = `${userInstruction}\n\n${timeInstruction}\n\n${emotionInstruction}\n\n${identityPrefInstruction}\n\n${personaInstruction}\n\nJSON:\n${userContent}`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -330,6 +425,7 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
     return { summaryText: null, insights, notEnoughHistory: true };
   }
 
+  // Persona snapshot (age/location/goals/etc)
   let personaSnapshot = null;
   try {
     personaSnapshot = await getPersonaSnapshot({ userId });
@@ -341,12 +437,14 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
     personaSnapshot = null;
   }
 
-  const summaryEnCount = personaSnapshot && Array.isArray(personaSnapshot.summaryLinesEn)
-    ? personaSnapshot.summaryLinesEn.length
-    : 0;
-  const summaryArCount = personaSnapshot && Array.isArray(personaSnapshot.summaryLinesAr)
-    ? personaSnapshot.summaryLinesAr.length
-    : 0;
+  const summaryEnCount =
+    personaSnapshot && Array.isArray(personaSnapshot.summaryLinesEn)
+      ? personaSnapshot.summaryLinesEn.length
+      : 0;
+  const summaryArCount =
+    personaSnapshot && Array.isArray(personaSnapshot.summaryLinesAr)
+      ? personaSnapshot.summaryLinesAr.length
+      : 0;
 
   console.log('[Mirror] persona snapshot', {
     userId,
@@ -355,12 +453,17 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
     summaryArCount,
   });
 
+  // Identity + preferences (name, seasons, weather, pets, crowds)
+  const identityProfile = await getIdentityAndPreferencesForUser(userId);
+
   const { summaryText } = await callLLMForMirror({
     insights,
     personaMeta,
     lang,
     personaSnapshot,
+    identityProfile,
   });
+
   const now = new Date();
 
   let session = null;
@@ -376,7 +479,10 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
       },
     });
   } catch (err) {
-    console.error('[Mirror] Failed to persist MirrorSession', err && err.message ? err.message : err);
+    console.error(
+      '[Mirror] Failed to persist MirrorSession',
+      err && err.message ? err.message : err
+    );
   }
 
   try {

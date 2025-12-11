@@ -1295,23 +1295,6 @@ useEffect(() => {
           status: res.status,
           body: data,
         });
-        // Free plan daily limit enforcement: show banner and disable input
-        if (res.status === 429 && data && (data.code === 'LIMIT_REACHED' || data.error === 'limit_reached')) {
-          setLimitExceeded(true);
-          setLimitUsage(data.usage || null);
-          if (typeof data.resetInSeconds === 'number' && data.resetInSeconds >= 0) {
-            setLimitResetSeconds(data.resetInSeconds);
-          } else {
-            setLimitResetSeconds(null);
-          }
-          if (data.usage) {
-            setUsageInfo(data.usage);
-            if (setUser) {
-              setUser((prev) => (prev ? { ...prev, usage: data.usage } : prev));
-            }
-          }
-          return;
-        }
         if (res.status === 403 && data && data.error === "premium_required") {
           setModalText(
             isArabicConversation
@@ -1342,14 +1325,22 @@ useEffect(() => {
           if (isArabicConversation) {
             setModalText(
               data.limitType === "monthly"
-                ? "وصلت إلى حد ٣٠٠٠ رسالة هذا الشهر. يرجى الانتظار حتى الشهر القادم أو التواصل مع الدعم."
-                : "وصلت إلى حدك اليومي في الخطة المجانية. قم بالترقية إلى بريميوم للحصول على ٣٠٠٠ رسالة شهريًا."
+                ? (isPrem
+                    ? "وصلت إلى حد ٥٠٠ رسالة هذا الشهر في خطة برو. يمكنك الانتظار حتى الشهر القادم أو التواصل مع الدعم إذا كان هذا غير متوقع."
+                    : "وصلت إلى حد ٥٠ رسالة هذا الشهر في الخطة المجانية. بإمكانك الترقية إلى برو للحصول على ٥٠٠ رسالة شهريًا.")
+                : (isPrem
+                    ? "تم الوصول إلى حد الاستخدام في خطة برو لهذا الشهر. يمكنك الانتظار حتى الشهر القادم أو التواصل مع الدعم."
+                    : "تم الوصول إلى حد الاستخدام في الخطة المجانية لهذا الشهر. بإمكانك الترقية للحصول على حد شهري أعلى.")
             );
           } else {
             setModalText(
               data.limitType === "monthly"
-                ? "You reached your 3,000 messages limit for this month. Please wait until next month or contact support."
-                : "You reached your free daily limit. Upgrade to Premium to unlock 3,000 messages per month."
+                ? (isPrem
+                    ? "You have reached your 500 messages limit for this month on the Pro plan. Please wait until next month or contact support if this seems incorrect."
+                    : "You have reached your 50 messages limit for this month on the free plan. You can upgrade to Pro to get 500 messages per month.")
+                : (isPrem
+                    ? "You have reached your usage limit for this month on the Pro plan. Please wait until next month or contact support."
+                    : "You have reached your usage limit for this month on the free plan. Upgrade to Pro for a higher monthly limit.")
             );
           }
           setShowLimitModal(true);
@@ -1809,10 +1800,15 @@ useEffect(() => {
                   setUser((prev) => (prev ? { ...prev, usage: nextUsage } : prev));
                 }
               }
+              const isPrem = !!(user?.isPremium || user?.plan === 'premium' || user?.plan === 'pro');
               setModalText(
                 isArabicConversation
-                  ? "وصلت للحد الشهري للرسائل. يمكنك الترقية إلى برو لحدود أعلى."
-                  : "You have reached your monthly message limit. Upgrade to Pro for higher limits."
+                  ? (isPrem
+                      ? "وصلت إلى حد ٥٠٠ رسالة هذا الشهر في خطة برو. يمكنك الانتظار حتى الشهر القادم أو التواصل مع الدعم إذا كان هذا غير متوقع."
+                      : "وصلت إلى حد ٥٠ رسالة هذا الشهر في الخطة المجانية. بإمكانك الترقية إلى برو للحصول على ٥٠٠ رسالة شهريًا.")
+                  : (isPrem
+                      ? "You have reached your 500 messages limit for this month on the Pro plan. Please wait until next month or contact support if this seems incorrect."
+                      : "You have reached your 50 messages limit for this month on the free plan. You can upgrade to Pro to get 500 messages per month.")
               );
               setShowLimitModal(true);
               return;
@@ -2098,19 +2094,14 @@ useEffect(() => {
               const isCurrentAiTyping =
                 isAiTyping && msg.id === aiTypingMessageId;
 
-              let rowClass = "asrar-chat-row";
-              if (msg.from === "ai") {
-                rowClass += " asrar-chat-row--assistant";
-              } else if (msg.from === "user") {
-                rowClass += " asrar-chat-row--user";
-              } else {
-                rowClass += " asrar-chat-row--system";
-              }
-
               const isAiTextMessage =
                 msg.from === "ai" && isTextOnly && !isAiVoice;
               const currentRenderedText =
                 isCurrentAiTyping ? aiTypingBuffer : msg.text;
+
+              // Decide text direction per message. For AI, we derive from the
+              // actual text content; for user/system we fall back to the
+              // overall conversation language.
               const textDir =
                 isAiTextMessage
                   ? isArabic(currentRenderedText)
@@ -2120,9 +2111,36 @@ useEffect(() => {
                   ? "rtl"
                   : "ltr";
 
+              // When an assistant text reply is Arabic, align its bubble to the
+              // right (like user messages) while keeping English replies
+              // left-aligned. This preserves existing logic and styling while
+              // fixing Arabic AI alignment only.
+              const isArabicAiText =
+                isAiTextMessage && isArabic(currentRenderedText);
+
+              let rowClass = "asrar-chat-row";
+              if (msg.from === "ai") {
+                rowClass += " asrar-chat-row--assistant";
+              } else if (msg.from === "user") {
+                rowClass += " asrar-chat-row--user";
+              } else {
+                rowClass += " asrar-chat-row--system";
+              }
+
+              const isDesktopViewport =
+                typeof window !== "undefined" && window.innerWidth > 900;
+
+              const bubbleStyle =
+                msg.from === "ai" && isArabicAiText
+                  ? {
+                      marginLeft: "auto",
+                      marginRight: isDesktopViewport ? "15%" : 0,
+                    }
+                  : undefined;
+
               return (
                 <div key={msg.id} className={rowClass}>
-                  <div className="asrar-chat-bubble">
+                  <div className="asrar-chat-bubble" style={bubbleStyle}>
                     {/* AI voice replies: voice bubble only */}
                     {isAiVoice && (
                       <VoiceMessageBubble
@@ -2400,10 +2418,16 @@ useEffect(() => {
                 const isPrem = !!(
                   user?.isPremium || user?.plan === "premium" || user?.plan === "pro"
                 );
-                const limit = usageInfo?.monthlyLimit ?? (isPrem ? 500 : 50);
-                const usedFromUsage = usageInfo?.monthlyUsed ?? null;
+                const baseLimit = isPrem ? 500 : 50;
+                const rawLimit = usageInfo && typeof usageInfo.monthlyLimit === "number"
+                  ? usageInfo.monthlyLimit
+                  : null;
+                const limit = rawLimit && rawLimit > 0 ? rawLimit : baseLimit;
+                const rawUsed = usageInfo && typeof usageInfo.monthlyUsed === "number"
+                  ? usageInfo.monthlyUsed
+                  : null;
                 const userMsgs = messages.filter((m) => m.from === "user").length;
-                const used = usedFromUsage ?? userMsgs;
+                const used = rawUsed != null && rawUsed >= 0 ? rawUsed : userMsgs;
                 const counterText = `${used} / ${limit}`;
                 const modelText = isPrem ? "gpt-4o" : "gpt-4o-mini";
                 return (
