@@ -18,7 +18,10 @@ const {
   getConversationState,
 } = require('./emotionalStateMachine');
 const { buildPhase4MemoryBlock } = require('../pipeline/memory/Phase4PromptBuilder');
-const { getIdentityMemory } = require('../pipeline/memory/memoryKernel');
+const {
+  getIdentityMemory,
+  getPersonaSnapshot,
+} = require('../pipeline/memory/memoryKernel');
 
 // Engine mode runners (lite/balanced/deep)
 let runLiteEngine = null;
@@ -490,7 +493,7 @@ async function updateConversationEmotionState(conversationId, emo) {
  * @param {{ name?: string }} [params.identityMemory]
  * @returns {string}
  */
-function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect, identityMemory, recentAssistantReplies = [] }) {
+function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect, identityMemory, recentAssistantReplies = [], personaSnapshot }) {
   const isArabic = language === 'ar';
   const personaCfg = personas[personaId] || defaultPersona;
   const premiumUser = !!isPremiumUser;
@@ -624,6 +627,53 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     hasIdentity: !!(identityMemory && identityMemory.name),
   });
 
+  // Persona snapshot block: coarse hints about the user's life context, always
+  // framed as internal guidance. This must stay short and non-invasive and
+  // never be mentioned directly to the user as "we analysed your life".
+  let personaProfileBlock = '';
+  try {
+    if (personaSnapshot && typeof personaSnapshot === 'object') {
+      const lines = language === 'ar'
+        ? Array.isArray(personaSnapshot.summaryLinesAr)
+          ? personaSnapshot.summaryLinesAr
+          : []
+        : Array.isArray(personaSnapshot.summaryLinesEn)
+        ? personaSnapshot.summaryLinesEn
+        : [];
+
+      if (lines.length) {
+        const trimmed = lines.slice(0, 4);
+        if (language === 'ar') {
+          personaProfileBlock = [
+            'ملف شخصي داخلي للمستخدم (لا تذكر هذه الجمل حرفيًا للمستخدم):',
+            'استخدم هذه الملاحظات فقط لاختيار النبرة والأمثلة الأقرب لحياة المستخدم، بدون أن تقول إن عندك "ملف" عنه أو أرقام عن شخصيته.',
+            ...trimmed,
+          ].join('\n');
+        } else {
+          personaProfileBlock = [
+            'Internal persona hints about the user (do NOT expose directly):',
+            'Use these as soft background context to choose tone and examples that fit their life; never say things like "I have a profile about you" or list these as analytics.',
+            ...trimmed,
+          ].join('\n');
+        }
+      }
+    }
+  } catch (err) {
+    console.error(
+      '[SystemPrompt] persona snapshot block error',
+      err && err.message ? err.message : err
+    );
+    personaProfileBlock = '';
+  }
+
+  console.log('[SystemPrompt] persona snapshot block', {
+    hasPersonaSnapshot: !!personaSnapshot,
+    hasPersonaLines:
+      !!personaSnapshot &&
+      !!((personaSnapshot.summaryLinesEn && personaSnapshot.summaryLinesEn.length) ||
+        (personaSnapshot.summaryLinesAr && personaSnapshot.summaryLinesAr.length)),
+  });
+
   const isFreeFast = engineMode === ENGINE_MODES.CORE_FAST && !premiumUser;
 
   let anchorsList = Array.isArray(anchors) ? anchors.filter(Boolean) : [];
@@ -738,6 +788,8 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     longTermHint,
     identityBlock ? '' : '',
     identityBlock,
+    personaProfileBlock ? '' : '',
+    personaProfileBlock,
     triggersBlock ? '' : '',
     triggersBlock,
     triggersHint ? '' : '',
@@ -824,10 +876,11 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
 
     let longTermSnapshot = null;
     let triggers = [];
+    let personaSnapshot = null;
     let phase4Block = '';
     let identityMemory = null;
 
-    // Fetch long-term snapshot and triggers in parallel.
+    // Fetch long-term snapshot, triggers and persona snapshot in parallel.
     await Promise.all([
       (async () => {
         const tSnapStart = Date.now();
@@ -847,6 +900,17 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
           triggers = [];
         } finally {
           triggersMs = Date.now() - tTrigStart;
+        }
+      })(),
+      (async () => {
+        try {
+          personaSnapshot = await getPersonaSnapshot({ userId });
+        } catch (err) {
+          console.error(
+            '[EmoEngine] getPersonaSnapshot error',
+            err && err.message ? err.message : err
+          );
+          personaSnapshot = null;
         }
       })(),
     ]);
@@ -940,6 +1004,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       dialect,
       identityMemory,
       recentAssistantReplies,
+      personaSnapshot,
     });
 
     const systemPrompt = phase4Block

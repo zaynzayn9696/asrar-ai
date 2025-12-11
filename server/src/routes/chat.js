@@ -877,7 +877,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const bodyConversationId = body.conversationId;
     const saveFlag = body.save !== false;
     const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
-    const engine = ['lite', 'balanced'].includes(engineRaw)
+    const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
       ? engineRaw
       : 'balanced';
 
@@ -1173,14 +1173,29 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       intensity: emo.intensity,
       conversationLength: recentMessagesForEngine.length,
     });
+    let engineModeSource = 'auto_decide';
 
     if (engine === 'lite') {
+      // User explicitly chose the fast path.
       engineMode = ENGINE_MODES.CORE_FAST;
+      engineModeSource = 'user_lite';
+    } else if (engine === 'balanced') {
+      // Deep emotional engine default for non-premium/tester users.
+      if (!(isPremiumUser || isTester)) {
+        engineMode = ENGINE_MODES.CORE_DEEP;
+        engineModeSource = 'default_core_deep';
+      } else {
+        // Premium/tester users keep the auto-decided mode.
+        engineModeSource = 'auto_decide_premium';
+      }
     } else if (engine === 'deep') {
+      // Legacy value: treat as explicit deep override.
       if (isPremiumUser || isTester) {
         engineMode = ENGINE_MODES.PREMIUM_DEEP;
+        engineModeSource = 'force_premium_deep';
       } else {
         engineMode = ENGINE_MODES.CORE_DEEP;
+        engineModeSource = 'force_core_deep';
       }
     }
 
@@ -1340,6 +1355,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     console.log('[VoiceRoute][Response]', {
       userId: userId == null ? 'null' : String(userId),
       conversationId: cid == null ? 'null' : String(cid),
+      engineParam: engine,
+      engineModeSelected: engineMode,
+      engineModeSource,
       engineMode,
       isPremiumUser: !!isPremiumUser,
       openAiMs,
@@ -1351,6 +1369,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     console.log('[VoiceTiming]', {
       userId: userId == null ? 'null' : String(userId),
       conversationId: cid == null ? 'null' : String(cid),
+      engineParam: engine,
+      engineModeSelected: engineMode,
+      engineModeSource,
       classifyMs: engineTimings.classifyMs || 0,
       engineTotalMs: engineTimings.totalMs || 0,
       snapshotMs: engineTimings.snapshotMs || 0,
@@ -1485,7 +1506,7 @@ router.post('/message', async (req, res) => {
     const userText =
       typeof body.content === 'string' ? body.content.trim() : '';
     const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
-    const engine = ['lite', 'balanced'].includes(engineRaw)
+    const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
       ? engineRaw
       : 'balanced';
 
@@ -1726,14 +1747,29 @@ router.post('/message', async (req, res) => {
       intensity: emo.intensity,
       conversationLength: recentMessagesForEngine.length,
     });
+    let engineModeSource = 'auto_decide';
 
     if (engine === 'lite') {
+      // User explicitly chose the fast path.
       engineMode = ENGINE_MODES.CORE_FAST;
+      engineModeSource = 'user_lite';
+    } else if (engine === 'balanced') {
+      // Deep emotional engine default for non-premium/tester users.
+      if (!(isPremiumUser || isTester)) {
+        engineMode = ENGINE_MODES.CORE_DEEP;
+        engineModeSource = 'default_core_deep';
+      } else {
+        // Premium/tester users keep the auto-decided mode.
+        engineModeSource = 'auto_decide_premium';
+      }
     } else if (engine === 'deep') {
+      // Legacy value: treat as explicit deep override.
       if (isPremiumUser || isTester) {
         engineMode = ENGINE_MODES.PREMIUM_DEEP;
+        engineModeSource = 'force_premium_deep';
       } else {
         engineMode = ENGINE_MODES.CORE_DEEP;
+        engineModeSource = 'force_core_deep';
       }
     }
 
@@ -2012,6 +2048,9 @@ router.post('/message', async (req, res) => {
     console.log('[EmoEngine][Response]', {
       userId: userId == null ? 'null' : String(userId),
       conversationId: cid == null ? 'null' : String(cid),
+      engineParam: engine,
+      engineModeSelected: engineMode,
+      engineModeSource,
       engineMode,
       isPremiumUser: !!isPremiumUser,
       classifyMs,
@@ -2030,6 +2069,9 @@ router.post('/message', async (req, res) => {
     console.log('[ChatTiming]', {
       userId: userId == null ? 'null' : String(userId),
       conversationId: cid == null ? 'null' : String(cid),
+      engineParam: engine,
+      engineModeSelected: engineMode,
+      engineModeSource,
       classifyMs,
       engineTotalMs,
       snapshotMs,

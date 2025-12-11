@@ -4,6 +4,7 @@
 // instruction block that is appended to the existing system prompt.
 
 const prisma = require('../../prisma');
+const { getPersonaSnapshot } = require('./memoryKernel');
 
 function ensureObject(val) {
   if (!val || typeof val !== 'object') return {};
@@ -25,14 +26,25 @@ function ensureObject(val) {
 async function buildPhase4MemoryBlock({ userId, conversationId, language, personaId, identityMemory }) {
   if (!userId) return '';
 
-  const [convoState, profile] = await Promise.all([
+  const [convoState, profile, personaSnapshot] = await Promise.all([
     conversationId
       ? prisma.conversationEmotionState.findUnique({ where: { conversationId } })
       : Promise.resolve(null),
     prisma.userEmotionProfile.findUnique({ where: { userId } }),
+    (async () => {
+      try {
+        return await getPersonaSnapshot({ userId });
+      } catch (err) {
+        console.error(
+          '[Phase4] getPersonaSnapshot error',
+          err && err.message ? err.message : err
+        );
+        return { facts: {}, summaryLinesEn: [], summaryLinesAr: [] };
+      }
+    })(),
   ]);
 
-  if (!convoState && !profile) return '';
+  if (!convoState && !profile && !personaSnapshot) return '';
 
   const isArabic = language === 'ar';
   const lines = [];
@@ -300,6 +312,40 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         );
       }
     }
+  }
+
+  // Persona snapshot (profile, goals, themes, traits).
+  try {
+    if (personaSnapshot) {
+      const personaLines = isArabic
+        ? Array.isArray(personaSnapshot.summaryLinesAr)
+          ? personaSnapshot.summaryLinesAr
+          : []
+        : Array.isArray(personaSnapshot.summaryLinesEn)
+        ? personaSnapshot.summaryLinesEn
+        : [];
+
+      if (personaLines.length) {
+        if (isArabic) {
+          lines.push(
+            'ملف شخصي تقريبي للمستخدم (معلومات داخلية لا تُذكر للمستخدم حرفيًا):',
+            'استخدم هذه الملامح فقط لاختيار الأسلوب والأمثلة الأقرب لحياة المستخدم، بدون أن تقول له أنك تحفظ تفاصيله أو تحلّل شخصيته بالأرقام.',
+            ...personaLines
+          );
+        } else {
+          lines.push(
+            'Approximate user persona profile (internal hints – do NOT expose directly):',
+            'Use these hints only to choose tone and examples that fit the user. Do not say things like "I have a profile about you" or list these facts as analytics.',
+            ...personaLines
+          );
+        }
+      }
+    }
+  } catch (err) {
+    console.error(
+      '[Phase4] persona snapshot render error',
+      err && err.message ? err.message : err
+    );
   }
 
   // Semantic preference profile (UserMemoryFact-based, internal-only).

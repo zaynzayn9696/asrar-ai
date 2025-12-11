@@ -147,6 +147,184 @@ async function detectNameUsingLLM(messageText) {
   }
 }
 
+// --- Persona / semantic profile helpers ---
+
+// Very lightweight age detection for EN + AR messages.
+// Returns a normalised age string like "24" or null.
+function detectAgeFromText(messageText) {
+  const text = String(messageText || '').trim();
+  if (!text) return null;
+  const enMatch = text.match(/\b(i am|i'm|im)\s+(\d{1,2})\s*(?:years? old|yo|yrs?)?\b/i);
+  if (enMatch && enMatch[2]) {
+    const n = parseInt(enMatch[2], 10);
+    if (Number.isFinite(n) && n >= 10 && n <= 80) return String(n);
+  }
+  const arMatch = text.match(/(?:عمري|أنا عمري|انا عمري)\s+(\d{1,2})/i);
+  if (arMatch && arMatch[1]) {
+    const n = parseInt(arMatch[1], 10);
+    if (Number.isFinite(n) && n >= 10 && n <= 80) return String(n);
+  }
+  return null;
+}
+
+// Small lexicons for location, language, role/domain and themes.
+const COUNTRY_KEYWORDS = [
+  { value: 'Jordan', tokens: ['jordan', 'jordanian', 'الأردن', 'الاردن', 'اردن', 'أردني', 'اردني'] },
+  { value: 'Saudi Arabia', tokens: ['saudi', 'ksa', 'saudi arabia', 'السعودية', 'السعوديه', 'سعودي'] },
+  { value: 'United Arab Emirates', tokens: ['uae', 'dubai', 'abu dhabi', 'الإمارات', 'الامارات', 'اماراتي'] },
+  { value: 'Qatar', tokens: ['qatar', 'qatari', 'قطر', 'قطري'] },
+  { value: 'Egypt', tokens: ['egypt', 'egyptian', 'مصر', 'مصري'] },
+];
+
+const CITY_KEYWORDS = [
+  { value: 'Amman', tokens: ['amman', 'عمان'] },
+  { value: 'Dubai', tokens: ['dubai', 'دبي'] },
+  { value: 'Riyadh', tokens: ['riyadh', 'الرياض'] },
+  { value: 'Jeddah', tokens: ['jeddah', 'جدة', 'جده'] },
+  { value: 'Doha', tokens: ['doha', 'الدوحة', 'الدوحه'] },
+  { value: 'Cairo', tokens: ['cairo', 'القاهرة', 'القاهره'] },
+];
+
+const ROLE_KEYWORDS = [
+  { value: 'student', tokens: ['i am a student', "i'm a student", 'im a student', 'i am student', 'انا طالب', 'انا طالبة', 'طالب جامعي', 'طالبة جامعية'] },
+  { value: 'high school student', tokens: ['high school', 'ثانوي', 'مدرسة ثانوية'] },
+  { value: 'university student', tokens: ['university student', 'في الجامعة', 'في الجامعه'] },
+  { value: 'software engineer', tokens: ['software engineer', 'software developer', 'مبرمج', 'مهندس برمجيات'] },
+  { value: 'developer', tokens: ['developer', 'programmer'] },
+];
+
+const DOMAIN_KEYWORDS = [
+  { value: 'computer science', tokens: ['computer science', 'cs ', 'cs.', 'cs student', 'علم الحاسوب', 'علوم الحاسوب'] },
+  { value: 'information technology', tokens: ['information technology', ' it ', 'نظم معلومات', 'تقنية معلومات'] },
+  { value: 'marketing', tokens: ['marketing', 'marketer', 'تسويق'] },
+  { value: 'medicine', tokens: ['medicine', 'medical school', 'med school', 'طب', 'كلية الطب'] },
+];
+
+const LANGUAGE_PRIMARY_KEYWORDS = [
+  { value: 'Arabic', tokens: ['my first language is arabic', 'native language is arabic', 'i speak arabic', 'احب احكي عربي', 'لغتي الام العربية', 'لغتي الأم العربية'] },
+  { value: 'English', tokens: ['my first language is english', 'native language is english', 'i speak english', 'i prefer english'] },
+];
+
+const DIALECT_KEYWORDS = [
+  { value: 'Jordanian Arabic', tokens: ['jordanian arabic', 'jordanian dialect', 'لهجة اردنية', 'لهجة أردنية'] },
+  { value: 'Gulf Arabic', tokens: ['gulf arabic', 'khaleeji', 'خليجي', 'لهجة خليجية'] },
+  { value: 'Egyptian Arabic', tokens: ['egyptian arabic', 'masri', 'مصري', 'لهجة مصرية'] },
+  { value: 'Levantine Arabic', tokens: ['levantine arabic', 'shami', 'شامي', 'لهجة شامية'] },
+];
+
+const HEALTH_KEYWORDS = [
+  { tokens: ['urticaria', 'cholinergic urticaria'], value: 'struggles with chronic urticaria' },
+  { tokens: ['skin condition', 'hives', 'حساسية', 'طفح جلدي'], value: 'struggles with a skin condition that flares under stress or heat' },
+  { tokens: ['allergy', 'allergic', 'مزمنة', 'chronic'], value: 'has ongoing health issues that cause stress' },
+];
+
+const ACADEMIC_KEYWORDS = [
+  { tokens: ['exam', 'exams', 'midterms', 'finals', 'university', 'assignment', 'grades', 'homework', 'امتحان', 'امتحانات', 'جامعة', 'اختبار'], value: 'stressed about university or exam performance' },
+];
+
+const FAMILY_KEYWORDS = [
+  { tokens: ['my parents', 'my family', 'my father', 'my mother', 'امي', 'أمي', 'ابوي', 'أبوي', 'اهلي', 'أهلي'], value: 'feels pressure or misunderstanding from family' },
+];
+
+const WORK_KEYWORDS = [
+  { tokens: ['job', 'work', '9-5', '9 to 5', 'manager', 'boss', 'شركة', 'دوام', 'startup', 'ستارت اب', 'ستارت أب'], value: 'experiences stress related to work or career' },
+];
+
+const PERSONALITY_TOKENS = [
+  { match: 'overthink', value: 'overthinks a lot' },
+  { match: 'over-think', value: 'overthinks a lot' },
+  { match: 'sensitive', value: 'sensitive' },
+  { match: 'perfectionist', value: 'perfectionist' },
+  { match: 'driven', value: 'driven' },
+  { match: 'ambitious', value: 'ambitious' },
+];
+
+const COPING_TOKENS = [
+  { tokens: ['go to the gym', 'hit the gym', 'gym', 'work out', 'workout', 'exercise', 'تمرين', 'نادي رياضي'], value: 'goes to the gym or exercises to cope' },
+  { tokens: ['watch youtube', 'youtube', 'scroll youtube', 'scroll tiktok', 'tiktok', 'تيك توك'], value: 'escapes into online content like YouTube or TikTok to cope' },
+  { tokens: ['play games', 'video games', 'gaming'], value: 'uses gaming as a way to cope' },
+  { tokens: ['journal', 'journaling', 'أكتب يومياتي'], value: 'likes to journal when stressed' },
+];
+
+// Persona kinds that should be stored as a single primary value per userId+kind.
+const PERSONA_SINGLETON_KINDS = new Set([
+  'profile.age',
+  'profile.location.country',
+  'profile.location.city',
+  'profile.language.primary',
+  'profile.language.dialect',
+  'profile.role',
+  'profile.domain',
+  'profile.goal.primary',
+  'profile.goal.secondary',
+  'profile.theme.health',
+  'profile.theme.academic',
+  'profile.theme.family',
+  'profile.theme.work',
+  'trait.personality.keywords',
+  'trait.coping.style',
+]);
+
+// Best-effort long-term goal extraction via LLM (English + Arabic).
+async function detectGoalsUsingLLM(messageText) {
+  const text = String(messageText || '').trim();
+  if (!text || !openaiClient) return null;
+
+  // Gate on likely goal-related cues to avoid unnecessary calls.
+  const cueRegex = /(my (biggest )?goal is|my dream is|i want to|i wanna|i would like to|i plan to|i'm planning to|i am planning to|i hope to|اريد ان|أريد أن|حاب|حابة|نفسي|خطتي|هدفي)/i;
+  if (!cueRegex.test(text)) return null;
+
+  const hasArabic = /[\u0600-\u06FF]/u.test(text);
+  const languageHint = hasArabic ? 'ar' : 'en';
+
+  const systemPrompt = [
+    'You extract at most two long-term personal goals from a single user message in Arabic or English.',
+    'Only include goals that are clearly about the user\'s life direction (studies, work, moving country, health, relationships, building a startup).',
+    'Ignore trivial or short-term wishes like eating, sleeping, or watching something.',
+    'Return STRICT JSON: {"primary": "string or empty", "secondary": "string or empty"}.',
+    'Keep each string under 100 characters.',
+  ].join(' ');
+
+  const userPrompt = [
+    `Language hint: ${languageHint}.`,
+    'User message:',
+    text.slice(0, 800),
+  ].join('\n');
+
+  try {
+    const completion = await openaiClient.chat.completions.create({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      max_tokens: 96,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+    });
+    const raw = completion.choices?.[0]?.message?.content || '';
+    let parsed = null;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
+    if (!parsed || typeof parsed !== 'object') return null;
+    const primary = typeof parsed.primary === 'string' ? parsed.primary.trim() : '';
+    const secondary = typeof parsed.secondary === 'string' ? parsed.secondary.trim() : '';
+    const out = {};
+    if (primary && primary.length <= 120) out.primary = primary;
+    if (secondary && secondary.length <= 120) out.secondary = secondary;
+    if (!out.primary && !out.secondary) return null;
+    return out;
+  } catch (err) {
+    console.error(
+      '[LongTermMemory] detectGoalsUsingLLM error',
+      err && err.message ? err.message : err
+    );
+    return null;
+  }
+}
+
 function extractSemanticFactsFromMessage(messageText) {
   const raw = String(messageText || '').trim();
   if (!raw) return [];
@@ -346,6 +524,121 @@ function extractSemanticFactsFromMessage(messageText) {
 
   if (dislikesCrowds) {
     pushFact('preference.crowds', 'dislike', 0.9);
+  }
+
+  // --- Persona: age ---
+  const age = detectAgeFromText(text);
+  if (age) {
+    pushFact('profile.age', age, 0.98);
+  }
+
+  // --- Persona: location (country/city) ---
+  for (const entry of COUNTRY_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.location.country', entry.value, 0.95);
+        break;
+      }
+    }
+  }
+  for (const entry of CITY_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.location.city', entry.value, 0.95);
+        break;
+      }
+    }
+  }
+
+  // --- Persona: language primary & dialect ---
+  for (const entry of LANGUAGE_PRIMARY_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.language.primary', entry.value, 0.9);
+        break;
+      }
+    }
+  }
+  for (const entry of DIALECT_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.language.dialect', entry.value, 0.9);
+        break;
+      }
+    }
+  }
+
+  // --- Persona: role & domain ---
+  for (const entry of ROLE_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.role', entry.value, 0.95);
+        break;
+      }
+    }
+  }
+  for (const entry of DOMAIN_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.domain', entry.value, 0.95);
+        break;
+      }
+    }
+  }
+
+  // --- Persona: themes (health, academic, family, work) ---
+  for (const entry of HEALTH_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.theme.health', entry.value, 0.92);
+        break;
+      }
+    }
+  }
+  for (const entry of ACADEMIC_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.theme.academic', entry.value, 0.92);
+        break;
+      }
+    }
+  }
+  for (const entry of FAMILY_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.theme.family', entry.value, 0.9);
+        break;
+      }
+    }
+  }
+  for (const entry of WORK_KEYWORDS) {
+    for (const tok of entry.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('profile.theme.work', entry.value, 0.9);
+        break;
+      }
+    }
+  }
+
+  // --- Persona: personality keywords ---
+  const personalityValues = [];
+  for (const p of PERSONALITY_TOKENS) {
+    if (lower.includes(p.match.toLowerCase()) && !personalityValues.includes(p.value)) {
+      personalityValues.push(p.value);
+    }
+  }
+  if (personalityValues.length) {
+    pushFact('trait.personality.keywords', personalityValues.join(', '), 0.9);
+  }
+
+  // --- Persona: coping style ---
+  for (const c of COPING_TOKENS) {
+    for (const tok of c.tokens) {
+      if (lower.includes(tok.toLowerCase())) {
+        pushFact('trait.coping.style', c.value, 0.9);
+        break;
+      }
+    }
   }
 
   return facts;
@@ -564,15 +857,6 @@ async function updateLongTerm(userId, event, outcome) {
           const kind = String(fact.kind || '').trim();
           const value = String(fact.value || '').trim();
           if (!kind || !value) continue;
-          let existingFact = null;
-          try {
-            existingFact = await prisma.userMemoryFact.findFirst({
-              where: { userId, kind, value },
-              select: { id: true },
-            });
-          } catch (_) {
-            existingFact = null;
-          }
           const confidence =
             typeof fact.confidence === 'number' && Number.isFinite(fact.confidence)
               ? fact.confidence
@@ -584,13 +868,54 @@ async function updateLongTerm(userId, event, outcome) {
             confidence,
             sourceMessageId: event.messageId || null,
           };
-          if (existingFact && existingFact.id) {
-            await prisma.userMemoryFact.update({
-              where: { id: existingFact.id },
-              data,
+
+          // Persona singleton kinds: one primary value per userId+kind.
+          if (PERSONA_SINGLETON_KINDS.has(kind)) {
+            let existingPersonaFact = null;
+            try {
+              existingPersonaFact = await prisma.userMemoryFact.findFirst({
+                where: { userId, kind },
+                select: { id: true },
+              });
+            } catch (_) {
+              existingPersonaFact = null;
+            }
+
+            if (existingPersonaFact && existingPersonaFact.id) {
+              await prisma.userMemoryFact.update({
+                where: { id: existingPersonaFact.id },
+                data,
+              });
+            } else {
+              await prisma.userMemoryFact.create({ data });
+            }
+
+            console.log('[LongTermMemory] persona_fact_upserted', {
+              userId,
+              kind,
+              value,
+              sourceMessageId: event.messageId || null,
             });
           } else {
-            await prisma.userMemoryFact.create({ data });
+            // Preference-style facts can have multiple values per kind.
+            let existingFact = null;
+            try {
+              existingFact = await prisma.userMemoryFact.findFirst({
+                where: { userId, kind, value },
+                select: { id: true },
+              });
+            } catch (_) {
+              existingFact = null;
+            }
+
+            if (existingFact && existingFact.id) {
+              await prisma.userMemoryFact.update({
+                where: { id: existingFact.id },
+                data,
+              });
+            } else {
+              await prisma.userMemoryFact.create({ data });
+            }
           }
         }
       }

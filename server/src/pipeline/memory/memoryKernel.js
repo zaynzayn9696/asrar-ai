@@ -208,10 +208,323 @@ async function getIdentityMemory({ userId }) {
   return result;
 }
 
+/**
+ * Build a compact persona snapshot from semantic UserMemoryFact rows.
+ *
+ * This is intentionally coarse: it only uses high-level facts (age, country,
+ * city, language, role, domain, long-term goals, themes, traits and a few
+ * preferences) and turns them into short, non-creepy summary lines.
+ *
+ * The function is defensive against older Prisma clients that may not yet have
+ * the UserMemoryFact delegate; in that case it simply returns empty output.
+ *
+ * @param {{ userId:number }} params
+ * @returns {Promise<{ facts:Object, summaryLinesEn:string[], summaryLinesAr:string[] }>}
+ */
+async function getPersonaSnapshot({ userId }) {
+  if (!userId || !Number.isFinite(Number(userId))) {
+    return { facts: {}, summaryLinesEn: [], summaryLinesAr: [] };
+  }
+  const uid = Number(userId);
+
+  const model = prisma && prisma.userMemoryFact;
+  if (!model || typeof model.findMany !== 'function') {
+    console.error(
+      '[MemoryKernel] getPersonaSnapshot: userMemoryFact delegate missing on prisma client'
+    );
+    return { facts: {}, summaryLinesEn: [], summaryLinesAr: [] };
+  }
+
+  let rows = [];
+  try {
+    rows = await model.findMany({
+      where: {
+        userId: uid,
+        kind: {
+          in: [
+            // Core profile facts
+            'profile.age',
+            'profile.location.country',
+            'profile.location.city',
+            'profile.language.primary',
+            'profile.language.dialect',
+            'profile.role',
+            'profile.domain',
+            'profile.goal.primary',
+            'profile.goal.secondary',
+            'profile.theme.health',
+            'profile.theme.academic',
+            'profile.theme.family',
+            'profile.theme.work',
+            // Traits & coping
+            'trait.personality.keywords',
+            'trait.coping.style',
+            // Preferences (shared with Phase4)
+            'preference.season.like',
+            'preference.season.dislike',
+            'preference.weather.like',
+            'preference.weather.dislike',
+            'preference.pets.like',
+            'preference.pets.dislike',
+            'preference.crowds',
+            'trait.social.style',
+          ],
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 96,
+    });
+  } catch (err) {
+    console.error(
+      '[MemoryKernel] getPersonaSnapshot fact query error',
+      err && err.message ? err.message : err
+    );
+    return { facts: {}, summaryLinesEn: [], summaryLinesAr: [] };
+  }
+
+  if (!Array.isArray(rows) || !rows.length) {
+    return { facts: {}, summaryLinesEn: [], summaryLinesAr: [] };
+  }
+
+  const getLatest = (kind) => {
+    const row = rows.find(
+      (r) => r && r.kind === kind && typeof r.value === 'string'
+    );
+    if (!row) return null;
+    const v = String(row.value || '').trim();
+    return v || null;
+  };
+
+  const collectAll = (kind) => {
+    const vals = [];
+    for (const r of rows) {
+      if (!r || r.kind !== kind || typeof r.value !== 'string') continue;
+      const v = r.value.trim();
+      if (!v) continue;
+      if (!vals.includes(v)) vals.push(v);
+    }
+    return vals;
+  };
+
+  const age = getLatest('profile.age');
+  const country = getLatest('profile.location.country');
+  const city = getLatest('profile.location.city');
+  const primaryLanguage = getLatest('profile.language.primary');
+  const dialect = getLatest('profile.language.dialect');
+  const role = getLatest('profile.role');
+  const domain = getLatest('profile.domain');
+  const goalPrimary = getLatest('profile.goal.primary');
+  const goalSecondary = getLatest('profile.goal.secondary');
+
+  const themeHealth = getLatest('profile.theme.health');
+  const themeAcademic = getLatest('profile.theme.academic');
+  const themeFamily = getLatest('profile.theme.family');
+  const themeWork = getLatest('profile.theme.work');
+
+  const personalityRaw = getLatest('trait.personality.keywords');
+  const personalityKeywords = [];
+  if (personalityRaw) {
+    const parts = personalityRaw
+      .split(/[,،]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const p of parts) {
+      if (!personalityKeywords.includes(p)) {
+        personalityKeywords.push(p);
+      }
+    }
+  }
+
+  const copingStyle = getLatest('trait.coping.style');
+
+  const seasonsLike = collectAll('preference.season.like');
+  const seasonsDislike = collectAll('preference.season.dislike');
+  const weatherLike = collectAll('preference.weather.like');
+  const weatherDislike = collectAll('preference.weather.dislike');
+  const petsLike = collectAll('preference.pets.like');
+  const petsDislike = collectAll('preference.pets.dislike');
+  const crowdPref = getLatest('preference.crowds');
+  const socialStyle = getLatest('trait.social.style');
+
+  const facts = {
+    profile: {
+      age: age || null,
+      location: {
+        country: country || null,
+        city: city || null,
+      },
+      language: {
+        primary: primaryLanguage || null,
+        dialect: dialect || null,
+      },
+      role: role || null,
+      domain: domain || null,
+      goals: {
+        primary: goalPrimary || null,
+        secondary: goalSecondary || null,
+      },
+      themes: {
+        health: themeHealth || null,
+        academic: themeAcademic || null,
+        family: themeFamily || null,
+        work: themeWork || null,
+      },
+    },
+    traits: {
+      personalityKeywords,
+      copingStyle: copingStyle || null,
+    },
+    preferences: {
+      seasonsLike,
+      seasonsDislike,
+      weatherLike,
+      weatherDislike,
+      petsLike,
+      petsDislike,
+      crowds: crowdPref || null,
+      socialStyle: socialStyle || null,
+    },
+  };
+
+  const summaryLinesEn = [];
+  const summaryLinesAr = [];
+
+  if (age) {
+    summaryLinesEn.push(`They seem to be around ${age} years old (approximate).`);
+    summaryLinesAr.push(`يبدو أنه في عمر يقارب ${age} سنة (تقديريًا).`);
+  }
+
+  if (country && city) {
+    summaryLinesEn.push(`They are based in ${city}, ${country}.`);
+    summaryLinesAr.push(`يعيش في ${city}، ${country}.`);
+  } else if (country) {
+    summaryLinesEn.push(`They are based in ${country}.`);
+    summaryLinesAr.push(`يعيش في ${country}.`);
+  }
+
+  if (primaryLanguage || dialect) {
+    if (primaryLanguage && dialect) {
+      summaryLinesEn.push(
+        `They mainly use ${primaryLanguage} and prefer a ${dialect} style when speaking.`
+      );
+      summaryLinesAr.push(
+        `يميل لاستخدام ${primaryLanguage} ويفضّل لهجة ${dialect} في الكلام.`
+      );
+    } else if (primaryLanguage) {
+      summaryLinesEn.push(`They mainly use ${primaryLanguage} in conversation.`);
+      summaryLinesAr.push(`يميل لاستخدام ${primaryLanguage} في المحادثة.`);
+    }
+  }
+
+  if (role || domain) {
+    if (role && domain) {
+      summaryLinesEn.push(`Their current role looks like ${role} in ${domain}.`);
+      summaryLinesAr.push(`دوره الحالي يبدو كـ ${role} في مجال ${domain}.`);
+    } else if (role) {
+      summaryLinesEn.push(`They describe themselves mainly as ${role}.`);
+      summaryLinesAr.push(`يصف نفسه غالبًا بأنه ${role}.`);
+    }
+  }
+
+  if (goalPrimary || goalSecondary) {
+    if (goalPrimary) {
+      summaryLinesEn.push(
+        `One important life direction they mentioned is: ${goalPrimary}.`
+      );
+      summaryLinesAr.push(
+        `ذكر هدفًا مهمًا في حياته: ${goalPrimary}.`
+      );
+    }
+    if (goalSecondary && goalSecondary !== goalPrimary) {
+      summaryLinesEn.push(
+        `They also talked about another direction or dream: ${goalSecondary}.`
+      );
+      summaryLinesAr.push(
+        `تحدّث أيضًا عن اتجاه أو حلم آخر: ${goalSecondary}.`
+      );
+    }
+  }
+
+  const themeBitsEn = [];
+  const themeBitsAr = [];
+  if (themeHealth) {
+    themeBitsEn.push(themeHealth);
+    themeBitsAr.push(themeHealth);
+  }
+  if (themeAcademic) {
+    themeBitsEn.push(themeAcademic);
+    themeBitsAr.push(themeAcademic);
+  }
+  if (themeFamily) {
+    themeBitsEn.push(themeFamily);
+    themeBitsAr.push(themeFamily);
+  }
+  if (themeWork) {
+    themeBitsEn.push(themeWork);
+    themeBitsAr.push(themeWork);
+  }
+  if (themeBitsEn.length) {
+    summaryLinesEn.push(
+      `Recurring life themes they talk about: ${themeBitsEn.join(', ')}.`
+    );
+    summaryLinesAr.push(
+      `مواضيع حياة تتكرّر في كلامه: ${themeBitsAr.join('، ')}.`
+    );
+  }
+
+  if (personalityKeywords.length) {
+    const joinedEn = personalityKeywords.join(', ');
+    summaryLinesEn.push(
+      `They use words like ${joinedEn} when describing their own personality.`
+    );
+    summaryLinesAr.push(
+      `يستخدم كلمات مثل ${joinedEn} لوصف شخصيته.`
+    );
+  }
+
+  if (copingStyle) {
+    summaryLinesEn.push(
+      `For coping, they sometimes lean on: ${copingStyle}.`
+    );
+    summaryLinesAr.push(
+      `عند التعامل مع الضغط يلجأ أحيانًا إلى: ${copingStyle}.`
+    );
+  }
+
+  // Keep persona block compact: trim to a few lines in each language.
+  if (summaryLinesEn.length > 6) {
+    summaryLinesEn.length = 6;
+  }
+  if (summaryLinesAr.length > 6) {
+    summaryLinesAr.length = 6;
+  }
+
+  console.log('[MemoryKernel] getPersonaSnapshot', {
+    userId: uid,
+    factCount: rows.length,
+    hasProfile: !!(
+      age ||
+      country ||
+      city ||
+      primaryLanguage ||
+      role ||
+      domain ||
+      goalPrimary ||
+      goalSecondary
+    ),
+    hasTraits: !!(personalityKeywords.length || copingStyle),
+    summaryEnCount: summaryLinesEn.length,
+    summaryArCount: summaryLinesAr.length,
+  });
+
+  return { facts, summaryLinesEn, summaryLinesAr };
+}
+
 module.exports = {
   recordEvent,
   updateShortTerm,
   updateLongTerm,
   getIdentityMemory,
+  getPersonaSnapshot,
 };
 

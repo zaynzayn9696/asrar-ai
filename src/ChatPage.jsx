@@ -1766,6 +1766,7 @@ useEffect(() => {
             text: m.text,
           }));
           form.append("messages", JSON.stringify(payloadMessages));
+          form.append("engine", selectedEngine);
 
           const token =
             typeof window !== "undefined"

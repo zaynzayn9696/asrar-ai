@@ -5,6 +5,7 @@
 const OpenAI = require('openai');
 const prisma = require('../prisma');
 const { logEmotionalEvent } = require('./timelineService');
+const { getPersonaSnapshot } = require('../pipeline/memory/memoryKernel');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -226,7 +227,7 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
   };
 }
 
-async function callLLMForMirror({ insights, personaMeta, lang }) {
+async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot }) {
 
   // Mirror language should follow the UI language from the client.
   // If lang is missing or unknown, fall back to English.
@@ -246,8 +247,33 @@ async function callLLMForMirror({ insights, personaMeta, lang }) {
 
   const systemPrompt = `${isAr ? basePromptAr : basePromptEn}\n\n${languageInstruction}`;
 
+  let personaProfile = null;
+  try {
+    if (personaSnapshot && typeof personaSnapshot === 'object') {
+      const lines = isAr
+        ? Array.isArray(personaSnapshot.summaryLinesAr)
+          ? personaSnapshot.summaryLinesAr
+          : []
+        : Array.isArray(personaSnapshot.summaryLinesEn)
+        ? personaSnapshot.summaryLinesEn
+        : [];
+      if (lines.length) {
+        personaProfile = {
+          summaryLines: lines.slice(0, 6),
+        };
+      }
+    }
+  } catch (err) {
+    console.error(
+      '[Mirror] persona snapshot build error',
+      err && err.message ? err.message : err
+    );
+    personaProfile = null;
+  }
+
   const userContent = JSON.stringify({
     persona: personaMeta || null,
+    personaProfile,
     insights,
   });
 
@@ -263,7 +289,11 @@ async function callLLMForMirror({ insights, personaMeta, lang }) {
     ? 'انتبه جيدًا لتوزيع المشاعر في insights.topEmotions وشدة avgIntensity. إذا كانت المشاعر السلبية (مثل الحزن أو القلق أو الغضب أو الوحدة أو الضغط) هي الغالبة، فاذكر ذلك بوضوح ولا تصف النمط بأنه هادئ أو محايد.'
     : 'Pay close attention to the distribution of emotions in `insights.topEmotions` and the overall `avgIntensity`. If negative emotions (sad, anxious, angry, lonely, stressed) are dominant, clearly acknowledge this distress or tension instead of calling the pattern calm or neutral.';
 
-  const userPrompt = `${userInstruction}\n\n${timeInstruction}\n\n${emotionInstruction}\n\nJSON:\n${userContent}`;
+  const personaInstruction = isAr
+    ? 'ستصلك ملامح داخلية تقريبية عن حياة المستخدم في الحقل personaProfile.summaryLines (مثل عمر تقريبي، بلد، دور دراسي/عملي، أهداف طويلة المدى، وبعض السمات). استخدم هذه الملاحظات فقط لاختيار طريقة الكلام والأمثلة الأقرب لواقع حياته، بدون أن تذكر هذه الجمل حرفيًا للمستخدم أو تقول إن عندك "ملف شخصي" عنه أو أرقام عن شخصيته. لو كانت personaProfile = null أو لا تحوي جملًا، تجاهلها ببساطة.'
+    : 'You may receive a small internal persona profile in `personaProfile.summaryLines` (approximate age, country/city, role, long-term goals, themes, traits). Use these hints only to choose tone and examples that fit the user’s life. Do NOT list them back as analytics, do NOT say you have a "profile" about them, and do NOT quote the lines word-for-word. If `personaProfile` is null or empty, just ignore it.';
+
+  const userPrompt = `${userInstruction}\n\n${timeInstruction}\n\n${emotionInstruction}\n\n${personaInstruction}\n\nJSON:\n${userContent}`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -300,7 +330,37 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
     return { summaryText: null, insights, notEnoughHistory: true };
   }
 
-  const { summaryText } = await callLLMForMirror({ insights, personaMeta, lang });
+  let personaSnapshot = null;
+  try {
+    personaSnapshot = await getPersonaSnapshot({ userId });
+  } catch (err) {
+    console.error(
+      '[Mirror] getPersonaSnapshot error',
+      err && err.message ? err.message : err
+    );
+    personaSnapshot = null;
+  }
+
+  const summaryEnCount = personaSnapshot && Array.isArray(personaSnapshot.summaryLinesEn)
+    ? personaSnapshot.summaryLinesEn.length
+    : 0;
+  const summaryArCount = personaSnapshot && Array.isArray(personaSnapshot.summaryLinesAr)
+    ? personaSnapshot.summaryLinesAr.length
+    : 0;
+
+  console.log('[Mirror] persona snapshot', {
+    userId,
+    hasPersona: !!personaSnapshot && (summaryEnCount > 0 || summaryArCount > 0),
+    summaryEnCount,
+    summaryArCount,
+  });
+
+  const { summaryText } = await callLLMForMirror({
+    insights,
+    personaMeta,
+    lang,
+    personaSnapshot,
+  });
   const now = new Date();
 
   let session = null;
