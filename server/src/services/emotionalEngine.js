@@ -539,6 +539,26 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       ];
   const guidance = guidanceLines.join('\n');
 
+  // Targeted guidance for explicit meta-questions about stored facts
+  // (e.g. "what do you know about me?", "what is my name, my age, and my
+  // favorite weather?"). This should only affect those direct questions and
+  // should not change normal reply style.
+  const metaMemoryInstruction = isArabic
+    ? [
+        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن بياناته (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وجوي المفضل؟")، فعتمد على الحقائق المخزَّنة لديك:',
+        '- استخدم الاسم من الهوية (identity.name) إذا كان متوفّراً بدل أن تقول إنك لا تعرف اسمه.',
+        '- استخدم العمر التقريبي من ملفه الشخصي (مثل profile.age) إذا كان موجوداً، واذكره كعمر تقريبي.',
+        '- استخدم تفضيلات مثل الجو أو الفصول من الذاكرة (preference.weather.like / preference.season.like) إذا كانت موجودة.',
+        '- لو كانت معلومة معيّنة غير موجودة في الذاكرة (مثلاً لم يخبرك عن طقسه المفضل)، قل بصراحة أنك لا تعرف هذه الجزئية بعد، بدل أن تنفي معرفتك بالكامل.',
+      ].join('\n')
+    : [
+        'If the user explicitly asks what you know about them or about their details (for example: "what do you know about me?" or "what is my name, my age, and my favorite weather?"), answer using stored facts:',
+        '- Use their name from identity memory (identity.name) if present instead of claiming you do not know their name.',
+        '- Use approximate age from persona/profile facts (e.g. profile.age) if present, and mention it as approximate.',
+        '- Use preference facts such as weather or seasons (preference.weather.like / preference.season.like) if present.',
+        '- If a specific attribute is missing from memory, say honestly that you do not know that part yet, instead of saying you cannot provide any details when you actually have some.',
+      ].join('\n');
+
   const header = isArabic
     ? 'أنت رفيق داخل تطبيق "أسرار" للدعم العاطفي.'
     : 'You are an AI companion inside an app called Asrar, focused on emotional support.';
@@ -796,6 +816,8 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     triggersHint,
     repetitionHintBlock ? '' : '',
     repetitionHintBlock,
+    '',
+    metaMemoryInstruction,
     '',
     'Safety & Empathy Rules:',
     safety,

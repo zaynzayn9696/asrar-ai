@@ -348,6 +348,93 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     );
   }
 
+  // Compact "known facts" view (name, age, favorite weather/season) for
+  // explicit meta-questions like "what do you know about me?". This is
+  // internal and should only shape answers when the user directly asks
+  // about stored attributes.
+  try {
+    let personaFacts = null;
+    try {
+      personaFacts = personaSnapshot && typeof personaSnapshot.facts === 'object'
+        ? personaSnapshot.facts
+        : null;
+    } catch (_) {
+      personaFacts = null;
+    }
+
+    const knownFactLines = [];
+
+    const safeNameForFacts =
+      identityMemory && typeof identityMemory.name === 'string'
+        ? identityMemory.name.trim()
+        : '';
+
+    const ageFact =
+      personaFacts &&
+      personaFacts.profile &&
+      typeof personaFacts.profile.age === 'string' &&
+      personaFacts.profile.age.trim()
+        ? personaFacts.profile.age.trim()
+        : null;
+
+    let favWeatherOrSeason = null;
+    if (personaFacts && personaFacts.preferences) {
+      const prefs = personaFacts.preferences;
+      if (Array.isArray(prefs.weatherLike) && prefs.weatherLike.length) {
+        favWeatherOrSeason = prefs.weatherLike[0];
+      } else if (Array.isArray(prefs.seasonsLike) && prefs.seasonsLike.length) {
+        favWeatherOrSeason = prefs.seasonsLike[0];
+      }
+    }
+
+    if (safeNameForFacts) {
+      if (isArabic) {
+        knownFactLines.push(`- الاسم الذي شاركه معك المستخدم: ${safeNameForFacts}.`);
+      } else {
+        knownFactLines.push(`- Name they shared with you: ${safeNameForFacts}.`);
+      }
+    }
+
+    if (ageFact) {
+      if (isArabic) {
+        knownFactLines.push(`- العمر التقريبي المخزَّن: حوالي ${ageFact} سنة.`);
+      } else {
+        knownFactLines.push(`- Approximate stored age: around ${ageFact}.`);
+      }
+    }
+
+    if (favWeatherOrSeason) {
+      if (isArabic) {
+        knownFactLines.push(
+          `- من التفضيلات المخزَّنة: يحب أجواء أو فصول مثل ${favWeatherOrSeason}.`
+        );
+      } else {
+        knownFactLines.push(
+          `- Stored preference: they like weather or seasons such as ${favWeatherOrSeason}.`
+        );
+      }
+    }
+
+    if (knownFactLines.length) {
+      if (isArabic) {
+        lines.push(
+          'حقائق معروفة عن المستخدم (داخلية، استخدمها فقط إذا سأل صراحة عمّا تعرفه عنه):',
+          ...knownFactLines
+        );
+      } else {
+        lines.push(
+          'Known facts about the user (internal – only use these when they explicitly ask what you know about them):',
+          ...knownFactLines
+        );
+      }
+    }
+  } catch (err) {
+    console.error(
+      '[Phase4] known facts render error',
+      err && err.message ? err.message : err
+    );
+  }
+
   // Semantic preference profile (UserMemoryFact-based, internal-only).
   try {
     const model = prisma && prisma.userMemoryFact;

@@ -394,22 +394,26 @@ function extractSemanticFactsFromMessage(messageText) {
   };
 
   const seasonTokensAr = {
-    winter: ['شتاء', 'شتاء'],
-    summer: ['صيف'],
-    spring: ['ربيع'],
-    autumn: ['خريف', 'خريف'],
+    winter: ['شتاء', 'شتوي', 'الجو الشتوي'],
+    summer: ['صيف', 'صيفي', 'الجو الصيفي'],
+    spring: ['ربيع', 'ربيعي'],
+    autumn: ['خريف', 'خريفي'],
   };
 
   const weatherTokensEn = {
     rain: ['rain', 'rainy'],
     snow: ['snow', 'snowy'],
     sun: ['sun', 'sunny', 'sunshine'],
+    cold: ['cold', 'chilly', 'cool'],
+    hot: ['hot', 'warm', 'heat'],
   };
 
   const weatherTokensAr = {
     rain: ['مطر', 'المطر', 'أمطار', 'ماطر', 'ماطرة'],
     snow: ['ثلج', 'الثلج', 'ثلجية'],
     sun: ['شمس', 'الشمس', 'مشمس'],
+    cold: ['بارد', 'الجو البارد', 'برد'],
+    hot: ['حار', 'الجو الحار', 'حارّة', 'حر'],
   };
 
   const petTokensEn = {
@@ -422,9 +426,27 @@ function extractSemanticFactsFromMessage(messageText) {
     dogs: ['كلب', 'كلاب', 'الكلاب'],
   };
 
-  const likeVerbsEn = ['love', 'like', 'enjoy', 'adore'];
+  const hobbyTokensEn = {
+    gaming: ['gaming', 'video games', 'playing games', 'play games', 'play video games'],
+    gym: ['gym', 'go to the gym', 'work out', 'workout', 'lifting weights'],
+    drawing: ['drawing', 'draw', 'sketching', 'sketch'],
+    reading: ['reading', 'read books', 'reading books', 'bookworm'],
+    football: ['football', 'soccer'],
+    basketball: ['basketball'],
+  };
+
+  const hobbyTokensAr = {
+    gaming: ['ألعاب فيديو', 'العاب فيديو', 'ألعاب', 'العاب'],
+    gym: ['الجيم', 'النادي الرياضي', 'نادي رياضي', 'تمرين', 'أتمرن'],
+    drawing: ['رسم', 'أرسم', 'برسم'],
+    reading: ['القراءة', 'أقرأ', 'قراءة الكتب', 'قراءة'],
+    football: ['كرة القدم', 'كرة قدم', 'فوتبول'],
+    basketball: ['كرة السلة'],
+  };
+
+  const likeVerbsEn = ['love', 'like', 'enjoy', 'adore', 'favorite', 'favourite'];
   const dislikeVerbsEn = ['hate', 'dislike', 'detest'];
-  const likeVerbsAr = ['احب', 'أحب', 'بحب', 'بعشق', 'اعشق', 'أعشق'];
+  const likeVerbsAr = ['احب', 'أحب', 'بحب', 'بعشق', 'اعشق', 'أعشق', 'المفضل', 'المفضلة'];
   const dislikeVerbsAr = ['اكره', 'أكره', 'بكره', 'ما بحب', 'ما احب', 'ما أحب'];
 
   function detectPrefsFromMap(tokensMapEn, tokensMapAr, kindLike, kindDislike) {
@@ -481,6 +503,142 @@ function extractSemanticFactsFromMessage(messageText) {
   detectPrefsFromMap(seasonTokensEn, seasonTokensAr, 'preference.season.like', 'preference.season.dislike');
   detectPrefsFromMap(weatherTokensEn, weatherTokensAr, 'preference.weather.like', 'preference.weather.dislike');
   detectPrefsFromMap(petTokensEn, petTokensAr, 'preference.pets.like', 'preference.pets.dislike');
+  detectPrefsFromMap(hobbyTokensEn, hobbyTokensAr, 'preference.hobby.like', 'preference.hobby.dislike');
+
+  // Additional explicit handling for phrases like:
+  // - "my favorite weather is summer"
+  // - "favorite weather: rainy and cold"
+  // - "my favorite season is winter"
+  // and Arabic equivalents using المفضل/المفضّل.
+  try {
+    const lowerNoPunct = lower.replace(/[.,!?؟،]+/g, ' ');
+
+    function pickFirstFromMaps(maps, src) {
+      for (const map of maps) {
+        const keys = Object.keys(map || {});
+        for (const code of keys) {
+          const tokens = map[code] || [];
+          for (const tok of tokens) {
+            if (tok && src.includes(String(tok).toLowerCase())) {
+              return code;
+            }
+          }
+        }
+      }
+      return null;
+    }
+
+    // English: favorite weather / season
+    if (lower.includes('favorite weather') || lower.includes('favourite weather')) {
+      const primaryCode = pickFirstFromMaps([seasonTokensEn, weatherTokensEn], lowerNoPunct);
+      if (primaryCode) {
+        pushFact('preference.weather.like', primaryCode, 0.97);
+      }
+    }
+    if (lower.includes('favorite season') || lower.includes('favourite season')) {
+      const seasonCode = pickFirstFromMaps([seasonTokensEn], lowerNoPunct);
+      if (seasonCode) {
+        pushFact('preference.season.like', seasonCode, 0.97);
+      }
+    }
+
+    // Arabic: phrases like "جوي المفضل" / "الجو المفضل" / "فصلي المفضل".
+    if (hasArabic) {
+      const favWeatherMarkers = ['جوي المفضل', 'الجو المفضل', 'الجو المفضل عندي'];
+      const favSeasonMarkers = ['فصلي المفضل', 'الفصل المفضل'];
+
+      const hasFavWeather = favWeatherMarkers.some((m) => text.includes(m));
+      const hasFavSeason = favSeasonMarkers.some((m) => text.includes(m));
+
+      if (hasFavWeather) {
+        const primaryCodeAr = pickFirstFromMaps([seasonTokensAr, weatherTokensAr], text);
+        if (primaryCodeAr) {
+          pushFact('preference.weather.like', primaryCodeAr, 0.97);
+        }
+      }
+      if (hasFavSeason) {
+        const seasonCodeAr = pickFirstFromMaps([seasonTokensAr], text);
+        if (seasonCodeAr) {
+          pushFact('preference.season.like', seasonCodeAr, 0.97);
+        }
+      }
+    }
+  } catch (_) {
+    // best-effort only; fall back silently if anything goes wrong
+  }
+
+  // Favorite drink / food preferences (EN + AR), stored as short
+  // preference.drink.like / preference.food.like facts.
+  try {
+    const MAX_PREF_LEN = 40;
+
+    function normalisePreferenceValue(rawVal) {
+      if (!rawVal) return null;
+      let v = String(rawVal)
+        .replace(/["'«»]/g, '')
+        .trim();
+      // Cut at first line break if present.
+      const nlIdx = v.indexOf('\n');
+      if (nlIdx !== -1) {
+        v = v.slice(0, nlIdx).trim();
+      }
+      if (v.length > MAX_PREF_LEN) {
+        v = v.slice(0, MAX_PREF_LEN).trim();
+      }
+      if (v.length < 2) return null;
+      return v.toLowerCase();
+    }
+
+    // --- Favorite drink ---
+    let drinkCandidate = null;
+
+    const drinkMatchEn = raw.match(
+      /\bmy favou?rite drink is\s+([^.,!?\n]+)|\bfavou?rite drink\s*[:\-]\s*([^.,!?\n]+)/i
+    );
+    if (drinkMatchEn) {
+      drinkCandidate = (drinkMatchEn[1] || drinkMatchEn[2] || '').trim();
+    }
+
+    if (!drinkCandidate && hasArabic) {
+      const drinkMatchAr = text.match(
+        /(?:مشروبي المفضل هو|مشروبي المفضّل هو|مشروبي المفضل|مشروبي المفضّل)\s+([^،.!؟\n]+)/u
+      );
+      if (drinkMatchAr && drinkMatchAr[1]) {
+        drinkCandidate = String(drinkMatchAr[1]).trim();
+      }
+    }
+
+    const normDrink = normalisePreferenceValue(drinkCandidate);
+    if (normDrink) {
+      pushFact('preference.drink.like', normDrink, 0.96);
+    }
+
+    // --- Favorite food ---
+    let foodCandidate = null;
+
+    const foodMatchEn = raw.match(
+      /\bmy favou?rite food is\s+([^.,!?\n]+)|\bfavou?rite food\s*[:\-]\s*([^.,!?\n]+)/i
+    );
+    if (foodMatchEn) {
+      foodCandidate = (foodMatchEn[1] || foodMatchEn[2] || '').trim();
+    }
+
+    if (!foodCandidate && hasArabic) {
+      const foodMatchAr = text.match(
+        /(?:اكلتي المفضلة|أكلتي المفضلة|اكلتي المفضّلة|أكلتي المفضّلة)\s+([^،.!؟\n]+)/u
+      );
+      if (foodMatchAr && foodMatchAr[1]) {
+        foodCandidate = String(foodMatchAr[1]).trim();
+      }
+    }
+
+    const normFood = normalisePreferenceValue(foodCandidate);
+    if (normFood) {
+      pushFact('preference.food.like', normFood, 0.96);
+    }
+  } catch (_) {
+    // best-effort only
+  }
 
   const socialIntrovertEn = ['introvert', 'introverted'];
   const socialExtrovertEn = ['extrovert', 'extroverted'];
@@ -956,15 +1114,20 @@ async function updateLongTerm(userId, event, outcome) {
             } else {
               await prisma.userMemoryFact.create({ data });
             }
+
+            // Log preference_fact_upserted only for true preference-style kinds,
+            // never for persona/profile singleton facts.
+            if (kind.startsWith('preference.') || kind === 'trait.social.style') {
+              try {
+                console.log('[LongTermMemory] preference_fact_upserted', {
+                  userId,
+                  kind,
+                  value,
+                  sourceMessageId: event.messageId || null,
+                });
+              } catch (_) {}
+            }
           }
-          try {
-            console.log('[LongTermMemory] preference_fact_upserted', {
-              userId,
-              kind,
-              value,
-              sourceMessageId: event.messageId || null,
-            });
-          } catch (_) {}
         }
       }
     } catch (err) {
