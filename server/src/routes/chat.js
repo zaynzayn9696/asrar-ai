@@ -35,6 +35,8 @@ const {
   updateUserEmotionProfile,
   getLongTermEmotionalSnapshot,
   detectEmotionalTriggers,
+  updateEmotionalPatterns,
+  logTriggerEventsForMessage,
 } = require('../services/emotionalLongTerm');
 const {
   updateTrustOnMessage,
@@ -994,7 +996,6 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         assistantText: assistantReplyForTTSQuick,
         userText,
         usage: buildUsageSummary(dbUser, usage),
-        instantReply: instant,
         engine: 'instant-shallow',
       };
 
@@ -2131,16 +2132,6 @@ router.post('/message', async (req, res) => {
         reply: responsePayload.reply,
         usage: responsePayload.usage,
       };
-      if (responsePayload.dailyLimitReached) {
-        donePayload.dailyLimitReached = responsePayload.dailyLimitReached;
-        donePayload.limitType = responsePayload.limitType;
-        donePayload.resetAt = responsePayload.resetAt;
-        donePayload.resetInSeconds = responsePayload.resetInSeconds;
-      }
-
-      if (responsePayload.whispersUnlocked) {
-        donePayload.whispersUnlocked = responsePayload.whispersUnlocked;
-      }
 
       res.write(`data: ${JSON.stringify(donePayload)}\n\n`);
       return res.end();
