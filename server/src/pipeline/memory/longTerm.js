@@ -632,6 +632,14 @@ async function updateLongTerm(userId, event, outcome) {
           } else {
             await prisma.userMemoryFact.create({ data });
           }
+          try {
+            console.log('[LongTermMemory] preference_fact_upserted', {
+              userId,
+              kind,
+              value,
+              sourceMessageId: event.messageId || null,
+            });
+          } catch (_) {}
         }
       }
     } catch (err) {
