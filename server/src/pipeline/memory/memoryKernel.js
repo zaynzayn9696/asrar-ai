@@ -256,9 +256,14 @@ async function getPersonaSnapshot({ userId }) {
             'profile.theme.academic',
             'profile.theme.family',
             'profile.theme.work',
+            'profile.job.title',
+            'profile.job.field',
+            'goal.long_term',
             // Traits & coping
             'trait.personality.keywords',
             'trait.coping.style',
+            'trait.mental.main',
+            'trait.mental.secondary',
             // Preferences (shared with Phase4)
             'preference.season.like',
             'preference.season.dislike',
@@ -268,6 +273,9 @@ async function getPersonaSnapshot({ userId }) {
             'preference.pets.dislike',
             'preference.crowds',
             'trait.social.style',
+            'preference.drink.like',
+            'preference.food.like',
+            'preference.hobby.like',
           ],
         },
       },
@@ -313,8 +321,11 @@ async function getPersonaSnapshot({ userId }) {
   const dialect = getLatest('profile.language.dialect');
   const role = getLatest('profile.role');
   const domain = getLatest('profile.domain');
+  const jobTitle = getLatest('profile.job.title');
+  const jobField = getLatest('profile.job.field');
   const goalPrimary = getLatest('profile.goal.primary');
   const goalSecondary = getLatest('profile.goal.secondary');
+  const longTermGoal = getLatest('goal.long_term');
 
   const themeHealth = getLatest('profile.theme.health');
   const themeAcademic = getLatest('profile.theme.academic');
@@ -336,6 +347,8 @@ async function getPersonaSnapshot({ userId }) {
   }
 
   const copingStyle = getLatest('trait.coping.style');
+  const mentalMain = getLatest('trait.mental.main');
+  const mentalSecondary = getLatest('trait.mental.secondary');
 
   const seasonsLike = collectAll('preference.season.like');
   const seasonsDislike = collectAll('preference.season.dislike');
@@ -345,6 +358,9 @@ async function getPersonaSnapshot({ userId }) {
   const petsDislike = collectAll('preference.pets.dislike');
   const crowdPref = getLatest('preference.crowds');
   const socialStyle = getLatest('trait.social.style');
+  const drinkLike = collectAll('preference.drink.like');
+  const foodLike = collectAll('preference.food.like');
+  const hobbyLike = collectAll('preference.hobby.like');
 
   const facts = {
     profile: {
@@ -359,9 +375,14 @@ async function getPersonaSnapshot({ userId }) {
       },
       role: role || null,
       domain: domain || null,
+      job: {
+        title: jobTitle || null,
+        field: jobField || null,
+      },
       goals: {
         primary: goalPrimary || null,
         secondary: goalSecondary || null,
+        longTerm: longTermGoal || null,
       },
       themes: {
         health: themeHealth || null,
@@ -373,6 +394,10 @@ async function getPersonaSnapshot({ userId }) {
     traits: {
       personalityKeywords,
       copingStyle: copingStyle || null,
+      mental: {
+        main: mentalMain || null,
+        secondary: mentalSecondary || null,
+      },
     },
     preferences: {
       seasonsLike,
@@ -383,6 +408,9 @@ async function getPersonaSnapshot({ userId }) {
       petsDislike,
       crowds: crowdPref || null,
       socialStyle: socialStyle || null,
+      drinkLike,
+      foodLike,
+      hobbyLike,
     },
   };
 
@@ -426,7 +454,25 @@ async function getPersonaSnapshot({ userId }) {
     }
   }
 
-  if (goalPrimary || goalSecondary) {
+  if (jobTitle || jobField) {
+    if (jobTitle && jobField) {
+      summaryLinesEn.push(`Their job title appears to be ${jobTitle} in the field of ${jobField}.`);
+      summaryLinesAr.push(`يبدو أن مسمّاه الوظيفي هو ${jobTitle} في مجال ${jobField}.`);
+    } else if (jobTitle) {
+      summaryLinesEn.push(`They mentioned a job title similar to ${jobTitle}.`);
+      summaryLinesAr.push(`ذكر مسمّى وظيفي قريب من ${jobTitle}.`);
+    }
+  }
+
+  if (goalPrimary || goalSecondary || longTermGoal) {
+    if (longTermGoal) {
+      summaryLinesEn.push(
+        `They described a longer-term dream or direction: ${longTermGoal}.`
+      );
+      summaryLinesAr.push(
+        `ذكر حلمًا أو توجهًا طويل الأمد: ${longTermGoal}.`
+      );
+    }
     if (goalPrimary) {
       summaryLinesEn.push(
         `One important life direction they mentioned is: ${goalPrimary}.`
@@ -491,6 +537,27 @@ async function getPersonaSnapshot({ userId }) {
     );
   }
 
+  if (mentalMain || mentalSecondary) {
+    const enParts = [];
+    const arParts = [];
+    if (mentalMain) {
+      enParts.push(mentalMain);
+      arParts.push(mentalMain);
+    }
+    if (mentalSecondary && mentalSecondary !== mentalMain) {
+      enParts.push(mentalSecondary);
+      arParts.push(mentalSecondary);
+    }
+    if (enParts.length) {
+      summaryLinesEn.push(
+        `They describe their longer-term mental state with phrases like: ${enParts.join(', ')}.`
+      );
+      summaryLinesAr.push(
+        `يصف حالته النفسية على المدى الطويل بعبارات مثل: ${arParts.join('، ')}.`
+      );
+    }
+  }
+
   // Keep persona block compact: trim to a few lines in each language.
   if (summaryLinesEn.length > 6) {
     summaryLinesEn.length = 6;
@@ -509,10 +576,16 @@ async function getPersonaSnapshot({ userId }) {
       primaryLanguage ||
       role ||
       domain ||
+      jobTitle ||
+      jobField ||
       goalPrimary ||
-      goalSecondary
+      goalSecondary ||
+      longTermGoal
     ),
-    hasTraits: !!(personalityKeywords.length || copingStyle),
+    hasTraits: !!(personalityKeywords.length || copingStyle || mentalMain || mentalSecondary),
+    hasJob: !!(jobTitle || jobField),
+    hasLongTermGoal: !!longTermGoal,
+    hasDrinkFoodHobby: !!(drinkLike.length || foodLike.length || hobbyLike.length),
     summaryEnCount: summaryLinesEn.length,
     summaryArCount: summaryLinesAr.length,
   });

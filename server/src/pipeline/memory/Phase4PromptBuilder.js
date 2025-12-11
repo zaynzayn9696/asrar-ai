@@ -375,8 +375,47 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         ? personaFacts.profile.age.trim()
         : null;
 
+    let jobTitleFact = null;
+    let dreamFact = null;
     let favWeatherOrSeason = null;
     let favDrink = null;
+    let favFood = null;
+    let hobbiesArr = null;
+
+    if (personaFacts && personaFacts.profile) {
+      const profileFacts = personaFacts.profile;
+      if (profileFacts.job && typeof profileFacts.job === 'object') {
+        const jt =
+          typeof profileFacts.job.title === 'string'
+            ? profileFacts.job.title.trim()
+            : '';
+        if (jt) jobTitleFact = jt;
+      }
+
+      if (profileFacts.goals && typeof profileFacts.goals === 'object') {
+        const longTerm =
+          typeof profileFacts.goals.longTerm === 'string'
+            ? profileFacts.goals.longTerm.trim()
+            : '';
+        const primary =
+          typeof profileFacts.goals.primary === 'string'
+            ? profileFacts.goals.primary.trim()
+            : '';
+        const secondary =
+          typeof profileFacts.goals.secondary === 'string'
+            ? profileFacts.goals.secondary.trim()
+            : '';
+
+        if (longTerm) {
+          dreamFact = longTerm;
+        } else if (primary) {
+          dreamFact = primary;
+        } else if (secondary) {
+          dreamFact = secondary;
+        }
+      }
+    }
+
     if (personaFacts && personaFacts.preferences) {
       const prefs = personaFacts.preferences;
       if (Array.isArray(prefs.weatherLike) && prefs.weatherLike.length) {
@@ -388,28 +427,54 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
       if (Array.isArray(prefs.drinkLike) && prefs.drinkLike.length) {
         favDrink = prefs.drinkLike[0];
       }
+      if (Array.isArray(prefs.foodLike) && prefs.foodLike.length) {
+        favFood = prefs.foodLike[0];
+      }
+      if (Array.isArray(prefs.hobbyLike) && prefs.hobbyLike.length) {
+        hobbiesArr = prefs.hobbyLike;
+      }
     }
 
     const nameValue = safeNameForFacts || 'unknown';
     const ageValue = ageFact || 'unknown';
+    const jobTitleValue = (jobTitleFact && String(jobTitleFact).trim()) || 'unknown';
+    const dreamValue = (dreamFact && String(dreamFact).trim()) || 'unknown';
     const favoriteWeatherValue = (favWeatherOrSeason && String(favWeatherOrSeason).trim()) || 'unknown';
     const favoriteDrinkValue = (favDrink && String(favDrink).trim()) || 'unknown';
+    const favoriteFoodValue = (favFood && String(favFood).trim()) || 'unknown';
+
+    let hobbiesValue = 'unknown';
+    if (Array.isArray(hobbiesArr) && hobbiesArr.length) {
+      const joined = hobbiesArr
+        .map((h) => (typeof h === 'string' ? h.trim() : ''))
+        .filter(Boolean)
+        .join(', ');
+      if (joined) hobbiesValue = joined;
+    }
 
     if (isArabic) {
       lines.push(
         'Known stored facts about the user (داخلي – استخدمه فقط عندما يسأل المستخدم مباشرة ماذا تعرف عنه):',
         `- name: ${nameValue}`,
         `- age: ${ageValue}`,
+        `- jobTitle: ${jobTitleValue}`,
+        `- dream: ${dreamValue}`,
         `- favoriteWeather: ${favoriteWeatherValue}`,
-        `- favoriteDrink: ${favoriteDrinkValue}`
+        `- favoriteDrink: ${favoriteDrinkValue}`,
+        `- favoriteFood: ${favoriteFoodValue}`,
+        `- hobbies: ${hobbiesValue}`
       );
     } else {
       lines.push(
         'Known stored facts about the user (internal – ONLY for answering direct questions like "what do you know about me?"): ',
         `- name: ${nameValue}`,
         `- age: ${ageValue}`,
+        `- jobTitle: ${jobTitleValue}`,
+        `- dream: ${dreamValue}`,
         `- favoriteWeather: ${favoriteWeatherValue}`,
-        `- favoriteDrink: ${favoriteDrinkValue}`
+        `- favoriteDrink: ${favoriteDrinkValue}`,
+        `- favoriteFood: ${favoriteFoodValue}`,
+        `- hobbies: ${hobbiesValue}`
       );
     }
 
@@ -418,8 +483,12 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         userId,
         hasName: nameValue !== 'unknown',
         hasAge: ageValue !== 'unknown',
+        hasJobTitle: jobTitleValue !== 'unknown',
+        hasDream: dreamValue !== 'unknown',
         hasFavoriteWeather: favoriteWeatherValue !== 'unknown',
         hasFavoriteDrink: favoriteDrinkValue !== 'unknown',
+        hasFavoriteFood: favoriteFoodValue !== 'unknown',
+        hasHobbies: hobbiesValue !== 'unknown',
       });
     } catch (_) {}
   } catch (err) {

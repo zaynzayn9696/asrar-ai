@@ -546,20 +546,22 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
   // direct questions and should not change normal reply style.
   const metaMemoryInstruction = isArabic
     ? [
-        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن تفاصيله (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وجوي ومشروبي المفضل؟")، استخدم كتلة "Known stored facts about the user" الداخلية:',
-        '- هذه الكتلة تحتوي دائماً على المفاتيح التالية: name, age, favoriteWeather, favoriteDrink.',
-        '- لكل خاصية يطلبها المستخدم: لو كانت القيمة ليست "unknown" في هذه الكتلة، أجب بها بوضوح (بدون تردّد أو تعميم).',
-        '- لو كانت بعض القيم معروفة وأخرى unknown، أجب بإخلاص جزئي: مثلاً "بعرف إن جَوّك المفضل هو summer، بس ما بعرف مشروبك المفضل لسه".',
-        '- لا تقل "ما بعرف عنك أي شيء" إذا كان عندك بعض القيم المعروفة؛ فرّق بين ما تعرفه (name, age, favoriteWeather, favoriteDrink) وما لا تعرفه بعد.',
+        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن تفاصيله (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وشغلي وحلمي وجوي ومشروبي المفضل؟")، استخدم كتلة "Known stored facts about the user" الداخلية:',
+        '- هذه الكتلة تحتوي دائماً على المفاتيح التالية: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
+        '- لكل خاصية يطلبها المستخدم (الاسم، العمر، العمل، الحلم، الجو المفضل، المشروب المفضل، الأكل المفضل، الهوايات): لو كانت القيمة ليست "unknown" في هذه الكتلة، أجب بها بوضوح واطمئنان.',
+        '- لو كانت بعض القيم معروفة وأخرى unknown، أجب بإخلاص جزئي: مثلاً "بعرف إن جَوّك المفضل هو summer، بس ما بعرف مشروبك المفضل أو هواياتك لسه".',
+        '- لا تقل "ما بعرف عنك أي شيء" إذا كان عندك بعض القيم المعروفة؛ فرّق بين ما تعرفه وما لا تعرفه بعد، واذكر المعروف بصيغة لطيفة.',
         '- لا تختلق قيمة لخاصية لو كانت "unknown" أو غير موجودة؛ في هذه الحالة قل بوضوح إنك لا تعرف هذه الجزئية حتى الآن.',
+        '- مثال جيد: لو عنا name:"Zubaid" و age:"28" و favoriteWeather:"summer" وباقي الحقول unknown، جواب مناسب هو: "بعرف إن اسمك زبيد، عمرك حوالي ٢٨، وبتحب جو الصيف، بس لسا ما بعرف مشروبك أو أكلك المفضلين."',
       ].join('\n')
     : [
-        'If the user explicitly asks what you know about them or for specific attributes such as their name, age, favorite weather, or favorite drink (for example: "what do you know about me?" or "what is my name, my age, and my favorite weather and drink?"), use the internal block "Known stored facts about the user":',
-        '- That block always exposes these keys: name, age, favoriteWeather, favoriteDrink.',
-        '- For each attribute the user asks about: if the value in that block is not "unknown", you MUST answer with that value directly (without hedging or pretending not to know).',
-        '- If some attributes are known and others are "unknown", give a partial honest answer (e.g. "I know your favorite weather is summer, but I don\'t know your favorite drink yet.").',
-        '- Do NOT say "I don\'t know anything about you" when some of these keys have non-"unknown" values; distinguish clearly between what you know and what you do not know yet.',
-        '- Never invent a value for any key whose value is "unknown" or missing; in that case clearly say you do not know that specific part yet.',
+        'If the user explicitly asks what you know about them or for attributes such as their name, age, job, dream, favorite weather, favorite drink, favorite food, or hobbies (for example: "what do you know about me?" or "what is my job and my favorite drink?"), use the internal block "Known stored facts about the user":',
+        '- That block always exposes these keys: name, age, jobTitle, dream, favoriteWeather, favoriteDrink, favoriteFood, hobbies.',
+        '- For each attribute the user asks about: if the value in that block is not "unknown", you MUST answer with that value directly (in your normal warm style, without pretending not to know).',
+        '- If some attributes are known and others are "unknown", give a partial honest answer (for example: "I know your favorite weather is summer and you love coffee, but I don\'t know your favorite food yet.").',
+        '- Do NOT say "I don\'t know anything about you" when some of these keys have non-"unknown" values; clearly separate what you know from what you do not know yet.',
+        '- Never invent a value for any key whose value is "unknown" or missing; instead say that you don\'t know that specific part yet.',
+        '- Example of a good answer: if the block has name:"zubaid", age:"28", favoriteWeather:"summer" and other fields are "unknown", answer like: "I know your name is Zubaid, you\'re around 28, and you enjoy summer weather, but I don\'t know your favorite drink or food yet."',
       ].join('\n');
 
   const header = isArabic
@@ -793,6 +795,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
   console.log('[SystemPrompt] language selection', {
     requestedLanguage: language,
     replyLanguage,
+    finalLanguage: replyLanguage,
     dialect: dialect == null ? null : String(dialect),
     personaId,
   });

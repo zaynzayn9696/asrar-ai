@@ -248,7 +248,7 @@ export default function ChatPage() {
   const character =
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[1];
 
-  const isArabicConversation = selectedDialect !== "en";
+  const isArabicConversation = isAr;
   const conversationLang = isArabicConversation ? "ar" : "en";
   const characterDisplayName = isAr ? character.nameAr : character.nameEn;
 
@@ -1251,6 +1251,13 @@ useEffect(() => {
       const payloadLang = conversationLang;
       const payloadDialect = selectedDialect || (conversationLang === "en" ? "en" : "msa");
 
+      console.log("[ChatPage] sending message", {
+        conversationLang,
+        selectedDialect,
+        payloadLang,
+        payloadDialect,
+      });
+
       const token =
         typeof window !== "undefined"
           ? localStorage.getItem(TOKEN_KEY)
@@ -2115,26 +2122,20 @@ useEffect(() => {
               let rowClass = "asrar-chat-row";
               if (msg.from === "ai") {
                 rowClass += " asrar-chat-row--assistant";
+                if (isArabicAiText) {
+                  rowClass += " asrar-chat-row--assistant-ar";
+                } else {
+                  rowClass += " asrar-chat-row--assistant-en";
+                }
               } else if (msg.from === "user") {
                 rowClass += " asrar-chat-row--user";
               } else {
                 rowClass += " asrar-chat-row--system";
               }
 
-              const isDesktopViewport =
-                typeof window !== "undefined" && window.innerWidth > 900;
-
-              const bubbleStyle =
-                msg.from === "ai" && isArabicAiText
-                  ? {
-                      marginLeft: "auto",
-                      marginRight: isDesktopViewport ? "15%" : 0,
-                    }
-                  : undefined;
-
               return (
                 <div key={msg.id} className={rowClass}>
-                  <div className="asrar-chat-bubble" style={bubbleStyle}>
+                  <div className="asrar-chat-bubble">
                     {/* AI voice replies: voice bubble only */}
                     {isAiVoice && (
                       <VoiceMessageBubble

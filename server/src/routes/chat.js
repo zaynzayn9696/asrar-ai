@@ -885,9 +885,20 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       return res.status(403).json({ error: 'premium_required' });
     }
 
-    const lang = body.lang || 'en';
-    const dialect = body.dialect || 'msa';
+    const rawLang = (req.body && req.body.lang) || null;
+    const rawDialect = (req.body && req.body.dialect) || null;
+
+    console.log('[ChatRoute] incoming /api/chat/voice', {
+      userId: req.user && req.user.id,
+      rawLang,
+      rawDialect,
+      characterId: req.body && req.body.characterId,
+    });
+
+    const lang = rawLang || 'en';
+    const dialect = rawDialect || 'msa';
     const rawToneKey = body.tone;
+
     const bodyConversationId = body.conversationId;
     const saveFlag = body.save !== false;
     const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
@@ -947,10 +958,15 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       return res.status(400).json({ message: 'Unknown character' });
     }
 
-    const isArabicConversation = lang === 'ar' || lang === 'mixed';
+    let languageForEngine;
+    if (rawLang === 'ar') {
+      languageForEngine = 'ar';
+    } else {
+      languageForEngine = 'en';
+    }
+
+    const isArabicConversation = languageForEngine === 'ar';
     const personaText = isArabicConversation ? persona.ar : persona.en;
-    const languageForEngine =
-      lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en';
 
     // Ultra-fast path: trivial greetings / acknowledgements.
     if (isQuickPhrase(userText)) {
@@ -1506,19 +1522,31 @@ router.post('/message', async (req, res) => {
 
     const body = req.body || {};
 
+    const rawLang = (req.body && req.body.lang) || null;
+    const rawDialect = (req.body && req.body.dialect) || null;
+
+    console.log('[ChatRoute] incoming /api/chat/message', {
+      userId: req.user && req.user.id,
+      rawLang,
+      rawDialect,
+      characterId: req.body && req.body.characterId,
+    });
+
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
     const characterId = body.characterId || 'daloua';
     if (!isPremiumUser && !isTester && isCharacterPremiumOnly(characterId)) {
       return res.status(403).json({ error: 'premium_required' });
     }
 
-    const lang = body.lang || 'en';
-    const dialect = body.dialect || 'msa';
+    const lang = rawLang || 'en';
+    const dialect = rawDialect || 'msa';
     const rawToneKey = body.tone;
+
     const bodyConversationId = body.conversationId;
     const saveFlag = body.save !== false;
     const userText =
       typeof body.content === 'string' ? body.content.trim() : '';
+
     const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
     const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
       ? engineRaw
@@ -1580,10 +1608,14 @@ router.post('/message', async (req, res) => {
       return res.status(400).json({ message: 'Unknown character' });
     }
 
-    const isArabicConversation = lang === 'ar' || lang === 'mixed';
+    const isArabicConversation = lang === 'ar';
     const personaText = isArabicConversation ? persona.ar : persona.en;
-    const languageForEngine =
-      lang === 'mixed' ? 'mixed' : lang === 'ar' ? 'ar' : 'en';
+    let languageForEngine;
+    if (rawLang === 'ar') {
+      languageForEngine = 'ar';
+    } else {
+      languageForEngine = 'en';
+    }
 
     // Ultra-fast path: trivial greetings / acknowledgements.
     if (isQuickPhrase(userText)) {

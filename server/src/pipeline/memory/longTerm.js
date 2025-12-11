@@ -291,12 +291,17 @@ const PERSONA_SINGLETON_KINDS = new Set([
   'profile.domain',
   'profile.goal.primary',
   'profile.goal.secondary',
+  'goal.long_term',
   'profile.theme.health',
   'profile.theme.academic',
   'profile.theme.family',
   'profile.theme.work',
+  'profile.job.title',
+  'profile.job.field',
   'trait.personality.keywords',
   'trait.coping.style',
+  'trait.mental.main',
+  'trait.mental.secondary',
 ]);
 
 // Best-effort long-term goal extraction via LLM (English + Arabic).
@@ -713,7 +718,7 @@ function extractSemanticFactsFromMessage(messageText) {
     }
 
     const normFood = normalisePreferenceValue(foodCandidate);
-    if (normFood) {
+    if (normFood && !pronounValuesEn.includes(normFood)) {
       pushFact('preference.food.like', normFood, 0.96);
     }
   } catch (_) {
@@ -858,6 +863,69 @@ function extractSemanticFactsFromMessage(messageText) {
     }
   }
 
+  // --- Persona: job title / field (pattern-based EN + AR) ---
+  try {
+    let jobTitleCandidate = null;
+    let jobFieldCandidate = null;
+
+    // English: "I work as X", "I'm a X", "I work in X".
+    const enJobMatch = lower.match(
+      /\b(i work as|i'm working as|i am working as|i'm a|i am a|i'm an|i am an)\s+([^.,!?\n]{2,60})/i
+    );
+    if (enJobMatch && enJobMatch[2]) {
+      jobTitleCandidate = enJobMatch[2].trim();
+    }
+
+    const enFieldMatch = lower.match(
+      /\b(i work in|i'm working in|i am working in)\s+([^.,!?\n]{2,60})/i
+    );
+    if (enFieldMatch && enFieldMatch[2]) {
+      jobFieldCandidate = enFieldMatch[2].trim();
+    }
+
+    if (hasArabic) {
+      // Arabic: patterns like "أنا أعمل كـ X" or "أعمل في مجال X".
+      const arJobMatch = text.match(
+        /(?:انا أعمل ك|انا اعمل ك|أنا أعمل ك|أنا اعمل ك|اشتغل ك|أشتغل ك|أشتغل كـ|اشتغل كـ)\s*([^،.!؟\n]{2,40})/u
+      );
+      if (arJobMatch && arJobMatch[1]) {
+        const v = String(arJobMatch[1]).trim();
+        if (v) jobTitleCandidate = jobTitleCandidate || v;
+      }
+
+      const arFieldMatch = text.match(
+        /(?:أعمل في مجال|اعمل في مجال|أشتغل في مجال|اشتغل في مجال)\s+([^،.!؟\n]{2,40})/u
+      );
+      if (arFieldMatch && arFieldMatch[1]) {
+        const v = String(arFieldMatch[1]).trim();
+        if (v) jobFieldCandidate = jobFieldCandidate || v;
+      }
+    }
+
+    const normaliseJob = (val) => {
+      if (!val) return null;
+      let v = String(val)
+        .replace(/^["'«»]+|["'«»]+$/gu, '')
+        .trim();
+      if (!v) return null;
+      if (v.length > 60) v = v.slice(0, 60).trim();
+      if (v.length < 2) return null;
+      return v;
+    };
+
+    const normJobTitle = normaliseJob(jobTitleCandidate);
+    const normJobField = normaliseJob(jobFieldCandidate);
+
+    if (normJobTitle) {
+      pushFact('profile.job.title', normJobTitle, 0.94);
+    }
+    if (normJobField) {
+      pushFact('profile.job.field', normJobField, 0.94);
+    }
+  } catch (_) {
+    // best-effort only
+  }
+
   // --- Persona: themes (health, academic, family, work) ---
   for (const entry of HEALTH_KEYWORDS) {
     for (const tok of entry.tokens) {
@@ -890,6 +958,100 @@ function extractSemanticFactsFromMessage(messageText) {
         break;
       }
     }
+  }
+
+  // --- Persona: stable mental traits (pattern-based EN + AR) ---
+  try {
+    const mentalLabels = [];
+
+    const MENTAL_TRAIT_TOKENS_EN = [
+      { token: 'anxious', label: 'long-term anxiety' },
+      { token: 'anxiety', label: 'long-term anxiety' },
+      { token: 'depressed', label: 'long-term depression' },
+      { token: 'depression', label: 'long-term depression' },
+      { token: 'numb', label: 'feeling emotionally numb for a long time' },
+      { token: 'empty', label: 'feeling emotionally empty for a long time' },
+      { token: 'stressed', label: 'long-term stress' },
+      { token: 'burnt out', label: 'long-term burnout' },
+      { token: 'burned out', label: 'long-term burnout' },
+    ];
+
+    const STABILITY_CUES_EN = [
+      'for years',
+      'for a long time',
+      'for so long',
+      'for months',
+      'for months now',
+      'since i was a kid',
+      'since childhood',
+      'since i was a child',
+      'since i was little',
+      'most of my life',
+      'all my life',
+      'always',
+      'constantly',
+      'all the time',
+    ];
+
+    for (const entry of MENTAL_TRAIT_TOKENS_EN) {
+      for (const cue of STABILITY_CUES_EN) {
+        if (hasNear(lower, entry.token, cue, 80)) {
+          if (!mentalLabels.includes(entry.label)) {
+            mentalLabels.push(entry.label);
+          }
+          break;
+        }
+      }
+    }
+
+    if (hasArabic) {
+      const MENTAL_TRAIT_TOKENS_AR = [
+        { token: 'قلق', label: 'قلق مزمن' },
+        { token: 'اكتئاب', label: 'اكتئاب مزمن' },
+        { token: 'مكتئب', label: 'اكتئاب مزمن' },
+        { token: 'تعبان نفسياً', label: 'تعب نفسي مستمر' },
+        { token: 'تعبان نفسيا', label: 'تعب نفسي مستمر' },
+      ];
+
+      const STABILITY_CUES_AR = [
+        'منذ سنوات',
+        'منذ سنين',
+        'من زمان',
+        'من فترة طويلة',
+        'من فتره طويله',
+        'طول الوقت',
+        'دايمًا',
+        'دائماً',
+        'دائما',
+        'على طول',
+        'أغلب حياتي',
+        'اغلب حياتي',
+      ];
+
+      for (const entry of MENTAL_TRAIT_TOKENS_AR) {
+        for (const cue of STABILITY_CUES_AR) {
+          if (hasNear(text, entry.token, cue, 80)) {
+            if (!mentalLabels.includes(entry.label)) {
+              mentalLabels.push(entry.label);
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    if (mentalLabels.length) {
+      const main = mentalLabels[0];
+      pushFact('trait.mental.main', main, 0.95);
+      if (mentalLabels.length > 1) {
+        const secondary = mentalLabels[1];
+        if (secondary && secondary !== main) {
+          pushFact('trait.mental.secondary', secondary, 0.9);
+        }
+      }
+    }
+  } catch (_) {
+    // best-effort only
   }
 
   // --- Persona: personality keywords ---
@@ -1128,6 +1290,72 @@ async function updateLongTerm(userId, event, outcome) {
 
   if (messageText) {
     try {
+      // Long-term goal extraction via LLM (English + Arabic), mapped into
+      // goal.long_term and profile.goal.primary / secondary.
+      try {
+        const goals = await detectGoalsUsingLLM(messageText);
+        if (goals && (goals.primary || goals.secondary)) {
+          const primary = goals.primary && goals.primary.trim ? goals.primary.trim() : goals.primary || '';
+          const secondary = goals.secondary && goals.secondary.trim ? goals.secondary.trim() : goals.secondary || '';
+
+          const longTermValue = primary || secondary || '';
+
+          const upsertSingletonGoal = async (kind, value) => {
+            if (!value) return;
+            const v = String(value).trim();
+            if (!v) return;
+            try {
+              let existingGoal = await prisma.userMemoryFact.findFirst({
+                where: { userId, kind },
+                select: { id: true },
+              });
+              const data = {
+                userId,
+                kind,
+                value: v,
+                confidence: 0.95,
+                sourceMessageId: event.messageId || null,
+              };
+              if (existingGoal && existingGoal.id) {
+                await prisma.userMemoryFact.update({ where: { id: existingGoal.id }, data });
+              } else {
+                await prisma.userMemoryFact.create({ data });
+              }
+            } catch (goalErr) {
+              console.error(
+                '[LongTermMemory] long_term_goal upsert error',
+                goalErr && goalErr.message ? goalErr.message : goalErr
+              );
+            }
+          };
+
+          if (longTermValue) {
+            await upsertSingletonGoal('goal.long_term', longTermValue);
+          }
+          if (primary) {
+            await upsertSingletonGoal('profile.goal.primary', primary);
+          }
+          if (secondary && secondary !== primary) {
+            await upsertSingletonGoal('profile.goal.secondary', secondary);
+          }
+
+          try {
+            console.log('[LongTermMemory] goal_long_term_upserted', {
+              userId,
+              hasPrimary: !!primary,
+              hasSecondary: !!secondary,
+              hasLongTerm: !!longTermValue,
+              sourceMessageId: event.messageId || null,
+            });
+          } catch (_) {}
+        }
+      } catch (goalOuterErr) {
+        console.error(
+          '[LongTermMemory] detectGoalsUsingLLM outer error',
+          goalOuterErr && goalOuterErr.message ? goalOuterErr.message : goalOuterErr
+        );
+      }
+
       const semanticFacts = extractSemanticFactsFromMessage(messageText);
       if (Array.isArray(semanticFacts) && semanticFacts.length) {
         for (const fact of semanticFacts) {
