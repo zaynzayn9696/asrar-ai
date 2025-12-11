@@ -348,10 +348,10 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     );
   }
 
-  // Compact "known facts" view (name, age, favorite weather/season) for
-  // explicit meta-questions like "what do you know about me?". This is
-  // internal and should only shape answers when the user directly asks
-  // about stored attributes.
+  // Compact "known stored facts" view for explicit meta-questions like
+  // "what do you know about me?". Always expose the same four keys so the
+  // assistant can answer per-attribute: name, age, favoriteWeather,
+  // favoriteDrink. Values may be "unknown" when not present.
   try {
     let personaFacts = null;
     try {
@@ -361,8 +361,6 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
     } catch (_) {
       personaFacts = null;
     }
-
-    const knownFactLines = [];
 
     const safeNameForFacts =
       identityMemory && typeof identityMemory.name === 'string'
@@ -378,6 +376,7 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
         : null;
 
     let favWeatherOrSeason = null;
+    let favDrink = null;
     if (personaFacts && personaFacts.preferences) {
       const prefs = personaFacts.preferences;
       if (Array.isArray(prefs.weatherLike) && prefs.weatherLike.length) {
@@ -385,49 +384,44 @@ async function buildPhase4MemoryBlock({ userId, conversationId, language, person
       } else if (Array.isArray(prefs.seasonsLike) && prefs.seasonsLike.length) {
         favWeatherOrSeason = prefs.seasonsLike[0];
       }
-    }
 
-    if (safeNameForFacts) {
-      if (isArabic) {
-        knownFactLines.push(`- الاسم الذي شاركه معك المستخدم: ${safeNameForFacts}.`);
-      } else {
-        knownFactLines.push(`- Name they shared with you: ${safeNameForFacts}.`);
+      if (Array.isArray(prefs.drinkLike) && prefs.drinkLike.length) {
+        favDrink = prefs.drinkLike[0];
       }
     }
 
-    if (ageFact) {
-      if (isArabic) {
-        knownFactLines.push(`- العمر التقريبي المخزَّن: حوالي ${ageFact} سنة.`);
-      } else {
-        knownFactLines.push(`- Approximate stored age: around ${ageFact}.`);
-      }
+    const nameValue = safeNameForFacts || 'unknown';
+    const ageValue = ageFact || 'unknown';
+    const favoriteWeatherValue = (favWeatherOrSeason && String(favWeatherOrSeason).trim()) || 'unknown';
+    const favoriteDrinkValue = (favDrink && String(favDrink).trim()) || 'unknown';
+
+    if (isArabic) {
+      lines.push(
+        'Known stored facts about the user (داخلي – استخدمه فقط عندما يسأل المستخدم مباشرة ماذا تعرف عنه):',
+        `- name: ${nameValue}`,
+        `- age: ${ageValue}`,
+        `- favoriteWeather: ${favoriteWeatherValue}`,
+        `- favoriteDrink: ${favoriteDrinkValue}`
+      );
+    } else {
+      lines.push(
+        'Known stored facts about the user (internal – ONLY for answering direct questions like "what do you know about me?"): ',
+        `- name: ${nameValue}`,
+        `- age: ${ageValue}`,
+        `- favoriteWeather: ${favoriteWeatherValue}`,
+        `- favoriteDrink: ${favoriteDrinkValue}`
+      );
     }
 
-    if (favWeatherOrSeason) {
-      if (isArabic) {
-        knownFactLines.push(
-          `- من التفضيلات المخزَّنة: يحب أجواء أو فصول مثل ${favWeatherOrSeason}.`
-        );
-      } else {
-        knownFactLines.push(
-          `- Stored preference: they like weather or seasons such as ${favWeatherOrSeason}.`
-        );
-      }
-    }
-
-    if (knownFactLines.length) {
-      if (isArabic) {
-        lines.push(
-          'حقائق معروفة عن المستخدم (داخلية، استخدمها فقط إذا سأل صراحة عمّا تعرفه عنه):',
-          ...knownFactLines
-        );
-      } else {
-        lines.push(
-          'Known facts about the user (internal – only use these when they explicitly ask what you know about them):',
-          ...knownFactLines
-        );
-      }
-    }
+    try {
+      console.log('[Phase4] known_user_facts_block', {
+        userId,
+        hasName: nameValue !== 'unknown',
+        hasAge: ageValue !== 'unknown',
+        hasFavoriteWeather: favoriteWeatherValue !== 'unknown',
+        hasFavoriteDrink: favoriteDrinkValue !== 'unknown',
+      });
+    } catch (_) {}
   } catch (err) {
     console.error(
       '[Phase4] known facts render error',

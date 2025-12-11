@@ -592,6 +592,7 @@ function extractSemanticFactsFromMessage(messageText) {
     // --- Favorite drink ---
     let drinkCandidate = null;
 
+    // Forward English patterns: "my favorite drink is X" or "favorite drink: X".
     const drinkMatchEn = raw.match(
       /\bmy favou?rite drink is\s+([^.,!?\n]+)|\bfavou?rite drink\s*[:\-]\s*([^.,!?\n]+)/i
     );
@@ -599,12 +600,32 @@ function extractSemanticFactsFromMessage(messageText) {
       drinkCandidate = (drinkMatchEn[1] || drinkMatchEn[2] || '').trim();
     }
 
+    // Reverse English pattern: "X is my favorite drink".
+    if (!drinkCandidate) {
+      const drinkMatchEnReverse = raw.match(
+        /([^.,!?\n]{2,40})\s+is\s+my\s+favou?rite\s+drink\b/i
+      );
+      if (drinkMatchEnReverse && drinkMatchEnReverse[1]) {
+        drinkCandidate = drinkMatchEnReverse[1].trim();
+      }
+    }
+
+    // Arabic patterns: "مشروبي المفضل هو X" and reverse "X هو/هي مشروبي المفضل".
     if (!drinkCandidate && hasArabic) {
       const drinkMatchAr = text.match(
         /(?:مشروبي المفضل هو|مشروبي المفضّل هو|مشروبي المفضل|مشروبي المفضّل)\s+([^،.!؟\n]+)/u
       );
       if (drinkMatchAr && drinkMatchAr[1]) {
         drinkCandidate = String(drinkMatchAr[1]).trim();
+      }
+    }
+
+    if (!drinkCandidate && hasArabic) {
+      const drinkMatchArReverse = text.match(
+        /([^،.!؟\n]{2,40})\s+(?:هو|هي)\s+(?:مشروبي المفضل|مشروبي المفضّل)/u
+      );
+      if (drinkMatchArReverse && drinkMatchArReverse[1]) {
+        drinkCandidate = String(drinkMatchArReverse[1]).trim();
       }
     }
 

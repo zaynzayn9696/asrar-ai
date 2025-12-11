@@ -494,7 +494,8 @@ async function updateConversationEmotionState(conversationId, emo) {
  * @returns {string}
  */
 function buildSystemPrompt({ personaText, personaId, emotion, convoState, language, longTermSnapshot, triggers, engineMode, loopTag, anchors, conversationSummary, isPremiumUser, reasonLabel, dialect, identityMemory, recentAssistantReplies = [], personaSnapshot }) {
-  const isArabic = language === 'ar';
+  const replyLanguage = language === 'ar' ? 'ar' : 'en';
+  const isArabic = replyLanguage === 'ar';
   const personaCfg = personas[personaId] || defaultPersona;
   const premiumUser = !!isPremiumUser;
 
@@ -510,7 +511,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       ? 'حالة المحادثة: لا توجد بيانات كافية بعد'
       : 'Conversation state: not enough data yet');
 
-  const cultural = getDialectGuidance(language, dialect);
+  const cultural = getDialectGuidance(replyLanguage, dialect);
 
   const safety = isArabic
     ? [
@@ -541,22 +542,24 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
 
   // Targeted guidance for explicit meta-questions about stored facts
   // (e.g. "what do you know about me?", "what is my name, my age, and my
-  // favorite weather?"). This should only affect those direct questions and
-  // should not change normal reply style.
+  // favorite weather and favorite drink?"). This should only affect those
+  // direct questions and should not change normal reply style.
   const metaMemoryInstruction = isArabic
     ? [
-        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن بياناته (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وجوي المفضل؟")، فعتمد على الحقائق المخزَّنة لديك:',
-        '- استخدم الاسم من الهوية (identity.name) إذا كان متوفّراً بدل أن تقول إنك لا تعرف اسمه.',
-        '- استخدم العمر التقريبي من ملفه الشخصي (مثل profile.age) إذا كان موجوداً، واذكره كعمر تقريبي.',
-        '- استخدم تفضيلات مثل الجو أو الفصول من الذاكرة (preference.weather.like / preference.season.like) إذا كانت موجودة.',
-        '- لو كانت معلومة معيّنة غير موجودة في الذاكرة (مثلاً لم يخبرك عن طقسه المفضل)، قل بصراحة أنك لا تعرف هذه الجزئية بعد، بدل أن تنفي معرفتك بالكامل.',
+        'لو سألَك المستخدم صراحةً عمّا تعرفه عنه أو عن تفاصيله (مثلاً: "شو بتعرف عني؟" أو "شو اسمي وعمري وجوي ومشروبي المفضل؟")، استخدم كتلة "Known stored facts about the user" الداخلية:',
+        '- هذه الكتلة تحتوي دائماً على المفاتيح التالية: name, age, favoriteWeather, favoriteDrink.',
+        '- لكل خاصية يطلبها المستخدم: لو كانت القيمة ليست "unknown" في هذه الكتلة، أجب بها بوضوح (بدون تردّد أو تعميم).',
+        '- لو كانت بعض القيم معروفة وأخرى unknown، أجب بإخلاص جزئي: مثلاً "بعرف إن جَوّك المفضل هو summer، بس ما بعرف مشروبك المفضل لسه".',
+        '- لا تقل "ما بعرف عنك أي شيء" إذا كان عندك بعض القيم المعروفة؛ فرّق بين ما تعرفه (name, age, favoriteWeather, favoriteDrink) وما لا تعرفه بعد.',
+        '- لا تختلق قيمة لخاصية لو كانت "unknown" أو غير موجودة؛ في هذه الحالة قل بوضوح إنك لا تعرف هذه الجزئية حتى الآن.',
       ].join('\n')
     : [
-        'If the user explicitly asks what you know about them or about their details (for example: "what do you know about me?" or "what is my name, my age, and my favorite weather?"), answer using stored facts:',
-        '- Use their name from identity memory (identity.name) if present instead of claiming you do not know their name.',
-        '- Use approximate age from persona/profile facts (e.g. profile.age) if present, and mention it as approximate.',
-        '- Use preference facts such as weather or seasons (preference.weather.like / preference.season.like) if present.',
-        '- If a specific attribute is missing from memory, say honestly that you do not know that part yet, instead of saying you cannot provide any details when you actually have some.',
+        'If the user explicitly asks what you know about them or for specific attributes such as their name, age, favorite weather, or favorite drink (for example: "what do you know about me?" or "what is my name, my age, and my favorite weather and drink?"), use the internal block "Known stored facts about the user":',
+        '- That block always exposes these keys: name, age, favoriteWeather, favoriteDrink.',
+        '- For each attribute the user asks about: if the value in that block is not "unknown", you MUST answer with that value directly (without hedging or pretending not to know).',
+        '- If some attributes are known and others are "unknown", give a partial honest answer (e.g. "I know your favorite weather is summer, but I don\'t know your favorite drink yet.").',
+        '- Do NOT say "I don\'t know anything about you" when some of these keys have non-"unknown" values; distinguish clearly between what you know and what you do not know yet.',
+        '- Never invent a value for any key whose value is "unknown" or missing; in that case clearly say you do not know that specific part yet.',
       ].join('\n');
 
   const header = isArabic
@@ -653,7 +656,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
   let personaProfileBlock = '';
   try {
     if (personaSnapshot && typeof personaSnapshot === 'object') {
-      const lines = language === 'ar'
+      const lines = replyLanguage === 'ar'
         ? Array.isArray(personaSnapshot.summaryLinesAr)
           ? personaSnapshot.summaryLinesAr
           : []
@@ -663,7 +666,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
 
       if (lines.length) {
         const trimmed = lines.slice(0, 4);
-        if (language === 'ar') {
+        if (replyLanguage === 'ar') {
           personaProfileBlock = [
             'ملف شخصي داخلي للمستخدم (لا تذكر هذه الجمل حرفيًا للمستخدم):',
             'استخدم هذه الملاحظات فقط لاختيار النبرة والأمثلة الأقرب لحياة المستخدم، بدون أن تقول إن عندك "ملف" عنه أو أرقام عن شخصيته.',
@@ -787,6 +790,13 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     }
   }
 
+  console.log('[SystemPrompt] language selection', {
+    requestedLanguage: language,
+    replyLanguage,
+    dialect: dialect == null ? null : String(dialect),
+    personaId,
+  });
+
   const systemPrompt = [
     header,
     cultural,
@@ -827,10 +837,11 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
     ...premiumToolkitBlock,
   ].join('\n');
 
-  console.log(
-    '[Diagnostic] Dialect Guidance: "%s"',
-    dialect == null ? 'null' : String(dialect)
-  );
+  console.log('[Diagnostic] Dialect Guidance', {
+    language,
+    replyLanguage,
+    dialect: dialect == null ? null : String(dialect),
+  });
   try {
     const snippet =
       typeof systemPrompt === 'string' ? systemPrompt.substring(0, 200) : '';
