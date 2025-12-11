@@ -1805,3 +1805,34 @@
   direction: rtl;
 }
 
+/* FORCE Arabic replies to the right when row itself has dir="rtl" */
+[dir="rtl"].asrar-chat-row--assistant,
+[dir="rtl"].asrar-chat-row--assistant-en,
+[dir="rtl"].asrar-chat-row--assistant-ar {
+  justify-content: flex-end !important;
+}
+
+[dir="rtl"].asrar-chat-row--assistant .asrar-chat-bubble,
+[dir="rtl"].asrar-chat-row--assistant-en .asrar-chat-bubble,
+[dir="rtl"].asrar-chat-row--assistant-ar .asrar-chat-bubble {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+/* If dir="rtl" is on a parent instead of the row */
+[dir="rtl"] .asrar-chat-row--assistant,
+[dir="rtl"] .asrar-chat-row--assistant-en,
+[dir="rtl"] .asrar-chat-row--assistant-ar {
+  justify-content: flex-end !important;
+}
+
+[dir="rtl"] .asrar-chat-row--assistant .asrar-chat-bubble,
+[dir="rtl"] .asrar-chat-row--assistant-en .asrar-chat-bubble,
+[dir="rtl"] .asrar-chat-row--assistant-ar .asrar-chat-bubble {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  direction: rtl !important;
+  text-align: right !important;
+}
