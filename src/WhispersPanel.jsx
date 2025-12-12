@@ -395,64 +395,74 @@ export default function WhispersPanel({
       <div
         className="asrar-whispers-panel"
         onClick={(e) => e.stopPropagation()}
+        dir={isAr ? "rtl" : "ltr"}
       >
-        <div className="asrar-whispers-header">
-          <div>
-            <h2 className="asrar-whispers-title">{title}</h2>
-            <p className="asrar-whispers-subtitle">{subtitle}</p>
+        {/* Header Zone */}
+        <div className="hidden-side-header">
+          <div className="hidden-side-header-content">
+            <h2 className="hidden-side-title">{title}</h2>
+            <p className="hidden-side-subtitle">{subtitle}</p>
           </div>
           <button
             type="button"
-            className="asrar-whispers-close"
+            className="hidden-side-close-btn"
             onClick={onClose}
             aria-label={isAr ? "إغلاق" : "Close"}
           >
             ×
           </button>
         </div>
+
         {trustLevelUi && (
-          <div className="asrar-whispers-trust-path">
-            <div className="asrar-whispers-trust-meta">
-              <p className="asrar-whispers-trust-meta-line">
-                {isAr
-                  ? `مستوى الثقة · المستوى ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`
-                  : `Trust Level · Level ${trustLevelUi.levelNumber} — ${trustLevelUi.label}`}
-              </p>
-              <p
-                className={
-                  "asrar-whispers-trust-meta-sub" +
-                  (trustLevelUi.levelNumber >= 5
-                    ? " asrar-whispers-trust-meta-sub--max"
-                    : "")
-                }
-              >
-                {trustLevelUi.levelNumber < 5 && progressPercent != null
-                  ? isAr
-                    ? `التقدّم نحو المستوى ${nextLevelNumberForProgress}: ${progressPercent}%`
-                    : `Progress to Level ${nextLevelNumberForProgress}: ${progressPercent}%`
-                  : isAr
-                  ? "وصلت لأعلى مستوى ثقة مع هذا الرفيق. تم فتح الجانب الخفي بالكامل."
-                  : "You've reached the highest trust level with this companion. Hidden Side is fully unlocked."}
-              </p>
+          <>
+            {/* Trust Level & Progress Hero */}
+            <div className="trust-level-hero">
+              <div className="trust-level-display">
+                <div className="trust-level-number">
+                  {isAr ? `المستوى ${trustLevelUi.levelNumber}` : `Level ${trustLevelUi.levelNumber}`}
+                </div>
+                <div className="trust-level-name">{trustLevelUi.label}</div>
+              </div>
+              
+              <div className="xp-bar-container">
+                <div className="xp-bar-label">
+                  {trustLevelUi.levelNumber < 5 && progressPercent != null
+                    ? isAr
+                      ? `التقدّم نحو المستوى ${nextLevelNumberForProgress}: ${progressPercent}%`
+                      : `Progress to Level ${nextLevelNumberForProgress}: ${progressPercent}%`
+                    : isAr
+                    ? "وصلت لأعلى مستوى ثقة"
+                    : "Maximum trust level reached"}
+                </div>
+                <div className="xp-bar-wrapper">
+                  <div className="xp-bar-track" />
+                  <div
+                    className="xp-bar-fill"
+                    style={{
+                      width: `${railFillPercent != null ? railFillPercent : 0}%`,
+                    }}
+                  />
+                  {progressPercent != null && (
+                    <div
+                      className="xp-bar-glow"
+                      key={progressPercent}
+                    />
+                  )}
+                </div>
+                <div className="xp-bar-hint">
+                  {isAr
+                    ? "المحادثات الصادقة والمستمرة = تقدم أسرع"
+                    : "More honest, consistent emotional conversations = faster progress"}
+                </div>
+              </div>
             </div>
 
-            <div className="asrar-whispers-rail-wrapper">
-              <div className="asrar-whispers-rail">
-                <div className="asrar-whispers-rail-track" />
-                <div
-                  className="asrar-whispers-rail-fill"
-                  style={{
-                    width: `${railFillPercent != null ? railFillPercent : 0}%`,
-                  }}
-                />
-                {progressPercent != null && (
-                  <div
-                    className="asrar-whispers-rail-particles"
-                    key={progressPercent}
-                  />
-                )}
+            {/* Level Selector */}
+            <div className="level-selector">
+              <div className="level-selector-title">
+                {isAr ? "اختر مستوى" : "Select Level"}
               </div>
-              <div className="asrar-whispers-level-badges">
+              <div className="level-orbs">
                 {levelsForUi.map((lvl) => {
                   const levelNumber = Number(lvl.id);
                   const isCurrent =
@@ -471,166 +481,189 @@ export default function WhispersPanel({
                   return (
                     <div
                       key={lvl.id}
-                      className={
-                        "asrar-whispers-level-badge" +
-                        (isCurrent
-                          ? " asrar-whispers-level-badge--current"
-                          : "") +
-                        (isCompleted
-                          ? " asrar-whispers-level-badge--completed"
-                          : "") +
-                        (isPreview
-                          ? " asrar-whispers-level-badge--preview"
-                          : "") +
-                        (isLocked
-                          ? " asrar-whispers-level-badge--locked"
-                          : "")
-                      }
+                      className={`
+                        level-orb
+                        ${isCurrent ? "level-orb--current" : ""}
+                        ${isCompleted ? "level-orb--completed" : ""}
+                        ${isPreview ? "level-orb--preview" : ""}
+                        ${isLocked ? "level-orb--locked" : ""}
+                      `}
                       role="button"
-                      tabIndex={0}
-                      onClick={() => setPreviewLevelId(lvl.id)}
+                      tabIndex={isLocked ? -1 : 0}
+                      onClick={() => !isLocked && setPreviewLevelId(lvl.id)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
+                        if ((e.key === "Enter" || e.key === " ") && !isLocked) {
                           e.preventDefault();
                           setPreviewLevelId(lvl.id);
                         }
                       }}
                     >
-                      <div className="asrar-whispers-level-dot">{lvl.id}</div>
-                      <span className="asrar-whispers-level-label">
+                      <div className="level-orb-inner">
+                        <div className="level-orb-number">{lvl.id}</div>
+                        {isLocked && (
+                          <div className="level-orb-lock">🔒</div>
+                        )}
+                      </div>
+                      <div className="level-orb-label">
                         {lvl.shortLabel || lvl.label}
-                      </span>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
 
+            {/* Current Level Details Card */}
             {previewLevelUi && (
-              <div className="asrar-whispers-level-detail">
-                <div className="asrar-whispers-level-detail-icon">
-                  {previewLevelUi.shortLabel || previewLevelUi.label}
+              <div className="level-details-card">
+                <div className="level-details-header">
+                  <div className="level-details-icon">
+                    {previewLevelUi.shortLabel || previewLevelUi.label}
+                  </div>
+                  <h3 className="level-details-title">{previewLevelUi.label}</h3>
                 </div>
-                <ul className="asrar-whispers-level-detail-list">
-                  {previewLevelUi.nowBullets.slice(0, 3).map((line, idx) => (
-                    <li key={idx}>{line}</li>
-                  ))}
-                </ul>
-                <p className="asrar-whispers-level-detail-next">
-                  {nextLevelUi
-                    ? isAr
-                      ? `المستوى التالي يفتح: ${nextLevelUi.nextHint}`
-                      : `Next level unlocks: ${nextLevelUi.nextHint}`
-                    : isAr
-                    ? "في هذا المستوى يكون الجانب الخفي مفتوحًا بالكامل ويستمر بمشاركة أعمق انعكاساته عن رحلتك العاطفية."
-                    : "At this level, Hidden Side is fully unlocked and keeps offering its deepest, long-term reflections about your emotional journey."}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {trustLevelUi && (
-          <div className="asrar-whispers-howto">
-            <p className="asrar-whispers-howto-title">
-              {isAr ? "كيف ترتقي في المستويات" : "How to level up"}
-            </p>
-            <ul className="asrar-whispers-howto-list">
-              <li>
-                {isAr
-                  ? "محادثات حقيقية وليست سطحية فقط."
-                  : "Real conversations, not just small talk."}
-              </li>
-              <li>
-                {isAr
-                  ? "صدق عاطفي عندما تتحدث عن شعورك."
-                  : "Emotional honesty when you talk about how you feel."}
-              </li>
-              <li>
-                {isAr
-                  ? "استمرارية في أيام مختلفة، وليس في جلسة واحدة فقط."
-                  : "Consistency across different days, not just one session."}
-              </li>
-              <li>
-                {isAr
-                  ? "الرد على فحوصات ومتابعات المزاج من الرفيق."
-                  : "Responding to emotional check-ins from your companion."}
-              </li>
-            </ul>
-          </div>
-        )}
-
-        <p className="asrar-whispers-explainer">
-          {isAr
-            ? "الجانب الخفي هو مقياس ثقة؛ كل ما فضفضت أكثر وبصدق، تنفتح لك همسات عاطفية أعمق مع الوقت."
-            : "Hidden Side is a trust meter: more honest, frequent conversations slowly unlock deeper emotional whispers."}
-        </p>
-
-        {loading && (
-          <div className="asrar-whispers-state">
-            {isAr ? "جارٍ تحميل الهمسات…" : "Loading whispers…"}
-          </div>
-        )}
-
-        {error && !loading && (
-          <div className="asrar-whispers-state asrar-whispers-state--error">
-            <p>
-              {isAr
-                ? "تعذر تحميل همساتك الآن."
-                : "We couldn’t load your whispers right now."}
-            </p>
-            <button
-              type="button"
-              className="asrar-whispers-retry"
-              onClick={handleRetry}
-            >
-              {isAr ? "حاول مرة أخرى" : "Try again"}
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && unlockedList.length === 0 && (
-          <div className="asrar-whispers-state">
-            {isAr
-              ? "لا توجد همسات بعد. استمر في بناء الثقة وستبدأ بالظهور هنا."
-              : "No whispers yet. Keep building trust and they’ll start appearing here."}
-          </div>
-        )}
-
-        {!loading && !error && unlockedList.length > 0 && (
-          <div className="asrar-whispers-list">
-            {unlockedList.map((w) => (
-              <div
-                key={`${w.id}-${w.unlockedAt || ""}`}
-                className="asrar-whispers-list-item"
-              >
-                <div className="asrar-whispers-list-item-header">
-                  <h3 className="asrar-whispers-list-title">{w.title}</h3>
-                  {typeof w.levelRequired === "number" && (
-                    <span className="asrar-whispers-list-level">
-                      {isAr
-                        ? `المستوى ${w.levelRequired}`
-                        : `Level ${w.levelRequired}`}
-                    </span>
+                
+                <div className="level-details-content">
+                  <div className="level-section">
+                    <h4 className="level-section-title">
+                      {isAr ? "ما يعنيه هذا المستوى" : "What this level means"}
+                    </h4>
+                    <ul className="level-section-list">
+                      {previewLevelUi.nowBullets.slice(0, 5).map((line, idx) => (
+                        <li key={idx}>{line}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  {nextLevelUi && (
+                    <div className="level-section">
+                      <h4 className="level-section-title">
+                        {isAr ? "المستوى التالي يفتح" : "Next level unlocks"}
+                      </h4>
+                      <ul className="level-section-list">
+                        {nextLevelUi.nextHint && (
+                          <li>{nextLevelUi.nextHint}</li>
+                        )}
+                      </ul>
+                    </div>
                   )}
                 </div>
-                {w.shortPreview && (
-                  <p className="asrar-whispers-list-preview">{w.shortPreview}</p>
-                )}
-                {w.unlockedAt && (
-                  <div className="asrar-whispers-list-meta">
-                    {isAr ? "تم الفتح في " : "Unlocked on "}
-                    {new Date(w.unlockedAt).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </div>
-                )}
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* How to Level Up Card */}
+            <div className="howto-card">
+              <h3 className="howto-card-title">
+                {isAr ? "كيف ترتقي في المستويات" : "How to level up"}
+              </h3>
+              <ul className="howto-card-list">
+                <li>
+                  {isAr
+                    ? "تحدث بصدق عن مشاعرك الحقيقية"
+                    : "Talk honestly about how you really feel"}
+                </li>
+                <li>
+                  {isAr
+                    ? "تواصل في أيام مختلفة، وليس مرة واحدة فقط"
+                    : "Come back on different days, not just once"}
+                </li>
+                <li>
+                  {isAr
+                    ? "شارك أفكاراً عميقة وليست محادثات سطحية"
+                    : "Share deep thoughts, not just small talk"}
+                </li>
+                <li>
+                  {isAr
+                    ? "رد على فحوصات المزاج والمتابعات من رفيقك"
+                    : "Respond to emotional check-ins from your companion"}
+                </li>
+              </ul>
+            </div>
+          </>
         )}
+
+        {/* Whispers Area */}
+        <div className="whispers-area">
+          <h3 className="whispers-area-title">
+            {isAr ? "الهمسات المفتوحة" : "Unlocked whispers"}
+          </h3>
+          
+          {loading && (
+            <div className="whispers-loading">
+              {isAr ? "جارٍ تحميل الهمسات…" : "Loading whispers…"}
+            </div>
+          )}
+
+          {error && !loading && (
+            <div className="whispers-error">
+              <p>
+                {isAr
+                  ? "تعذر تحميل همساتك الآن."
+                  : "We couldn't load your whispers right now."}
+              </p>
+              <button
+                type="button"
+                className="whispers-retry-btn"
+                onClick={handleRetry}
+              >
+                {isAr ? "حاول مرة أخرى" : "Try again"}
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && unlockedList.length === 0 && (
+            <div className="whispers-empty">
+              <div className="whispers-empty-icon">🔮</div>
+              <div className="whispers-empty-text">
+                {isAr
+                  ? "لا توجد همسات بعد. استمر في بناء الثقة وستظهر انعكاساتك الخاصة هنا."
+                  : "No whispers yet. Keep building trust and your first private reflection will appear here."}
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && unlockedList.length > 0 && (
+            <div className="whispers-grid">
+              {unlockedList.map((w) => (
+                <div
+                  key={`${w.id}-${w.unlockedAt || ""}`}
+                  className="whisper-card"
+                >
+                  <div className="whisper-card-header">
+                    <h4 className="whisper-card-title">{w.title}</h4>
+                    {typeof w.levelRequired === "number" && (
+                      <span className="whisper-card-level">
+                        {isAr ? `مستوى ${w.levelRequired}` : `Level ${w.levelRequired}`}
+                      </span>
+                    )}
+                  </div>
+                  {w.shortPreview && (
+                    <p className="whisper-card-preview">{w.shortPreview}</p>
+                  )}
+                  <div className="whisper-card-meta">
+                    <span className="whisper-card-persona">{personaName}</span>
+                    {w.unlockedAt && (
+                      <span className="whisper-card-date">
+                        {new Date(w.unlockedAt).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Hint */}
+        <div className="hidden-side-footer">
+          {isAr
+            ? "الجانب الخفي هو مقياس ثقة؛ المحادثات الصادقة والمتكررة تفتح همسات عاطفية أعمق ببطء."
+            : "Hidden Side is a trust meter. More honest, frequent emotional talks slowly unlock deeper emotional whispers."}
+        </div>
       </div>
     </div>
   );
