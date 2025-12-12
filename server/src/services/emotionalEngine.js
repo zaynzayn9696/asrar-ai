@@ -179,22 +179,16 @@ function buildInstantReply(text, opts = {}) {
   };
 }
 
-function decideEngineMode({ isPremiumUser, primaryEmotion, intensity, conversationLength }) {
-  const safeIntensity = Number.isFinite(Number(intensity)) ? Number(intensity) : 2;
-  const len = Number.isFinite(Number(conversationLength)) ? Number(conversationLength) : 0;
-
-  const NEGATIVE = new Set(['SAD', 'ANXIOUS', 'ANGRY', 'LONELY', 'STRESSED']);
-  const primary = String(primaryEmotion || '').toUpperCase();
-
-  if (isPremiumUser && safeIntensity >= 4 && NEGATIVE.has(primary)) {
-    return ENGINE_MODES.PREMIUM_DEEP;
-  }
-
-  if (safeIntensity >= 3 || len > 16) {
-    return ENGINE_MODES.CORE_DEEP;
-  }
-
-  return ENGINE_MODES.CORE_FAST;
+/**
+ * Normalize external engine preference to internal modes.
+ * - 'lite'  -> CORE_FAST
+ * - 'balanced'/'deep' (or undefined) -> PREMIUM_DEEP for premium users, CORE_DEEP for free.
+ */
+function decideEngineMode({ enginePreference, isPremiumUser }) {
+  const pref = String(enginePreference || '').toLowerCase();
+  if (pref === 'lite') return ENGINE_MODES.CORE_FAST;
+  if (isPremiumUser) return ENGINE_MODES.PREMIUM_DEEP;
+  return ENGINE_MODES.CORE_DEEP;
 }
 
 /**
@@ -228,7 +222,7 @@ function getDialectGuidance(language, dialect) {
 
   // For English UI / English conversations, ignore dialect for content.
   if (lang === 'en') {
-    return 'Language: reply in natural, clear English. If the user occasionally mixes Arabic, you may briefly mirror that, but keep your full reply in English.';
+    return 'Language: reply entirely in natural, clear English. Even if the user mixes Arabic words, keep the whole reply in English with no Arabic sentences.';
   }
 
   const key = String(dialect || 'msa').toLowerCase();
@@ -512,6 +506,10 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
       : 'Conversation state: not enough data yet');
 
   const cultural = getDialectGuidance(replyLanguage, dialect);
+
+  const languageHardRule = replyLanguage === 'ar'
+    ? 'IMPORTANT: Reply entirely in Arabic. Do not include English sentences. Adjust wording to the chosen dialect, but keep the whole reply Arabic.'
+    : 'IMPORTANT: Reply entirely in English, even if the user inserts Arabic words. Do not include Arabic sentences.';
 
   const safety = isArabic
     ? [
@@ -801,6 +799,7 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
   const systemPrompt = [
     header,
     cultural,
+    languageHardRule,
     '',
     'Follow this character description and style strictly:',
     personaText,

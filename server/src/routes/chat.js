@@ -891,7 +891,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const forceArabic = langLower === 'ar' || arabicDialects.has(dialectLower);
     const forceEnglish = !forceArabic && (langLower === 'en' || dialectLower === 'en');
     const lang = forceArabic ? 'ar' : (forceEnglish ? 'en' : (langLower || 'en'));
-    const dialect = forceArabic ? (dialectLower || 'msa') : (forceEnglish ? 'en' : (dialectLower || 'msa'));
+    const dialect = lang === 'en' ? 'en' : (dialectLower || 'msa');
 
     const rawToneKey = body.tone;
 
@@ -1188,37 +1188,11 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     const engineTimings = engineResult.timings || {};
 
-    let engineMode = decideEngineMode({
+    const engineMode = decideEngineMode({
+      enginePreference: engine,
       isPremiumUser: isPremiumUser || isTester,
-      primaryEmotion: emo.primaryEmotion,
-      intensity: emo.intensity,
-      conversationLength: recentMessagesForEngine.length,
     });
-    let engineModeSource = 'auto_decide';
-
-    if (engine === 'lite') {
-      // User explicitly chose the fast path.
-      engineMode = ENGINE_MODES.CORE_FAST;
-      engineModeSource = 'user_lite';
-    } else if (engine === 'balanced') {
-      // Deep emotional engine default for non-premium/tester users.
-      if (!(isPremiumUser || isTester)) {
-        engineMode = ENGINE_MODES.CORE_DEEP;
-        engineModeSource = 'default_core_deep';
-      } else {
-        // Premium/tester users keep the auto-decided mode.
-        engineModeSource = 'auto_decide_premium';
-      }
-    } else if (engine === 'deep') {
-      // Legacy value: treat as explicit deep override.
-      if (isPremiumUser || isTester) {
-        engineMode = ENGINE_MODES.PREMIUM_DEEP;
-        engineModeSource = 'force_premium_deep';
-      } else {
-        engineMode = ENGINE_MODES.CORE_DEEP;
-        engineModeSource = 'force_core_deep';
-      }
-    }
+    const engineModeSource = engine === 'lite' ? 'user_lite' : 'normalized';
 
     const systemMessage = systemPrompt;
 
@@ -1571,7 +1545,7 @@ router.post('/message', async (req, res) => {
     const forceArabic = langLower === 'ar' || arabicDialects.has(dialectLower);
     const forceEnglish = !forceArabic && (langLower === 'en' || dialectLower === 'en');
     const lang = forceArabic ? 'ar' : (forceEnglish ? 'en' : (langLower || 'en'));
-    const dialect = forceArabic ? (dialectLower || 'msa') : (forceEnglish ? 'en' : (dialectLower || 'msa'));
+    const dialect = lang === 'en' ? 'en' : (dialectLower || 'msa');
 
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
     const characterId = body.characterId || 'daloua';
@@ -1823,37 +1797,11 @@ router.post('/message', async (req, res) => {
     stateReadMs = engineTimings.stateReadMs ?? 0;
     engineTotalMs = engineTimings.totalMs ?? 0;
 
-    let engineMode = decideEngineMode({
+    const engineMode = decideEngineMode({
+      enginePreference: engine,
       isPremiumUser: isPremiumUser || isTester,
-      primaryEmotion: emo.primaryEmotion,
-      intensity: emo.intensity,
-      conversationLength: recentMessagesForEngine.length,
     });
-    let engineModeSource = 'auto_decide';
-
-    if (engine === 'lite') {
-      // User explicitly chose the fast path.
-      engineMode = ENGINE_MODES.CORE_FAST;
-      engineModeSource = 'user_lite';
-    } else if (engine === 'balanced') {
-      // Deep emotional engine default for non-premium/tester users.
-      if (!(isPremiumUser || isTester)) {
-        engineMode = ENGINE_MODES.CORE_DEEP;
-        engineModeSource = 'default_core_deep';
-      } else {
-        // Premium/tester users keep the auto-decided mode.
-        engineModeSource = 'auto_decide_premium';
-      }
-    } else if (engine === 'deep') {
-      // Legacy value: treat as explicit deep override.
-      if (isPremiumUser || isTester) {
-        engineMode = ENGINE_MODES.PREMIUM_DEEP;
-        engineModeSource = 'force_premium_deep';
-      } else {
-        engineMode = ENGINE_MODES.CORE_DEEP;
-        engineModeSource = 'force_core_deep';
-      }
-    }
+    const engineModeSource = engine === 'lite' ? 'user_lite' : 'normalized';
 
     const systemMessage = systemPrompt;
 

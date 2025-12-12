@@ -13,9 +13,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // to justify a full Mirror reflection. These are intentionally conservative
 // so that brand-new companions with only a handful of neutral messages do
 // NOT get a fake "month of calm neutrality" summary.
-const MIN_MESSAGES_FOR_PATTERN = 10; // typical threshold for a reliable pattern
-const MIN_DAYS_FOR_PATTERN = 3; // or at least a few distinct days
-const MIN_MESSAGES_ABSOLUTE = 3; // below this, always treat as low-data
+const MIRROR_MIN_MESSAGES = 20;
+const MIRROR_MIN_DISTINCT_DAYS = 4;
+const MIRROR_MIN_MESSAGES_ABSOLUTE = 5;
 
 const NEGATIVE_LABELS = new Set(['SAD', 'ANXIOUS', 'ANGRY', 'LONELY', 'STRESSED']);
 
@@ -282,16 +282,12 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
   // earlier so we can still acknowledge distress.
   let notEnoughHistory = false;
 
-  if (totalMessages < MIN_MESSAGES_ABSOLUTE && totalDays <= 1) {
-    // Brand-new companion with just a couple of short exchanges.
+  if (totalMessages < MIRROR_MIN_MESSAGES_ABSOLUTE && totalDays <= 1) {
     notEnoughHistory = true;
   } else if (
-    totalMessages < MIN_MESSAGES_FOR_PATTERN &&
-    totalDays < MIN_DAYS_FOR_PATTERN &&
-    negativeShare < 0.6
+    totalMessages < MIRROR_MIN_MESSAGES ||
+    totalDays < MIRROR_MIN_DISTINCT_DAYS
   ) {
-    // Very light and mostly neutral usage: better to be honest and say
-    // we do not yet have a reliable emotional pattern.
     notEnoughHistory = true;
   }
 

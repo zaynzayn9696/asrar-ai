@@ -536,6 +536,9 @@ async function logTriggerEventsForMessage({ userId, conversationId, messageId, m
   }
 }
 
+const MIRROR_MIN_MESSAGES = 20;
+const MIRROR_MIN_DISTINCT_DAYS = 4;
+
 /**
  * Build a structured emotional summary for a specific persona using existing data.
  * Returns dominant emotions, volatility, key themes, and bilingual summaries.
@@ -563,17 +566,20 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
       (acc, s) => acc + (s.messageCount || 0),
       0
     );
+    const distinctDays = summaries.length;
     const hasEnoughData =
-      summaries.length >= 3 || totalMessagesWindow >= 8 || summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
+      totalMessagesWindow >= MIRROR_MIN_MESSAGES &&
+      distinctDays >= MIRROR_MIN_DISTINCT_DAYS &&
+      summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
 
-    if (!summaries.length) {
+    if (!summaries.length || !hasEnoughData) {
       return {
         primaryEmotion: null,
         secondaryEmotion: null,
         volatility: 'low',
         keyThemes: [],
-        summaryEn: 'We haven’t talked enough yet for me to see your emotional patterns with this companion. Keep sharing and I’ll reflect back what I notice.',
-        summaryAr: 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية مع هذا الرفيق. استمر في المشاركة وسأعكس لك ما ألاحظه.',
+        summaryEn: 'We don’t have enough real conversations with this companion to mirror you honestly yet. Share across more days and moods, then I’ll reflect what I truly see.',
+        summaryAr: 'لا توجد محادثات كافية بعد مع هذا الرفيق لأعكسك بصدق. شارك على أيام ومشاعر أكثر، ثم سأعكس لك ما أراه فعلاً.',
         hasEnoughData: false,
         scope: 'persona',
       };
@@ -612,23 +618,19 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
     const triggers = await detectEmotionalTriggers({ userId });
     const keyThemes = triggers.slice(0, 3).map(t => t.topic).filter(Boolean);
 
-    const summaryEn = hasEnoughData
-      ? [
-          primaryEmotion ? `Your most frequent mood with this companion has been ${primaryEmotion.toLowerCase()}.` : null,
-          secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
-          volatility === 'high' ? 'Your emotions tend to swing noticeably.' : volatility === 'medium' ? 'Your moods vary moderately.' : 'Your moods stay relatively steady.',
-          keyThemes.length ? `Key themes include: ${keyThemes.join(', ')}.` : null,
-        ].filter(Boolean).join(' ')
-      : 'We haven’t talked enough yet for me to see your emotional patterns with this companion. Keep sharing and I’ll reflect back what I notice.';
+    const summaryEn = [
+      primaryEmotion ? `Your most frequent mood with this companion has been ${primaryEmotion.toLowerCase()}.` : null,
+      secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
+      volatility === 'high' ? 'Your emotions tend to swing noticeably.' : volatility === 'medium' ? 'Your moods vary moderately.' : 'Your moods stay relatively steady.',
+      keyThemes.length ? `Key themes include: ${keyThemes.join(', ')}.` : null,
+    ].filter(Boolean).join(' ');
 
-    const summaryAr = hasEnoughData
-      ? [
-          primaryEmotion ? `مزاجك الأكثر تكرارًا مع هذا الرفيق كان ${primaryEmotion.toLowerCase()}.` : null,
-          secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
-          volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال.' : 'مزاجك يظل ثابتًا نسبيًا.',
-          keyThemes.length ? `المواضيع الرئيسية تشمل: ${keyThemes.join(', ')}.` : null,
-        ].filter(Boolean).join(' ')
-      : 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية مع هذا الرفيق. استمر في المشاركة وسأعكس لك ما ألاحظه.';
+    const summaryAr = [
+      primaryEmotion ? `مزاجك الأكثر تكرارًا مع هذا الرفيق كان ${primaryEmotion.toLowerCase()}.` : null,
+      secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
+      volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال.' : 'مزاجك يظل ثابتًا نسبيًا.',
+      keyThemes.length ? `المواضيع الرئيسية تشمل: ${keyThemes.join(', ')}.` : null,
+    ].filter(Boolean).join(' ');
 
     return {
       primaryEmotion,
@@ -680,17 +682,20 @@ async function buildMirrorSummaryAcrossPersonas({ userId, rangeDays = 30 }) {
       (acc, s) => acc + (s.messageCount || 0),
       0
     );
+    const distinctDays = summaries.length;
     const hasEnoughData =
-      summaries.length >= 3 || totalMessagesWindow >= 8 || summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
+      totalMessagesWindow >= MIRROR_MIN_MESSAGES &&
+      distinctDays >= MIRROR_MIN_DISTINCT_DAYS &&
+      summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
 
-    if (!summaries.length) {
+    if (!summaries.length || !hasEnoughData) {
       return {
         primaryEmotion: null,
         secondaryEmotion: null,
         volatility: 'low',
         keyThemes: [],
-        summaryEn: 'We haven’t talked enough yet for me to see your overall emotional patterns. Keep sharing across companions and I’ll reflect back what I notice.',
-        summaryAr: 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية العامة. استمر في المشاركة مع الرفقاء وسأعكس لك ما ألاحظه.',
+        summaryEn: 'We don’t have enough across companions to mirror you honestly yet. Share across more days, moods, and companions; then I’ll reflect the patterns I truly see.',
+        summaryAr: 'لا توجد بيانات كافية بعد عبر الرفقاء لأعكسك بصدق. شارك على أيام ومشاعر ورفقاء أكثر، ثم سأعكس لك ما أراه فعلاً.',
         hasEnoughData: false,
         scope: 'global',
       };
@@ -729,23 +734,19 @@ async function buildMirrorSummaryAcrossPersonas({ userId, rangeDays = 30 }) {
     const triggers = await detectEmotionalTriggers({ userId });
     const keyThemes = triggers.slice(0, 3).map(t => t.topic).filter(Boolean);
 
-    const summaryEn = hasEnoughData
-      ? [
-          primaryEmotion ? `Across all your conversations, your most frequent mood has been ${primaryEmotion.toLowerCase()}.` : null,
-          secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
-          volatility === 'high' ? 'Your emotions tend to swing noticeably across different companions.' : volatility === 'medium' ? 'Your moods vary moderately overall.' : 'Your moods stay relatively steady across companions.',
-          keyThemes.length ? `Recurring themes include: ${keyThemes.join(', ')}.` : null,
-        ].filter(Boolean).join(' ')
-      : 'We haven’t talked enough yet for me to see your overall emotional patterns. Keep sharing across companions and I’ll reflect back what I notice.';
+    const summaryEn = [
+      primaryEmotion ? `Across all your conversations, your most frequent mood has been ${primaryEmotion.toLowerCase()}.` : null,
+      secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
+      volatility === 'high' ? 'Your emotions tend to swing noticeably across different companions.' : volatility === 'medium' ? 'Your moods vary moderately overall.' : 'Your moods stay relatively steady across companions.',
+      keyThemes.length ? `Recurring themes include: ${keyThemes.join(', ')}.` : null,
+    ].filter(Boolean).join(' ');
 
-    const summaryAr = hasEnoughData
-      ? [
-          primaryEmotion ? `عبر كل محادثاتك، مزاجك الأكثر تكرارًا كان ${primaryEmotion.toLowerCase()}.` : null,
-          secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
-          volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ بين الرفقاء المختلفين.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال بشكل عام.' : 'مزاجك يظل ثابتًا نسبيًا عبر الرفقاء.',
-          keyThemes.length ? `المواضيع المتكررة تشمل: ${keyThemes.join(', ')}.` : null,
-        ].filter(Boolean).join(' ')
-      : 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية العامة. استمر في المشاركة مع الرفقاء وسأعكس لك ما ألاحظه.';
+    const summaryAr = [
+      primaryEmotion ? `عبر كل محادثاتك، مزاجك الأكثر تكرارًا كان ${primaryEmotion.toLowerCase()}.` : null,
+      secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
+      volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ بين الرفقاء المختلفين.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال بشكل عام.' : 'مزاجك يظل ثابتًا نسبيًا عبر الرفقاء.',
+      keyThemes.length ? `المواضيع المتكررة تشمل: ${keyThemes.join(', ')}.` : null,
+    ].filter(Boolean).join(' ');
 
     return {
       primaryEmotion,
@@ -781,4 +782,6 @@ module.exports = {
   logTriggerEventsForMessage,
   buildMirrorSummaryForPersona,
   buildMirrorSummaryAcrossPersonas,
+  MIRROR_MIN_MESSAGES,
+  MIRROR_MIN_DISTINCT_DAYS,
 };

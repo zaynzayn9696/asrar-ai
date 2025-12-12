@@ -68,6 +68,12 @@ async function getOrCreateTrust(userId, personaId) {
  * - 51–80 => level 2
  * - 81–100=> level 3
  */
+const MAX_DAILY_TRUST_DELTA = 1.2; // hard ceiling per calendar day per persona
+const MIN_MESSAGES_FOR_LEVEL1 = 30;
+const MIN_DISTINCT_DAYS_FOR_LEVEL1 = 4;
+const MIN_MESSAGES_FOR_WHISPERS = 40;
+const MIN_DISTINCT_DAYS_FOR_WHISPERS = 5;
+
 async function updateTrustOnMessage({ userId, personaId, emotionSnapshot, triggers, timestamp }) {
   if (!userId || !personaId) return null;
 
@@ -102,6 +108,11 @@ async function updateTrustOnMessage({ userId, personaId, emotionSnapshot, trigge
 
   if (intensity >= 4) {
     delta += 0.2;
+  }
+
+  // Daily cap: do not allow more than MAX_DAILY_TRUST_DELTA within the same calendar day.
+  if (trust.lastInteractionAt && isSameDay(trust.lastInteractionAt, now)) {
+    delta = Math.min(delta, MAX_DAILY_TRUST_DELTA);
   }
 
   // Basic toxicity penalty based on trigger topics/kinds.
@@ -142,6 +153,19 @@ async function updateTrustOnMessage({ userId, personaId, emotionSnapshot, trigge
     nextLevel = 0;
   }
 
+  // Enforce minimum history before graduating to level 1.
+  const projectedMessageCount = (trust.messageCount || 0) + 1;
+  const projectedDistinctDays = isNewDay
+    ? (trust.distinctDaysCount || 0) + 1
+    : trust.distinctDaysCount || 0;
+  if (
+    projectedMessageCount < MIN_MESSAGES_FOR_LEVEL1 ||
+    projectedDistinctDays < MIN_DISTINCT_DAYS_FOR_LEVEL1
+  ) {
+    nextLevel = 0;
+    nextScore = Math.min(nextScore, 20);
+  }
+
   const isNewDay = !trust.lastInteractionAt || !isSameDay(trust.lastInteractionAt, now);
 
   try {
@@ -176,7 +200,12 @@ async function evaluateWhisperUnlocks({ userId, personaId }) {
     return [];
   }
 
-  if (!trust || (trust.trustLevel || 0) <= 0) {
+  if (
+    !trust ||
+    (trust.trustLevel || 0) <= 0 ||
+    (trust.messageCount || 0) < MIN_MESSAGES_FOR_WHISPERS ||
+    (trust.distinctDaysCount || 0) < MIN_DISTINCT_DAYS_FOR_WHISPERS
+  ) {
     return [];
   }
 
