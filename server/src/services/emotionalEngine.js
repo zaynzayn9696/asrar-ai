@@ -191,9 +191,9 @@ function decideEngineMode({ enginePreference, isPremiumUser, severityLevel, long
   const highSeverity = sev === 'HIGH_RISK' || sev === 'SUPPORT';
   const wantsDeep = pref === 'deep' || highSeverity || !!longFormIntent;
 
-  if (pref === 'lite') return ENGINE_MODES.CORE_FAST;
   if (wantsDeep) return isPremiumUser ? ENGINE_MODES.PREMIUM_DEEP : ENGINE_MODES.CORE_DEEP;
-  return ENGINE_MODES.CORE_DEEP;
+  if (pref === 'lite' || pref === 'balanced') return ENGINE_MODES.CORE_FAST;
+  return ENGINE_MODES.CORE_FAST;
 }
 
 /**

@@ -964,10 +964,9 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     const bodyConversationId = body.conversationId;
     const saveFlag = body.save !== false;
-    const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'balanced';
-    const engine = ['lite', 'balanced', 'deep'].includes(engineRaw)
-      ? engineRaw
-      : 'balanced';
+    const engineRaw = typeof body.engine === 'string' ? body.engine.toLowerCase() : 'lite';
+    const engineNormalized = engineRaw === 'balanced' ? 'lite' : engineRaw;
+    const engine = ['lite', 'deep'].includes(engineNormalized) ? engineNormalized : 'lite';
 
     console.log(
       '[Diagnostic] Incoming Request: route="/api/chat/voice" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
