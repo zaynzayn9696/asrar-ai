@@ -1550,6 +1550,8 @@ useEffect(() => {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+      // Immediately refresh emotional timeline so backdrop reacts without reload
+      fetchEmotionalData();
 
       const fullText = String(finalText || "");
       if (fullText) {
@@ -2076,6 +2078,9 @@ useEffect(() => {
 
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
+
+          // Refresh emotional timeline right after voice reply so mood updates live
+          fetchEmotionalData();
 
           // 2) Non-critical usage + whispers updates in a follow-up tick.
           setTimeout(() => {
