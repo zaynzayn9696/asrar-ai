@@ -841,6 +841,123 @@
   color: #8da5c7;
 }
 
+/* 11 Hidden Portals CTA */
+.hidden-portals-cta {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: radial-gradient(circle at top, rgba(124, 77, 255, 0.1), rgba(4, 12, 26, 0.95));
+  border: 2px solid rgba(124, 77, 255, 0.4);
+  box-shadow: 
+    0 0 0 1px rgba(124, 77, 255, 0.2),
+    0 20px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 30px rgba(124, 77, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.hidden-portals-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(124, 77, 255, 0.1), transparent);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.hidden-portals-cta-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.hidden-portals-cta-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f0fbff;
+  text-shadow: 0 0 15px rgba(124, 77, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hidden-portals-cta-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #c3e3ff;
+  line-height: 1.5;
+  max-width: 400px;
+  opacity: 0.9;
+}
+
+.hidden-portals-cta-btn {
+  padding: 1rem 2rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7c4dff, #00f4ff);
+  color: #050311;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 15px 30px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hidden-portals-cta-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hidden-portals-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 0 2px rgba(255, 255, 255, 0.5),
+    0 20px 40px rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.hidden-portals-cta-btn:hover::before {
+  opacity: 1;
+}
+
+.hidden-portals-cta-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .hidden-portals-cta {
+    padding: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hidden-portals-cta-title {
+    font-size: 1.1rem;
+  }
+  
+  .hidden-portals-cta-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .hidden-portals-cta-btn {
+    padding: 0.9rem 1.8rem;
+    font-size: 0.9rem;
+  }
+}
+
 /* --- NEW GAME-LIKE HIDDEN SIDE LAYOUT --- */
 
 /* Header Zone */

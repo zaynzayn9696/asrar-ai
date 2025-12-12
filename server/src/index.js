@@ -24,6 +24,7 @@ const adminRoutes = require('./routes/admin');
 const whispersRoutes = require('./routes/whispers');
 const emotionsRoutes = require('./routes/emotions');
 const mirrorRoutes = require('./routes/mirror');
+const portalsRoutes = require('./routes/portals');
 
 const app = express();
 app.set("trust proxy", 1);
@@ -104,6 +105,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/personas', whispersRoutes);
 app.use('/api/emotions', emotionsRoutes);
 app.use('/api/mirror', mirrorRoutes);
+app.use('/api/portals', portalsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Not Found' });

@@ -627,6 +627,40 @@
   text-align: right;
 }
 
+.mirror-me-summary-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #e8f4ff;
+  margin-bottom: 1rem;
+}
+
+[dir="rtl"] .mirror-me-summary-text {
+  text-align: right;
+}
+
+.mirror-me-emotion-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.mirror-me-emotion-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+[dir="rtl"] .mirror-me-emotion-tag {
+  flex-direction: row-reverse;
+}
+
 /* --- SIMPLE EMOTIONAL JOURNEY DASHBOARD STYLES --- */
 
 /* Header Zone */

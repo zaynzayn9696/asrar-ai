@@ -254,9 +254,56 @@
 }
 
 .asrar-chat-tools-sidebar .asrar-whispers-badge,
-.asrar-chat-tools-sidebar .asrar-timeline-badge {
+.asrar-chat-tools-sidebar .asrar-timeline-badge,
+.asrar-chat-tools-sidebar .asrar-hidden-portals-badge {
   width: 100%;
   justify-content: center;
+}
+
+/* 11 Hidden Portals Badge Styles */
+.asrar-hidden-portals-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(124, 77, 255, 0.9);
+  background: radial-gradient(
+    circle at top,
+    rgba(124, 77, 255, 0.18),
+    rgba(3, 8, 18, 0.97)
+  );
+  color: #e8f4ff;
+  font-size: 0.78rem;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(124, 77, 255, 0.4),
+    0 10px 26px rgba(0, 0, 0, 0.92);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.asrar-hidden-portals-badge:hover {
+  transform: translateY(-1px);
+  border-color: rgba(151, 110, 255, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(151, 110, 255, 0.6),
+    0 15px 32px rgba(0, 0, 0, 0.98);
+}
+
+.asrar-hidden-portals-badge-icon {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+[dir="rtl"] .asrar-hidden-portals-badge {
+  flex-direction: row-reverse;
 }
 
 @media (max-width: 900px) {

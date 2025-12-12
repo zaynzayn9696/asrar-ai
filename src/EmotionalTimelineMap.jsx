@@ -52,8 +52,12 @@ export default function EmotionalTimelineMap({
   const [selectedDayIndex, setSelectedDayIndex] = useState(null);
   const [mirrorScope, setMirrorScope] = useState("current"); // "current" or "all"
 
+  const [mirrorSummary, setMirrorSummary] = useState(null);
+  const [mirrorLoading, setMirrorLoading] = useState(false);
+  const [mirrorError, setMirrorError] = useState(null);
+
   useEffect(() => {
-    if (!isOpen || !personaId) return;
+    if (!isOpen) return;
 
     let cancelled = false;
     const controller = new AbortController();
@@ -84,7 +88,6 @@ export default function EmotionalTimelineMap({
         const timelineData = await res.json();
         if (!cancelled) {
           setData(timelineData);
-          // Reset selection when data refreshes
           setSelectedDayIndex(null);
         }
       } catch (err) {
@@ -104,6 +107,59 @@ export default function EmotionalTimelineMap({
       controller.abort();
     };
   }, [isOpen, personaId, refreshKey, isAr]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    const fetchMirrorSummary = async () => {
+      setMirrorLoading(true);
+      setMirrorError(null);
+      setMirrorSummary(null);
+
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) throw new Error("No auth token");
+
+        const scopePersonaId = mirrorScope === "current" ? personaId : "all";
+        const res = await fetch(
+          `${API_BASE}/api/emotions/mirror-summary?personaId=${encodeURIComponent(
+            scopePersonaId
+          )}&range=30d`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            signal: controller.signal,
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch mirror summary");
+
+        const summaryData = await res.json();
+        if (!cancelled) {
+          setMirrorSummary(summaryData);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Mirror summary fetch error:", err);
+          setMirrorError(isAr ? "فشل تحميل ملخص المرآة" : "Failed to load mirror summary");
+        }
+      } finally {
+        if (!cancelled) setMirrorLoading(false);
+      }
+    };
+
+    fetchMirrorSummary();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [isOpen, personaId, mirrorScope, isAr]);
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -153,16 +209,38 @@ export default function EmotionalTimelineMap({
   };
 
   const getMirrorSummary = () => {
-    // Placeholder summary - will be replaced by backend logic
-    if (mirrorScope === "current") {
-      return isAr 
-        ? "بناءً على محادثاتك الأخيرة مع هذه الشخصية، غالباً ما تشعر بالتفاؤل عند التحدث عن أهدافك المستقبلية."
-        : "Based on your recent conversations with this character, you often feel hopeful when talking about future goals.";
-    } else {
-      return isAr 
-        ? "عبر جميع الشخصيات، تظهر نمطاً من القلق عند مواجهة التحديات الجديدة، ولكنك تستعيد توازنك بسرعة."
-        : "Across all characters, you show a pattern of anxiety when facing new challenges, but you recover quickly.";
+    if (mirrorError) {
+      return isAr ? "لا يمكن عرض الملخص الآن." : "Unable to show summary right now.";
     }
+    if (mirrorLoading || !mirrorSummary) {
+      return isAr ? "جاري التحميل..." : "Loading...";
+    }
+    if (mirrorSummary && mirrorSummary.hasEnoughData === false) {
+      return isAr
+        ? mirrorSummary.summaryAr ||
+            "لا توجد بيانات كافية بعد. استمر في المحادثات وسنشاركك أنماطك لاحقاً."
+        : mirrorSummary.summaryEn ||
+            "Not enough data yet. Keep chatting and I’ll reflect your patterns soon.";
+    }
+    return isAr ? mirrorSummary.summaryAr : mirrorSummary.summaryEn;
+  };
+
+  const getMirrorEmotionTags = () => {
+    if (!mirrorSummary || mirrorSummary.hasEnoughData === false) {
+      return [];
+    }
+    const tags = [mirrorSummary.primaryEmotion];
+    if (mirrorSummary.secondaryEmotion) {
+      tags.push(mirrorSummary.secondaryEmotion);
+    }
+    if (mirrorSummary.volatility && mirrorSummary.volatility !== "low") {
+      if (mirrorSummary.volatility === "high") {
+        tags.push(isAr ? "متقلب" : "Volatile");
+      } else if (mirrorSummary.volatility === "medium") {
+        tags.push(isAr ? "متغير" : "Shifts");
+      }
+    }
+    return tags;
   };
 
   const handleRetry = () => {
@@ -453,6 +531,26 @@ export default function EmotionalTimelineMap({
                   <p className="mirror-me-summary-text">
                     {getMirrorSummary()}
                   </p>
+                  {mirrorSummary && !mirrorLoading && !mirrorError && (
+                    <div className="mirror-me-emotion-tags">
+                      {getMirrorEmotionTags().map((tag, idx) => {
+                        const display = getEmotionDisplay(tag);
+                        return (
+                          <span
+                            key={idx}
+                            className="mirror-me-emotion-tag"
+                            style={{
+                              backgroundColor: `${display.color}20`,
+                              borderColor: display.color,
+                              color: display.color,
+                            }}
+                          >
+                            {display.emoji} {display.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="mirror-me-scope">

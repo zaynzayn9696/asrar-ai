@@ -536,6 +536,242 @@ async function logTriggerEventsForMessage({ userId, conversationId, messageId, m
   }
 }
 
+/**
+ * Build a structured emotional summary for a specific persona using existing data.
+ * Returns dominant emotions, volatility, key themes, and bilingual summaries.
+ * @param {Object} params
+ * @param {number} params.userId
+ * @param {string} params.personaId
+ * @param {number} params.rangeDays
+ * @returns {Promise<Object>}
+ */
+async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 }) {
+  try {
+    const now = new Date();
+    const start = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+
+    const summaries = await prisma.emotionalDailySummary.findMany({
+      where: {
+        userId,
+        personaId: String(personaId),
+        date: { gte: start },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    const totalMessagesWindow = summaries.reduce(
+      (acc, s) => acc + (s.messageCount || 0),
+      0
+    );
+    const hasEnoughData =
+      summaries.length >= 3 || totalMessagesWindow >= 8 || summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
+
+    if (!summaries.length) {
+      return {
+        primaryEmotion: null,
+        secondaryEmotion: null,
+        volatility: 'low',
+        keyThemes: [],
+        summaryEn: 'We haven’t talked enough yet for me to see your emotional patterns with this companion. Keep sharing and I’ll reflect back what I notice.',
+        summaryAr: 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية مع هذا الرفيق. استمر في المشاركة وسأعكس لك ما ألاحظه.',
+        hasEnoughData: false,
+        scope: 'persona',
+      };
+    }
+
+    const emotionTotals = {};
+    let totalIntensity = 0;
+    const intensities = [];
+
+    for (const s of summaries) {
+      const counts = s.emotionCounts || {};
+      for (const [emotion, count] of Object.entries(counts)) {
+        const e = String(emotion).toUpperCase();
+        emotionTotals[e] = (emotionTotals[e] || 0) + count;
+      }
+      if (s.avgIntensity != null) {
+        totalIntensity += s.avgIntensity;
+        intensities.push(s.avgIntensity);
+      }
+    }
+
+    const sorted = Object.entries(emotionTotals)
+      .sort((a, b) => b[1] - a[1])
+      .map(([e]) => e);
+    const primaryEmotion = sorted[0] || null;
+    const secondaryEmotion = sorted[1] || null;
+
+    const avgIntensity = intensities.length ? totalIntensity / intensities.length : 0;
+    const variance = intensities.length > 1
+      ? intensities.reduce((acc, v) => acc + Math.pow(v - avgIntensity, 2), 0) / intensities.length
+      : 0;
+    let volatility = 'low';
+    if (variance > 0.04) volatility = 'high';
+    else if (variance > 0.01) volatility = 'medium';
+
+    const triggers = await detectEmotionalTriggers({ userId });
+    const keyThemes = triggers.slice(0, 3).map(t => t.topic).filter(Boolean);
+
+    const summaryEn = hasEnoughData
+      ? [
+          primaryEmotion ? `Your most frequent mood with this companion has been ${primaryEmotion.toLowerCase()}.` : null,
+          secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
+          volatility === 'high' ? 'Your emotions tend to swing noticeably.' : volatility === 'medium' ? 'Your moods vary moderately.' : 'Your moods stay relatively steady.',
+          keyThemes.length ? `Key themes include: ${keyThemes.join(', ')}.` : null,
+        ].filter(Boolean).join(' ')
+      : 'We haven’t talked enough yet for me to see your emotional patterns with this companion. Keep sharing and I’ll reflect back what I notice.';
+
+    const summaryAr = hasEnoughData
+      ? [
+          primaryEmotion ? `مزاجك الأكثر تكرارًا مع هذا الرفيق كان ${primaryEmotion.toLowerCase()}.` : null,
+          secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
+          volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال.' : 'مزاجك يظل ثابتًا نسبيًا.',
+          keyThemes.length ? `المواضيع الرئيسية تشمل: ${keyThemes.join(', ')}.` : null,
+        ].filter(Boolean).join(' ')
+      : 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية مع هذا الرفيق. استمر في المشاركة وسأعكس لك ما ألاحظه.';
+
+    return {
+      primaryEmotion,
+      secondaryEmotion,
+      volatility,
+      keyThemes,
+      summaryEn,
+      summaryAr,
+      hasEnoughData,
+      scope: 'persona',
+    };
+  } catch (e) {
+    console.error('[buildMirrorSummaryForPersona] error', e && e.message ? e.message : e);
+    return {
+      primaryEmotion: null,
+      secondaryEmotion: null,
+      volatility: 'low',
+      keyThemes: [],
+      summaryEn: 'I couldn’t summarize your patterns right now. Please try again later.',
+      summaryAr: 'لم أتمكن من تلخيص أنماطك الآن. يرجى المحاولة مرة أخرى لاحقًا.',
+      hasEnoughData: false,
+      scope: 'persona',
+    };
+  }
+}
+
+/**
+ * Build a structured emotional summary across all personas using combined data.
+ * Returns global dominant emotions, volatility, key themes, and bilingual summaries.
+ * @param {Object} params
+ * @param {number} params.userId
+ * @param {number} params.rangeDays
+ * @returns {Promise<Object>}
+ */
+async function buildMirrorSummaryAcrossPersonas({ userId, rangeDays = 30 }) {
+  try {
+    const now = new Date();
+    const start = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+
+    const summaries = await prisma.emotionalDailySummary.findMany({
+      where: {
+        userId,
+        date: { gte: start },
+      },
+      orderBy: { date: 'asc' },
+    });
+
+    const totalMessagesWindow = summaries.reduce(
+      (acc, s) => acc + (s.messageCount || 0),
+      0
+    );
+    const hasEnoughData =
+      summaries.length >= 3 || totalMessagesWindow >= 8 || summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
+
+    if (!summaries.length) {
+      return {
+        primaryEmotion: null,
+        secondaryEmotion: null,
+        volatility: 'low',
+        keyThemes: [],
+        summaryEn: 'We haven’t talked enough yet for me to see your overall emotional patterns. Keep sharing across companions and I’ll reflect back what I notice.',
+        summaryAr: 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية العامة. استمر في المشاركة مع الرفقاء وسأعكس لك ما ألاحظه.',
+        hasEnoughData: false,
+        scope: 'global',
+      };
+    }
+
+    const emotionTotals = {};
+    let totalIntensity = 0;
+    const intensities = [];
+
+    for (const s of summaries) {
+      const counts = s.emotionCounts || {};
+      for (const [emotion, count] of Object.entries(counts)) {
+        const e = String(emotion).toUpperCase();
+        emotionTotals[e] = (emotionTotals[e] || 0) + count;
+      }
+      if (s.avgIntensity != null) {
+        totalIntensity += s.avgIntensity;
+        intensities.push(s.avgIntensity);
+      }
+    }
+
+    const sorted = Object.entries(emotionTotals)
+      .sort((a, b) => b[1] - a[1])
+      .map(([e]) => e);
+    const primaryEmotion = sorted[0] || null;
+    const secondaryEmotion = sorted[1] || null;
+
+    const avgIntensity = intensities.length ? totalIntensity / intensities.length : 0;
+    const variance = intensities.length > 1
+      ? intensities.reduce((acc, v) => acc + Math.pow(v - avgIntensity, 2), 0) / intensities.length
+      : 0;
+    let volatility = 'low';
+    if (variance > 0.04) volatility = 'high';
+    else if (variance > 0.01) volatility = 'medium';
+
+    const triggers = await detectEmotionalTriggers({ userId });
+    const keyThemes = triggers.slice(0, 3).map(t => t.topic).filter(Boolean);
+
+    const summaryEn = hasEnoughData
+      ? [
+          primaryEmotion ? `Across all your conversations, your most frequent mood has been ${primaryEmotion.toLowerCase()}.` : null,
+          secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
+          volatility === 'high' ? 'Your emotions tend to swing noticeably across different companions.' : volatility === 'medium' ? 'Your moods vary moderately overall.' : 'Your moods stay relatively steady across companions.',
+          keyThemes.length ? `Recurring themes include: ${keyThemes.join(', ')}.` : null,
+        ].filter(Boolean).join(' ')
+      : 'We haven’t talked enough yet for me to see your overall emotional patterns. Keep sharing across companions and I’ll reflect back what I notice.';
+
+    const summaryAr = hasEnoughData
+      ? [
+          primaryEmotion ? `عبر كل محادثاتك، مزاجك الأكثر تكرارًا كان ${primaryEmotion.toLowerCase()}.` : null,
+          secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
+          volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ بين الرفقاء المختلفين.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال بشكل عام.' : 'مزاجك يظل ثابتًا نسبيًا عبر الرفقاء.',
+          keyThemes.length ? `المواضيع المتكررة تشمل: ${keyThemes.join(', ')}.` : null,
+        ].filter(Boolean).join(' ')
+      : 'لم نتحدث بما يكفي بعد لأرى أنماطك العاطفية العامة. استمر في المشاركة مع الرفقاء وسأعكس لك ما ألاحظه.';
+
+    return {
+      primaryEmotion,
+      secondaryEmotion,
+      volatility,
+      keyThemes,
+      summaryEn,
+      summaryAr,
+      hasEnoughData,
+      scope: 'global',
+    };
+  } catch (e) {
+    console.error('[buildMirrorSummaryAcrossPersonas] error', e && e.message ? e.message : e);
+    return {
+      primaryEmotion: null,
+      secondaryEmotion: null,
+      volatility: 'low',
+      keyThemes: [],
+      summaryEn: 'I couldn’t summarize your overall patterns right now. Please try again later.',
+      summaryAr: 'لم أتمكن من تلخيص أنماطك العامة الآن. يرجى المحاولة مرة أخرى لاحقًا.',
+      hasEnoughData: false,
+      scope: 'global',
+    };
+  }
+}
+
 module.exports = {
   logEmotionalTimelineEvent,
   updateUserEmotionProfile,
@@ -543,4 +779,6 @@ module.exports = {
   detectEmotionalTriggers,
   updateEmotionalPatterns,
   logTriggerEventsForMessage,
+  buildMirrorSummaryForPersona,
+  buildMirrorSummaryAcrossPersonas,
 };

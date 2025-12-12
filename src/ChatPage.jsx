@@ -10,6 +10,7 @@ import WhispersBadge from "./WhispersBadge";
 import WhisperUnlockCard from "./WhisperUnlockCard";
 import WhispersPanel from "./WhispersPanel";
 import EmotionalTimelineMap from "./EmotionalTimelineMap";
+import HiddenPortalsModal from "./HiddenPortalsModal";
 import { API_BASE } from "./apiBase";
 
 import abuZainAvatar from "./assets/abu_zain.png";
@@ -283,6 +284,7 @@ export default function ChatPage() {
   const [hasNewWhispers, setHasNewWhispers] = useState(false);
   const [isWhispersOpen, setIsWhispersOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [isHiddenPortalsOpen, setIsHiddenPortalsOpen] = useState(false);
 
   // Free plan limit banner state
   const [limitExceeded, setLimitExceeded] = useState(false);
@@ -1028,6 +1030,21 @@ const renderSidebarContent = () => (
         </span>
         <span className="asrar-conv-title">
           {isAr ? "رحلة مشاعرك" : "Mood Journey"}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="asrar-hidden-portals-badge"
+        onClick={() => {
+          setIsHiddenPortalsOpen(true);
+          setIsMobileSidebarOpen(false);
+        }}
+      >
+        <span className="asrar-hidden-portals-badge-icon" aria-hidden="true">
+          🔮
+        </span>
+        <span className="asrar-conv-title">
+          {isAr ? "11 بوابة مخفية" : "11 Hidden Portals"}
         </span>
       </button>
     </div>
@@ -2534,6 +2551,18 @@ useEffect(() => {
         personaId={selectedCharacterId}
         personaName={characterDisplayName}
         isAr={isAr}
+      />
+
+      {/* 11 Hidden Portals Modal */}
+      <HiddenPortalsModal
+        isOpen={isHiddenPortalsOpen}
+        onClose={() => setIsHiddenPortalsOpen(false)}
+        isAr={isAr}
+        onComplete={(answers) => {
+          // Placeholder callback - will be used later by Codex MAX
+          console.log("Hidden Portals completed with answers:", answers);
+          setIsHiddenPortalsOpen(false);
+        }}
       />
     </div>
   );
