@@ -6,6 +6,9 @@
 const prisma = require('../prisma');
 const { detectTriggers } = require('./emotionalReasoning');
 
+const RECENT_WINDOW_MS = 60 * 60 * 1000; // 60 minutes
+const RECENT_EVENT_LIMIT = 50;
+
 /**
  * @typedef {Object} Emotion
  * @property {('NEUTRAL'|'SAD'|'ANXIOUS'|'ANGRY'|'LONELY'|'STRESSED'|'HOPEFUL'|'GRATEFUL')} primaryEmotion
@@ -552,6 +555,7 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
   try {
     const now = new Date();
     const start = new Date(now.getTime() - rangeDays * 24 * 60 * 60 * 1000);
+    const recentStart = new Date(now.getTime() - RECENT_WINDOW_MS);
 
     const summaries = await prisma.emotionalDailySummary.findMany({
       where: {
@@ -561,6 +565,23 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
       },
       orderBy: { date: 'asc' },
     });
+
+    let recentEvents = [];
+    try {
+      recentEvents = await prisma.emotionalEvent.findMany({
+        where: {
+          userId,
+          personaId: String(personaId),
+          timestamp: { gte: recentStart },
+          eventType: 'message',
+        },
+        orderBy: { timestamp: 'desc' },
+        take: RECENT_EVENT_LIMIT,
+      });
+    } catch (e) {
+      console.error('[buildMirrorSummaryForPersona] recent events fetch error', e && e.message ? e.message : e);
+      recentEvents = [];
+    }
 
     const totalMessagesWindow = summaries.reduce(
       (acc, s) => acc + (s.messageCount || 0),
@@ -604,8 +625,34 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
     const sorted = Object.entries(emotionTotals)
       .sort((a, b) => b[1] - a[1])
       .map(([e]) => e);
-    const primaryEmotion = sorted[0] || null;
-    const secondaryEmotion = sorted[1] || null;
+    let primaryEmotion = sorted[0] || null;
+    let secondaryEmotion = sorted[1] || null;
+
+    // Recency-weighted override: last window of events dominates if clear.
+    let recentPrimary = null;
+    let recentSecondary = null;
+    let recentShare = 0;
+    if (recentEvents.length) {
+      const recentTotals = {};
+      let weightSum = 0;
+      recentEvents.forEach((ev, idx) => {
+        const label = String(ev.dominantEmotion || ev.emotion || '').toUpperCase();
+        if (!label) return;
+        const weight = idx < 10 ? 2 : 1;
+        recentTotals[label] = (recentTotals[label] || 0) + weight;
+        weightSum += weight;
+      });
+      const sortedRecent = Object.entries(recentTotals).sort((a, b) => b[1] - a[1]);
+      if (sortedRecent.length) {
+        recentPrimary = sortedRecent[0][0];
+        recentShare = weightSum ? sortedRecent[0][1] / weightSum : 0;
+        recentSecondary = sortedRecent[1]?.[0] || null;
+      }
+      if (recentPrimary && recentShare >= 0.35) {
+        primaryEmotion = recentPrimary;
+        secondaryEmotion = recentSecondary || secondaryEmotion;
+      }
+    }
 
     const avgIntensity = intensities.length ? totalIntensity / intensities.length : 0;
     const variance = intensities.length > 1
@@ -624,9 +671,13 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
       distinctDays >= 1;
 
     const summaryEn = (() => {
+      const recencyLine = recentPrimary && recentShare >= 0.35
+        ? `Recently, your tone is strongly ${recentPrimary.toLowerCase()}.`
+        : null;
       const base = [
         primaryEmotion ? `Your tone with this companion leans toward ${primaryEmotion.toLowerCase()}.` : 'Your tone with this companion is just beginning to take shape.',
         secondaryEmotion ? `You also slip into ${secondaryEmotion.toLowerCase()} at times.` : null,
+        recencyLine,
         volatility === 'high'
           ? 'Your emotions swing noticeably.'
           : volatility === 'medium'
@@ -643,9 +694,13 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
     })();
 
     const summaryAr = (() => {
+      const recencyLine = recentPrimary && recentShare >= 0.35
+        ? `مؤخرًا، نبرة مشاعرك تميل بقوة إلى ${recentPrimary.toLowerCase()}.`
+        : null;
       const base = [
         primaryEmotion ? `مزاجك مع هذا الرفيق يميل إلى ${primaryEmotion.toLowerCase()}.` : 'ملامح مزاجك مع هذا الرفيق بدأت للتو في الظهور.',
         secondaryEmotion ? `كما تميل أحيانًا إلى ${secondaryEmotion.toLowerCase()}.` : null,
+        recencyLine,
         volatility === 'high'
           ? 'مشاعرك تتقلب بوضوح.'
           : volatility === 'medium'

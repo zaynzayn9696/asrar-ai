@@ -127,15 +127,8 @@ async function upsertDailySummaryFromEvent(event) {
     counts[dominantEmotion] = (counts[dominantEmotion] || 0) + 1;
   }
 
-  // Recompute topEmotion based on updated counts.
-  let topEmotion = summary.topEmotion || null;
-  let topCount = -1;
-  for (const [key, value] of Object.entries(counts)) {
-    if (typeof value === 'number' && value > topCount) {
-      topCount = value;
-      topEmotion = key;
-    }
-  }
+  // Recency-first: the latest event wins for today's topEmotion.
+  const topEmotion = dominantEmotion || summary.topEmotion || null;
 
   // Approximate total event count used for avgIntensity.
   const prevSamples = (summary.messageCount || 0) + (summary.voiceMessageCount || 0) + (summary.whisperUnlockCount || 0) + (summary.mirrorSessionCount || 0);
