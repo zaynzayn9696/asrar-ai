@@ -9,13 +9,12 @@ const { getPersonaSnapshot } = require('../pipeline/memory/memoryKernel');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Thresholds for deciding when there is enough persona-level history
-// to justify a full Mirror reflection. These are intentionally conservative
-// so that brand-new companions with only a handful of neutral messages do
-// NOT get a fake "month of calm neutrality" summary.
-const MIRROR_MIN_MESSAGES = 20;
-const MIRROR_MIN_DISTINCT_DAYS = 4;
-const MIRROR_MIN_MESSAGES_ABSOLUTE = 5;
+// Thresholds for deciding when there is enough persona-level history.
+// We allow early, honest micro-mirrors once there is a modest signal,
+// and only block when data is truly minimal.
+const MIRROR_MIN_MESSAGES = 12;
+const MIRROR_MIN_DISTINCT_DAYS = 2;
+const MIRROR_MIN_MESSAGES_ABSOLUTE = 3;
 
 const NEGATIVE_LABELS = new Set(['SAD', 'ANXIOUS', 'ANGRY', 'LONELY', 'STRESSED']);
 
@@ -277,18 +276,19 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
   }
 
   // Decide if we truly have enough persona-level history to justify
-  // a detailed reflection. We gate on BOTH volume and span, but allow
-  // strongly negative, high-intensity patterns to be reflected a bit
-  // earlier so we can still acknowledge distress.
+  // a detailed reflection. We only block when data is extremely thin;
+  // otherwise we allow an early mirror (with lowData flag) so the user
+  // sees honest progress quickly.
   let notEnoughHistory = false;
+  let lowData = false;
 
-  if (totalMessages < MIRROR_MIN_MESSAGES_ABSOLUTE && totalDays <= 1) {
+  if (totalMessages < MIRROR_MIN_MESSAGES_ABSOLUTE) {
     notEnoughHistory = true;
   } else if (
     totalMessages < MIRROR_MIN_MESSAGES ||
     totalDays < MIRROR_MIN_DISTINCT_DAYS
   ) {
-    notEnoughHistory = true;
+    lowData = true;
   }
 
   return {
@@ -313,6 +313,7 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
       periodLabel,
       negativeShare,
       notEnoughHistory,
+      lowData,
       personaScope: personaFilter ? 'persona' : 'global',
     },
   };
@@ -451,9 +452,59 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
   }
 
   if (insights.meta && insights.meta.notEnoughHistory) {
-    // Explicit low-data path: do NOT call the LLM, just surface the flag
-    // so the UI can show a truthful "not enough history yet" state.
+    // Truly minimal data — keep honest "not enough" state.
     return { summaryText: null, insights, notEnoughHistory: true };
+  }
+
+  // Early-data micro-mirror: provide a grounded, short reflection without LLM when data is thin but non-zero.
+  if (insights.meta && insights.meta.lowData) {
+    const langKey = typeof lang === 'string' && lang.toLowerCase() === 'ar' ? 'ar' : 'en';
+    const top = Array.isArray(insights.topEmotions) && insights.topEmotions.length
+      ? insights.topEmotions[0]
+      : null;
+    const second = Array.isArray(insights.topEmotions) && insights.topEmotions.length > 1
+      ? insights.topEmotions[1]
+      : null;
+    const dominantLabel = top && top.emotion ? String(top.emotion).toLowerCase() : null;
+    const secondLabel = second && second.emotion ? String(second.emotion).toLowerCase() : null;
+    const period = insights.meta.periodLabel || (langKey === 'ar' ? 'هذه المحادثات المبكرة' : 'these early conversations');
+    const intensity = typeof insights.avgIntensity === 'number'
+      ? Math.max(0, Math.min(1, insights.avgIntensity))
+      : 0;
+
+    const piecesEn = [
+      period ? `In ${period},` : 'In these chats,',
+      dominantLabel
+        ? `you most often sound ${dominantLabel}.`
+        : 'your tone is just starting to show.',
+      secondLabel ? `You also dip into ${secondLabel} at times.` : null,
+      intensity > 0.55
+        ? 'Your feelings come through with some heat.'
+        : intensity > 0.35
+        ? 'Your feelings show up with medium strength.'
+        : 'Your tone stays relatively soft so far.',
+      'This is an early mirror—keep sharing and it will get sharper.',
+    ].filter(Boolean).join(' ');
+
+    const piecesAr = [
+      period ? `في ${period},` : 'في هذه المحادثات المبكرة،',
+      dominantLabel
+        ? `يبدو صوتك غالبًا ${dominantLabel}.`
+        : 'ملامح نبرة صوتك بدأت للتو في الظهور.',
+      secondLabel ? `وأحيانًا تميل إلى ${secondLabel}.` : null,
+      intensity > 0.55
+        ? 'مشاعرك تظهر بوضوح وبشيء من الحدة.'
+        : intensity > 0.35
+        ? 'مشاعرك تظهر بقوة متوسطة.'
+        : 'نبرة صوتك هادئة نسبيًا حتى الآن.',
+      'هذا انعكاس مبكر—واصل المشاركة ليصبح أدق.',
+    ].filter(Boolean).join(' ');
+
+    return {
+      summaryText: langKey === 'ar' ? piecesAr : piecesEn,
+      insights,
+      notEnoughHistory: false,
+    };
   }
 
   // Persona snapshot (age/location/goals/etc)

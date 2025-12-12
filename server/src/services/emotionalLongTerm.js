@@ -536,8 +536,8 @@ async function logTriggerEventsForMessage({ userId, conversationId, messageId, m
   }
 }
 
-const MIRROR_MIN_MESSAGES = 20;
-const MIRROR_MIN_DISTINCT_DAYS = 4;
+const MIRROR_MIN_MESSAGES = 12; // solid mirror threshold; below this we still provide early micro-mirrors
+const MIRROR_MIN_DISTINCT_DAYS = 2;
 
 /**
  * Build a structured emotional summary for a specific persona using existing data.
@@ -567,19 +567,19 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
       0
     );
     const distinctDays = summaries.length;
-    const hasEnoughData =
+    const hasSolidData =
       totalMessagesWindow >= MIRROR_MIN_MESSAGES &&
       distinctDays >= MIRROR_MIN_DISTINCT_DAYS &&
       summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
 
-    if (!summaries.length || !hasEnoughData) {
+    if (!summaries.length || totalMessagesWindow === 0) {
       return {
         primaryEmotion: null,
         secondaryEmotion: null,
         volatility: 'low',
         keyThemes: [],
-        summaryEn: 'We don’t have enough real conversations with this companion to mirror you honestly yet. Share across more days and moods, then I’ll reflect what I truly see.',
-        summaryAr: 'لا توجد محادثات كافية بعد مع هذا الرفيق لأعكسك بصدق. شارك على أيام ومشاعر أكثر، ثم سأعكس لك ما أراه فعلاً.',
+        summaryEn: 'We barely have any real moments with this companion yet—share a few feelings and I’ll start reflecting them back.',
+        summaryAr: 'لا نملك لحظات حقيقية كافية بعد مع هذا الرفيق. شارك بعض مشاعرك، وسأبدأ بعكسها لك.',
         hasEnoughData: false,
         scope: 'persona',
       };
@@ -618,19 +618,48 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
     const triggers = await detectEmotionalTriggers({ userId });
     const keyThemes = triggers.slice(0, 3).map(t => t.topic).filter(Boolean);
 
-    const summaryEn = [
-      primaryEmotion ? `Your most frequent mood with this companion has been ${primaryEmotion.toLowerCase()}.` : null,
-      secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
-      volatility === 'high' ? 'Your emotions tend to swing noticeably.' : volatility === 'medium' ? 'Your moods vary moderately.' : 'Your moods stay relatively steady.',
-      keyThemes.length ? `Key themes include: ${keyThemes.join(', ')}.` : null,
-    ].filter(Boolean).join(' ');
+    const earlyData =
+      !hasSolidData &&
+      totalMessagesWindow >= 3 &&
+      distinctDays >= 1;
 
-    const summaryAr = [
-      primaryEmotion ? `مزاجك الأكثر تكرارًا مع هذا الرفيق كان ${primaryEmotion.toLowerCase()}.` : null,
-      secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
-      volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال.' : 'مزاجك يظل ثابتًا نسبيًا.',
-      keyThemes.length ? `المواضيع الرئيسية تشمل: ${keyThemes.join(', ')}.` : null,
-    ].filter(Boolean).join(' ');
+    const summaryEn = (() => {
+      const base = [
+        primaryEmotion ? `Your tone with this companion leans toward ${primaryEmotion.toLowerCase()}.` : 'Your tone with this companion is just beginning to take shape.',
+        secondaryEmotion ? `You also slip into ${secondaryEmotion.toLowerCase()} at times.` : null,
+        volatility === 'high'
+          ? 'Your emotions swing noticeably.'
+          : volatility === 'medium'
+          ? 'Your moods shift moderately.'
+          : 'Your moods stay relatively steady so far.',
+        keyThemes.length ? `Themes already showing up: ${keyThemes.join(', ')}.` : null,
+      ].filter(Boolean).join(' ');
+
+      if (earlyData) {
+        return `${base} This is an early mirror—keep sharing and it will get sharper.`;
+      }
+
+      return base;
+    })();
+
+    const summaryAr = (() => {
+      const base = [
+        primaryEmotion ? `مزاجك مع هذا الرفيق يميل إلى ${primaryEmotion.toLowerCase()}.` : 'ملامح مزاجك مع هذا الرفيق بدأت للتو في الظهور.',
+        secondaryEmotion ? `كما تميل أحيانًا إلى ${secondaryEmotion.toLowerCase()}.` : null,
+        volatility === 'high'
+          ? 'مشاعرك تتقلب بوضوح.'
+          : volatility === 'medium'
+          ? 'مزاجك يتغير بدرجة متوسطة.'
+          : 'مزاجك ثابت نسبيًا حتى الآن.',
+        keyThemes.length ? `مواضيع ظهرت مبكرًا: ${keyThemes.join(', ')}.` : null,
+      ].filter(Boolean).join(' ');
+
+      if (earlyData) {
+        return `${base} هذا انعكاس مبكر—واصل المشاركة ليصبح أدق.`;
+      }
+
+      return base;
+    })();
 
     return {
       primaryEmotion,
@@ -639,7 +668,7 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
       keyThemes,
       summaryEn,
       summaryAr,
-      hasEnoughData,
+      hasEnoughData: hasSolidData,
       scope: 'persona',
     };
   } catch (e) {
@@ -683,19 +712,19 @@ async function buildMirrorSummaryAcrossPersonas({ userId, rangeDays = 30 }) {
       0
     );
     const distinctDays = summaries.length;
-    const hasEnoughData =
+    const hasSolidData =
       totalMessagesWindow >= MIRROR_MIN_MESSAGES &&
       distinctDays >= MIRROR_MIN_DISTINCT_DAYS &&
       summaries.some((s) => (s.emotionCounts && Object.keys(s.emotionCounts).length > 0));
 
-    if (!summaries.length || !hasEnoughData) {
+    if (!summaries.length || totalMessagesWindow === 0) {
       return {
         primaryEmotion: null,
         secondaryEmotion: null,
         volatility: 'low',
         keyThemes: [],
-        summaryEn: 'We don’t have enough across companions to mirror you honestly yet. Share across more days, moods, and companions; then I’ll reflect the patterns I truly see.',
-        summaryAr: 'لا توجد بيانات كافية بعد عبر الرفقاء لأعكسك بصدق. شارك على أيام ومشاعر ورفقاء أكثر، ثم سأعكس لك ما أراه فعلاً.',
+        summaryEn: 'Across your companions, we barely have emotional moments yet. Share a bit more and I’ll start mirroring the pattern.',
+        summaryAr: 'عبر رفقائك، لا نملك بعد لحظات عاطفية كافية. شارك أكثر وسأبدأ بعكس النمط.',
         hasEnoughData: false,
         scope: 'global',
       };
@@ -734,19 +763,48 @@ async function buildMirrorSummaryAcrossPersonas({ userId, rangeDays = 30 }) {
     const triggers = await detectEmotionalTriggers({ userId });
     const keyThemes = triggers.slice(0, 3).map(t => t.topic).filter(Boolean);
 
-    const summaryEn = [
-      primaryEmotion ? `Across all your conversations, your most frequent mood has been ${primaryEmotion.toLowerCase()}.` : null,
-      secondaryEmotion ? `You also often feel ${secondaryEmotion.toLowerCase()}.` : null,
-      volatility === 'high' ? 'Your emotions tend to swing noticeably across different companions.' : volatility === 'medium' ? 'Your moods vary moderately overall.' : 'Your moods stay relatively steady across companions.',
-      keyThemes.length ? `Recurring themes include: ${keyThemes.join(', ')}.` : null,
-    ].filter(Boolean).join(' ');
+    const earlyData =
+      !hasSolidData &&
+      totalMessagesWindow >= 3 &&
+      distinctDays >= 1;
 
-    const summaryAr = [
-      primaryEmotion ? `عبر كل محادثاتك، مزاجك الأكثر تكرارًا كان ${primaryEmotion.toLowerCase()}.` : null,
-      secondaryEmotion ? `كما تشعر غالبًا بـ ${secondaryEmotion.toLowerCase()}.` : null,
-      volatility === 'high' ? 'مشاعرك تميل للتقلب بشكل ملحوظ بين الرفقاء المختلفين.' : volatility === 'medium' ? 'مزاجك يختلف باعتدال بشكل عام.' : 'مزاجك يظل ثابتًا نسبيًا عبر الرفقاء.',
-      keyThemes.length ? `المواضيع المتكررة تشمل: ${keyThemes.join(', ')}.` : null,
-    ].filter(Boolean).join(' ');
+    const summaryEn = (() => {
+      const base = [
+        primaryEmotion ? `Across companions, you most often sound ${primaryEmotion.toLowerCase()}.` : 'Across companions, your tone is just starting to show.',
+        secondaryEmotion ? `You also slip into ${secondaryEmotion.toLowerCase()}.` : null,
+        volatility === 'high'
+          ? 'Your emotions swing noticeably across conversations.'
+          : volatility === 'medium'
+          ? 'Your moods vary moderately overall.'
+          : 'Your moods stay relatively steady across companions.',
+        keyThemes.length ? `Early recurring topics: ${keyThemes.join(', ')}.` : null,
+      ].filter(Boolean).join(' ');
+
+      if (earlyData) {
+        return `${base} This is an early cross-companion mirror—more sharing will make it sharper.`;
+      }
+
+      return base;
+    })();
+
+    const summaryAr = (() => {
+      const base = [
+        primaryEmotion ? `عبر رفقائك، غالبًا ما يبدو صوتك ${primaryEmotion.toLowerCase()}.` : 'عبر رفقائك، ملامح مزاجك بدأت للتو في الظهور.',
+        secondaryEmotion ? `كما تميل أحيانًا إلى ${secondaryEmotion.toLowerCase()}.` : null,
+        volatility === 'high'
+          ? 'مشاعرك تتقلب بوضوح بين المحادثات.'
+          : volatility === 'medium'
+          ? 'مزاجك يختلف بدرجة متوسطة بشكل عام.'
+          : 'مزاجك ثابت نسبيًا عبر الرفقاء.',
+        keyThemes.length ? `مواضيع متكررة مبكرًا: ${keyThemes.join(', ')}.` : null,
+      ].filter(Boolean).join(' ');
+
+      if (earlyData) {
+        return `${base} هذا انعكاس مبكر عبر الرفقاء—المزيد من المشاركة سيجعله أدق.`;
+      }
+
+      return base;
+    })();
 
     return {
       primaryEmotion,
@@ -755,7 +813,7 @@ async function buildMirrorSummaryAcrossPersonas({ userId, rangeDays = 30 }) {
       keyThemes,
       summaryEn,
       summaryAr,
-      hasEnoughData,
+      hasEnoughData: hasSolidData,
       scope: 'global',
     };
   } catch (e) {

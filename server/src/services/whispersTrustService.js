@@ -68,11 +68,11 @@ async function getOrCreateTrust(userId, personaId) {
  * - 51–80 => level 2
  * - 81–100=> level 3
  */
-const MAX_DAILY_TRUST_DELTA = 1.2; // hard ceiling per calendar day per persona
-const MIN_MESSAGES_FOR_LEVEL1 = 30;
-const MIN_DISTINCT_DAYS_FOR_LEVEL1 = 4;
-const MIN_MESSAGES_FOR_WHISPERS = 40;
-const MIN_DISTINCT_DAYS_FOR_WHISPERS = 5;
+const MAX_DAILY_TRUST_DELTA = 3.0; // per-message ceiling to allow visible early progress without giant jumps
+const MIN_MESSAGES_FOR_LEVEL1 = 8;
+const MIN_DISTINCT_DAYS_FOR_LEVEL1 = 2;
+const MIN_MESSAGES_FOR_WHISPERS = 16;
+const MIN_DISTINCT_DAYS_FOR_WHISPERS = 3;
 
 async function updateTrustOnMessage({ userId, personaId, emotionSnapshot, triggers, timestamp }) {
   if (!userId || !personaId) return null;
@@ -91,27 +91,38 @@ async function updateTrustOnMessage({ userId, personaId, emotionSnapshot, trigge
     ? Number(emotionSnapshot.intensity)
     : 2;
 
-  const vulnerableSet = new Set(['SAD', 'LONELY', 'ANXIOUS', 'STRESSED']);
+  const vulnerableSet = new Set(['SAD', 'LONELY', 'ANXIOUS', 'STRESSED', 'HURT', 'SHAME', 'FEAR', 'FEARFUL']);
   const isVulnerable = vulnerableSet.has(primaryRaw);
   const intensity = clamp(intensityRaw, 1, 5);
 
-  let delta = 0.3; // per message base
+  const isNewDay = !trust.lastInteractionAt || !isSameDay(trust.lastInteractionAt, now);
+
+  let delta = 0.4; // per message base for any real engagement
 
   // New active day with this persona => strong bonding bonus.
-  if (!trust.lastInteractionAt || !isSameDay(trust.lastInteractionAt, now)) {
+  if (isNewDay) {
     delta += 1.0;
   }
 
   if (isVulnerable) {
-    delta += 0.3;
+    delta += 0.7;
   }
 
   if (intensity >= 4) {
-    delta += 0.2;
+    delta += 0.4;
+  }
+
+  // Gentle early-journey acceleration so the user sees progress within the first few heartfelt exchanges.
+  const projectedMessageCount = (trust.messageCount || 0) + 1;
+  const projectedDistinctDays = isNewDay
+    ? (trust.distinctDaysCount || 0) + 1
+    : trust.distinctDaysCount || 0;
+  if (projectedMessageCount <= 6 || projectedDistinctDays <= 2) {
+    delta += 0.3;
   }
 
   // Daily cap: do not allow more than MAX_DAILY_TRUST_DELTA within the same calendar day.
-  if (trust.lastInteractionAt && isSameDay(trust.lastInteractionAt, now)) {
+  if (!isNewDay) {
     delta = Math.min(delta, MAX_DAILY_TRUST_DELTA);
   }
 
@@ -153,20 +164,13 @@ async function updateTrustOnMessage({ userId, personaId, emotionSnapshot, trigge
     nextLevel = 0;
   }
 
-  // Enforce minimum history before graduating to level 1.
-  const projectedMessageCount = (trust.messageCount || 0) + 1;
-  const projectedDistinctDays = isNewDay
-    ? (trust.distinctDaysCount || 0) + 1
-    : trust.distinctDaysCount || 0;
+  // Enforce minimum history before graduating to level 1, but keep score visible so UI shows progress.
   if (
     projectedMessageCount < MIN_MESSAGES_FOR_LEVEL1 ||
     projectedDistinctDays < MIN_DISTINCT_DAYS_FOR_LEVEL1
   ) {
     nextLevel = 0;
-    nextScore = Math.min(nextScore, 20);
   }
-
-  const isNewDay = !trust.lastInteractionAt || !isSameDay(trust.lastInteractionAt, now);
 
   try {
     const updated = await prisma.userPersonaTrust.update({
