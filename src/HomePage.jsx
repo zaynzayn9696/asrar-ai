@@ -13,7 +13,6 @@ import farahAvatar from "./assets/farah_2.png";
 import { useAuth } from "./hooks/useAuth";
 import CharacterCarousel from "./CharacterCarousel";
 import AsrarHeader from "./AsrarHeader";
-import FeaturesAccordion from "./components/FeaturesAccordion";
 import HomeSplash from "./components/HomeSplash";
 
 // --- CORE 5 CHARACTERS ONLY -----------------------------------------
@@ -1209,7 +1208,7 @@ export default function HomePage() {
         <div className="asrar-section-divider" aria-hidden="true" />
 
         {/* FEATURES ACCORDION */}
-        <FeaturesAccordion isAr={isAr} />
+        
         <div className="asrar-section-divider" aria-hidden="true" />
 
         {/* SECURITY & PRIVACY / WHY */}
