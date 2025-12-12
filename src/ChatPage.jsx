@@ -12,6 +12,8 @@ import WhispersPanel from "./WhispersPanel";
 import EmotionalTimelineMap from "./EmotionalTimelineMap";
 import HiddenPortalsModal from "./HiddenPortalsModal";
 import ChatMoodBackdrop from "./components/ChatMoodBackdrop";
+import CurrentMoodBadge from "./components/CurrentMoodBadge";
+import { deriveUIMoodFromTimeline } from "./components/moodUtils";
 import { API_BASE } from "./apiBase";
 
 import abuZainAvatar from "./assets/abu_zain.png";
@@ -290,59 +292,6 @@ export default function ChatPage() {
   // Current mood state for backdrop and badge
   const [currentMood, setCurrentMood] = useState("neutral");
   const [emotionalData, setEmotionalData] = useState(null);
-
-  const mapEmotionToUIMood = (emotion) => {
-    const key = String(emotion || "").toLowerCase();
-    switch (key) {
-      case "sadness":
-      case "lonely":
-        return "sad";
-      case "anxiety":
-      case "fear":
-      case "worry":
-        return "anxious";
-      case "anger":
-      case "frustration":
-        return "angry";
-      case "low-energy":
-      case "exhausted":
-        return "tired";
-      case "calm":
-      case "stable":
-        return "calm";
-      case "neutral":
-      case "mixed":
-        return "neutral";
-      case "hopeful":
-      case "optimistic":
-        return "hopeful";
-      case "joy":
-      case "excitement":
-        return "happy";
-      case "gratitude":
-      case "love":
-        return "warm";
-      default:
-        return null;
-    }
-  };
-
-  const deriveUIMoodFromTimeline = (timelineData) => {
-    const points = Array.isArray(timelineData?.points)
-      ? timelineData.points
-      : Array.isArray(timelineData)
-      ? timelineData
-      : [];
-
-    for (let i = points.length - 1; i >= 0; i -= 1) {
-      const candidateMood = mapEmotionToUIMood(points[i]?.topEmotion);
-      if (candidateMood) {
-        return candidateMood;
-      }
-    }
-
-    return "neutral";
-  };
 
   // Free plan limit banner state
   const [limitExceeded, setLimitExceeded] = useState(false);
@@ -2191,6 +2140,9 @@ useEffect(() => {
                 <h1 className="asrar-chat-header-title">
                   {getName(character)} - {getRole(character)}
                 </h1>
+                <div className="asrar-current-mood-badge">
+                  <CurrentMoodBadge mood={currentMood} isAr={isAr} />
+                </div>
               </div>
             </header>
             {recentWhispers.length > 0 && (

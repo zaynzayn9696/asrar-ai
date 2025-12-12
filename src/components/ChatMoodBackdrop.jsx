@@ -1,18 +1,7 @@
 // src/components/ChatMoodBackdrop.jsx
 import React from "react";
 import "./ChatMoodBackdrop.css";
-
-const SUPPORTED_MOODS = [
-  "sad",
-  "anxious",
-  "angry",
-  "tired",
-  "neutral",
-  "calm",
-  "hopeful",
-  "happy",
-  "warm",
-];
+import { SUPPORTED_MOODS } from "./moodUtils";
 
 export default function ChatMoodBackdrop({ mood = "neutral" }) {
   const rawMood = String(mood || "neutral").toLowerCase();
