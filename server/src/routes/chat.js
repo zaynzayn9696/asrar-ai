@@ -7,7 +7,6 @@ const express = require('express');
 const requireAuth = require('../middleware/requireAuth');
 const OpenAI = require('openai');
 const prisma = require('../prisma');
-const { recordUserSession } = require('../services/userSessionService');
 
 const { LIMITS, getPlanLimits } = require('../config/limits');
 const { CHARACTER_VOICES } = require('../config/characterVoices');
@@ -17,6 +16,7 @@ const {
   generateVoiceReply,
   normalizeAssistantReplyForTTS,
 } = require('../services/voiceService');
+
 const {
   runEmotionalEngine,
   selectModelForResponse,
@@ -38,6 +38,7 @@ const {
   updateEmotionalPatterns,
   logTriggerEventsForMessage,
 } = require('../services/emotionalLongTerm');
+
 const {
   updateTrustOnMessage,
   evaluateWhisperUnlocks,
@@ -1143,6 +1144,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       triggers,
       severityLevel,
       personaCfg,
+      cacheMeta = {},
     } = engineResult;
 
     let trustSnapshot = null;
@@ -1280,98 +1282,105 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
 
     let userRow = null;
 
+    let dbSaveDeferred = false;
+    let backgroundJobQueued = false;
+    let dbSavePromise = Promise.resolve();
+
     if (shouldSave) {
-      try {
+      dbSaveDeferred = true;
+      dbSavePromise = (async () => {
         const tDbStart = Date.now();
-        const rows = await prisma.$transaction([
-          prisma.message.create({
-            data: {
-              userId,
-              characterId,
-              conversationId: cid,
-              role: 'user',
-              content: userText,
-            },
-          }),
-          prisma.message.create({
-            data: {
-              userId,
-              characterId,
-              conversationId: cid,
-              role: 'assistant',
-              content: aiMessage,
-            },
-          }),
-          prisma.conversation.update({
-            where: { id: cid },
-            data: { updatedAt: new Date() },
-          }),
-        ]);
-        dbSaveMs = Date.now() - tDbStart;
-        userRow = rows[0];
-
-        console.log(
-          '[Diagnostic] Voice Message Saved Successfully: ID=%s',
-          userRow && userRow.id != null ? String(userRow.id) : 'null'
-        );
-      } catch (err) {
-        console.error(
-          'Voice message persistence error',
-          err && err.message ? err.message : err
-        );
-      }
-    }
-
-    const backgroundJobQueued = !!(shouldSave && userRow && userRow.id);
-
-    if (backgroundJobQueued) {
-      const bgUserId = userId;
-      const bgConversationId = cid;
-      const bgCharacterId = characterId;
-      const bgEmotion = emo;
-      const bgMessageId = userRow.id;
-
-      setImmediate(() => {
-        (async () => {
-          try {
-            await prisma.messageEmotion.create({
+        let rows = null;
+        try {
+          rows = await prisma.$transaction([
+            prisma.message.create({
               data: {
-                messageId: bgMessageId,
-                primaryEmotion: bgEmotion.primaryEmotion,
-                intensity: bgEmotion.intensity,
-                confidence: bgEmotion.confidence,
-                cultureTag: bgEmotion.cultureTag,
-                notes: bgEmotion.notes || null,
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'user',
+                content: userText,
               },
-            });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background][Voice] MessageEmotion error',
-              err && err.message ? err.message : err
-            );
-          }
+            }),
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'assistant',
+                content: aiMessage,
+              },
+            }),
+            prisma.conversation.update({
+              where: { id: cid },
+              data: { updatedAt: new Date() },
+            }),
+          ]);
+          dbSaveMs = Date.now() - tDbStart;
+        } catch (err) {
+          console.error(
+            'Voice message persistence error',
+            err && err.message ? err.message : err
+          );
+          return;
+        }
 
-          try {
-            await recordMemoryEvent({
-              userId: bgUserId,
-              conversationId: bgConversationId,
-              messageId: bgMessageId,
-              characterId: bgCharacterId,
-              emotion: bgEmotion,
-              topics: Array.isArray(bgEmotion.topics) ? bgEmotion.topics : [],
-              secondaryEmotion: bgEmotion.secondaryEmotion || null,
-              emotionVector: bgEmotion.emotionVector || null,
-              detectorVersion: bgEmotion.detectorVersion || null,
-              isKernelRelevant: true,
-            });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background][Voice] MemoryKernel error',
-              err && err.message ? err.message : err
-            );
-          }
-        })().catch(() => {});
-      });
+        const userRow = rows ? rows[0] : null;
+        const assistantRow = rows ? rows[1] : null;
+        if (!userRow || !userRow.id) return;
+        backgroundJobQueued = true;
+
+        const bgEngineMode = engineMode;
+        const bgUserId = userId;
+        const bgConversationId = cid;
+        const bgCharacterId = characterId;
+        const bgEmotion = emo;
+        const bgMessageId = userRow.id;
+
+        setImmediate(() => {
+          (async () => {
+            try {
+              await prisma.messageEmotion.create({
+                data: {
+                  messageId: bgMessageId,
+                  primaryEmotion: bgEmotion.primaryEmotion,
+                  intensity: bgEmotion.intensity,
+                  confidence: bgEmotion.confidence,
+                  cultureTag: bgEmotion.cultureTag,
+                  notes: bgEmotion.notes || null,
+                },
+              });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background][Voice] MessageEmotion error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            try {
+              await recordMemoryEvent({
+                userId: bgUserId,
+                conversationId: bgConversationId,
+                messageId: bgMessageId,
+                characterId: bgCharacterId,
+                emotion: bgEmotion,
+                topics: Array.isArray(bgEmotion.topics) ? bgEmotion.topics : [],
+                secondaryEmotion: bgEmotion.secondaryEmotion || null,
+                emotionVector: bgEmotion.emotionVector || null,
+                detectorVersion: bgEmotion.detectorVersion || null,
+                isKernelRelevant: true,
+              });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background][Voice] MemoryKernel error',
+                err && err.message ? err.message : err
+              );
+            }
+          })().catch(() => {});
+        });
+      })();
+
+      dbSavePromise.catch(() => {});
     }
 
     // 6) Text-to-speech for the final reply text.
@@ -1404,7 +1413,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       conversationId: cid == null ? 'null' : String(cid),
       engineParam: engine,
       engineModeSelected: engineMode,
-      engineModeSource,
+      engineModeSource: engineModeSource,
       engineMode,
       isPremiumUser: !!isPremiumUser,
       openAiMs,
@@ -1746,6 +1755,7 @@ router.post('/message', async (req, res) => {
       triggers,
       severityLevel,
       personaCfg,
+      cacheMeta = {},
     } = engineResult;
 
     try {
@@ -1896,6 +1906,10 @@ router.post('/message', async (req, res) => {
       }
     }
 
+    let dbSaveDeferred = false;
+    let backgroundJobQueued = false;
+    let dbSavePromise = Promise.resolve();
+
     const shouldSave =
       !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
 
@@ -1906,173 +1920,173 @@ router.post('/message', async (req, res) => {
       userId == null ? 'null' : String(userId)
     );
 
-    let userRow = null;
-
     if (shouldSave) {
-      try {
+      dbSaveDeferred = true;
+      dbSavePromise = (async () => {
         const tDbStart = Date.now();
-        const rows = await prisma.$transaction([
-          prisma.message.create({
-            data: {
-              userId,
-              characterId,
-              conversationId: cid,
-              role: 'user',
-              content: userText,
-            },
-          }),
-          prisma.message.create({
-            data: {
-              userId,
-              characterId,
-              conversationId: cid,
-              role: 'assistant',
-              content: aiMessage,
-            },
-          }),
-          prisma.conversation.update({
-            where: { id: cid },
-            data: { updatedAt: new Date() },
-          }),
-        ]);
-        dbSaveMs = Date.now() - tDbStart;
-        userRow = rows[0];
-
-        console.log(
-          '[Diagnostic] Message Saved Successfully: ID=%s',
-          userRow && userRow.id != null ? String(userRow.id) : 'null'
-        );
-      } catch (err) {
-        console.error(
-          'Message persistence error',
-          err && err.message ? err.message : err
-        );
-      }
-    }
-
-    const backgroundJobQueued = !!(shouldSave && userRow && userRow.id);
-
-    if (backgroundJobQueued) {
-      const bgEngineMode = engineMode;
-      const bgUserId = userId;
-      const bgConversationId = cid;
-      const bgCharacterId = characterId;
-      const bgEmotion = emo;
-      const bgMessageId = userRow.id;
-
-      setImmediate(async () => {
-        const tBgStart = Date.now();
+        let rows = null;
         try {
-          try {
-            await prisma.messageEmotion.create({
+          rows = await prisma.$transaction([
+            prisma.message.create({
               data: {
-                messageId: bgMessageId,
-                primaryEmotion: bgEmotion.primaryEmotion,
-                intensity: bgEmotion.intensity,
-                confidence: bgEmotion.confidence,
-                cultureTag: bgEmotion.cultureTag,
-                notes: bgEmotion.notes || null,
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'user',
+                content: userText,
               },
-            });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background] MessageEmotion error',
-              err && err.message ? err.message : err
-            );
-          }
-
-          try {
-            await recordMemoryEvent({
-              userId: bgUserId,
-              conversationId: bgConversationId,
-              messageId: bgMessageId,
-              characterId: bgCharacterId,
-              emotion: bgEmotion,
-              topics: Array.isArray(bgEmotion.topics)
-                ? bgEmotion.topics
-                : [],
-              secondaryEmotion: bgEmotion.secondaryEmotion || null,
-              emotionVector: bgEmotion.emotionVector || null,
-              detectorVersion: bgEmotion.detectorVersion || null,
-              isKernelRelevant: true,
-            });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background] MemoryKernel error',
-              err && err.message ? err.message : err
-            );
-          }
-
-          try {
-            await updateConversationEmotionState(bgConversationId, bgEmotion);
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background] ConversationEmotionState error',
-              err && err.message ? err.message : err
-            );
-          }
-
-          try {
-            await logEmotionalTimelineEvent({
-              userId: bgUserId,
-              conversationId: bgConversationId,
-              emotion: bgEmotion,
-            });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background] Timeline error',
-              err && err.message ? err.message : err
-            );
-          }
-
-          try {
-            await logTriggerEventsForMessage({
-              userId: bgUserId,
-              conversationId: bgConversationId,
-              messageId: bgMessageId,
-              messageText: userText,
-              emotion: bgEmotion,
-            });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background] TriggerEvents error',
-              err && err.message ? err.message : err
-            );
-          }
-
-          try {
-            await updateUserEmotionProfile({ userId: bgUserId });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background] UserEmotionProfile error',
-              err && err.message ? err.message : err
-            );
-          }
-
-          try {
-            await updateEmotionalPatterns({ userId: bgUserId });
-          } catch (err) {
-            console.error(
-              '[EmoEngine][Background] Patterns error',
-              err && err.message ? err.message : err
-            );
-          }
-
-          const bgMs = Date.now() - tBgStart;
-          console.log('[EmoEngine][Background]', {
-            userId: bgUserId == null ? 'null' : String(bgUserId),
-            conversationId: bgConversationId == null ? 'null' : String(bgConversationId),
-            engineMode: bgEngineMode,
-            isPremiumUser: !!isPremiumUser,
-            durationMs: bgMs,
-          });
+            }),
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'assistant',
+                content: aiMessage,
+              },
+            }),
+            prisma.conversation.update({
+              where: { id: cid },
+              data: { updatedAt: new Date() },
+            }),
+          ]);
+          dbSaveMs = Date.now() - tDbStart;
         } catch (err) {
           console.error(
-            '[EmoEngine][Background] Unhandled error',
+            'Message persistence error',
             err && err.message ? err.message : err
           );
+          return;
         }
-      });
+
+        const userRow = rows ? rows[0] : null;
+        const assistantRow = rows ? rows[1] : null;
+        if (!userRow || !userRow.id) return;
+        backgroundJobQueued = true;
+
+        const bgEngineMode = engineMode;
+        const bgUserId = userId;
+        const bgConversationId = cid;
+        const bgCharacterId = characterId;
+        const bgEmotion = emo;
+        const bgMessageId = userRow.id;
+
+        setImmediate(async () => {
+          const tBgStart = Date.now();
+          try {
+            try {
+              await prisma.messageEmotion.create({
+                data: {
+                  messageId: bgMessageId,
+                  primaryEmotion: bgEmotion.primaryEmotion,
+                  intensity: bgEmotion.intensity,
+                  confidence: bgEmotion.confidence,
+                  cultureTag: bgEmotion.cultureTag,
+                  notes: bgEmotion.notes || null,
+                },
+              });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background] MessageEmotion error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            try {
+              await recordMemoryEvent({
+                userId: bgUserId,
+                conversationId: bgConversationId,
+                messageId: bgMessageId,
+                characterId: bgCharacterId,
+                emotion: bgEmotion,
+                topics: Array.isArray(bgEmotion.topics)
+                  ? bgEmotion.topics
+                  : [],
+                secondaryEmotion: bgEmotion.secondaryEmotion || null,
+                emotionVector: bgEmotion.emotionVector || null,
+                detectorVersion: bgEmotion.detectorVersion || null,
+                isKernelRelevant: true,
+              });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background] MemoryKernel error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            try {
+              await updateConversationEmotionState(bgConversationId, bgEmotion);
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background] ConversationEmotionState error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            try {
+              await logEmotionalTimelineEvent({
+                userId: bgUserId,
+                conversationId: bgConversationId,
+                emotion: bgEmotion,
+              });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background] Timeline error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            try {
+              await logTriggerEventsForMessage({
+                userId: bgUserId,
+                conversationId: bgConversationId,
+                messageId: bgMessageId,
+                messageText: userText,
+                emotion: bgEmotion,
+              });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background] TriggerEvents error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            try {
+              await updateUserEmotionProfile({ userId: bgUserId });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background] UserEmotionProfile error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            try {
+              await updateEmotionalPatterns({ userId: bgUserId });
+            } catch (err) {
+              console.error(
+                '[EmoEngine][Background] Patterns error',
+                err && err.message ? err.message : err
+              );
+            }
+
+            const bgMs = Date.now() - tBgStart;
+            console.log('[EmoEngine][Background]', {
+              userId: bgUserId == null ? 'null' : String(bgUserId),
+              conversationId: bgConversationId == null ? 'null' : String(bgConversationId),
+              engineMode: bgEngineMode,
+              isPremiumUser: !!isPremiumUser,
+              durationMs: bgMs,
+            });
+          } catch (err) {
+            console.error(
+              '[EmoEngine][Background] Unhandled error',
+              err && err.message ? err.message : err
+            );
+          }
+        });
+      })();
+
+      dbSavePromise.catch(() => {});
     }
 
     console.log('[EmoEngine][Response]', {

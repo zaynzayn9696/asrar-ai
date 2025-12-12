@@ -22,6 +22,7 @@ const {
   getIdentityMemory,
   getPersonaSnapshot,
 } = require('../pipeline/memory/memoryKernel');
+const { getCachedValue } = require('../utils/ttlCache');
 
 // Engine mode runners (lite/balanced/deep)
 let runLiteEngine = null;
@@ -915,6 +916,12 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
     let personaSnapshot = null;
     let phase4Block = '';
     let identityMemory = null;
+    const cacheMeta = {
+      personaHit: false,
+      personaMs: 0,
+      phase4Hit: false,
+      phase4Ms: 0,
+    };
 
     // Fetch long-term snapshot, triggers and persona snapshot in parallel.
     await Promise.all([
@@ -939,11 +946,27 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
         }
       })(),
       (async () => {
+        const personaKey = `personaSnapshot:${userId}`;
+        const personaTtlMs =
+          Number(process.env.PERSONA_SNAPSHOT_TTL_MS || 15 * 60 * 1000) || 900000;
         try {
-          personaSnapshot = await getPersonaSnapshot({ userId });
+          const res = await getCachedValue(personaKey, personaTtlMs, async () => {
+            try {
+              return await getPersonaSnapshot({ userId });
+            } catch (err) {
+              console.error(
+                '[EmoEngine] getPersonaSnapshot error',
+                err && err.message ? err.message : err
+              );
+              return null;
+            }
+          });
+          personaSnapshot = res.value;
+          cacheMeta.personaHit = res.hit;
+          cacheMeta.personaMs = res.durationMs;
         } catch (err) {
           console.error(
-            '[EmoEngine] getPersonaSnapshot error',
+            '[EmoEngine] persona snapshot cache error',
             err && err.message ? err.message : err
           );
           personaSnapshot = null;
@@ -958,17 +981,47 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       identityMemory = null;
     }
 
-    // Build Phase 4 block after identityMemory is available so hints can include name.
+    // Build Phase 4 block with caching to avoid repeated DB reads when inputs are stable.
+    const phase4KeyParts = [
+      userId,
+      conversationId || 0,
+      personaId || 'hana',
+      language,
+      identityMemory && identityMemory.name ? identityMemory.name : '',
+      longTermSnapshot && longTermSnapshot.summaryText
+        ? longTermSnapshot.summaryText.slice(0, 120)
+        : '',
+      Array.isArray(triggers) && triggers.length
+        ? triggers
+            .slice(0, 3)
+            .map((t) => t && t.topic)
+            .filter(Boolean)
+            .join(',')
+        : '',
+    ];
+    const phase4Key = `phase4:${phase4KeyParts.join('|')}`;
+    const phase4TtlMs =
+      Number(process.env.PHASE4_BLOCK_TTL_MS || 5 * 60 * 1000) || 300000;
+
     const tPhase4Start = Date.now();
     try {
-      phase4Block = await buildPhase4MemoryBlock({
-        userId,
-        conversationId,
-        language,
-        personaId: personaId || 'hana',
-        identityMemory,
-        personaSnapshot,
+      const cached = await getCachedValue(phase4Key, phase4TtlMs, async () => {
+        try {
+          return await buildPhase4MemoryBlock({
+            userId,
+            conversationId,
+            language,
+            personaId: personaId || 'hana',
+            identityMemory,
+            personaSnapshot,
+          });
+        } catch (_) {
+          return '';
+        }
       });
+      phase4Block = cached.value || '';
+      cacheMeta.phase4Hit = cached.hit;
+      cacheMeta.phase4Ms = cached.durationMs;
     } catch (_) {
       phase4Block = '';
     } finally {
@@ -1062,6 +1115,8 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       phase4BlockLen: typeof phase4Block === 'string' ? phase4Block.length : 0,
       hasConvoState: !!convoState,
       hasProfileSnapshot: !!longTermSnapshot,
+      personaCacheHit: cacheMeta.personaHit,
+      phase4CacheHit: cacheMeta.phase4Hit,
     });
 
     return {
@@ -1074,6 +1129,7 @@ async function runEmotionalEngine({ userMessage, recentMessages, personaId, pers
       triggers,
       identityMemory,
       personaCfg: personas[personaId] || defaultPersona,
+      cacheMeta,
       timings: {
         classifyMs,
         snapshotMs,
