@@ -7,27 +7,14 @@ export default function ChatMoodBackdrop({ mood = "neutral" }) {
   const rawMood = String(mood || "neutral").toLowerCase();
   const moodKey = SUPPORTED_MOODS.includes(rawMood) ? rawMood : "neutral";
 
-  const prefersReducedMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
   return (
     <div
-      className={`chat-mood-backdrop chat-mood-backdrop--${moodKey} ${
-        prefersReducedMotion ? "chat-mood-backdrop--reduced-motion" : ""
-      }`}
+      className={`chat-mood-backdrop chat-mood-backdrop--${moodKey}`}
       aria-hidden="true"
     >
-      <div className="chat-mood-backdrop__base" />
-      <div className="chat-mood-backdrop__texture" />
-      <div className="chat-mood-backdrop__tint" />
-
-      {!prefersReducedMotion && (
-        <>
-          <div className="chat-mood-backdrop__motion" />
-          <div className="chat-mood-backdrop__particles" />
-        </>
-      )}
+      <div className="chat-mood-layer chat-mood-layer--base" />
+      <div className="chat-mood-layer chat-mood-layer--glow" />
+      <div className="chat-mood-layer chat-mood-layer--particles" />
     </div>
   );
 }
