@@ -11,6 +11,7 @@ import WhisperUnlockCard from "./WhisperUnlockCard";
 import WhispersPanel from "./WhispersPanel";
 import EmotionalTimelineMap from "./EmotionalTimelineMap";
 import HiddenPortalsModal from "./HiddenPortalsModal";
+import ChatMoodBackdrop from "./components/ChatMoodBackdrop";
 import { API_BASE } from "./apiBase";
 
 import abuZainAvatar from "./assets/abu_zain.png";
@@ -285,6 +286,63 @@ export default function ChatPage() {
   const [isWhispersOpen, setIsWhispersOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [isHiddenPortalsOpen, setIsHiddenPortalsOpen] = useState(false);
+
+  // Current mood state for backdrop and badge
+  const [currentMood, setCurrentMood] = useState("neutral");
+  const [emotionalData, setEmotionalData] = useState(null);
+
+  const mapEmotionToUIMood = (emotion) => {
+    const key = String(emotion || "").toLowerCase();
+    switch (key) {
+      case "sadness":
+      case "lonely":
+        return "sad";
+      case "anxiety":
+      case "fear":
+      case "worry":
+        return "anxious";
+      case "anger":
+      case "frustration":
+        return "angry";
+      case "low-energy":
+      case "exhausted":
+        return "tired";
+      case "calm":
+      case "stable":
+        return "calm";
+      case "neutral":
+      case "mixed":
+        return "neutral";
+      case "hopeful":
+      case "optimistic":
+        return "hopeful";
+      case "joy":
+      case "excitement":
+        return "happy";
+      case "gratitude":
+      case "love":
+        return "warm";
+      default:
+        return null;
+    }
+  };
+
+  const deriveUIMoodFromTimeline = (timelineData) => {
+    const points = Array.isArray(timelineData?.points)
+      ? timelineData.points
+      : Array.isArray(timelineData)
+      ? timelineData
+      : [];
+
+    for (let i = points.length - 1; i >= 0; i -= 1) {
+      const candidateMood = mapEmotionToUIMood(points[i]?.topEmotion);
+      if (candidateMood) {
+        return candidateMood;
+      }
+    }
+
+    return "neutral";
+  };
 
   // Free plan limit banner state
   const [limitExceeded, setLimitExceeded] = useState(false);
@@ -708,6 +766,51 @@ export default function ChatPage() {
     }
   }, []);
 
+  // Fetch emotional data for mood backdrop and badge
+  const fetchEmotionalData = async () => {
+    if (!user || !selectedCharacterId) return;
+    
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      if (!token) return;
+
+      const res = await fetch(
+        `${API_BASE}/api/emotions/timeline?personaId=${encodeURIComponent(selectedCharacterId)}&range=7d`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setEmotionalData(data);
+        const derivedMood = deriveUIMoodFromTimeline(data);
+        setCurrentMood(derivedMood);
+      }
+    } catch (err) {
+      console.error("[ChatPage] Failed to fetch emotional data", err);
+    }
+  };
+
+  // Load emotional data when user or character changes
+  useEffect(() => {
+    if (user && selectedCharacterId) {
+      fetchEmotionalData();
+    }
+  }, [user?.id, selectedCharacterId]);
+
+  // Update mood when new messages are sent (emotional state might change)
+  useEffect(() => {
+    if (messages.length > 2) { // Skip initial system messages
+      // Fetch updated emotional data after a short delay
+      const timer = setTimeout(fetchEmotionalData, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [messages.length]);
+
   // Auto-expand textarea up to ~3 lines, then scroll internally
   useEffect(() => {
     const el = inputRef.current;
@@ -1009,8 +1112,8 @@ const renderSidebarContent = () => (
       >
         <span className="asrar-timeline-badge-icon" aria-hidden="true">
           <svg
-            width="18"
-            height="18"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -2075,6 +2178,9 @@ useEffect(() => {
         <aside className="asrar-chat-sidebar">{renderSidebarContent()}</aside>
         
         <div className="asrar-chat-main">
+          {/* Mood-based animated background covers entire chat column */}
+          <ChatMoodBackdrop mood={currentMood} isAr={isAr} />
+
           <div
             className="asrar-chat-messages"
             ref={messagesContainerRef}
@@ -2238,7 +2344,6 @@ useEffect(() => {
 
           <footer className="asrar-chat-composer">
             <div className="asrar-chat-dock">
-              <div className="asrar-chat-status-row">
               {isSending && (
                 <div className="asrar-chat-row asrar-chat-row--assistant">
                   <div className="asrar-chat-bubble asrar-chat-bubble--typing">
@@ -2275,7 +2380,6 @@ useEffect(() => {
                   </div>
                 </div>
               )}
-            </div>
 
             <form className="asrar-chat-composer-inner" onSubmit={handleSend}>
               <div

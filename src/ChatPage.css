@@ -260,6 +260,67 @@
   justify-content: center;
 }
 
+/* Timeline Badge Styles */
+.asrar-timeline-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 147, 41, 0.8);
+  background: radial-gradient(
+    circle at top,
+    rgba(255, 147, 41, 0.15),
+    rgba(3, 8, 18, 0.97)
+  );
+  color: #ffe8cc;
+  font-size: 0.78rem;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(255, 147, 41, 0.3),
+    0 10px 26px rgba(0, 0, 0, 0.92);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.asrar-timeline-badge:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 167, 61, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(255, 167, 61, 0.5),
+    0 15px 32px rgba(0, 0, 0, 0.98);
+}
+
+.asrar-timeline-badge--locked {
+  opacity: 0.7;
+  cursor: not-allowed;
+  border-color: rgba(128, 128, 128, 0.5);
+  color: #999;
+}
+
+.asrar-timeline-badge--locked:hover {
+  transform: none;
+  border-color: rgba(128, 128, 128, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(128, 128, 128, 0.2),
+    0 10px 26px rgba(0, 0, 0, 0.92);
+}
+
+.asrar-timeline-badge-icon {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+[dir="rtl"] .asrar-timeline-badge {
+  flex-direction: row-reverse;
+}
+
 /* 11 Hidden Portals Badge Styles */
 .asrar-hidden-portals-badge {
   display: flex;
@@ -298,7 +359,7 @@
 }
 
 .asrar-hidden-portals-badge-icon {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   opacity: 0.9;
 }
 
@@ -477,20 +538,7 @@
 }
 
 .asrar-chat-main::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: 
-    linear-gradient(45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(24, 209, 218, 0.03) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(24, 209, 218, 0.03) 75%);
-  background-size: 60px 60px;
-  background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
-  filter: blur(1px);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.4;
+  display: none; /* Remove old background pattern */
 }
 
 .asrar-chat-main::after {
@@ -511,7 +559,7 @@
   padding: 0.7rem 0 0.4rem;
   background: transparent;
   position: relative;
-  z-index: 30;
+  z-index: 2;  /* Ensure header is above mood backdrop */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -606,15 +654,10 @@
   top: 0;
   z-index: 8;
   padding: 0.35rem 0 0.6rem;
-  background: linear-gradient(
-    to bottom,
-    rgba(2, 6, 18, 0.96),
-    rgba(2, 6, 18, 0.86),
-    transparent
-  );
+  background: rgba(4, 8, 16, 0.35);
   display: flex;
   justify-content: center;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(6px);
 }
 
 @media (max-width: 900px) {
@@ -630,23 +673,10 @@
   overflow-y: auto;    /* scroll if there are many messages */
   max-height: none;
   padding: 0 var(--chat-side-padding) 2rem; /* Add side padding to messages container */
+  position: relative;  /* Position context for mood backdrop */
+  z-index: 1;          /* Ensure content is above backdrop */
 }
 
-.asrar-chat-status-row {
-  width: 100%;
-  max-width: var(--asrar-chat-width);
-  margin: 0 auto 0.35rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.asrar-chat-status-row .asrar-chat-row {
-  width: auto;
-  max-width: 100%;
-  margin: 0 auto;
-}
 
 .asrar-chat-messages::-webkit-scrollbar {
   width: 10px;
@@ -771,6 +801,8 @@
   unicode-bidi: plaintext;
   text-align: start;
   margin: 6px 0;
+  position: relative;  /* Ensure proper stacking context */
+  z-index: 2;          /* Appear above mood backdrop */
 }
 
 /* Bubble horizontal alignment rules */
@@ -905,24 +937,20 @@
   gap: 10px;
   box-sizing: border-box;
   border-radius: 24px;
-  background: radial-gradient(circle at top, rgba(24, 209, 218, 0.1), rgba(4, 16, 32, 0.92));
-  border: 1px solid rgba(24, 209, 218, 0.3);
+  background: rgba(6, 10, 18, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
-    0 0 0 1px rgba(24, 209, 218, 0.1),
-    0 16px 48px rgba(0, 0, 0, 0.7),
-    0 0 32px rgba(24, 209, 218, 0.12),
-    inset 0 0 16px rgba(24, 209, 218, 0.03);
+    0 10px 28px rgba(0, 0, 0, 0.6),
+    inset 0 0 10px rgba(255, 255, 255, 0.02);
   transition: all 0.3s ease;
 }
 
 .asrar-chat-composer-inner:focus-within {
   padding: 7px 14px; /* smaller change on focus */
-  border-color: rgba(24, 209, 218, 0.45);
+  border-color: rgba(255, 255, 255, 0.16);
   box-shadow:
-    0 0 0 1px rgba(24, 209, 218, 0.15),
-    0 20px 60px rgba(0, 0, 0, 0.8),
-    0 0 48px rgba(24, 209, 218, 0.2),
-    inset 0 0 20px rgba(24, 209, 218, 0.05);
+    0 12px 34px rgba(0, 0, 0, 0.68),
+    inset 0 0 12px rgba(255, 255, 255, 0.04);
 }
 
 /* Chat input area */

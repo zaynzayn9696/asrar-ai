@@ -2024,25 +2024,25 @@ export default function HomePage() {
                 <h3>{isAr ? "مجاني" : "Free"}</h3>
                 <p className="asrar-pricing-price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
                 <ul className="asrar-pricing-features">
-                  <li><span className="asrar-feature-icon">👥</span> {isAr ? "ثلاث شخصيات اساسية" : "3 core character"}</li>
-                  <li><span className="asrar-feature-icon">💬</span> {isAr ? "٥٠ رسالة شهرياً" : "50 messages per month"}</li>
-                  <li><span className="asrar-feature-icon">🎤</span> {isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
-                   <li><span className="asrar-feature-icon">🧠</span>
+                  <li>{isAr ? "ثلاث شخصيات اساسية" : "3 core character"}</li>
+                  <li>{isAr ? "٥٠ رسالة شهرياً" : "50 messages per month"}</li>
+                  <li>{isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
+                   <li>
                     {isAr
                       ? "محرك المشاعر العميق V6 (إرشاد أعمق وخطوات عملية)"
                       : "Powered by the Asrar Emotional Engine V6 for longer, structured guidance."}
                   </li>
-                  <li><span className="asrar-feature-icon">🌙</span>
+                  <li>
                     {isAr
                       ? "وصول إلى الجانب الخفي™ فقط"
                       : "Hidden Side™ access only (no Emotional Journey or Mirror Me)"}
                   </li>
-                  <li><span className="asrar-feature-icon">⚡</span>
+                  <li>
                     {isAr
                       ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)"
                       : "Lite Emotional Engine for short, supportive replies."}
                   </li>
-                  <li><span className="asrar-feature-icon">🚀</span>
+                  <li>
                     {isAr
                       ? "موديل GPT-4o mini سريع ومناسب للاستخدام اليومي"
                       : "Fast and reliable GPT-4o mini model for everyday use."}
@@ -2063,42 +2063,42 @@ export default function HomePage() {
                 <h3>{isAr ? "برو" : "Pro"}</h3>
                 <p className="asrar-pricing-price">{isAr ? "$7.99 / شهرياً" : "$7.99 / month"}</p>
                 <ul className="asrar-pricing-features">
-                  <li><span className="asrar-feature-icon">🌟</span>
+                  <li>
                     {isAr
                       ? "جميع شخصيات أسرار الخمسة"
                       : "All 5 Asrar characters"}
                   </li>
-                  <li><span className="asrar-feature-icon">💬</span>
+                  <li>
                     {isAr ? "٥٠٠ رسالة شهرياً" : "500 messages per month"}
                   </li>
-                  <li><span className="asrar-feature-icon">🎤</span> {isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
-                  <li><span className="asrar-feature-icon">🌈</span>
+                  <li> {isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
+                  <li>
                     {isAr
                       ? "الجانب الخفي™، الرحلة العاطفية™، ومرآتي™"
                       : "Hidden Side™, Emotional Journey™ & Mirror Me™"}
                   </li>
-                  <li><span className="asrar-feature-icon">🧠</span>
+                  <li>
                     {isAr
                       ? "محرك المشاعر العميق V6 (إرشاد أعمق وخطوات عملية)"
                       : "Powered by the Asrar Emotional Engine V6 for longer, structured guidance."}
                   </li>
-                  <li><span className="asrar-feature-icon">🎯</span>
+                  <li>
   {isAr
     ? "موديل ذكاء أعلى GPT-4o لاستجابات أدق وأعمق"
     : "Higher-intelligence GPT-4o model for smarter, deeper responses."}
 </li>
-                  <li><span className="asrar-feature-icon">🧩</span>
+                  <li>
                     {isAr
                       ? "ذاكرة محادثة متقدمة"
                       : "Advanced chat memory."}
                   </li>
-                  <li><span className="asrar-feature-icon">🚫</span>
+                  <li>
                     {isAr
                       ? "بدون إعلانات "
                       : "Ad-free experience."}
                   </li>
-                  <li><span className="asrar-feature-icon">🌀</span> {isAr ? "١١ بوابة خفية™" : "11 Hidden Portals™"}</li>
-                  <li><span className="asrar-feature-icon">❌</span> {isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}</li>
+                  <li> {isAr ? "١١ بوابة خفية™" : "11 Hidden Portals™"}</li>
+                  <li> {isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}</li>
                 </ul>
 
                 <button
