@@ -5,6 +5,134 @@ import { API_BASE } from "./apiBase";
 import { TOKEN_KEY } from "./hooks/useAuth";
 import AIMirrorPanel from "./AIMirrorPanel";
 
+// Emotional Journey stages/chapters
+const JOURNEY_STAGES = {
+  en: [
+    {
+      id: 1,
+      label: "Noticing",
+      shortLabel: "Notice",
+      description: "You're starting to pay attention to your emotional patterns.",
+      nowBullets: [
+        "Basic awareness of your daily mood changes",
+        "Simple recognition of strong emotions",
+        "Beginning to notice emotional triggers",
+      ],
+      nextHint: "deeper emotional insights and pattern recognition",
+    },
+    {
+      id: 2,
+      label: "Naming",
+      shortLabel: "Name",
+      description: "You're learning to identify and name your emotions clearly.",
+      nowBullets: [
+        "Clear emotional vocabulary and labeling",
+        "Understanding the difference between similar feelings",
+        "Expressing emotions with more precision",
+      ],
+      nextHint: "understanding the root causes and patterns",
+    },
+    {
+      id: 3,
+      label: "Understanding",
+      shortLabel: "Understand",
+      description: "You're exploring why emotions happen and how they connect.",
+      nowBullets: [
+        "Connecting emotions to specific situations",
+        "Recognizing recurring emotional cycles",
+        "Seeing how thoughts influence feelings",
+      ],
+      nextHint: "healing strategies and emotional regulation",
+    },
+    {
+      id: 4,
+      label: "Healing",
+      shortLabel: "Heal",
+      description: "You're developing healthy ways to process and recover.",
+      nowBullets: [
+        "Building emotional resilience and coping tools",
+        "Processing difficult emotions constructively",
+        "Finding balance during emotional storms",
+      ],
+      nextHint: "sustainable emotional growth and wisdom",
+    },
+    {
+      id: 5,
+      label: "Growing",
+      shortLabel: "Grow",
+      description: "You're using emotional wisdom to navigate life's challenges.",
+      nowBullets: [
+        "Applying emotional insights proactively",
+        "Helping others understand their emotions",
+        "Living with greater emotional intelligence",
+      ],
+      nextHint: "You're already mastering your emotional journey",
+    },
+  ],
+  ar: [
+    {
+      id: 1,
+      label: "الملاحظة",
+      shortLabel: "لاحظ",
+      description: "تبدأ بالانتباه إلى أنماطك العاطفية.",
+      nowBullets: [
+        "وعي أساسي بتغيرات مزاجك اليومية",
+        "التعرف البسيط على المشاعر القوية",
+        "بدء ملاحظة المحفزات العاطفية",
+      ],
+      nextHint: "رؤى عاطفية أعمق وتحديد الأنماط",
+    },
+    {
+      id: 2,
+      label: "التسمية",
+      shortLabel: "سمِّ",
+      description: "تتعلم كيفية تحديد المشاعر وتسميتها بوضوح.",
+      nowBullets: [
+        "مفردات عاطفية واضحة وتسمية دقيقة",
+        "فهم الفرق بين المشاعر المتشابهة",
+        "التعبير عن المشاعر بدقة أكبر",
+      ],
+      nextHint: "فهم الأسباب الجذرية والأنماط",
+    },
+    {
+      id: 3,
+      label: "الفهم",
+      shortLabel: "افهم",
+      description: "تستكشف لماذا تحدث المشاعر وكيف تتصل ببعضها.",
+      nowBullets: [
+        "ربط المشاعر بمواقف محددة",
+        "التعرف على الدورات العاطفية المتكررة",
+        "رؤية كيف تؤثر الأفكار على المشاعر",
+      ],
+      nextHint: "استراتيجيات الشفاء والتنظيم العاطفي",
+    },
+    {
+      id: 4,
+      label: "الشفاء",
+      shortLabel: "اشفِ",
+      description: "تطور طرقاً صحية لمعالجة المشاعر والتعافي.",
+      nowBullets: [
+        "بناء المرونة العاطفية وأدوات المواجهة",
+        "معالجة المشاعر الصعبة بشكل بنّاء",
+        "إيجاد التوازن خلال العواصف العاطفية",
+      ],
+      nextHint: "النمو العاطفي المستدامل والحكمة",
+    },
+    {
+      id: 5,
+      label: "النمو",
+      shortLabel: "انمُ",
+      description: "تستخدم الحكمة العاطفية لمواجهة تحديات الحياة.",
+      nowBullets: [
+        "تطبيق الرؤى العاطفية بشكل استباقي",
+        "مساعدة الآخرين على فهم مشاعرهم",
+        "العيش بذكاء عاطفي أكبر",
+      ],
+      nextHint: "أنت بالفعل تتقن رحلتك العاطفية",
+    },
+  ],
+};
+
 export default function EmotionalTimelineMap({
   isOpen,
   onClose,
@@ -19,6 +147,7 @@ export default function EmotionalTimelineMap({
   const [showMirror, setShowMirror] = useState(false);
   const [range, setRange] = useState("30d");
   const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedStageId, setSelectedStageId] = useState(null);
 
   useEffect(() => {
     if (!isOpen || !personaId) return;
@@ -194,78 +323,88 @@ export default function EmotionalTimelineMap({
     return null;
   };
 
-  const title = personaName
-    ? isAr
-      ? `رحلة مشاعرك مع ${personaName}`
-      : `Mood Journey with ${personaName}`
-    : isAr
-    ? "رحلة مشاعرك"
-    : "Your Mood Journey";
-
-  const subtitle = isAr
-    ? "خريطة بصرية لكيفية تغيّر مشاعرك مع الوقت."
-    : "A visual map of how your feelings change over time.";
-
-  const emptyLabel = isAr
-    ? "لا توجد بيانات للمشاعر بعد."
-    : "No mood data available yet.";
-
-  const emotionLabel = (emotionCode) => {
-    const code = String(emotionCode || "NEUTRAL").toUpperCase();
-    if (!isAr) return code;
-    switch (code) {
-      case "NEUTRAL":
-        return "محايد";
-      case "SAD":
-        return "حزين";
-      case "ANGRY":
-        return "غاضب";
-      case "ANXIOUS":
-        return "قلق";
-      case "LONELY":
-        return "وحيد";
-      case "STRESSED":
-        return "مُتوتّر";
-      default:
-        return code;
-    }
-  };
-
-  const emotionEmoji = (emotionCode) => {
-    const code = String(emotionCode || "NEUTRAL").toUpperCase();
-    switch (code) {
-      case "HAPPY":
-        return "😊";
-      case "NEUTRAL":
-        return "😐";
-      case "SAD":
-        return "😢";
-      case "ANGRY":
-        return "😡";
-      case "ANXIOUS":
-        return "😰";
-      case "LONELY":
-        return "😔";
-      case "STRESSED":
-        return "😰";
-      case "EXCITED":
-        return "🤩";
-      case "TIRED":
-        return "😴";
-      case "WARM":
-        return "❤️";
-      case "HOPEFUL":
-        return "🌈";
-      case "GRATEFUL":
-        return "🙏";
-      default:
-        return "💭";
-    }
-  };
-
   const handleRetry = () => {
     setRefreshKey((k) => k + 1);
   };
+
+  // Calculate current journey stage based on data points
+  const getCurrentJourneyStage = () => {
+    if (!points.length) return 1;
+    // Simple logic: more points = higher stage
+    const pointCount = points.length;
+    if (pointCount <= 5) return 1; // Noticing
+    if (pointCount <= 12) return 2; // Naming
+    if (pointCount <= 25) return 3; // Understanding
+    if (pointCount <= 40) return 4; // Healing
+    return 5; // Growing
+  };
+
+  const currentStageNumber = getCurrentJourneyStage();
+  const langKey = isAr ? "ar" : "en";
+  const stagesForUi = JOURNEY_STAGES[langKey] || JOURNEY_STAGES.en;
+  
+  const currentStageUi = stagesForUi.find(
+    (stage) => Number(stage.id) === Number(currentStageNumber)
+  ) || stagesForUi[0];
+  
+  const selectedStageUi = selectedStageId 
+    ? stagesForUi.find((stage) => Number(stage.id) === Number(selectedStageId))
+    : currentStageUi;
+  
+  const nextStageUi = selectedStageUi && stagesForUi
+    ? stagesForUi.find((stage) => Number(stage.id) === Number(selectedStageUi.id) + 1)
+    : null;
+
+  // Get recent pattern summary
+  const getRecentPattern = () => {
+    if (!points.length) {
+      return isAr 
+        ? "ابدأ بالحديث عن مشاعرك لترى أنماطك هنا."
+        : "Start talking about your feelings to see your patterns here.";
+    }
+    
+    const recentPoints = points.slice(-7);
+    const emotions = recentPoints.map(p => p.topEmotion).filter(Boolean);
+    
+    if (!emotions.length) {
+      return isAr 
+        ? "استمر في المشاركة لرؤية الأنماط العاطفية."
+        : "Keep sharing to see emotional patterns.";
+    }
+    
+    // Simple pattern detection
+    const stressEmotions = ['STRESSED', 'ANXIOUS', 'ANGRY'];
+    const happyEmotions = ['HAPPY', 'EXCITED', 'GRATEFUL', 'HOPEFUL'];
+    
+    const stressCount = emotions.filter(e => stressEmotions.includes(e)).length;
+    const happyCount = emotions.filter(e => happyEmotions.includes(e)).length;
+    
+    if (stressCount > happyCount * 1.5) {
+      return isAr 
+        ? "مؤخراً كنت تشعر بالتوتر أكثر. حاول ممارسة التقنيات المريحة."
+        : "Recently you've been more stressed. Try relaxation techniques.";
+    } else if (happyCount > stressCount * 1.5) {
+      return isAr 
+        ? "مؤخراً كنت في مزاج جيد! استمر في الأنشطة التي تجلب لك السعادة."
+        : "You've been in a good mood lately! Keep up what's working.";
+    } else {
+      return isAr 
+        ? "مزاجك متوازن lately. استمر في الوعي بمشاعرك."
+        : "Your mood has been balanced lately. Keep staying aware.";
+    }
+  };
+
+  const title = personaName
+    ? isAr
+      ? `رحلتك العاطفية مع ${personaName}`
+      : `Your Emotional Journey with ${personaName}`
+    : isAr
+    ? "رحلتك العاطفية"
+    : "Your Emotional Journey";
+
+  const subtitle = isAr
+    ? "قصة مرئية لنموك العاطفي وتطورك مع الوقت."
+    : "A visual story of your emotional growth and progress over time.";
 
   if (!isOpen) return null;
 
@@ -274,39 +413,17 @@ export default function EmotionalTimelineMap({
       <div
         className="asrar-timeline-panel"
         onClick={(e) => e.stopPropagation()}
+        dir={isAr ? "rtl" : "ltr"}
       >
-        <div className="asrar-timeline-header">
-          <div>
-            <h2 className="asrar-timeline-title">{title}</h2>
-            <p className="asrar-timeline-subtitle">{subtitle}</p>
-            <div className="asrar-timeline-header-right">
-              <div className="asrar-timeline-range-toggle">
-              <button
-                type="button"
-                className={
-                  "asrar-timeline-range-btn" +
-                  (range === "7d" ? " asrar-timeline-range-btn--active" : "")
-                }
-                onClick={() => setRange("7d")}
-              >
-                {isAr ? "آخر ٧ أيام" : "Last 7 days"}
-              </button>
-              <button
-                type="button"
-                className={
-                  "asrar-timeline-range-btn" +
-                  (range === "30d" ? " asrar-timeline-range-btn--active" : "")
-                }
-                onClick={() => setRange("30d")}
-              >
-                {isAr ? "آخر ٣٠ يومًا" : "Last 30 days"}
-              </button>
-              </div>
-            </div>
+        {/* Header Zone */}
+        <div className="emotional-journey-header">
+          <div className="emotional-journey-header-content">
+            <h2 className="emotional-journey-title">{title}</h2>
+            <p className="emotional-journey-subtitle">{subtitle}</p>
           </div>
           <button
             type="button"
-            className="asrar-timeline-close"
+            className="emotional-journey-close-btn"
             onClick={onClose}
             aria-label={isAr ? "إغلاق" : "Close"}
           >
@@ -314,61 +431,161 @@ export default function EmotionalTimelineMap({
           </button>
         </div>
 
-        {loading && (
-          <div className="asrar-timeline-state">
-            {isAr ? "جارٍ تحميل خريطة المشاعر…" : "Loading emotional timeline…"}
+        {/* Journey Progress Track */}
+        <div className="journey-progress-hero">
+          <div className="journey-stage-display">
+            <div className="journey-stage-number">
+              {isAr ? `المرحلة ${currentStageUi.id}` : `Stage ${currentStageUi.id}`}
+            </div>
+            <div className="journey-stage-name">{currentStageUi.label}</div>
           </div>
-        )}
-
-        {error && !loading && (
-          <div className="asrar-timeline-state asrar-timeline-state--error">
-            <p>
-              {isAr
-                ? "تعذر تحميل خريطة المشاعر الآن."
-                : "We couldn’t load your emotional history right now."}
-            </p>
-            <button
-              type="button"
-              className="asrar-timeline-retry"
-              onClick={handleRetry}
-            >
-              {isAr ? "حاول مرة أخرى" : "Try again"}
-            </button>
+          
+          <div className="journey-progress-container">
+            <div className="journey-progress-label">
+              {isAr ? "تقدمك في الرحلة" : "Your journey progress"}
+            </div>
+            <div className="journey-progress-wrapper">
+              <div className="journey-progress-track" />
+              <div 
+                className="journey-progress-fill" 
+                style={{width: `${(currentStageNumber / 5) * 100}%`}} 
+              />
+              <div className="journey-progress-glow" />
+            </div>
+            <div className="journey-progress-hint">
+              {isAr 
+                ? `${currentStageNumber} من 5 مراحل مكتملة` 
+                : `${currentStageNumber} of 5 stages completed`}
+            </div>
           </div>
-        )}
+        </div>
 
-        {!loading && !error && points.length === 0 && (
-          <div className="asrar-timeline-state">{emptyLabel}</div>
-        )}
-
-        {!loading && !error && points.length > 0 && (
-          <div className="asrar-timeline-body">
-            <div className="asrar-timeline-scroll">
-              <div className="asrar-timeline-visual">
-                <div className="asrar-mood-stream-rail" />
-                <div
-                  className={
-                    "asrar-mood-stream " +
-                    (range === "7d"
-                      ? "asrar-mood-stream--focus"
-                      : "asrar-mood-stream--overview")
-                  }
-                >
-                  {visiblePoints.map((p, idx) => {
-                    if (!p || typeof p !== "object") return null;
-
-                    let shortDate = "";
-                    if (p.date) {
-                      const d = new Date(p.date);
-                      if (!Number.isNaN(d.getTime())) {
-                        shortDate = d.toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                        });
-                      }
+        {/* Stage Selector */}
+        <div className="stage-selector">
+          <div className="stage-selector-title">
+            {isAr ? "اختر مرحلة" : "Select Stage"}
+          </div>
+          <div className="stage-orbs">
+            {stagesForUi.map(stage => {
+              const isCurrent = Number(stage.id) === Number(currentStageNumber);
+              const isSelected = Number(stage.id) === Number(selectedStageId);
+              const isCompleted = Number(stage.id) < Number(currentStageNumber);
+              const isLocked = Number(stage.id) > Number(currentStageNumber) + 1;
+              
+              return (
+                <div 
+                  key={stage.id} 
+                  className={`stage-orb ${
+                    isCurrent ? 'stage-orb--current' : ''
+                  } ${
+                    isSelected ? 'stage-orb--preview' : ''
+                  } ${
+                    isCompleted ? 'stage-orb--completed' : ''
+                  } ${
+                    isLocked ? 'stage-orb--locked' : ''
+                  }`}
+                  role="button"
+                  tabIndex={isLocked ? -1 : 0}
+                  onClick={() => !isLocked && setSelectedStageId(stage.id)}
+                  onKeyDown={(e) => {
+                    if (!isLocked && (e.key === 'Enter' || e.key === ' ')) {
+                      setSelectedStageId(stage.id);
                     }
+                  }}
+                >
+                  <div className="stage-orb-inner">
+                    <div className="stage-orb-number">{stage.id}</div>
+                    {isLocked && <div className="stage-orb-lock">🔒</div>}
+                  </div>
+                  <div className="stage-orb-label">{stage.shortLabel || stage.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
+        {/* Stage Details Card */}
+        {selectedStageUi && (
+          <div className="stage-details-card">
+            <div className="stage-details-header">
+              <div className="stage-details-icon">
+                {selectedStageUi.shortLabel || selectedStageUi.label}
+              </div>
+              <h3 className="stage-details-title">{selectedStageUi.label}</h3>
+            </div>
+            <div className="stage-details-content">
+              <div className="stage-section">
+                <h4 className="stage-section-title">
+                  {isAr ? "ما تعنيه هذه المرحلة" : "What this stage means"}
+                </h4>
+                <ul className="stage-section-list">
+                  {selectedStageUi.nowBullets.map((bullet, idx) => (
+                    <li key={idx}>{bullet}</li>
+                  ))}
+                </ul>
+              </div>
+              {nextStageUi && (
+                <div className="stage-section">
+                  <h4 className="stage-section-title">
+                    {isAr ? "المرحلة التالية تفتح" : "Next stage unlocks"}
+                  </h4>
+                  <ul className="stage-section-list">
+                    <li>{nextStageUi.nextHint}</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* How to Progress Card */}
+        <div className="howto-progress-card">
+          <h3 className="howto-progress-card-title">
+            {isAr ? "كيف تتقدم في رحلتك" : "How to progress in your journey"}
+          </h3>
+          <ul className="howto-progress-card-list">
+            <li>
+              {isAr 
+                ? "تحدث عن مشاعرك الحقيقية، وليس فقط ما تعتقد أن يجب عليك قوله"
+                : "Talk about your true feelings, not just what you think you should say"}
+            </li>
+            <li>
+              {isAr 
+                ? "احضر يومياً للمشاركة، حتى لو لفترة قصيرة"
+                : "Show up daily to share, even for brief moments"}
+            </li>
+            <li>
+              {isAr 
+                ? "اشرح ما الذي أثار مشاعرك، وليس فقط اسم المشاعر"
+                : "Explain what triggered your feelings, not just the emotion names"}
+            </li>
+            <li>
+              {isAr 
+                ? "استخدم المرآة العاطفية للحصول على رؤى أعمق"
+                : "Use the emotional mirror for deeper insights"}
+            </li>
+          </ul>
+        </div>
+
+        {/* Journey Summary Area */}
+        <div className="journey-summary-area">
+          <h3 className="journey-summary-title">
+            {isAr ? "ملخص الرحلة" : "Journey Summary"}
+          </h3>
+          <div className="journey-summary-content">
+            <p className="journey-summary-text">{getRecentPattern()}</p>
+            
+            {/* Show recent mood visualization if data exists */}
+            {!loading && !error && points.length > 0 && (
+              <div className="recent-mood-visualization">
+                <div className="recent-mood-title">
+                  {isAr ? "المزاج مؤخراً" : "Recent Moods"}
+                </div>
+                <div className="recent-mood-stream">
+                  {points.slice(-7).map((p, idx) => {
                     const emotion = String(p.topEmotion || "NEUTRAL").toUpperCase();
+                    const { value: intensityValue } = getIntensityMeta(p.avgIntensity);
+                    
                     let famClass = "mood-neutral";
                     if (
                       emotion === "HAPPY" ||
@@ -387,143 +604,61 @@ export default function EmotionalTimelineMap({
                     ) {
                       famClass = "mood-angry";
                     }
-
-                    const { value: intensityValue } = getIntensityMeta(
-                      p.avgIntensity
-                    );
-                    const isSelected = idx === selectedIndex;
-
-                    const nodeClass =
-                      "asrar-mood-node " +
-                      famClass +
-                      (isSelected ? " asrar-mood-node--selected" : "");
-
+                    
                     return (
-                      <button
-                        key={idx}
-                        type="button"
-                        className={nodeClass}
+                      <div 
+                        key={idx} 
+                        className={`recent-mood-node ${famClass}`}
                         style={{ "--intensity-scale": intensityValue }}
-                        onClick={() => setSelectedIndex(idx)}
-                        aria-pressed={isSelected}
                       >
-                        <div className="asrar-mood-node-core" />
-                        <span className="asrar-mood-node-day">{shortDate}</span>
-                      </button>
+                        <div className="recent-mood-node-core" />
+                      </div>
                     );
                   })}
                 </div>
               </div>
-            </div>
-
-            <div className="asrar-timeline-details">
-              {selectedPoint && (() => {
-                const fullDate =
-                  selectedPoint.date &&
-                  !Number.isNaN(new Date(selectedPoint.date).getTime())
-                    ? new Date(selectedPoint.date).toLocaleDateString(
-                        undefined,
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      )
-                    : "";
-                const { level, label } = getIntensityMeta(
-                  selectedPoint.avgIntensity
-                );
-                const description = describeDayCopy(
-                  selectedPoint.topEmotion,
-                  level
-                );
-                const events = Array.isArray(selectedPoint.keyEvents)
-                  ? selectedPoint.keyEvents.map(mapEventLabel).filter(Boolean)
-                  : [];
-
-                return (
-                  <div className="asrar-timeline-detail-card">
-                    <div className="asrar-timeline-detail-header">
-                      <div className="asrar-timeline-detail-main">
-                        <div className="asrar-timeline-detail-date">
-                          {fullDate}
-                        </div>
-                        <div className="asrar-timeline-detail-emotion-row">
-                          <span className="asrar-timeline-mood-pill">
-                            {emotionLabel(selectedPoint.topEmotion)}
-                          </span>
-                          <span className="asrar-timeline-detail-emoji">
-                            {emotionEmoji(selectedPoint.topEmotion)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div
-                        className={
-                          "asrar-timeline-intensity asrar-timeline-intensity--" +
-                          level
-                        }
-                      >
-                        <span className="asrar-timeline-intensity-ring" />
-                        <span className="asrar-timeline-intensity-label">
-                          {label}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="asrar-timeline-detail-body">
-                      <p className="asrar-timeline-detail-copy">
-                        {description}
-                      </p>
-
-                      {events.length > 0 && (
-                        <div className="asrar-timeline-detail-events">
-                          {events.slice(0, 2).map((label, idx) => (
-                            <span
-                              key={idx}
-                              className="asrar-timeline-event-chip"
-                            >
-                              {label}
-                            </span>
-                          ))}
-                          {events.length > 2 && (
-                            <span className="asrar-timeline-detail-events-more">
-                              {isAr
-                                ? "وأحداث أخرى في هذا اليوم."
-                                : "Plus other moments on this day."}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className="asrar-timeline-legend">
-                {isAr
-                  ? "اللون يمثّل نوع الشعور، والسطوع وارتفاع النقطة يمثّلان شدّة المشاعر."
-                  : "Color reflects the emotion family; glow and height reflect how intense the day felt."}
+            )}
+            
+            {loading && (
+              <div className="journey-summary-loading">
+                {isAr ? "جارٍ تحليل رحلتك..." : "Analyzing your journey..."}
               </div>
-            </div>
+            )}
+            
+            {error && !loading && (
+              <div className="journey-summary-error">
+                <p>
+                  {isAr
+                    ? "تعذر تحليل رحلتك الآن."
+                    : "We couldn't analyze your journey right now."}
+                </p>
+                <button
+                  type="button"
+                  className="journey-summary-retry-btn"
+                  onClick={handleRetry}
+                >
+                  {isAr ? "حاول مرة أخرى" : "Try again"}
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {points.length > 0 && (
-          <p className="asrar-timeline-explainer">
-            {isAr
-              ? "كل نقطة مضيئة تمثّل مزاجك العام في ذلك اليوم، لتمنحك خريطة هادئة لكيف يتغيّر نمطك العاطفي عبر الأيام."
-              : "Each glowing point shows your overall mood for that day, giving you a calm map of how your emotional pattern shifts over time."}
-          </p>
-        )}
+        {/* Footer */}
+        <div className="emotional-journey-footer">
+          {isAr 
+            ? "رحلتك العاطفية هي قصة نمك. كل محادثة صادقة تقربك من فهم أعمق."
+            : "Your emotional journey is a growth story. Every honest conversation brings you closer to deeper understanding."}
+        </div>
 
-        <div className="asrar-timeline-footer">
+        {/* Mirror Button */}
+        <div className="emotional-journey-actions">
           <button
             type="button"
-            className="asrar-timeline-mirror-btn"
+            className="emotional-journey-mirror-btn"
             onClick={() => setShowMirror(true)}
           >
-            {isAr ? "وضع المرآة العاطفية" : "Mirror Me"}
+            {isAr ? "المرآة العاطفية" : "Emotional Mirror"}
           </button>
         </div>
 

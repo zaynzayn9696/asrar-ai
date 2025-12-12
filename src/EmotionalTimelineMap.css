@@ -627,12 +627,775 @@
   text-align: right;
 }
 
-@media (max-width: 480px) {
-  .asrar-timeline-visual {
-    padding: 0.55rem 0.3rem 0.75rem;
-  }
+/* --- NEW GAME-LIKE EMOTIONAL JOURNEY LAYOUT --- */
 
-  .asrar-mood-stream {
-    padding-inline: 0.6rem;
+/* Header Zone */
+.emotional-journey-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.emotional-journey-header-content {
+  flex: 1;
+  text-align: center;
+}
+
+.emotional-journey-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f0fbff;
+  text-align: center;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+}
+
+.emotional-journey-subtitle {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: #c3e3ff;
+  text-align: center;
+  line-height: 1.5;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.emotional-journey-close-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(160, 184, 212, 0.7);
+  background: rgba(3, 8, 18, 0.9);
+  color: #d8e7ff;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.emotional-journey-close-btn:hover {
+  background: rgba(255, 100, 100, 0.2);
+  border-color: rgba(255, 120, 120, 0.8);
+  color: #fff;
+}
+
+[dir="rtl"] .emotional-journey-close-btn {
+  left: 0;
+  right: auto;
+}
+
+/* Journey Progress Hero */
+.journey-progress-hero {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: radial-gradient(circle at top, rgba(0, 240, 255, 0.1), rgba(4, 12, 26, 0.95));
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 
+    0 0 0 1px rgba(0, 240, 255, 0.15),
+    0 20px 40px rgba(0, 0, 0, 0.8),
+    inset 0 0 30px rgba(0, 240, 255, 0.05);
+}
+
+.journey-stage-display {
+  margin-bottom: 1.5rem;
+}
+
+.journey-stage-number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00f4ff, #7c4dff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+  margin-bottom: 0.3rem;
+}
+
+.journey-stage-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffe3ae;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Journey Progress Bar */
+.journey-progress-container {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.journey-progress-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f0fbff;
+  margin-bottom: 0.5rem;
+}
+
+.journey-progress-wrapper {
+  position: relative;
+  width: 100%;
+  height: 12px;
+  margin-bottom: 0.5rem;
+}
+
+.journey-progress-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(2, 10, 22, 0.96), rgba(2, 6, 16, 0.98));
+  box-shadow: 
+    0 0 0 1px rgba(0, 240, 255, 0.3),
+    0 0 20px rgba(0, 24, 56, 0.95),
+    inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.journey-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00f4ff, #7c4dff);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 0 25px rgba(0, 244, 255, 0.9),
+    inset 0 0 10px rgba(255, 255, 255, 0.3);
+  transform-origin: left center;
+  transition: width 300ms ease-out;
+}
+
+.journey-progress-glow {
+  position: absolute;
+  inset: -2px 0;
+  border-radius: 999px;
+  pointer-events: none;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 244, 255, 0.4), 
+    rgba(124, 77, 255, 0.4), 
+    transparent);
+  animation: journey-progress-pulse 2s ease-in-out infinite;
+}
+
+@keyframes journey-progress-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.journey-progress-hint {
+  font-size: 0.8rem;
+  color: #9fbce6;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Stage Selector */
+.stage-selector {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.stage-selector-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbe9ff;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+}
+
+.stage-orbs {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.stage-orb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: 0.6;
+}
+
+.stage-orb:not(.stage-orb--locked):hover {
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
+.stage-orb-inner {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid rgba(170, 196, 255, 0.4);
+  background: radial-gradient(circle at top, rgba(4, 8, 18, 0.95), rgba(2, 4, 10, 0.98));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 0 0 1px rgba(0, 240, 255, 0.2),
+    0 10px 20px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s ease;
+}
+
+.stage-orb-number {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #d9e7ff;
+}
+
+.stage-orb-label {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #d6ecff;
+  text-align: center;
+  max-width: 60px;
+}
+
+.stage-orb--current {
+  opacity: 1;
+}
+
+.stage-orb--current .stage-orb-inner {
+  background: radial-gradient(circle at top, #00f4ff, #1a2340);
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 0 0 2px rgba(255, 255, 255, 0.6),
+    0 0 30px rgba(0, 255, 255, 0.8),
+    0 15px 30px rgba(0, 0, 0, 0.7);
+  animation: stage-orb-glow 2s ease-in-out infinite;
+}
+
+.stage-orb--current .stage-orb-number {
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+@keyframes stage-orb-glow {
+  0%, 100% { 
+    box-shadow: 
+      0 0 0 2px rgba(255, 255, 255, 0.6),
+      0 0 30px rgba(0, 255, 255, 0.8),
+      0 15px 30px rgba(0, 0, 0, 0.7);
+  }
+  50% { 
+    box-shadow: 
+      0 0 0 2px rgba(255, 255, 255, 0.9),
+      0 0 40px rgba(0, 255, 255, 1),
+      0 20px 35px rgba(0, 0, 0, 0.8);
+  }
+}
+
+.stage-orb--completed .stage-orb-inner {
+  background: radial-gradient(circle at top, #00b8ff, #0b172c);
+  border-color: rgba(200, 236, 255, 0.6);
+  box-shadow: 
+    0 0 0 1px rgba(200, 236, 255, 0.4),
+    0 0 20px rgba(0, 210, 255, 0.6);
+}
+
+.stage-orb--preview .stage-orb-inner {
+  border-color: rgba(0, 240, 255, 0.8);
+  box-shadow: 
+    0 0 0 1px rgba(0, 240, 255, 0.5),
+    0 0 15px rgba(0, 240, 255, 0.7);
+}
+
+.stage-orb--preview .stage-orb-label {
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 240, 255, 0.6);
+}
+
+.stage-orb--locked {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stage-orb--locked .stage-orb-inner {
+  border-color: rgba(100, 120, 140, 0.3);
+  background: radial-gradient(circle at top, rgba(20, 30, 40, 0.9), rgba(10, 15, 20, 0.95));
+}
+
+.stage-orb-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+/* Stage Details Card */
+.stage-details-card {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: radial-gradient(circle at top left, #07182b, #02040b);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  box-shadow: 
+    0 0 0 1px rgba(0, 240, 255, 0.2),
+    0 20px 40px rgba(0, 0, 0, 0.9),
+    inset 0 0 20px rgba(0, 240, 255, 0.05);
+}
+
+.stage-details-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  justify-content: center;
+}
+
+.stage-details-icon {
+  padding: 0.3rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.6);
+  background: radial-gradient(circle at top, rgba(0, 240, 255, 0.2), rgba(4, 12, 26, 0.98));
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e5f6ff;
+  box-shadow: 
+    0 0 0 1px rgba(0, 240, 255, 0.4),
+    0 10px 20px rgba(0, 0, 0, 0.8);
+}
+
+.stage-details-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f0fbff;
+  text-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+}
+
+.stage-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stage-section {
+  text-align: left;
+}
+
+[dir="rtl"] .stage-section {
+  text-align: right;
+}
+
+.stage-section-title {
+  margin: 0 0 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #cbe9ff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stage-section-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stage-section-list li {
+  font-size: 0.9rem;
+  color: #d6ecff;
+  line-height: 1.5;
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+[dir="rtl"] .stage-section-list li {
+  padding-left: 0;
+  padding-right: 1.2rem;
+}
+
+.stage-section-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, #00f4ff, #7c4dff);
+  box-shadow: 0 0 10px rgba(0, 244, 255, 0.8);
+}
+
+[dir="rtl"] .stage-section-list li::before {
+  left: auto;
+  right: 0;
+}
+
+/* How to Progress Card */
+.howto-progress-card {
+  margin-bottom: 2rem;
+  padding: 1.2rem;
+  border-radius: 16px;
+  background: rgba(3, 14, 30, 0.95);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 
+    0 0 0 1px rgba(0, 240, 255, 0.15),
+    0 15px 30px rgba(0, 0, 0, 0.8);
+}
+
+.howto-progress-card-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  color: #cbe9ff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.howto-progress-card-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.howto-progress-card-list li {
+  font-size: 0.9rem;
+  color: #d6ecff;
+  line-height: 1.5;
+  position: relative;
+  padding-left: 1.2rem;
+  text-align: center;
+}
+
+[dir="rtl"] .howto-progress-card-list li {
+  padding-left: 0;
+  padding-right: 1.2rem;
+}
+
+.howto-progress-card-list li::before {
+  content: "✨";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 0.8rem;
+}
+
+[dir="rtl"] .howto-progress-card-list li::before {
+  left: auto;
+  right: 0;
+}
+
+/* Journey Summary Area */
+.journey-summary-area {
+  margin-bottom: 1.5rem;
+}
+
+.journey-summary-title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  color: #f0fbff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.journey-summary-content {
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(2, 10, 22, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.journey-summary-text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #d6ecff;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.recent-mood-visualization {
+  margin-top: 1rem;
+}
+
+.recent-mood-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbe9ff;
+  margin-bottom: 0.8rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.recent-mood-stream {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.8rem;
+  padding: 0.5rem;
+  min-height: 60px;
+}
+
+.recent-mood-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.recent-mood-node-core {
+  width: calc(16px + (var(--intensity-scale, 0.5) * 12px));
+  height: calc(16px + (var(--intensity-scale, 0.5) * 12px));
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(255, 255, 255, 0.16),
+    rgba(5, 7, 18, 0.96)
+  );
+  box-shadow:
+    0 0 0 1px rgba(130, 170, 255, 0.35),
+    0 0 12px var(--mood-glow-color, rgba(150, 190, 255, 0.45)),
+    0 0 24px var(--mood-glow-color, rgba(150, 190, 255, 0.45));
+  transform: translateY(calc((1 - var(--intensity-scale, 0.5)) * 8px));
+}
+
+.journey-summary-loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 0.9rem;
+  color: #d1e5ff;
+}
+
+.journey-summary-error {
+  text-align: center;
+  padding: 2rem;
+  font-size: 0.9rem;
+  color: #ffb8c6;
+}
+
+.journey-summary-retry-btn {
+  margin-top: 0.5rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 180, 200, 0.7);
+  background: rgba(45, 8, 24, 0.9);
+  color: #ffe7f0;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+/* Footer */
+.emotional-journey-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #7a92b4;
+  line-height: 1.4;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 240, 255, 0.1);
+  opacity: 0.7;
+  margin-bottom: 1rem;
+}
+
+/* Actions */
+.emotional-journey-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.emotional-journey-mirror-btn {
+  border-radius: 999px;
+  padding: 0.5rem 1.5rem;
+  border: 1px solid rgba(223, 196, 255, 0.9);
+  background: radial-gradient(
+    circle at top,
+    rgba(210, 192, 255, 0.22),
+    rgba(14, 6, 30, 0.98)
+  );
+  color: #f6f0ff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(223, 196, 255, 0.45),
+    0 14px 32px rgba(0, 0, 0, 0.96);
+  transition: all 0.2s ease;
+}
+
+.emotional-journey-mirror-btn:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 230, 255, 0.8),
+    0 18px 40px rgba(0, 0, 0, 0.98);
+}
+
+/* Mood color families for recent mood visualization */
+.recent-mood-node.mood-happy {
+  --mood-glow-color: rgba(255, 215, 120, 0.7);
+}
+
+.recent-mood-node.mood-neutral {
+  --mood-glow-color: rgba(120, 200, 255, 0.55);
+}
+
+.recent-mood-node.mood-sad {
+  --mood-glow-color: rgba(100, 140, 255, 0.6);
+}
+
+.recent-mood-node.mood-angry {
+  --mood-glow-color: rgba(255, 110, 140, 0.7);
+}
+
+/* --- RESPONSIVE MOBILE STYLES --- */
+@media (max-width: 480px) {
+  .emotional-journey-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  
+  .emotional-journey-header-content {
+    text-align: center;
+  }
+  
+  .emotional-journey-title {
+    font-size: 1.1rem;
+  }
+  
+  .emotional-journey-subtitle {
+    font-size: 0.85rem;
+    margin: 0.2rem 0 0;
+  }
+  
+  .emotional-journey-close-btn {
+    position: static;
+    align-self: flex-end;
+  }
+  
+  .journey-progress-hero {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .journey-stage-number {
+    font-size: 2rem;
+  }
+  
+  .journey-stage-name {
+    font-size: 1rem;
+  }
+  
+  .stage-selector {
+    margin-bottom: 1.5rem;
+  }
+  
+  .stage-orbs {
+    gap: 0.8rem;
+  }
+  
+  .stage-orb-inner {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .stage-orb-label {
+    font-size: 0.7rem;
+    max-width: 50px;
+  }
+  
+  .stage-details-card {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .stage-details-header {
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  
+  .stage-details-title {
+    font-size: 1.1rem;
+  }
+  
+  .stage-section {
+    margin-bottom: 1rem;
+  }
+  
+  .stage-section-list li {
+    font-size: 0.85rem;
+  }
+  
+  .howto-progress-card {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .howto-progress-card-title {
+    font-size: 0.95rem;
+  }
+  
+  .howto-progress-card-list li {
+    font-size: 0.85rem;
+  }
+  
+  .journey-summary-area {
+    margin-bottom: 1rem;
+  }
+  
+  .journey-summary-title {
+    font-size: 1rem;
+  }
+  
+  .journey-summary-content {
+    padding: 0.8rem;
+  }
+  
+  .journey-summary-text {
+    font-size: 0.85rem;
+  }
+  
+  .recent-mood-stream {
+    gap: 0.6rem;
+    padding: 0.4rem;
+    min-height: 50px;
+  }
+  
+  .recent-mood-node-core {
+    width: calc(14px + (var(--intensity-scale, 0.5) * 10px));
+    height: calc(14px + (var(--intensity-scale, 0.5) * 10px));
+  }
+  
+  .emotional-journey-footer {
+    font-size: 0.75rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .emotional-journey-mirror-btn {
+    padding: 0.4rem 1.2rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .asrar-timeline-panel {
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
   }
 }
