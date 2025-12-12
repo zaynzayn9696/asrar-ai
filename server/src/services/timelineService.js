@@ -244,6 +244,7 @@ function computeStableMoodFromEvents({ events, lastDailyTop }) {
   let streakIntensitySum = 0;
   let newestTs = null;
   let oldestTs = null;
+  const occurrenceCounts = {};
 
   recent.forEach((ev, idx) => {
     const key = String(ev.dominantEmotion || ev.emotion || '').toUpperCase();
@@ -256,6 +257,7 @@ function computeStableMoodFromEvents({ events, lastDailyTop }) {
     weights[key] = (weights[key] || 0) + w;
     intensityWeights[key] = (intensityWeights[key] || 0) + w * intensity01;
     totalWeight += w;
+    occurrenceCounts[key] = (occurrenceCounts[key] || 0) + 1;
     const ts = new Date(ev.timestamp).getTime();
     if (Number.isFinite(ts)) {
       if (newestTs === null || ts > newestTs) newestTs = ts;
@@ -277,10 +279,10 @@ function computeStableMoodFromEvents({ events, lastDailyTop }) {
 
   entries.sort((a, b) => b[1] - a[1]);
   const [candidate, candidateScore] = entries[0];
+  const candidateCount = occurrenceCounts[candidate] || 0;
   const baseline = String(lastDailyTop || '').toUpperCase() || null;
   const baselineScore = baseline ? weights[baseline] || 0 : 0;
   const candidateShare = candidateScore / totalWeight;
-
   const streakAvgIntensity =
     streakCount > 0 ? Math.max(0, Math.min(1, streakIntensitySum / streakCount)) : 0;
 
@@ -294,11 +296,16 @@ function computeStableMoodFromEvents({ events, lastDailyTop }) {
 
   const spanMs = newestTs !== null && oldestTs !== null ? Math.max(0, newestTs - oldestTs) : 0;
   const spanMinutes = spanMs / 60000;
+  const hasConfirmations = candidateCount >= 3 || candidateShare >= 0.78;
   const sustainedMessages = recent.length >= 4;
-  const extremeShare = candidateShare >= 0.75 || streakAvgIntensity >= 0.75;
-  const cooldownSatisfied = spanMinutes >= 2;
+  const extremeShare = candidateShare >= 0.78 || streakAvgIntensity >= 0.8;
+  const cooldownSatisfied = spanMinutes >= 4;
 
-  const finalSwitch = allowSwitch && (extremeShare || sustainedMessages) && (cooldownSatisfied || extremeShare);
+  const finalSwitch =
+    allowSwitch &&
+    hasConfirmations &&
+    (extremeShare || sustainedMessages) &&
+    (cooldownSatisfied || extremeShare);
 
   const dominantEmotion = finalSwitch ? candidate : baseline || candidate;
 

@@ -264,22 +264,27 @@ export default function ChatPage() {
   const getRole = (c) => (isAr ? c.roleAr : c.roleEn);
 
   const [inputValue, setInputValue] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isSendingVoice, setIsSendingVoice] = useState(false);
-  const recorderRef = useRef(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
+  const [isEngineMenuOpen, setIsEngineMenuOpen] = useState(false);
   const mediaStreamRef = useRef(null);
   const audioChunksRef = useRef([]);
   const voiceStopIntentRef = useRef('send');
   const [crossSuggestion, setCrossSuggestion] = useState(null);
   const [usageInfo, setUsageInfo] = useState(() => user?.usage || null);
+
+  const [isSending, setIsSending] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSendingVoice, setIsSendingVoice] = useState(false);
+  const recorderRef = useRef(null);
+
   const [showLockedModal, setShowLockedModal] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [modalText, setModalText] = useState("");
   const [isBlocked, setIsBlocked] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [selectedEngine, setSelectedEngine] = useState(getInitialEngine);
-  const [isEngineMenuOpen, setIsEngineMenuOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
 
   // Whispers / timeline UI state
@@ -288,6 +293,73 @@ export default function ChatPage() {
   const [isWhispersOpen, setIsWhispersOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [isHiddenPortalsOpen, setIsHiddenPortalsOpen] = useState(false);
+
+  const moodHistoryRef = useRef([]);
+  const lastMoodRef = useRef("neutral");
+  const lastMoodChangeRef = useRef(0);
+
+  const pushMoodSample = (mood) => {
+    const key = String(mood || "neutral").toLowerCase();
+    const now = Date.now();
+    moodHistoryRef.current.unshift({ mood: key, ts: now });
+    if (moodHistoryRef.current.length > 30) {
+      moodHistoryRef.current.length = 30;
+    }
+  };
+
+  const shouldSwitchMood = (candidate) => {
+    const base = String(lastMoodRef.current || "neutral").toLowerCase();
+    const cand = String(candidate || "neutral").toLowerCase();
+    if (cand === base) return true;
+
+    const now = Date.now();
+    const windowSamples = moodHistoryRef.current.slice(0, 12);
+    const total = Math.max(1, windowSamples.length);
+    const counts = windowSamples.reduce((acc, s) => {
+      const k = s.mood;
+      acc[k] = (acc[k] || 0) + 1;
+      return acc;
+    }, {});
+    const candScore = counts[cand] || 0;
+    const baseScore = counts[base] || 0;
+    const candShare = candScore / total;
+    const baseShare = baseScore / total;
+    const streak = windowSamples.slice(0, 3).every((s) => s.mood === cand) ? 3 : 0;
+
+    const hysteresisPass = candShare - baseShare >= 0.2 || candScore >= baseScore * 1.3;
+    const dominancePass = candShare >= 0.6 || streak >= 3;
+    const cooldownMs = 3 * 60 * 1000;
+    const cooldownPass = now - lastMoodChangeRef.current >= cooldownMs || candShare >= 0.85;
+
+    return hysteresisPass && dominancePass && cooldownPass;
+  };
+
+  const applyStableMood = (candidate) => {
+    const debugFlag =
+      typeof window !== "undefined" && localStorage.getItem("asrar_mood_debug") === "true";
+
+    pushMoodSample(candidate);
+    const allow = shouldSwitchMood(candidate);
+    if (!allow) {
+      if (debugFlag) {
+        console.log("[MoodDebug] hold background", {
+          candidate,
+          current: lastMoodRef.current,
+          history: moodHistoryRef.current.slice(0, 6),
+        });
+      }
+      return;
+    }
+    lastMoodRef.current = String(candidate || "neutral").toLowerCase();
+    lastMoodChangeRef.current = Date.now();
+    setCurrentMood(lastMoodRef.current);
+    if (debugFlag) {
+      console.log("[MoodDebug] switch background", {
+        next: lastMoodRef.current,
+        history: moodHistoryRef.current.slice(0, 6),
+      });
+    }
+  };
 
   // Current mood state for backdrop and badge
   const [currentMood, setCurrentMood] = useState("neutral");
@@ -737,7 +809,7 @@ export default function ChatPage() {
         const data = await res.json();
         setEmotionalData(data);
         const derivedMood = deriveUIMoodFromTimeline(data);
-        setCurrentMood(derivedMood);
+        applyStableMood(derivedMood);
         try {
           const debugFlag =
             typeof window !== "undefined" &&
