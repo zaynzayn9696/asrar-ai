@@ -8,6 +8,8 @@ const { detectTriggers } = require('./emotionalReasoning');
 
 const RECENT_WINDOW_MS = 60 * 60 * 1000; // 60 minutes
 const RECENT_EVENT_LIMIT = 50;
+const HYSTERESIS_RATIO = 1.4;
+const HYSTERESIS_SHARE = 0.65;
 
 /**
  * @typedef {Object} Emotion
@@ -648,9 +650,17 @@ async function buildMirrorSummaryForPersona({ userId, personaId, rangeDays = 30 
         recentShare = weightSum ? sortedRecent[0][1] / weightSum : 0;
         recentSecondary = sortedRecent[1]?.[0] || null;
       }
-      if (recentPrimary && recentShare >= 0.35) {
-        primaryEmotion = recentPrimary;
-        secondaryEmotion = recentSecondary || secondaryEmotion;
+      if (recentPrimary && recentShare >= HYSTERESIS_SHARE) {
+        const baseScore = emotionTotals[primaryEmotion] || 0;
+        const recentScore = recentTotals[recentPrimary] || 0;
+        const canFlip = !primaryEmotion
+          || recentPrimary === primaryEmotion
+          || recentScore >= baseScore * HYSTERESIS_RATIO
+          || recentShare >= HYSTERESIS_SHARE;
+        if (canFlip) {
+          primaryEmotion = recentPrimary;
+          secondaryEmotion = recentSecondary || secondaryEmotion;
+        }
       }
     }
 

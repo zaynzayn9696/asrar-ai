@@ -16,6 +16,9 @@ function clamp(num, min, max) {
   return num;
 }
 
+const HYSTERESIS_RATIO = 1.4;
+const HYSTERESIS_SHARE = 0.65;
+
 async function logEmotionalEvent({
   userId,
   personaId,
@@ -127,8 +130,32 @@ async function upsertDailySummaryFromEvent(event) {
     counts[dominantEmotion] = (counts[dominantEmotion] || 0) + 1;
   }
 
-  // Recency-first: the latest event wins for today's topEmotion.
-  const topEmotion = dominantEmotion || summary.topEmotion || null;
+  // Smoothed topEmotion with hysteresis to avoid flapping on single messages.
+  const weights = {};
+  for (const [emotion, count] of Object.entries(counts)) {
+    const key = String(emotion || '').toUpperCase();
+    weights[key] = (weights[key] || 0) + (typeof count === 'number' ? count : 0);
+  }
+  const eventKey = String(dominantEmotion || '').toUpperCase();
+  if (eventKey) {
+    weights[eventKey] = (weights[eventKey] || 0) + 3; // boost latest message
+  }
+
+  const entries = Object.entries(weights).filter(([, v]) => typeof v === 'number');
+  entries.sort((a, b) => b[1] - a[1]);
+  const [candidate, candidateScore] = entries[0] || [summary.topEmotion, 0];
+  const current = String(summary.topEmotion || '').toUpperCase() || null;
+  const currentScore = current ? (weights[current] || 0) : 0;
+  const total = entries.reduce((acc, [, v]) => acc + v, 0) || 1;
+  const candidateShare = candidateScore / total;
+
+  const shouldSwitch =
+    !current ||
+    candidate === current ||
+    candidateScore >= currentScore * HYSTERESIS_RATIO ||
+    candidateShare >= HYSTERESIS_SHARE;
+
+  const topEmotion = shouldSwitch ? candidate : current || candidate;
 
   // Approximate total event count used for avgIntensity.
   const prevSamples = (summary.messageCount || 0) + (summary.voiceMessageCount || 0) + (summary.whisperUnlockCount || 0) + (summary.mirrorSessionCount || 0);
@@ -186,6 +213,51 @@ function parseRangeToDays(range) {
   return 30;
 }
 
+function dayKeyUTC(date) {
+  const d = new Date(date);
+  return d.toISOString().slice(0, 10);
+}
+
+function computeWeightedTopEmotion({ summary, dayEvents }) {
+  const baseCounts = (summary.emotionCounts && typeof summary.emotionCounts === 'object')
+    ? { ...summary.emotionCounts }
+    : {};
+
+  const weights = {};
+  // Add base counts as weight 1
+  for (const [emotion, count] of Object.entries(baseCounts)) {
+    const key = String(emotion || '').toUpperCase();
+    weights[key] = (weights[key] || 0) + (typeof count === 'number' ? count : 0);
+  }
+
+  // Recency boost: most recent events get higher weights (3x for first 10, 2x for next 10, then 1x)
+  (dayEvents || []).forEach((ev, idx) => {
+    const key = String(ev.dominantEmotion || ev.emotion || '').toUpperCase();
+    if (!key) return;
+    const w = idx < 10 ? 3 : idx < 20 ? 2 : 1;
+    weights[key] = (weights[key] || 0) + w;
+  });
+
+  const entries = Object.entries(weights).filter(([, v]) => typeof v === 'number');
+  if (!entries.length) return summary.topEmotion || null;
+
+  entries.sort((a, b) => b[1] - a[1]);
+  const [candidate, candidateScore] = entries[0];
+  const current = String(summary.topEmotion || '').toUpperCase() || null;
+  const currentScore = current ? (weights[current] || 0) : 0;
+  const total = entries.reduce((acc, [, v]) => acc + v, 0) || 1;
+  const candidateShare = candidateScore / total;
+
+  // Hysteresis: switch only if candidate clearly dominates.
+  const shouldSwitch =
+    !current ||
+    candidate === current ||
+    candidateScore >= currentScore * 1.4 ||
+    candidateShare >= 0.65;
+
+  return shouldSwitch ? candidate : current || candidate;
+}
+
 async function getTimeline({ userId, personaId, range, granularity }) {
   if (!userId || !personaId) {
     return { personaId, range, points: [], keyEvents: [] };
@@ -218,9 +290,6 @@ async function getTimeline({ userId, personaId, range, granularity }) {
         userId,
         personaId: String(personaId),
         timestamp: { gte: start },
-        eventType: {
-          in: ['whisper_unlocked', 'voice_first', 'mirror_generated'],
-        },
       },
       orderBy: { timestamp: 'asc' },
     });
@@ -231,25 +300,30 @@ async function getTimeline({ userId, personaId, range, granularity }) {
 
   const eventsByDay = new Map();
   for (const ev of events) {
-    const d = startOfDay(ev.timestamp);
-    const key = d.toISOString();
+    const key = dayKeyUTC(ev.timestamp);
     if (!eventsByDay.has(key)) eventsByDay.set(key, []);
-    eventsByDay.get(key).push({
-      type: ev.eventType,
-      label: ev.eventType,
-      timestamp: ev.timestamp,
-    });
+    eventsByDay.get(key).push(ev);
   }
 
   const points = summaries.map((s) => {
-    const dayKey = startOfDay(s.date).toISOString();
+    const dayKey = dayKeyUTC(s.date);
+    const dayEvents = (eventsByDay.get(dayKey) || []).sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    );
+    const messageEvents = dayEvents.filter((ev) => ev.eventType === 'message');
+    const topEmotion = computeWeightedTopEmotion({ summary: s, dayEvents: messageEvents });
+
     return {
       date: s.date,
-      topEmotion: s.topEmotion,
+      topEmotion,
       avgIntensity: s.avgIntensity,
       emotionDistribution: s.emotionCounts || {},
       messageCount: s.messageCount,
-      keyEvents: eventsByDay.get(dayKey) || [],
+      keyEvents: (eventsByDay.get(dayKey) || []).map((ev) => ({
+        type: ev.eventType,
+        label: ev.eventType,
+        timestamp: ev.timestamp,
+      })),
     };
   });
 
