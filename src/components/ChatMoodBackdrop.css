@@ -22,8 +22,8 @@
   background:
     radial-gradient(120% 120% at 20% 0%, rgba(17, 30, 52, 0.9) 0%, rgba(4, 8, 16, 0.95) 50%),
     linear-gradient(135deg, #0b1020 0%, #04060d 100%);
-  background-size: 140% 140%, 120% 120%;
-  animation: base-pan 40s ease-in-out infinite alternate;
+  background-size: 160% 160%, 140% 140%;
+  animation: base-pan 22s ease-in-out infinite alternate;
 }
 
 .chat-mood-backdrop__texture {
@@ -31,13 +31,13 @@
     linear-gradient(rgba(180, 220, 255, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(180, 220, 255, 0.02) 1px, transparent 1px);
   background-size: 70px 70px;
-  opacity: 0.2;
-  animation: texture-shift 48s linear infinite;
+  opacity: 0.26;
+  animation: texture-shift 30s linear infinite;
 }
 
 .chat-mood-backdrop__tint {
   mix-blend-mode: soft-light;
-  opacity: 0.2;
+  opacity: 0.24;
 }
 
 .chat-mood-backdrop--sad .chat-mood-backdrop__tint {
@@ -68,12 +68,12 @@
 }
 
 .chat-mood-backdrop__motion {
-  opacity: 0.32;
+  opacity: 0.45;
 }
 
 .chat-mood-backdrop__particles {
-  opacity: 0.24;
-  filter: blur(0.3px);
+  opacity: 0.3;
+  filter: blur(0.25px);
 }
 
 /* Sad: faint vertical streaks drifting */
@@ -87,8 +87,8 @@
   );
   background-size: 100% 160%;
   animation:
-    rain-fall 18s linear infinite,
-    rain-sway 26s ease-in-out infinite;
+    rain-fall 12s linear infinite,
+    rain-sway 18s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--sad .chat-mood-backdrop__particles {
@@ -105,14 +105,14 @@
     linear-gradient(115deg, rgba(120, 180, 190, 0.05), transparent 70%);
   background-size: 140% 140%, 180% 180%;
   animation:
-    wind-shift 22s ease-in-out infinite,
-    shimmer-slide 30s ease-in-out infinite;
+    wind-shift 14s ease-in-out infinite,
+    shimmer-slide 18s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--anxious .chat-mood-backdrop__particles {
   background: linear-gradient(120deg, rgba(120, 180, 190, 0.05), transparent 60%);
   background-size: 160% 160%;
-  animation: shimmer-slide 24s ease-in-out infinite;
+  animation: shimmer-slide 16s ease-in-out infinite;
 }
 
 /* Angry: distant edge glow pulse */
@@ -131,7 +131,7 @@
 .chat-mood-backdrop--tired .chat-mood-backdrop__motion {
   background: linear-gradient(180deg, transparent 0%, rgba(120, 136, 158, 0.18) 60%, transparent 100%);
   background-size: 100% 160%;
-  animation: mist-rise 34s ease-in-out infinite;
+  animation: mist-rise 18s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--tired .chat-mood-backdrop__particles {
@@ -139,15 +139,15 @@
     radial-gradient(120% 50% at 50% 90%, rgba(160, 176, 200, 0.08), transparent 75%),
     radial-gradient(90% 50% at 40% 85%, rgba(140, 160, 190, 0.06), transparent 75%);
   filter: blur(2px);
-  animation: mist-shift 32s ease-in-out infinite;
+  animation: mist-shift 18s ease-in-out infinite;
 }
 
 /* Calm / Neutral: gentle breathing gradient */
 .chat-mood-backdrop--calm .chat-mood-backdrop__motion,
 .chat-mood-backdrop--neutral .chat-mood-backdrop__motion {
   background: radial-gradient(90% 80% at 50% 40%, rgba(100, 130, 170, 0.16), transparent 70%);
-  background-size: 140% 140%;
-  animation: breathe 28s ease-in-out infinite;
+  background-size: 150% 150%;
+  animation: breathe 16s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--calm .chat-mood-backdrop__particles,
@@ -163,7 +163,7 @@
     radial-gradient(90% 70% at 70% 40%, rgba(210, 130, 200, 0.18), transparent 70%),
     radial-gradient(100% 90% at 60% 80%, rgba(150, 190, 255, 0.12), transparent 80%);
   background-size: 220% 220%;
-  animation: aurora-flow 32s ease-in-out infinite alternate;
+  animation: aurora-flow 18s ease-in-out infinite alternate;
 }
 
 .chat-mood-backdrop--hopeful .chat-mood-backdrop__particles,
@@ -172,7 +172,7 @@
   background: radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.05), transparent 40%),
     radial-gradient(circle at 70% 25%, rgba(255, 220, 240, 0.05), transparent 45%);
   background-size: 160% 160%;
-  animation: aurora-pulse 28s ease-in-out infinite;
+  animation: aurora-pulse 14s ease-in-out infinite;
 }
 
 @keyframes base-pan {
