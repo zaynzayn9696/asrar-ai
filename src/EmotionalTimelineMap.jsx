@@ -166,6 +166,19 @@ export default function EmotionalTimelineMap({
     };
   }, [isOpen, personaId, mirrorScope, isAr]);
 
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      document.addEventListener('keydown', handleEsc);
+      return () => document.removeEventListener('keydown', handleEsc);
+    }
+  }, [isOpen, onClose]);
+
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -387,10 +400,10 @@ export default function EmotionalTimelineMap({
   }, [points]);
 
   useEffect(() => {
-    if (displayDays.length && selectedDayIndex === null) {
-      setSelectedDayIndex(0);
+    if (displayDays.length) {
+      setSelectedDayIndex(null);
     }
-  }, [displayDays, selectedDayIndex]);
+  }, [displayDays]);
 
   const selectedDay = selectedDayIndex !== null 
     ? displayDays[selectedDayIndex] 
@@ -414,7 +427,10 @@ export default function EmotionalTimelineMap({
           <button
             type="button"
             className="emotional-journey-close-btn"
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             aria-label={isAr ? "إغلاق" : "Close"}
           >
             ×
@@ -478,6 +494,7 @@ export default function EmotionalTimelineMap({
                       className={`daily-emotion-card ${
                         isSelected ? "daily-emotion-card--selected" : ""
                       }`}
+                      onClick={() => setSelectedDayIndex(isSelected ? null : index)}
                     >
                       <div className="daily-emotion-day">
                         {getDayLabel(day.date, index, displayDays.length, day.dateKey)}

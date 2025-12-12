@@ -711,6 +711,9 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
 }
 
 .emotional-journey-close-btn:hover {
