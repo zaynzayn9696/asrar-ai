@@ -885,18 +885,14 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       return res.status(403).json({ error: 'premium_required' });
     }
 
-    const rawLang = (req.body && req.body.lang) || null;
-    const rawDialect = (req.body && req.body.dialect) || null;
+    const dialectLower = (req.body && req.body.dialect && req.body.dialect.toLowerCase()) || '';
+    const langLower = (req.body && req.body.lang && req.body.lang.toLowerCase()) || '';
+    const arabicDialects = new Set(['msa','ar','jo','eg','sa','lb','sy','iq','gulf','khaleeji','ae','qa','kw','bh','ye','om','dz','ma','tn','ps','sd','ly']);
+    const forceArabic = langLower === 'ar' || arabicDialects.has(dialectLower);
+    const forceEnglish = !forceArabic && (langLower === 'en' || dialectLower === 'en');
+    const lang = forceArabic ? 'ar' : (forceEnglish ? 'en' : (langLower || 'en'));
+    const dialect = forceArabic ? (dialectLower || 'msa') : (forceEnglish ? 'en' : (dialectLower || 'msa'));
 
-    console.log('[ChatRoute] incoming /api/chat/voice', {
-      userId: req.user && req.user.id,
-      rawLang,
-      rawDialect,
-      characterId: req.body && req.body.characterId,
-    });
-
-    const lang = rawLang || 'en';
-    const dialect = rawDialect || 'msa';
     const rawToneKey = body.tone;
 
     const bodyConversationId = body.conversationId;
@@ -958,12 +954,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       return res.status(400).json({ message: 'Unknown character' });
     }
 
-    let languageForEngine;
-    if (rawLang === 'ar') {
-      languageForEngine = 'ar';
-    } else {
-      languageForEngine = 'en';
-    }
+    let languageForEngine = lang === 'ar' ? 'ar' : 'en';
 
     const isArabicConversation = languageForEngine === 'ar';
     const personaText = isArabicConversation ? persona.ar : persona.en;
@@ -1574,15 +1565,13 @@ router.post('/message', async (req, res) => {
 
     const body = req.body || {};
 
-    const rawLang = (req.body && req.body.lang) || null;
-    const rawDialect = (req.body && req.body.dialect) || null;
-
-    console.log('[ChatRoute] incoming /api/chat/message', {
-      userId: req.user && req.user.id,
-      rawLang,
-      rawDialect,
-      characterId: req.body && req.body.characterId,
-    });
+    const dialectLower = (req.body && req.body.dialect && req.body.dialect.toLowerCase()) || '';
+    const langLower = (req.body && req.body.lang && req.body.lang.toLowerCase()) || '';
+    const arabicDialects = new Set(['msa','ar','jo','eg','sa','lb','sy','iq','gulf','khaleeji','ae','qa','kw','bh','ye','om','dz','ma','tn','ps','sd','ly']);
+    const forceArabic = langLower === 'ar' || arabicDialects.has(dialectLower);
+    const forceEnglish = !forceArabic && (langLower === 'en' || dialectLower === 'en');
+    const lang = forceArabic ? 'ar' : (forceEnglish ? 'en' : (langLower || 'en'));
+    const dialect = forceArabic ? (dialectLower || 'msa') : (forceEnglish ? 'en' : (dialectLower || 'msa'));
 
     const rawMessages = Array.isArray(body.messages) ? body.messages : [];
     const characterId = body.characterId || 'daloua';
@@ -1590,8 +1579,6 @@ router.post('/message', async (req, res) => {
       return res.status(403).json({ error: 'premium_required' });
     }
 
-    const lang = rawLang || 'en';
-    const dialect = rawDialect || 'msa';
     const rawToneKey = body.tone;
 
     const bodyConversationId = body.conversationId;
@@ -1661,13 +1648,9 @@ router.post('/message', async (req, res) => {
     }
 
     const isArabicConversation = lang === 'ar';
+
     const personaText = isArabicConversation ? persona.ar : persona.en;
-    let languageForEngine;
-    if (rawLang === 'ar') {
-      languageForEngine = 'ar';
-    } else {
-      languageForEngine = 'en';
-    }
+    const languageForEngine = lang === 'ar' ? 'ar' : 'en';
 
     // Ultra-fast path: trivial greetings / acknowledgements.
     if (isQuickPhrase(userText)) {
