@@ -18,6 +18,8 @@ function clamp(num, min, max) {
 
 const HYSTERESIS_RATIO = 1.4;
 const HYSTERESIS_SHARE = 0.65;
+const NEGATIVE_SET = new Set(['SAD', 'ANXIOUS', 'ANGRY', 'LONELY', 'STRESSED']);
+const POSITIVE_SET = new Set(['HOPEFUL', 'GRATEFUL', 'HAPPY', 'WARM', 'CALM', 'NEUTRAL']);
 
 async function logEmotionalEvent({
   userId,
@@ -213,9 +215,175 @@ function parseRangeToDays(range) {
   return 30;
 }
 
-function dayKeyUTC(date) {
+function dayKeyLocal(date) {
   const d = new Date(date);
-  return d.toISOString().slice(0, 10);
+  return d.toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
+}
+
+function computeStableMoodFromEvents({ events, lastDailyTop }) {
+  const recent = (events || [])
+    .filter((ev) => ev && ev.eventType === 'message')
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 60);
+
+  if (!recent.length) return null;
+
+  const weightForIndex = (idx) => {
+    if (idx < 8) return 3;
+    if (idx < 20) return 2;
+    return 1;
+  };
+
+  const weights = {};
+  const intensityWeights = {};
+  let totalWeight = 0;
+
+  let transientEmotion = null;
+  let streakEmotion = null;
+  let streakCount = 0;
+  let streakIntensitySum = 0;
+  let newestTs = null;
+  let oldestTs = null;
+
+  recent.forEach((ev, idx) => {
+    const key = String(ev.dominantEmotion || ev.emotion || '').toUpperCase();
+    if (!key) return;
+    if (idx === 0) transientEmotion = key;
+
+    const w = weightForIndex(idx);
+    const intensity01 = Math.max(0, Math.min(1, Number(ev.intensity || 0) / 5));
+
+    weights[key] = (weights[key] || 0) + w;
+    intensityWeights[key] = (intensityWeights[key] || 0) + w * intensity01;
+    totalWeight += w;
+    const ts = new Date(ev.timestamp).getTime();
+    if (Number.isFinite(ts)) {
+      if (newestTs === null || ts > newestTs) newestTs = ts;
+      if (oldestTs === null || ts < oldestTs) oldestTs = ts;
+    }
+
+    if (idx === 0) {
+      streakEmotion = key;
+      streakCount = 1;
+      streakIntensitySum = intensity01;
+    } else if (key === streakEmotion) {
+      streakCount += 1;
+      streakIntensitySum += intensity01;
+    }
+  });
+
+  const entries = Object.entries(weights).filter(([, v]) => typeof v === 'number' && v > 0);
+  if (!entries.length || totalWeight <= 0) return null;
+
+  entries.sort((a, b) => b[1] - a[1]);
+  const [candidate, candidateScore] = entries[0];
+  const baseline = String(lastDailyTop || '').toUpperCase() || null;
+  const baselineScore = baseline ? weights[baseline] || 0 : 0;
+  const candidateShare = candidateScore / totalWeight;
+
+  const streakAvgIntensity =
+    streakCount > 0 ? Math.max(0, Math.min(1, streakIntensitySum / streakCount)) : 0;
+
+  const allowSwitch =
+    !baseline ||
+    candidate === baseline ||
+    candidateScore >= baselineScore * 1.3 ||
+    candidateShare >= 0.6 ||
+    (streakEmotion === candidate && streakCount >= 3 && streakAvgIntensity >= 0.65) ||
+    (candidateShare >= 0.5 && totalWeight >= 24);
+
+  const spanMs = newestTs !== null && oldestTs !== null ? Math.max(0, newestTs - oldestTs) : 0;
+  const spanMinutes = spanMs / 60000;
+  const sustainedMessages = recent.length >= 4;
+  const extremeShare = candidateShare >= 0.75 || streakAvgIntensity >= 0.75;
+  const cooldownSatisfied = spanMinutes >= 2;
+
+  const finalSwitch = allowSwitch && (extremeShare || sustainedMessages) && (cooldownSatisfied || extremeShare);
+
+  const dominantEmotion = finalSwitch ? candidate : baseline || candidate;
+
+  return {
+    dominantEmotion,
+    transientEmotion,
+    candidateShare,
+    windowSize: recent.length,
+    reason: finalSwitch ? 'trend-dominates' : 'protected-by-hysteresis',
+    switched: finalSwitch && baseline && dominantEmotion !== baseline,
+  };
+}
+
+function computeDaySummary({ messageEvents, topEmotion, avgIntensity }) {
+  const sorted = (messageEvents || [])
+    .filter((ev) => ev && ev.eventType === 'message')
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  if (!sorted.length) {
+    return {
+      startEmotion: topEmotion || null,
+      endEmotion: topEmotion || null,
+      peakEmotion: topEmotion || null,
+      peakIntensity: avgIntensity || 0,
+      volatility: 'low',
+      swings: 0,
+      messageCount: 0,
+    };
+  }
+
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  let peakEmotion = null;
+  let peakIntensity = -1;
+  let negativePeak = null;
+  let positivePeak = null;
+  let negativePeakIntensity = -1;
+  let positivePeakIntensity = -1;
+  let swings = 0;
+  let prev = null;
+  let intensitySum = 0;
+
+  sorted.forEach((ev) => {
+    const key = String(ev.dominantEmotion || ev.emotion || '').toUpperCase();
+    const intensity01 = Math.max(0, Math.min(1, Number(ev.intensity || 0) / 5));
+    intensitySum += intensity01;
+
+    if (key) {
+      if (prev && prev !== key) swings += 1;
+      prev = key;
+    }
+
+    if (intensity01 >= peakIntensity) {
+      peakIntensity = intensity01;
+      peakEmotion = key || peakEmotion;
+    }
+
+    if (NEGATIVE_SET.has(key) && intensity01 >= negativePeakIntensity) {
+      negativePeakIntensity = intensity01;
+      negativePeak = key;
+    }
+    if (POSITIVE_SET.has(key) && intensity01 >= positivePeakIntensity) {
+      positivePeakIntensity = intensity01;
+      positivePeak = key;
+    }
+  });
+
+  let volatility = 'low';
+  if (swings >= 4) volatility = 'high';
+  else if (swings >= 2) volatility = 'medium';
+
+  const avg = sorted.length ? intensitySum / sorted.length : avgIntensity || 0;
+
+  return {
+    startEmotion: String(first.dominantEmotion || first.emotion || topEmotion || '').toUpperCase() || null,
+    endEmotion: String(last.dominantEmotion || last.emotion || topEmotion || '').toUpperCase() || null,
+    peakEmotion,
+    peakIntensity: Math.max(0, Math.min(1, peakIntensity >= 0 ? peakIntensity : avg || 0)),
+    volatility,
+    swings,
+    messageCount: sorted.length,
+    negativePeak,
+    positivePeak,
+    avgIntensity: avg,
+  };
 }
 
 function computeWeightedTopEmotion({ summary, dayEvents }) {
@@ -252,8 +420,8 @@ function computeWeightedTopEmotion({ summary, dayEvents }) {
   const shouldSwitch =
     !current ||
     candidate === current ||
-    candidateScore >= currentScore * 1.4 ||
-    candidateShare >= 0.65;
+    candidateScore >= currentScore * HYSTERESIS_RATIO ||
+    candidateShare >= HYSTERESIS_SHARE;
 
   return shouldSwitch ? candidate : current || candidate;
 }
@@ -300,29 +468,38 @@ async function getTimeline({ userId, personaId, range, granularity }) {
 
   const eventsByDay = new Map();
   for (const ev of events) {
-    const key = dayKeyUTC(ev.timestamp);
+    const key = dayKeyLocal(ev.timestamp);
     if (!eventsByDay.has(key)) eventsByDay.set(key, []);
     eventsByDay.get(key).push(ev);
   }
 
   const points = summaries.map((s) => {
-    const dayKey = dayKeyUTC(s.date);
+    const dayKey = dayKeyLocal(s.date);
     const dayEvents = (eventsByDay.get(dayKey) || []).sort(
       (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
     );
     const messageEvents = dayEvents.filter((ev) => ev.eventType === 'message');
     const topEmotion = computeWeightedTopEmotion({ summary: s, dayEvents: messageEvents });
+    const daySummary = computeDaySummary({
+      messageEvents,
+      topEmotion,
+      avgIntensity: s.avgIntensity,
+    });
 
     return {
       date: s.date,
+      dateKey: dayKey,
       topEmotion,
       avgIntensity: s.avgIntensity,
       emotionDistribution: s.emotionCounts || {},
       messageCount: s.messageCount,
+      daySummary,
       keyEvents: (eventsByDay.get(dayKey) || []).map((ev) => ({
         type: ev.eventType,
         label: ev.eventType,
         timestamp: ev.timestamp,
+        emotion: ev.dominantEmotion || ev.emotion || null,
+        intensity: ev.intensity || null,
       })),
     };
   });
@@ -332,12 +509,18 @@ async function getTimeline({ userId, personaId, range, granularity }) {
     timestamp: ev.timestamp,
   }));
 
+  const currentMood = computeStableMoodFromEvents({
+    events,
+    lastDailyTop: points.length ? points[points.length - 1].topEmotion : null,
+  });
+
   return {
     personaId: String(personaId),
     range: `${days}d`,
     granularity: granularity || 'daily',
     points,
     keyEvents,
+    currentMood,
   };
 }
 

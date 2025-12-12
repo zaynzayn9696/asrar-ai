@@ -5,6 +5,11 @@ import { API_BASE } from "./apiBase";
 import { TOKEN_KEY } from "./hooks/useAuth";
 import AIMirrorPanel from "./AIMirrorPanel";
 
+const dayKeyLocal = (date) => {
+  const d = new Date(date);
+  return d.toLocaleDateString("en-CA");
+};
+
 // Emotion display data
 const EMOTION_DISPLAY = {
   en: {
@@ -174,32 +179,148 @@ export default function EmotionalTimelineMap({
     return [];
   }, [data]);
 
+  const buildDayNarrative = (day) => {
+    const summary = day?.daySummary || {};
+    const start = summary.startEmotion;
+    const end = summary.endEmotion;
+    const peak = summary.peakEmotion;
+    const swings = summary.swings || 0;
+    const volatility = summary.volatility || "low";
+    const msgCount = summary.messageCount || 0;
+    const intensity = typeof summary.avgIntensity === "number" ? summary.avgIntensity : day?.avgIntensity;
+
+    if (!msgCount && !day?.topEmotion) {
+      return isAr
+        ? "لا توجد محادثات مسجلة لهذا اليوم بعد."
+        : "No conversations are logged for this day yet.";
+    }
+
+    const parts = [];
+    if (start) {
+      parts.push(
+        isAr
+          ? `بدأ اليوم بنبرة ${start.toLowerCase()}.`
+          : `The day started sounding ${start.toLowerCase()}.`
+      );
+    }
+    if (peak) {
+      parts.push(
+        isAr
+          ? `أعلى لحظة كانت ${peak.toLowerCase()} (الشدة ${(Math.round((summary.peakIntensity || 0) * 100) / 100) || intensity || 0}).`
+          : `Peak tone hit ${peak.toLowerCase()} (intensity ${(Math.round((summary.peakIntensity || 0) * 100) / 100) || intensity || 0}).`
+      );
+    }
+    if (end && end !== start) {
+      parts.push(
+        isAr
+          ? `انتهى اليوم على ${end.toLowerCase()}.`
+          : `It ended feeling ${end.toLowerCase()}.`
+      );
+    }
+    if (!parts.length && day?.topEmotion) {
+      parts.push(
+        isAr
+          ? `النبرة العامة كانت ${day.topEmotion.toLowerCase()}.`
+          : `Overall the tone was ${day.topEmotion.toLowerCase()}.`
+      );
+    }
+
+    const swingLine =
+      volatility === "high"
+        ? isAr
+          ? "اليوم كان متقلباً بوضوح، عدة تغيرات في النبرة."
+          : "The day swung noticeably with several shifts."
+        : volatility === "medium"
+        ? isAr
+          ? "هناك بعض التبدلات المتوسطة في المشاعر."
+          : "There were a few shifts in mood."
+        : isAr
+        ? "النبرة بقيت مستقرة نسبياً."
+        : "The tone stayed relatively steady.";
+
+    return `${parts.join(" ")} ${swingLine}`.trim();
+  };
+
+  const buildDayBullets = (day) => {
+    const summary = day?.daySummary || {};
+    const bullets = [];
+    if (summary.startEmotion) {
+      bullets.push(
+        isAr
+          ? `البداية: ${summary.startEmotion.toLowerCase()}`
+          : `Start: ${summary.startEmotion.toLowerCase()}`
+      );
+    }
+    if (summary.peakEmotion) {
+      bullets.push(
+        isAr
+          ? `الذروة: ${summary.peakEmotion.toLowerCase()}`
+          : `Peak: ${summary.peakEmotion.toLowerCase()}`
+      );
+    }
+    if (summary.endEmotion) {
+      bullets.push(
+        isAr
+          ? `النهاية: ${summary.endEmotion.toLowerCase()}`
+          : `End: ${summary.endEmotion.toLowerCase()}`
+      );
+    }
+    if (typeof summary.swings === "number") {
+      bullets.push(
+        isAr
+          ? `عدد التبدلات: ${summary.swings}`
+          : `Mood shifts: ${summary.swings}`
+      );
+    }
+    if (summary.messageCount) {
+      bullets.push(
+        isAr
+          ? `عدد الرسائل: ${summary.messageCount}`
+          : `Messages: ${summary.messageCount}`
+      );
+    }
+    return bullets;
+  };
+
   // Helper functions for the new simple design
-  const getDayLabel = (dateStr, index, totalDays) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
-    
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    if (date.toDateString() === today.toDateString()) {
+  const todayKey = React.useMemo(() => dayKeyLocal(new Date()), []);
+
+  const yesterdayKey = React.useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return dayKeyLocal(d);
+  }, []);
+
+  const getDayLabel = (dateValue, index, totalDays, dayKeyOverride) => {
+    const key = dayKeyOverride || (dateValue ? dayKeyLocal(dateValue) : "");
+    if (!key) return "";
+
+    if (key === todayKey) {
       return isAr ? "اليوم" : "Today";
     }
-    if (date.toDateString() === yesterday.toDateString()) {
+    if (key === yesterdayKey) {
       return isAr ? "أمس" : "Yesterday";
     }
-    
-    // For older dates, show day name
+
+    // For older dates, show month/day
     if (index === totalDays - 1) {
-      return date.toLocaleDateString(isAr ? 'ar' : 'en', { weekday: 'short' });
+      try {
+        return new Date(key).toLocaleDateString(isAr ? "ar" : "en", {
+          weekday: "short",
+        });
+      } catch (_) {
+        return key;
+      }
     }
-    
-    return date.toLocaleDateString(isAr ? 'ar' : 'en', { 
-      month: 'short', 
-      day: 'numeric' 
-    });
+
+    try {
+      return new Date(key).toLocaleDateString(isAr ? "ar" : "en", {
+        month: "short",
+        day: "numeric",
+      });
+    } catch (_) {
+      return key;
+    }
   };
 
   const getEmotionDisplay = (emotionCode) => {
@@ -264,6 +385,12 @@ export default function EmotionalTimelineMap({
     if (!points.length) return [];
     return points.slice(-10).reverse(); // Most recent first
   }, [points]);
+
+  useEffect(() => {
+    if (displayDays.length && selectedDayIndex === null) {
+      setSelectedDayIndex(0);
+    }
+  }, [displayDays, selectedDayIndex]);
 
   const selectedDay = selectedDayIndex !== null 
     ? displayDays[selectedDayIndex] 
@@ -351,17 +478,9 @@ export default function EmotionalTimelineMap({
                       className={`daily-emotion-card ${
                         isSelected ? "daily-emotion-card--selected" : ""
                       }`}
-                      onClick={() => setSelectedDayIndex(isSelected ? null : index)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          setSelectedDayIndex(isSelected ? null : index);
-                        }
-                      }}
                     >
                       <div className="daily-emotion-day">
-                        {getDayLabel(day.date, index, displayDays.length)}
+                        {getDayLabel(day.date, index, displayDays.length, day.dateKey)}
                       </div>
                       <div className="daily-emotion-visual">
                         <div 
@@ -391,7 +510,7 @@ export default function EmotionalTimelineMap({
               <div className="day-detail-section">
                 <div className="day-detail-header">
                   <h4 className="day-detail-title">
-                    {getDayLabel(selectedDay.date, selectedDayIndex, displayDays.length)}
+                    {getDayLabel(selectedDay.date, selectedDayIndex, displayDays.length, selectedDay.dateKey)}
                   </h4>
                   <button
                     type="button"
@@ -405,52 +524,45 @@ export default function EmotionalTimelineMap({
                 <div className="day-detail-content">
                   <div className="day-detail-emotions">
                     <h5 className="day-detail-emotions-title">
-                      {isAr ? "المشاعر الرئيسية اليوم" : "Main emotions today"}
+                      {isAr ? "المشاعر الأبرز" : "Top Emotions"}
                     </h5>
                     <div className="day-detail-emotion-row">
-                      <span 
+                      <span
                         className="day-detail-emoji"
                         style={{ color: getEmotionDisplay(selectedDay.topEmotion).color }}
                       >
                         {getEmotionDisplay(selectedDay.topEmotion).emoji}
                       </span>
-                      <span 
+                      <span
                         className="day-detail-emotion-label"
-                        style={{ 
+                        style={{
                           backgroundColor: `${getEmotionDisplay(selectedDay.topEmotion).color}20`,
-                          borderColor: getEmotionDisplay(selectedDay.topEmotion).color 
+                          borderColor: getEmotionDisplay(selectedDay.topEmotion).color,
                         }}
                       >
                         {getEmotionDisplay(selectedDay.topEmotion).label}
                       </span>
                     </div>
                   </div>
-                  
-                  <div className="day-detail-pattern">
-                    <h5 className="day-detail-pattern-title">
-                      {isAr ? "النمط العاطفي" : "Emotional Pattern"}
-                    </h5>
-                    <ul className="day-detail-pattern-list">
-                      <li>
-                        {selectedDay.avgIntensity > 0.7
-                          ? isAr
-                            ? "مشاعر قوية وواضحة اليوم"
-                            : "Strong, clear emotions today"
-                          : selectedDay.avgIntensity < 0.4
-                          ? isAr
-                            ? "يوم هادئ ومتوازن عاطفياً"
-                            : "A calm, emotionally balanced day"
-                          : isAr
-                          ? "مستوى معتدل من الشدة العاطفية"
-                          : "Moderate emotional intensity"}
-                      </li>
-                      <li>
-                        {isAr 
-                          ? "استمر في المشاركة للحصول على رؤى أعمق"
-                          : "Keep sharing for deeper insights"}
-                      </li>
-                    </ul>
-                  </div>
+                  {selectedDay && selectedDay.topEmotion ? (
+                    <div className="day-detail-pattern">
+                      <h5 className="day-detail-pattern-title">
+                        {isAr ? "ملخص اليوم" : "Day Story"}
+                      </h5>
+                      <p className="day-detail-copy">
+                        {buildDayNarrative(selectedDay)}
+                      </p>
+                      <ul className="day-detail-pattern-list">
+                        {buildDayBullets(selectedDay).map((line, idx) => (
+                          <li key={idx}>{line}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="day-detail-copy">
+                      {isAr ? "لا يوجد بيانات متاحة لهذا اليوم." : "No data available for this day."}
+                    </p>
+                  )}
                 </div>
               </div>
             )}

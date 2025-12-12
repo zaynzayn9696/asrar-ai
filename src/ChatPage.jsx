@@ -738,6 +738,15 @@ export default function ChatPage() {
         setEmotionalData(data);
         const derivedMood = deriveUIMoodFromTimeline(data);
         setCurrentMood(derivedMood);
+        try {
+          const debugFlag =
+            typeof window !== "undefined" &&
+            localStorage.getItem("asrar_mood_debug") === "true";
+          if (debugFlag) {
+            console.log("[MoodDebug] timeline currentMood", data?.currentMood);
+            console.log("[MoodDebug] derived UI mood", derivedMood);
+          }
+        } catch (_) {}
       }
     } catch (err) {
       console.error("[ChatPage] Failed to fetch emotional data", err);
@@ -759,6 +768,17 @@ export default function ChatPage() {
       return () => clearTimeout(timer);
     }
   }, [messages.length]);
+
+  useEffect(() => {
+    try {
+      const debugFlag =
+        typeof window !== "undefined" &&
+        localStorage.getItem("asrar_mood_debug") === "true";
+      if (debugFlag) {
+        console.log("[MoodDebug] currentMood changed", currentMood);
+      }
+    } catch (_) {}
+  }, [currentMood]);
 
   // Auto-expand textarea up to ~3 lines, then scroll internally
   useEffect(() => {

@@ -23,6 +23,13 @@ export function mapEmotionToUIMood(emotion) {
 }
 
 export function deriveUIMoodFromTimeline(timelineData) {
+  if (timelineData && typeof timelineData === "object") {
+    const stableCandidate = mapEmotionToUIMood(
+      timelineData.currentMood?.dominantEmotion || timelineData.currentMood?.transientEmotion
+    );
+    if (stableCandidate) return stableCandidate;
+  }
+
   const points = Array.isArray(timelineData?.points)
     ? timelineData.points
     : Array.isArray(timelineData)
