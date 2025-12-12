@@ -12,254 +12,155 @@
   position: absolute;
   inset: 0;
   mix-blend-mode: screen;
-  transform: translate3d(0, 0, 0);
 }
 
-/* Base: slow gradient drift (hero-inspired) */
+/* Default: dark premium base, diagonal texture, soft vignette */
 .chat-mood-layer--base {
   background:
-    radial-gradient(120% 120% at 20% 10%, rgba(44, 120, 200, 0.22), transparent 55%),
-    radial-gradient(120% 120% at 80% 20%, rgba(200, 120, 200, 0.2), transparent 60%),
-    linear-gradient(135deg, #04060f 0%, #060a18 50%, #03040b 100%);
-  animation: base-drift 24s ease-in-out infinite alternate;
-  opacity: 0.75;
+    radial-gradient(140% 100% at 50% 42%, rgba(50, 90, 140, 0.22), transparent 65%),
+    linear-gradient(145deg, #04060f 0%, #0a101c 52%, #05070f 100%);
+  opacity: 0.84;
 }
 
-/* Glow: soft pulses similar to hero mist */
 .chat-mood-layer--glow {
   background:
-    radial-gradient(120% 80% at 30% 40%, rgba(120, 200, 255, 0.22), transparent 65%),
-    radial-gradient(110% 90% at 70% 60%, rgba(255, 180, 230, 0.18), transparent 70%);
+    radial-gradient(125% 95% at 50% 48%, rgba(150, 190, 240, 0.18), transparent 70%),
+    radial-gradient(155% 115% at 50% 82%, rgba(6, 10, 16, 0.5), transparent 82%);
   filter: blur(10px);
-  opacity: 0.35;
-  animation: glow-pulse 18s ease-in-out infinite;
+  opacity: 0.36;
+  mix-blend-mode: screen;
 }
 
-/* Particles: faint moving dots/lines */
 .chat-mood-layer--particles {
   background:
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.08), transparent 38%),
-    radial-gradient(circle at 80% 25%, rgba(200, 235, 255, 0.07), transparent 42%),
-    radial-gradient(circle at 55% 70%, rgba(180, 210, 255, 0.05), transparent 45%);
-  opacity: 0.28;
-  animation: particles-drift 20s ease-in-out infinite;
+    repeating-linear-gradient(135deg, rgba(170, 210, 240, 0.16) 0px, rgba(170, 210, 240, 0.16) 18px, transparent 18px, transparent 44px),
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.04), transparent 40%),
+    radial-gradient(circle at 80% 25%, rgba(200, 235, 255, 0.04), transparent 42%),
+    radial-gradient(circle at 55% 70%, rgba(180, 210, 255, 0.03), transparent 45%);
+  opacity: 0.25;
 }
 
-/* Mood tints: colorized overlays */
+/* Sad / Lonely */
 .chat-mood-backdrop--sad .chat-mood-layer--base {
   background:
-    radial-gradient(120% 120% at 20% 10%, rgba(70, 110, 180, 0.32), transparent 55%),
-    radial-gradient(120% 120% at 80% 20%, rgba(40, 70, 140, 0.28), transparent 60%),
-    linear-gradient(145deg, #050a16 0%, #0a1024 55%, #060a16 100%);
+    radial-gradient(140% 100% at 50% 45%, rgba(40, 90, 150, 0.24), transparent 65%),
+    linear-gradient(145deg, #040912 0%, #0a1320 55%, #050912 100%);
 }
-
+.chat-mood-backdrop--sad .chat-mood-layer--glow {
+  background:
+    radial-gradient(122% 92% at 48% 46%, rgba(70, 120, 190, 0.2), transparent 72%),
+    radial-gradient(150% 112% at 50% 82%, rgba(5, 8, 12, 0.48), transparent 84%);
+}
 .chat-mood-backdrop--sad .chat-mood-layer--particles {
   background:
-    repeating-linear-gradient(180deg, rgba(140, 180, 230, 0.18) 0px, rgba(140, 180, 230, 0.18) 18px, transparent 22px, transparent 46px),
-    radial-gradient(circle at 25% 35%, rgba(160, 200, 240, 0.06), transparent 40%),
-    radial-gradient(circle at 65% 65%, rgba(120, 160, 220, 0.05), transparent 45%);
-  animation:
-    rain-fall 12s linear infinite,
-    particles-drift 18s ease-in-out infinite;
+    repeating-linear-gradient(135deg, rgba(90, 140, 190, 0.16) 0px, rgba(90, 140, 190, 0.16) 18px, transparent 18px, transparent 44px),
+    radial-gradient(circle at 22% 32%, rgba(160, 200, 240, 0.05), transparent 40%),
+    radial-gradient(circle at 68% 62%, rgba(110, 150, 210, 0.04), transparent 45%);
 }
 
+/* Anxious / Stressed */
 .chat-mood-backdrop--anxious .chat-mood-layer--base {
   background:
-    radial-gradient(120% 120% at 20% 20%, rgba(70, 150, 170, 0.3), transparent 55%),
-    radial-gradient(120% 120% at 80% 30%, rgba(30, 80, 100, 0.26), transparent 60%),
-    linear-gradient(150deg, #041019 0%, #081624 55%, #050b14 100%);
+    radial-gradient(140% 100% at 50% 45%, rgba(70, 150, 170, 0.26), transparent 65%),
+    linear-gradient(150deg, #06101c 0%, #0b1828 55%, #06101c 100%);
 }
-
+.chat-mood-backdrop--anxious .chat-mood-layer--glow {
+  background:
+    radial-gradient(130% 95% at 50% 48%, rgba(90, 170, 200, 0.2), transparent 70%),
+    radial-gradient(150% 112% at 50% 82%, rgba(6, 10, 16, 0.5), transparent 84%);
+}
 .chat-mood-backdrop--anxious .chat-mood-layer--particles {
   background:
-    repeating-linear-gradient(165deg, rgba(160, 220, 240, 0.16) 0px, rgba(160, 220, 240, 0.16) 16px, transparent 22px, transparent 48px),
-    radial-gradient(circle at 70% 40%, rgba(180, 220, 240, 0.06), transparent 45%);
-  animation:
-    wind-sweep 10s linear infinite,
-    particles-drift 16s ease-in-out infinite;
+    repeating-linear-gradient(135deg, rgba(140, 210, 230, 0.2) 0px, rgba(140, 210, 230, 0.2) 18px, transparent 18px, transparent 44px),
+    radial-gradient(circle at 70% 40%, rgba(180, 220, 240, 0.06), transparent 45%),
+    radial-gradient(circle at 30% 65%, rgba(110, 170, 200, 0.05), transparent 44%);
 }
 
+/* Hopeful / Happy / Warm */
 .chat-mood-backdrop--hopeful .chat-mood-layer--base,
 .chat-mood-backdrop--happy .chat-mood-layer--base,
 .chat-mood-backdrop--warm .chat-mood-layer--base {
   background:
-    radial-gradient(120% 120% at 25% 20%, rgba(120, 230, 255, 0.26), transparent 60%),
-    radial-gradient(110% 100% at 75% 35%, rgba(255, 180, 230, 0.24), transparent 65%),
-    linear-gradient(145deg, #071224 0%, #0b1630 55%, #081020 100%);
-  animation: hero-base-drift 22s ease-in-out infinite alternate;
+    radial-gradient(140% 100% at 50% 45%, rgba(120, 220, 250, 0.26), transparent 65%),
+    radial-gradient(120% 90% at 70% 40%, rgba(220, 160, 240, 0.18), transparent 68%),
+    linear-gradient(145deg, #071020 0%, #0c1a30 55%, #071020 100%);
 }
-
 .chat-mood-backdrop--hopeful .chat-mood-layer--glow,
 .chat-mood-backdrop--happy .chat-mood-layer--glow,
 .chat-mood-backdrop--warm .chat-mood-layer--glow {
   background:
-    radial-gradient(140% 90% at 30% 40%, rgba(140, 230, 255, 0.22), transparent 60%),
-    radial-gradient(120% 90% at 70% 60%, rgba(255, 200, 220, 0.18), transparent 65%);
-  animation: aurora-flow 18s ease-in-out infinite alternate;
-  opacity: 0.38;
+    radial-gradient(140% 90% at 35% 45%, rgba(140, 230, 255, 0.24), transparent 62%),
+    radial-gradient(120% 90% at 70% 60%, rgba(255, 190, 230, 0.2), transparent 68%);
+  opacity: 0.42;
+}
+.chat-mood-backdrop--hopeful .chat-mood-layer--particles,
+.chat-mood-backdrop--happy .chat-mood-layer--particles,
+.chat-mood-backdrop--warm .chat-mood-layer--particles {
+  background:
+    repeating-linear-gradient(135deg, rgba(150, 230, 250, 0.18) 0px, rgba(150, 230, 250, 0.18) 18px, transparent 18px, transparent 44px),
+    radial-gradient(circle at 30% 35%, rgba(220, 180, 255, 0.06), transparent 42%),
+    radial-gradient(circle at 70% 65%, rgba(150, 210, 255, 0.05), transparent 45%);
 }
 
+/* Calm / Neutral */
 .chat-mood-backdrop--calm .chat-mood-layer--base,
 .chat-mood-backdrop--neutral .chat-mood-layer--base {
   background:
-    radial-gradient(110% 100% at 30% 30%, rgba(90, 140, 200, 0.2), transparent 60%),
-    radial-gradient(120% 90% at 70% 50%, rgba(60, 110, 170, 0.16), transparent 65%),
-    linear-gradient(140deg, #050a13 0%, #0a1220 55%, #050910 100%);
+    radial-gradient(140% 100% at 50% 45%, rgba(80, 150, 190, 0.22), transparent 65%),
+    linear-gradient(140deg, #050e16 0%, #0a1724 55%, #050c14 100%);
 }
-
 .chat-mood-backdrop--calm .chat-mood-layer--glow,
 .chat-mood-backdrop--neutral .chat-mood-layer--glow {
-  animation: breathe 22s ease-in-out infinite;
-  opacity: 0.28;
+  background:
+    radial-gradient(130% 95% at 50% 45%, rgba(90, 170, 200, 0.18), transparent 70%),
+    radial-gradient(150% 110% at 50% 80%, rgba(6, 10, 16, 0.45), transparent 82%);
+  opacity: 0.34;
+}
+.chat-mood-backdrop--calm .chat-mood-layer--particles,
+.chat-mood-backdrop--neutral .chat-mood-layer--particles {
+  background:
+    repeating-linear-gradient(135deg, rgba(120, 190, 210, 0.16) 0px, rgba(120, 190, 210, 0.16) 18px, transparent 18px, transparent 44px),
+    radial-gradient(circle at 25% 30%, rgba(140, 200, 220, 0.05), transparent 40%),
+    radial-gradient(circle at 70% 65%, rgba(110, 170, 190, 0.04), transparent 45%);
 }
 
+/* Angry */
 .chat-mood-backdrop--angry .chat-mood-layer--base {
   background:
-    radial-gradient(130% 110% at 20% 25%, rgba(180, 60, 40, 0.24), transparent 60%),
-    radial-gradient(120% 100% at 80% 30%, rgba(255, 120, 90, 0.2), transparent 65%),
-    linear-gradient(150deg, #0b0608 0%, #15080c 55%, #080406 100%);
+    radial-gradient(140% 100% at 50% 45%, rgba(160, 60, 40, 0.22), transparent 65%),
+    linear-gradient(150deg, #0a0506 0%, #140809 55%, #090405 100%);
 }
-
 .chat-mood-backdrop--angry .chat-mood-layer--glow {
   background:
-    radial-gradient(120% 100% at 120% 10%, rgba(255, 120, 90, 0.22), transparent 70%),
-    radial-gradient(140% 120% at -20% 60%, rgba(180, 60, 40, 0.2), transparent 70%);
-  animation: ember-pulse 18s ease-in-out infinite;
-  opacity: 0.28;
+    radial-gradient(130% 95% at 55% 45%, rgba(240, 120, 90, 0.2), transparent 68%),
+    radial-gradient(150% 110% at 50% 78%, rgba(10, 4, 5, 0.45), transparent 82%);
+  opacity: 0.32;
+}
+.chat-mood-backdrop--angry .chat-mood-layer--particles {
+  background:
+    repeating-linear-gradient(135deg, rgba(200, 90, 60, 0.16) 0px, rgba(200, 90, 60, 0.16) 18px, transparent 18px, transparent 44px),
+    radial-gradient(circle at 28% 38%, rgba(255, 150, 110, 0.05), transparent 42%),
+    radial-gradient(circle at 72% 62%, rgba(190, 80, 60, 0.05), transparent 44%);
 }
 
+/* Tired */
 .chat-mood-backdrop--tired .chat-mood-layer--base {
   background:
-    radial-gradient(120% 100% at 40% 80%, rgba(140, 160, 190, 0.22), transparent 65%),
-    radial-gradient(120% 90% at 70% 70%, rgba(90, 110, 140, 0.18), transparent 70%),
-    linear-gradient(160deg, #060910 0%, #0b0f18 55%, #060810 100%);
+    radial-gradient(140% 100% at 50% 45%, rgba(120, 140, 170, 0.2), transparent 65%),
+    linear-gradient(160deg, #05080e 0%, #0a0f16 55%, #05080e 100%);
 }
-
 .chat-mood-backdrop--tired .chat-mood-layer--glow {
+  background:
+    radial-gradient(130% 95% at 50% 48%, rgba(140, 160, 180, 0.16), transparent 70%),
+    radial-gradient(150% 110% at 50% 80%, rgba(5, 6, 8, 0.5), transparent 82%);
   filter: blur(18px);
-  opacity: 0.26;
-  animation: mist-drift 24s ease-in-out infinite alternate;
+  opacity: 0.3;
 }
-
-/* Keyframes adapted from hero */
-@keyframes base-drift {
-  0% {
-    transform: translate3d(-3%, -2%, 0) scale(1.02);
-  }
-  50% {
-    transform: translate3d(4%, 3%, 0) scale(1.04);
-  }
-  100% {
-    transform: translate3d(-2%, 2%, 0) scale(1.02);
-  }
-}
-
-@keyframes glow-pulse {
-  0%, 100% {
-    opacity: 0.32;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.48;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes particles-drift {
-  0% {
-    transform: translate3d(-4px, -6px, 0);
-  }
-  50% {
-    transform: translate3d(8px, 10px, 0);
-  }
-  100% {
-    transform: translate3d(-6px, -4px, 0);
-  }
-}
-
-@keyframes rain-fall {
-  0% {
-    transform: translate3d(0, -20%, 0);
-  }
-  100% {
-    transform: translate3d(0, 30%, 0);
-  }
-}
-
-@keyframes wind-sweep {
-  0% {
-    transform: translate3d(-12px, 0, 0);
-    opacity: 0.26;
-  }
-  50% {
-    transform: translate3d(14px, 0, 0);
-    opacity: 0.4;
-  }
-  100% {
-    transform: translate3d(-12px, 0, 0);
-    opacity: 0.26;
-  }
-}
-
-@keyframes aurora-flow {
-  0% {
-    background-position: 10% 30%;
-  }
-  50% {
-    background-position: 80% 60%;
-  }
-  100% {
-    background-position: 20% 40%;
-  }
-}
-
-@keyframes breathe {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.42;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes mist-drift {
-  0% {
-    transform: translate3d(0, 6px, 0);
-    opacity: 0.28;
-  }
-  50% {
-    transform: translate3d(0, -8px, 0);
-    opacity: 0.36;
-  }
-  100% {
-    transform: translate3d(0, 4px, 0);
-    opacity: 0.28;
-  }
-}
-
-@keyframes ember-pulse {
-  0%, 100% {
-    opacity: 0.24;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 0.38;
-    transform: translateY(-4px);
-  }
-}
-
-/* Reduced motion: disable animation only when requested */
-@media (prefers-reduced-motion: reduce) {
-  .chat-mood-backdrop,
-  .chat-mood-backdrop::before,
-  .chat-mood-backdrop::after,
-  .chat-mood-layer {
-    animation: none !important;
-    transform: none !important;
-    transition: none !important;
-  }
+.chat-mood-backdrop--tired .chat-mood-layer--particles {
+  background:
+    repeating-linear-gradient(135deg, rgba(130, 150, 170, 0.13) 0px, rgba(130, 150, 170, 0.13) 18px, transparent 18px, transparent 44px),
+    radial-gradient(circle at 24% 34%, rgba(170, 180, 200, 0.04), transparent 42%),
+    radial-gradient(circle at 72% 62%, rgba(120, 140, 160, 0.04), transparent 45%);
 }
 
 .asrar-chat-messages {
