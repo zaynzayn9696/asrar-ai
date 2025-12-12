@@ -230,6 +230,60 @@ function applyStateAdjustments(text, convoState, language) {
   return text;
 }
 
+function splitSentencesArAware(text) {
+  return String(text || '')
+    .split(/(?<=[.!؟?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function normalizeSentenceForDedupe(sentence) {
+  const withoutEmojis = sentence.replace(/[\u{1F300}-\u{1FAFF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '');
+  return withoutEmojis
+    .replace(/[.!؟?]+/g, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+}
+
+function dedupeSentences(sentences) {
+  const seen = new Set();
+  const out = [];
+  for (const s of sentences) {
+    const normalized = normalizeSentenceForDedupe(s);
+    if (!normalized) continue;
+    let duplicate = false;
+    for (const existing of seen) {
+      if (normalized === existing || normalized.includes(existing) || existing.includes(normalized)) {
+        duplicate = true;
+        break;
+      }
+    }
+    if (!duplicate) {
+      seen.add(normalized);
+      out.push(s.trim());
+    }
+  }
+  return out;
+}
+
+function clampEmojis(text, maxEmojis) {
+  if (!maxEmojis || maxEmojis <= 0) return String(text || '').replace(/[\u{1F300}-\u{1FAFF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '');
+  const chars = Array.from(String(text || ''));
+  let count = 0;
+  return chars
+    .map((ch) => {
+      const isEmoji = /[\u{1F300}-\u{1FAFF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u.test(ch);
+      if (!isEmoji) return ch;
+      if (count < maxEmojis) {
+        count += 1;
+        return ch;
+      }
+      return '';
+    })
+    .join('');
+}
+
 /**
  * Lightly decorates the reply with 1–2 emojis based on primary emotion.
  * Avoids duplicating emojis or touching safety disclaimer lines.
@@ -237,17 +291,21 @@ function applyStateAdjustments(text, convoState, language) {
  * @param {{ primaryEmotion?:string }} emotion
  * @param {'ar'|'en'|'mixed'} language
  * @param {'CASUAL'|'VENTING'|'SUPPORT'|'HIGH_RISK'} severityLevel
- * @param {boolean=} disable
+ * @param {boolean=} shortMode
  */
-function decorateWithEmojis(text, emotion, language, severityLevel, disable) {
-  if (disable) return String(text || '');
+function decorateWithEmojis(text, emotion, language, severityLevel, shortMode) {
   const raw = String(text || '');
   if (!raw) return raw;
 
+  // In short mode, only allow up to 2 existing emojis, no new ones.
+  if (shortMode) {
+    return clampEmojis(raw, 2);
+  }
+
   // Skip if emojis already present to avoid spam
   try {
-    const emojiRe = /[\u{1F300}-\u{1FAFF}]/u;
-    if (emojiRe.test(raw)) return raw;
+    const emojiRe = /[\u{1F300}-\u{1FAFF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u;
+    if (emojiRe.test(raw)) return clampEmojis(raw, 3);
   } catch (_) {
     // Environments without Unicode property support: fall through
   }
@@ -285,9 +343,9 @@ function decorateWithEmojis(text, emotion, language, severityLevel, disable) {
     // Avoid decorating disclaimer/footer lines
     if (hasAnySafetyDisclaimer(line)) continue;
     lines[i] = line + suffix;
-    return lines.join('\n');
+    return clampEmojis(lines.join('\n'), 3);
   }
-  return raw + suffix;
+  return clampEmojis(raw + suffix, 3);
 }
 
 /**
@@ -352,9 +410,7 @@ function hasQuestionMark(text) {
 }
 
 function limitSentences(text, maxSentences) {
-  const sentences = String(text || '')
-    .split(/(?<=[.!؟?])\s+/)
-    .filter(Boolean);
+  const sentences = splitSentencesArAware(text);
   return sentences.slice(0, maxSentences).join(' ').trim() || String(text || '').trim();
 }
 
@@ -490,20 +546,23 @@ async function orchestrateResponse({
     }
 
     // Verbosity enforcement
-    if (shortMode) {
-      // First clamp
-      out = clampText(out, 2, ultraShortCasual ? 240 : 320);
+    if (shortMode && sev !== 'HIGH_RISK') {
+      const sentences = splitSentencesArAware(out);
+      const deduped = dedupeSentences(sentences);
+      let limited = deduped.slice(0, 2).join(' ').trim();
+      if (limited.length > 220) limited = limited.slice(0, 220).trim();
 
-      // Append ONE gentle question only if none exists (Arabic + English)
-      if (!hasQuestionMark(out)) {
-        out = `${out} ${isAr ? 'شو اللي خلاك تحس هيك؟' : 'What made you feel that?'}`;
+      if (!hasQuestionMark(limited)) {
+        limited = `${limited} ${isAr ? 'شو اللي خلاك تحس هيك؟' : 'What made you feel that?'}`.trim();
       }
 
-      // Final clamp (question included)
-      out = clampText(out, ultraShortCasual ? 3 : 4, ultraShortCasual ? 280 : 420);
+      const finalSentences = dedupeSentences(splitSentencesArAware(limited)).slice(0, 2);
+      let finalOut = finalSentences.join(' ').trim();
+      if (finalOut.length > 220) finalOut = finalOut.slice(0, 220).trim();
+      out = clampEmojis(finalOut, 2);
     }
 
-    // Emojis: disable in short mode to avoid spam + keep ultra-clean
+    // Emojis: limit in short mode, light decoration otherwise
     out = decorateWithEmojis(out, emotion, language, severityLevel, shortMode);
 
     return out;

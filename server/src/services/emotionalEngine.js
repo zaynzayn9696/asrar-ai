@@ -185,10 +185,14 @@ function buildInstantReply(text, opts = {}) {
  * - 'lite'  -> CORE_FAST
  * - 'balanced'/'deep' (or undefined) -> PREMIUM_DEEP for premium users, CORE_DEEP for free.
  */
-function decideEngineMode({ enginePreference, isPremiumUser }) {
+function decideEngineMode({ enginePreference, isPremiumUser, severityLevel, longFormIntent }) {
   const pref = String(enginePreference || '').toLowerCase();
+  const sev = String(severityLevel || 'CASUAL').toUpperCase();
+  const highSeverity = sev === 'HIGH_RISK' || sev === 'SUPPORT';
+  const wantsDeep = pref === 'deep' || highSeverity || !!longFormIntent;
+
   if (pref === 'lite') return ENGINE_MODES.CORE_FAST;
-  if (isPremiumUser) return ENGINE_MODES.PREMIUM_DEEP;
+  if (wantsDeep) return isPremiumUser ? ENGINE_MODES.PREMIUM_DEEP : ENGINE_MODES.CORE_DEEP;
   return ENGINE_MODES.CORE_DEEP;
 }
 

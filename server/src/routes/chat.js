@@ -147,6 +147,21 @@ function computeVerbosityControls({ userText, severityLevel }) {
   return { maxTokens, verbosityMode, longIntent };
 }
 
+function countSentencesArAware(text) {
+  return String(text || '')
+    .split(/(?<=[.!؟?])\s+/)
+    .filter(Boolean).length;
+}
+
+function countEmojis(text) {
+  try {
+    const matches = String(text || '').match(/[\u{1F300}-\u{1FAFF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu);
+    return matches ? matches.length : 0;
+  } catch (_) {
+    return 0;
+  }
+}
+
 // Usage helpers
 function startOfToday() {
   const d = new Date();
@@ -1240,14 +1255,31 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     }
 
     const engineTimings = engineResult.timings || {};
+    const verbosity = computeVerbosityControls({
+      userText,
+      severityLevel: severityLevel || 'CASUAL',
+    });
 
     const engineMode = decideEngineMode({
       enginePreference: engine,
       isPremiumUser: isPremiumUser || isTester,
+      severityLevel: severityLevel || 'CASUAL',
+      longFormIntent: verbosity.longIntent,
     });
     const engineModeSource = engine === 'lite' ? 'user_lite' : 'normalized';
 
-    const systemMessage = systemPrompt;
+    const conciseNudge =
+      verbosity.verbosityMode === 'short'
+        ? `\n\nOUTPUT RULES (VERY IMPORTANT):
+- Default: 1–2 short sentences only.
+- Be conversational (no speeches, no proverbs unless asked).
+- Ask at most ONE short follow-up question only if it feels natural.
+- If the user explicitly asks for detail/steps, you may expand.`
+        : `\n\nOUTPUT RULES:
+- Be conversational and avoid long speeches unless the user asks.
+- Ask at most one question.`;
+
+    const systemMessage = `${systemPrompt}${conciseNudge}`;
 
     const recentContext = recentMessagesForEngine.slice(-MAX_CONTEXT_MESSAGES);
     const openAIMessages = [];
@@ -1259,52 +1291,6 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         : recentContext;
     if (Array.isArray(limitedContext) && limitedContext.length) {
       openAIMessages.push(...limitedContext);
-    }
-    openAIMessages.push({ role: 'user', content: userText });
-
-    const routedModel = selectModelForResponse({
-      engine: 'balanced',
-      isPremiumUser: isPremiumUser || isTester,
-    });
-
-    const tOpenAIStart = Date.now();
-    const completion = await openai.chat.completions.create({
-      model: routedModel,
-      messages: openAIMessages,
-      temperature: verbosity.verbosityMode === 'short' ? 0.6 : 0.8,
-    });
-    const openAiMs = Date.now() - tOpenAIStart;
-
-    const rawReply = completion.choices?.[0]?.message?.content?.trim();
-    if (!rawReply) {
-      return res
-        .status(500)
-        .json({ message: 'No response from language model.' });
-    }
-
-    let aiMessage = rawReply;
-    let orchestrateMs = 0;
-
-    try {
-      const tOrchStart = Date.now();
-      aiMessage = await orchestrateResponse({
-        rawReply,
-        persona: personaText,
-        emotion: emo,
-        convoState: flowState || { currentState: 'NEUTRAL' },
-        longTermSnapshot,
-        triggers,
-        language: languageForEngine,
-        severityLevel: severityLevel || 'CASUAL',
-        personaCfg: personaCfg || null,
-        engineMode,
-        isPremiumUser: isPremiumUser || isTester,
-      });
-      orchestrateMs = Date.now() - tOrchStart;
-      if (typeof aiMessage !== 'string' || !aiMessage.trim()) {
-        aiMessage = rawReply;
-      }
-    } catch (_) {
       aiMessage = rawReply;
     }
 
