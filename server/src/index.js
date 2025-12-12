@@ -57,7 +57,8 @@ app.use(
         return callback(null, true);
       }
       console.warn("[CORS] Blocked origin:", origin);
-      return callback(new Error("Not allowed by CORS"));
+      // For unknown origins, deny without throwing to avoid crashing the request pipeline.
+      return callback(null, false);
     },
     credentials: true,
   })

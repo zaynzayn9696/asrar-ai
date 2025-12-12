@@ -80,9 +80,7 @@ function hasAnySafetyDisclaimer(text) {
 function stripModelGeneratedDisclaimers(text) {
   const raw = String(text || '');
   if (!raw) return raw;
-  const sentences = raw
-    .split(/(?<=[.!؟?])\s+/)
-    .filter(Boolean);
+  const sentences = raw.split(/(?<=[.!؟?])\s+/).filter(Boolean);
   const kept = sentences.filter((s) => {
     const lower = s.toLowerCase();
     if (EN_DISCLAIMER_PATTERNS.some((re) => re.test(lower))) return false;
@@ -119,7 +117,6 @@ function computeTrustTier(trustSnapshot) {
  */
 function getToneProfile({ severityLevel, convoState, personaCfg }) {
   const sev = String(severityLevel || 'CASUAL').toUpperCase();
-  const state = String(convoState?.currentState || 'NEUTRAL').toUpperCase();
   const style = personaCfg?.style || {};
   const allowLightHumor = (style.humor === 'high' || style.humor === 'medium') && (sev === 'CASUAL');
 
@@ -155,11 +152,7 @@ function addEmpathy(text, language) {
 
 /**
  * Decide if a *crisis-level* safety footer should be appended.
- * We keep this strictly for self-harm / suicidal intent or wanting to
- * seriously harm someone else.
- *
- * Approximation: classifier severityLevel === "HIGH_RISK" OR the emotion
- * notes clearly mention self-harm / suicide / harming others.
+ * Keep this strictly for self-harm / suicidal intent or wanting to seriously harm others.
  * @param {{ severityLevel?:string, emotion?:{ notes?:string }, convoState?:{ currentState?:string, state?:string } }} meta
  */
 function shouldAppendSafetyFooter(meta) {
@@ -244,8 +237,10 @@ function applyStateAdjustments(text, convoState, language) {
  * @param {{ primaryEmotion?:string }} emotion
  * @param {'ar'|'en'|'mixed'} language
  * @param {'CASUAL'|'VENTING'|'SUPPORT'|'HIGH_RISK'} severityLevel
+ * @param {boolean=} disable
  */
-function decorateWithEmojis(text, emotion, language, severityLevel) {
+function decorateWithEmojis(text, emotion, language, severityLevel, disable) {
+  if (disable) return String(text || '');
   const raw = String(text || '');
   if (!raw) return raw;
 
@@ -282,8 +277,6 @@ function decorateWithEmojis(text, emotion, language, severityLevel) {
       suffix = ' 🙂';
   }
 
-  if (!suffix) return raw;
-
   const lines = raw.split('\n');
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -294,8 +287,6 @@ function decorateWithEmojis(text, emotion, language, severityLevel) {
     lines[i] = line + suffix;
     return lines.join('\n');
   }
-
-  // Fallback: append at very end
   return raw + suffix;
 }
 
@@ -348,36 +339,55 @@ function modulateByPrimaryEmotion(text, emotion, language) {
 
   if (primary === 'HOPEFUL') {
     return prependOnce(
-      'حلو إن في لمحة أمل، نقدر نبني عليها بخطوات صغيرة.',
-      "I love that there is some hope here; we can build on it with small steps."
+      'حلو! خلّينا نثبت هالإحساس بخطوة صغيرة.',
+      "Nice — let's lock that feeling in with one small step."
     );
   }
 
   return text;
 }
 
+function hasQuestionMark(text) {
+  return /[?؟]/.test(String(text || ''));
+}
+
+function limitSentences(text, maxSentences) {
+  const sentences = String(text || '')
+    .split(/(?<=[.!؟?])\s+/)
+    .filter(Boolean);
+  return sentences.slice(0, maxSentences).join(' ').trim() || String(text || '').trim();
+}
+
+function clampText(text, maxSentences, maxChars) {
+  let out = limitSentences(text, maxSentences);
+  out = String(out || '').trim();
+  if (maxChars && out.length > maxChars) out = out.slice(0, maxChars).trim();
+  return out;
+}
+
 /**
  * Applies tone softening, cultural adaptation, empathy, safety guardrails, and state-machine guidance.
  * The rewrite is gentle (not drastic) and avoids clinical framing.
- * @param {Object} params
- * @param {string} params.rawReply
- * @param {string} params.persona
- * @param {{ primaryEmotion:string, intensity:number, confidence:number, cultureTag:string }} params.emotion
- * @param {{ currentState?:string }} params.convoState
- * @param {{ summaryText?:string }|null} params.longTermSnapshot
- * @param {Array<{topic:string, emotion:string, score:number}>} params.triggers
- * @param {'ar'|'en'|'mixed'} params.language
- * @param {'CASUAL'|'VENTING'|'SUPPORT'|'HIGH_RISK'} params.severityLevel
- * @param {{ style?: {warmth?:string, humor?:string, directness?:string, energy?:string} }} params.personaCfg
- * @param {'CORE_FAST'|'CORE_DEEP'|'PREMIUM_DEEP'=} params.engineMode
- * @param {boolean=} params.isPremiumUser
- * @param {{ trustScore?:number, trustLevel?:number }=} params.trustSnapshot
- * @returns {Promise<string>}
  */
-async function orchestrateResponse({ rawReply, persona, emotion, convoState, longTermSnapshot, triggers, language, severityLevel, personaCfg, engineMode, isPremiumUser, trustSnapshot }) {
+async function orchestrateResponse({
+  rawReply,
+  persona,
+  emotion,
+  convoState,
+  longTermSnapshot,
+  triggers,
+  language,
+  severityLevel,
+  personaCfg,
+  engineMode,
+  isPremiumUser,
+  trustSnapshot,
+  verbosityMode = 'normal',
+}) {
   try {
     if (!rawReply || typeof rawReply !== 'string') return '';
     const isAr = language === 'ar';
+    const sev = String(severityLevel || 'CASUAL').toUpperCase();
     const { tier: trustTier } = computeTrustTier(trustSnapshot);
 
     let out = rawReply.trim();
@@ -391,137 +401,113 @@ async function orchestrateResponse({ rawReply, persona, emotion, convoState, lon
     // State-specific adjustments
     out = applyStateAdjustments(out, convoState, language);
 
-    // Choose opener style from tone profile
+    // Decide tone profile
     let tone = getToneProfile({ severityLevel, convoState, personaCfg });
-    if (String(severityLevel || '').toUpperCase() !== 'HIGH_RISK') {
-      if (trustTier >= 3 && tone.empathyLevel === 'low') {
-        tone = { ...tone, empathyLevel: 'medium' };
-      }
-      if (trustTier >= 4 && tone.messageLength === 'short') {
-        tone = { ...tone, messageLength: 'normal' };
-      } else if (trustTier >= 5 && tone.messageLength === 'normal') {
-        tone = { ...tone, messageLength: 'extended' };
-      }
+    if (sev !== 'HIGH_RISK') {
+      if (trustTier >= 3 && tone.empathyLevel === 'low') tone = { ...tone, empathyLevel: 'medium' };
+      if (trustTier >= 4 && tone.messageLength === 'short') tone = { ...tone, messageLength: 'normal' };
+      else if (trustTier >= 5 && tone.messageLength === 'normal') tone = { ...tone, messageLength: 'extended' };
     }
+
+    const shortMode = verbosityMode === 'short';
+    const ultraShortCasual = shortMode && sev === 'CASUAL';
+
+    // Empathy openers (DISABLED for ultra-short casual; keeps replies non-preachy)
     const trimmed = String(out).trim();
-    if (tone.empathyLevel === 'high') {
-      out = addEmpathy(out, language);
-    } else if (tone.empathyLevel === 'medium') {
-      const lightOpener = isAr ? 'شكراً إنك شاركتني. أنا هنا معك. ' : "Thanks for sharing that with me. I'm here with you. ";
-      if (!trimmed.startsWith('شكراً إنك شاركتني') && !trimmed.startsWith("Thanks for sharing")) {
-        out = lightOpener + out;
-      }
-    } else {
-      // For low-empathy/casual states, avoid a single fixed opener to reduce
-      // repetitive greetings like "Hey, it's good to hear from you." and let
-      // the persona + system prompt drive natural variety instead.
-      // As a light touch, only soften very abrupt starts.
-      const genericStartRe = isAr
-        ? /^(طيب|شوف|اسمع)\b/
-        : /^(So\b|Look\b|Listen\b)/i;
-      if (genericStartRe.test(trimmed)) {
-        const alt = isAr
-          ? 'خلّينا نحكي بهدوء وبساطة. '
-          : "Let's talk through this calmly and simply. ";
-        out = alt + trimmed;
+    if (!ultraShortCasual) {
+      if (tone.empathyLevel === 'high') {
+        out = addEmpathy(out, language);
+      } else if (tone.empathyLevel === 'medium') {
+        const lightOpener = isAr ? 'شكراً إنك شاركتني. أنا هنا معك. ' : "Thanks for sharing that with me. I'm here with you. ";
+        if (!trimmed.startsWith('شكراً إنك شاركتني') && !trimmed.startsWith("Thanks for sharing")) {
+          out = lightOpener + out;
+        }
       }
     }
 
-    // Persona Modulation V3 — emotion-aware tone tweak
-    out = modulateByPrimaryEmotion(out, emotion, language);
+    // Persona Modulation V3 (DISABLED for ultra-short casual to avoid sermon vibes)
+    if (!ultraShortCasual) {
+      out = modulateByPrimaryEmotion(out, emotion, language);
+    }
 
     const premiumUser = !!isPremiumUser;
 
-    // Free-lite shaping: for non-premium users in CORE_FAST, keep the reply
-    // short, simple, and without heavy list structures, before adding safety
-    // footers. Arabic content is preserved; we only trim length/structure.
+    // Free-lite shaping
     if (!premiumUser && engineMode === 'CORE_FAST') {
       const flattenedLines = String(out)
         .split(/\n+/)
         .map((line) => {
           const trimmedLine = String(line || '').trim();
           if (!trimmedLine) return '';
-          // Remove simple bullet/number prefixes to avoid long lists.
-          return trimmedLine
-            .replace(/^[-*•]\s+/, '')
-            .replace(/^\d+\.\s+/, '');
+          return trimmedLine.replace(/^[-*•]\s+/, '').replace(/^\d+\.\s+/, '');
         })
         .filter(Boolean);
 
       const flattenedText = flattenedLines.join(' ');
-      const sentences = flattenedText
-        .split(/(?<=[.!؟?])\s+/)
-        .filter(Boolean);
+      const sentences = flattenedText.split(/(?<=[.!؟?])\s+/).filter(Boolean);
 
-      const maxSentences = 4; // ~1–2 short paragraphs
+      const maxSentences = 4;
       const kept = sentences.slice(0, maxSentences).join(' ');
-      if (kept) {
-        out = kept;
-      }
+      if (kept) out = kept;
     }
 
     // Strip any model-generated disclaimers before appending our own.
     out = stripModelGeneratedDisclaimers(out);
 
-    // Conditionally append safety footer, but never duplicate it.
+    // Safety footer
     const fullFooter = isAr
       ? 'تذكّر: كلامي دعم ومساندة وليس تشخيص طبي. لو ظهرت أفكار إيذاء للنفس، تواصل مع مختص أو شخص تثق به.'
       : 'Remember: this is supportive guidance, not medical advice. If self-harm thoughts appear, please reach out to a professional or someone you trust.';
-    const mildFooter = isAr
-      ? 'أنا هنا للدعم، لكن لا أستبدل الرعاية المتخصّصة. لو حسّيت أن الموضوع محتاج أكثر، تكلم مع شخص تثق به أو مختص.'
-      : "I'm here to support you, but I can't replace professional care. For serious or urgent concerns, consider talking to a trusted person or a professional.";
 
     const safetyAlreadyPresent = hasAnySafetyDisclaimer(out);
-
     if (!safetyAlreadyPresent && shouldAppendSafetyFooter({ severityLevel, emotion, convoState })) {
       if (!out.includes(fullFooter)) out = out + '\n\n' + fullFooter;
     }
 
-    // Final gentle polish: avoid overly long replies
+    // Engine-mode line caps (keep existing behavior)
     const lines = out.split(/\n+/).filter(Boolean);
+
     if (engineMode === 'CORE_FAST') {
-      // Free-lite path is already sentence-trimmed; this keeps at most ~1–2 paragraphs.
-      if (lines.length > 6) {
-        out = lines.slice(0, 6).join('\n');
-      }
+      if (lines.length > 6) out = lines.slice(0, 6).join('\n');
     } else if (engineMode === 'CORE_DEEP') {
       let maxLines = 9;
-      if (tone.messageLength === 'short') {
-        maxLines = 7;
-      } else if (tone.messageLength === 'extended' && trustTier >= 4) {
-        maxLines = 11;
-      }
-      if (lines.length > maxLines) {
-        out = lines.slice(0, maxLines).join('\n');
-      }
+      if (tone.messageLength === 'short') maxLines = 7;
+      else if (tone.messageLength === 'extended' && trustTier >= 4) maxLines = 11;
+      if (lines.length > maxLines) out = lines.slice(0, maxLines).join('\n');
     } else if (engineMode === 'PREMIUM_DEEP') {
       const intensity = Number(emotion?.intensity || 0);
-      let maxLines = 10; // default medium
-      if (intensity >= 5) {
-        maxLines = 14; // full structured guidance
-      } else if (intensity >= 3) {
-        maxLines = 10; // 8–10 lines typical
-      } else if (intensity > 0) {
-        maxLines = 8; // gentler for low intensity
-      }
-      if (tone.messageLength === 'extended' && trustTier >= 4) {
-        maxLines += 2;
-      } else if (tone.messageLength === 'short') {
-        maxLines = Math.max(6, maxLines - 2);
-      }
-      if (lines.length > maxLines) {
-        out = lines.slice(0, maxLines).join('\n');
-      }
+      let maxLines = 10;
+      if (intensity >= 5) maxLines = 14;
+      else if (intensity >= 3) maxLines = 10;
+      else if (intensity > 0) maxLines = 8;
+
+      if (tone.messageLength === 'extended' && trustTier >= 4) maxLines += 2;
+      else if (tone.messageLength === 'short') maxLines = Math.max(6, maxLines - 2);
+
+      if (lines.length > maxLines) out = lines.slice(0, maxLines).join('\n');
     } else if (convoState?.currentState === 'SAD_SUPPORT' && lines.length > 5) {
       out = lines.slice(0, 5).join('\n');
     }
 
-    // Final pass: add a small emoji decoration based on emotional tone.
-    out = decorateWithEmojis(out, emotion, language, severityLevel);
+    // Verbosity enforcement
+    if (shortMode) {
+      // First clamp
+      out = clampText(out, 2, ultraShortCasual ? 240 : 320);
+
+      // Append ONE gentle question only if none exists (Arabic + English)
+      if (!hasQuestionMark(out)) {
+        out = `${out} ${isAr ? 'شو اللي خلاك تحس هيك؟' : 'What made you feel that?'}`;
+      }
+
+      // Final clamp (question included)
+      out = clampText(out, ultraShortCasual ? 3 : 4, ultraShortCasual ? 280 : 420);
+    }
+
+    // Emojis: disable in short mode to avoid spam + keep ultra-clean
+    out = decorateWithEmojis(out, emotion, language, severityLevel, shortMode);
 
     return out;
   } catch (e) {
-    // Fail softly
     return rawReply;
   }
 }

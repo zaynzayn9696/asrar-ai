@@ -43,6 +43,7 @@ const {
   updateTrustOnMessage,
   evaluateWhisperUnlocks,
 } = require('../services/whispersTrustService');
+const { recordUserSession } = require('../services/userSessionService');
 const { logEmotionalEvent } = require('../services/timelineService');
 const { recordEvent: recordMemoryEvent } = require('../pipeline/memory/memoryKernel');
 const { orchestrateResponse } = require('../services/responseOrchestrator');
@@ -95,6 +96,56 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // Sliding-window size for model context
 const MAX_CONTEXT_MESSAGES = parseInt(process.env.MAX_CONTEXT_MESSAGES || '20', 10);
 const FAST_CONTEXT_MESSAGES = 5;
+
+function detectLongFormIntent(text) {
+  const raw = String(text || '').toLowerCase();
+  if (!raw) return false;
+  const longKeywords = [
+    'explain',
+    'detailed',
+    'detail',
+    'steps',
+    'plan',
+    'guide',
+    'how to',
+    'analysis',
+    'why',
+    'long answer',
+    'تفصيل',
+    'تفصيلي',
+    'شرح',
+    'خطوات',
+    'خطة',
+    'حلول',
+    'ارشدني',
+  ];
+  return (
+    raw.length > 220 ||
+    longKeywords.some((kw) => raw.includes(kw))
+  );
+}
+
+function computeVerbosityControls({ userText, severityLevel }) {
+  const len = (userText || '').length;
+  const longIntent = detectLongFormIntent(userText);
+  const sev = String(severityLevel || 'CASUAL').toUpperCase();
+
+  let verbosityMode = 'short';
+  if (longIntent || sev === 'HIGH_RISK' || sev === 'SUPPORT' || sev === 'VENTING' || len > 200) {
+    verbosityMode = 'normal';
+  }
+
+  let maxTokens = 180;
+  if (verbosityMode === 'short' && len < 120 && sev === 'CASUAL') {
+    maxTokens = 140;
+  } else if (longIntent || len > 240 || sev === 'HIGH_RISK' || sev === 'SUPPORT') {
+    maxTokens = 320;
+  } else {
+    maxTokens = 220;
+  }
+
+  return { maxTokens, verbosityMode, longIntent };
+}
 
 // Usage helpers
 function startOfToday() {
@@ -1220,7 +1271,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: routedModel,
       messages: openAIMessages,
-      temperature: 0.8,
+      temperature: verbosity.verbosityMode === 'short' ? 0.6 : 0.8,
     });
     const openAiMs = Date.now() - tOpenAIStart;
 
@@ -1248,7 +1299,6 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         personaCfg: personaCfg || null,
         engineMode,
         isPremiumUser: isPremiumUser || isTester,
-        trustSnapshot,
       });
       orchestrateMs = Date.now() - tOrchStart;
       if (typeof aiMessage !== 'string' || !aiMessage.trim()) {
@@ -1574,13 +1624,19 @@ router.post('/message', async (req, res) => {
       ? engineRaw
       : 'balanced';
 
+    const wantsStream =
+      body.stream === true ||
+      body.stream === 'true' ||
+      (req.query && req.query.stream === '1');
+
     console.log(
-      '[Diagnostic] Incoming Request: route="/api/chat/message" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d',
-      dialect,
-      characterId,
-      saveFlag,
-      typeof userText === 'string' ? userText.length : 0
-    );
+  '[Diagnostic] Incoming Request: route="/api/chat/message" Dialect="%s", Character="%s", SaveFlag=%s, ContentLength=%d, WantsStream=%s',
+  dialect,
+  characterId,
+  saveFlag,
+  typeof userText === 'string' ? userText.length : 0,
+  wantsStream
+);
 
     if (!userText) {
       return res.status(400).json({ message: 'content is required' });
@@ -1813,7 +1869,23 @@ router.post('/message', async (req, res) => {
     });
     const engineModeSource = engine === 'lite' ? 'user_lite' : 'normalized';
 
-    const systemMessage = systemPrompt;
+const verbosity = computeVerbosityControls({
+  userText,
+  severityLevel: severityLevel || 'CASUAL',
+});
+
+const conciseNudge =
+  verbosity.verbosityMode === 'short'
+    ? `\n\nOUTPUT RULES (VERY IMPORTANT):
+- Default: 1–2 short sentences only.
+- Be conversational (no speeches, no proverbs unless asked).
+- Ask at most ONE short follow-up question only if it feels natural.
+- If the user explicitly asks for detail/steps, you may expand.`
+    : `\n\nOUTPUT RULES:
+- Be conversational and avoid long speeches unless the user asks.
+- Ask at most one question.`;
+
+const systemMessage = `${systemPrompt}${conciseNudge}`;
 
     const recentContext = recentMessagesForEngine.slice(-MAX_CONTEXT_MESSAGES);
     const openAIMessages = [];
@@ -1833,11 +1905,14 @@ router.post('/message', async (req, res) => {
       isPremiumUser: isPremiumUser || isTester,
     });
 
+
+
     const tOpenAIStart = Date.now();
     const completion = await openai.chat.completions.create({
       model: routedModel,
       messages: openAIMessages,
-      temperature: 0.8,
+      temperature: verbosity.verbosityMode === 'short' ? 0.6 : 0.8,
+      max_tokens: verbosity.maxTokens,
     });
     openAiMs = Date.now() - tOpenAIStart;
 
@@ -1865,6 +1940,7 @@ router.post('/message', async (req, res) => {
         personaCfg: personaCfg || null,
         engineMode,
         isPremiumUser: isPremiumUser || isTester,
+        verbosityMode: verbosity.verbosityMode,
       });
       orchestrateMs = Date.now() - tOrchStart;
       if (typeof aiMessage !== 'string' || !aiMessage.trim()) {
@@ -2170,45 +2246,25 @@ router.post('/message', async (req, res) => {
       );
     }
 
-    const wantsStream =
-      body.stream === true ||
-      body.stream === 'true' ||
-      (req.query && req.query.stream === '1');
-
+  
     const responsePayload = {
       reply: aiMessage,
       usage: buildUsageSummary(dbUser, usage),
     };
 
-    if (whispersUnlocked.length) {
-      responsePayload.whispersUnlocked = whispersUnlocked;
-    }
-
     if (wantsStream) {
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
-      const text = aiMessage || '';
-      const chunkSize = 120;
-      for (let i = 0; i < text.length; i += chunkSize) {
-        const chunk = text.slice(i, i + chunkSize);
-        if (chunk) {
-          res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
-        }
-      }
-
       const donePayload = {
         type: 'done',
         reply: responsePayload.reply,
         usage: responsePayload.usage,
+        whispersUnlocked: responsePayload.whispersUnlocked || [],
       };
-
       res.write(`data: ${JSON.stringify(donePayload)}\n\n`);
       return res.end();
     }
 
     return res.json(responsePayload);
+
   } catch (err) {
     console.error('Chat completion error', err && err.message ? err.message : err);
     return res.status(500).json({
