@@ -17,9 +17,10 @@ export default function AIMirrorPanel({
   const [insights, setInsights] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeMode, setActiveMode] = useState("persona"); // "persona" | "global"
+  const [notEnoughHistory, setNotEnoughHistory] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !personaId) return;
+    if (!isOpen) return;
 
     let cancelled = false;
     const controller = new AbortController();
@@ -27,6 +28,7 @@ export default function AIMirrorPanel({
     const fetchMirror = async () => {
       setLoading(true);
       setError(null);
+      setNotEnoughHistory(false);
       try {
         const token =
           typeof window !== "undefined"
@@ -38,7 +40,9 @@ export default function AIMirrorPanel({
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         const res = await fetch(
-          `${API_BASE}/api/mirror/${encodeURIComponent(personaId)}`,
+          `${API_BASE}/api/mirror/${encodeURIComponent(
+            activeMode === "global" ? "all" : personaId
+          )}`,
           {
             method: "POST",
             credentials: "include",
@@ -62,6 +66,7 @@ export default function AIMirrorPanel({
         if (!cancelled) {
           setSummaryText(data?.summaryText || null);
           setInsights(data?.insights || null);
+          setNotEnoughHistory(!!data?.notEnoughHistory);
         }
       } catch (err) {
         if (cancelled || err.name === "AbortError") return;
@@ -79,7 +84,7 @@ export default function AIMirrorPanel({
       cancelled = true;
       controller.abort();
     };
-  }, [isOpen, personaId, isAr, refreshKey]);
+  }, [isOpen, personaId, isAr, refreshKey, activeMode]);
 
   if (!isOpen) return null;
 
@@ -193,7 +198,7 @@ export default function AIMirrorPanel({
                 </div>
               )}
 
-              {!loading && !error && !summaryText && (
+              {!loading && !error && (!summaryText || notEnoughHistory) && (
                 <div className="asrar-mirror-state">{noDataLabel}</div>
               )}
 

@@ -2,6 +2,8 @@
 // Whispers Mode: trust scoring + whisper unlock evaluation per user/persona.
 
 const prisma = require('../prisma');
+const { getLongTermEmotionalSnapshot } = require('./emotionalLongTerm');
+const { getPersonaSnapshot, getIdentityMemory } = require('../pipeline/memory/memoryKernel');
 
 // Helper: clamp a numeric value between min and max.
 function clamp(num, min, max) {
@@ -258,10 +260,133 @@ async function evaluateWhisperUnlocks({ userId, personaId }) {
     return [];
   }
 
-  const raw = target.contentTemplate || '';
-  const finalContent = userName
-    ? raw.replace(/\{userName\}/g, userName)
-    : raw.replace(/\{userName\}/g, '').trim();
+  // --- Build a language-aware, memory-grounded whisper content ---
+  const rawTemplate = target.contentTemplate || '';
+  const language =
+    /[\u0600-\u06FF]/.test(rawTemplate) || /[\u0600-\u06FF]/.test(userName || '')
+      ? 'ar'
+      : 'en';
+
+  let personaSnapshot = null;
+  let longTermSnapshot = null;
+  let identityMemory = null;
+
+  try {
+    personaSnapshot = await getPersonaSnapshot({ userId });
+  } catch (_) {
+    personaSnapshot = null;
+  }
+
+  try {
+    longTermSnapshot = await getLongTermEmotionalSnapshot({ userId });
+  } catch (_) {
+    longTermSnapshot = null;
+  }
+
+  try {
+    identityMemory = await getIdentityMemory({ userId });
+  } catch (_) {
+    identityMemory = null;
+  }
+
+  const facts = personaSnapshot && typeof personaSnapshot.facts === 'object'
+    ? personaSnapshot.facts
+    : {};
+  const profileFacts = facts.profile || {};
+  const prefFacts = facts.preferences || {};
+
+  const safeName = identityMemory && typeof identityMemory.name === 'string' ? identityMemory.name.trim() : null;
+  const age = typeof profileFacts.age === 'string' ? profileFacts.age.trim() : null;
+  const jobTitle =
+    profileFacts.job && typeof profileFacts.job.title === 'string'
+      ? profileFacts.job.title.trim()
+      : null;
+  const dream =
+    profileFacts.goals && typeof profileFacts.goals.longTerm === 'string'
+      ? profileFacts.goals.longTerm.trim()
+      : null;
+  const favWeather =
+    Array.isArray(prefFacts.weatherLike) && prefFacts.weatherLike.length
+      ? prefFacts.weatherLike[0]
+      : Array.isArray(prefFacts.seasonsLike) && prefFacts.seasonsLike.length
+      ? prefFacts.seasonsLike[0]
+      : null;
+  const favDrink =
+    Array.isArray(prefFacts.drinkLike) && prefFacts.drinkLike.length
+      ? prefFacts.drinkLike[0]
+      : null;
+  const favFood =
+    Array.isArray(prefFacts.foodLike) && prefFacts.foodLike.length
+      ? prefFacts.foodLike[0]
+      : null;
+  const hobbies =
+    Array.isArray(prefFacts.hobbyLike) && prefFacts.hobbyLike.length
+      ? prefFacts.hobbyLike.filter(Boolean).join(', ')
+      : null;
+
+  const dominantLongTerm = longTermSnapshot && longTermSnapshot.dominantLongTermEmotion
+    ? String(longTermSnapshot.dominantLongTermEmotion).toUpperCase()
+    : null;
+  const avgIntensity = longTermSnapshot && typeof longTermSnapshot.avgIntensity === 'number'
+    ? longTermSnapshot.avgIntensity
+    : null;
+
+  const pieces = [];
+
+  if (language === 'ar') {
+    if (safeName) pieces.push(`أسمع اسمك يتكرر: ${safeName}.`);
+    if (age) pieces.push(`عمرك الذي ذكرتَه: ${age}.`);
+    if (jobTitle) pieces.push(`تتصرف كمن يعيش دور "${jobTitle}".`);
+    if (dream) pieces.push(`حلمك الطويل الذي تلمّح له كثيرًا: ${dream}.`);
+    if (favWeather) pieces.push(`تبتسم عندما يذكَر ${favWeather}.`);
+    if (favDrink) pieces.push(`مشروبك المألوف في أحاديثك: ${favDrink}.`);
+    if (favFood) pieces.push(`طعام ترتاح له: ${favFood}.`);
+    if (hobbies) pieces.push(`الهوايات التي كررتها: ${hobbies}.`);
+    if (dominantLongTerm) {
+      pieces.push(`مزاجك البعيد يميل إلى ${dominantLongTerm.toLowerCase()} أكثر من غيره.`);
+    }
+    if (avgIntensity != null) {
+      pieces.push(`حدة شعورك في محادثات كثيرة كانت حول ${(avgIntensity * 5).toFixed(1)}/5.`);
+    }
+  } else {
+    if (safeName) pieces.push(`I keep hearing your name as "${safeName}".`);
+    if (age) pieces.push(`You once shared your age as ${age}.`);
+    if (jobTitle) pieces.push(`You move like someone living the role of "${jobTitle}".`);
+    if (dream) pieces.push(`A long-term dream you hinted at: ${dream}.`);
+    if (favWeather) pieces.push(`You soften when talking about ${favWeather}.`);
+    if (favDrink) pieces.push(`Your go-to drink you mentioned: ${favDrink}.`);
+    if (favFood) pieces.push(`Food that comforts you: ${favFood}.`);
+    if (hobbies) pieces.push(`Hobbies you actually named: ${hobbies}.`);
+    if (dominantLongTerm) {
+      pieces.push(`Across time, your mood drifts toward ${dominantLongTerm.toLowerCase()}.`);
+    }
+    if (avgIntensity != null) {
+      pieces.push(`Your emotional intensity often sits near ${(avgIntensity * 5).toFixed(1)}/5.`);
+    }
+  }
+
+  const noDataLine =
+    language === 'ar'
+      ? 'لا أملك بعد تفاصيل كافية لهمسة عميقة. استمر في مشاركتك الحقيقية معي.'
+      : "I don’t have enough real details yet for a deep whisper. Keep sharing honestly with me.";
+
+  const personalizedBody = pieces.length ? pieces.join(' ') : noDataLine;
+
+  const finalContent = [rawTemplate, personalizedBody]
+    .filter((s) => s && String(s).trim())
+    .join('\n\n')
+    .trim();
+
+  try {
+    console.log('[Whispers][Evaluate] personalization_meta', {
+      userId,
+      personaId: String(personaId),
+      lang: language,
+      hasName: !!safeName,
+      hasPersonaSnapshot: !!personaSnapshot && !!(personaSnapshot.summaryLinesEn?.length || personaSnapshot.summaryLinesAr?.length),
+      hasLongTermSnapshot: !!longTermSnapshot,
+    });
+  } catch (_) {}
 
   return [
     {

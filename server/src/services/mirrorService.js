@@ -124,6 +124,12 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
   const now = new Date();
   const start = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
+  // Allow a global, cross-persona view when personaId is "all" or "global".
+  const personaFilter =
+    personaId && personaId !== 'all' && personaId !== 'global'
+      ? String(personaId)
+      : null;
+
   let summaries = [];
   let events = [];
 
@@ -131,7 +137,7 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
     summaries = await prisma.emotionalDailySummary.findMany({
       where: {
         userId,
-        personaId: String(personaId),
+        ...(personaFilter ? { personaId: personaFilter } : {}),
         date: { gte: start },
       },
       orderBy: { date: 'asc' },
@@ -145,7 +151,7 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
     events = await prisma.emotionalEvent.findMany({
       where: {
         userId,
-        personaId: String(personaId),
+        ...(personaFilter ? { personaId: personaFilter } : {}),
         timestamp: { gte: start },
       },
       orderBy: { timestamp: 'asc' },
@@ -311,11 +317,12 @@ async function generateMirrorInsights({ userId, personaId, rangeDays }) {
       periodLabel,
       negativeShare,
       notEnoughHistory,
+      personaScope: personaFilter ? 'persona' : 'global',
     },
   };
 }
 
-async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot, identityProfile }) {
+async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot, identityProfile, personaScope }) {
   // Mirror language should follow the UI language from the client.
   // If lang is missing or unknown, fall back to English.
   const rawLang = typeof lang === 'string' ? lang.toLowerCase() : '';
@@ -388,7 +395,35 @@ async function callLLMForMirror({ insights, personaMeta, lang, personaSnapshot, 
     ? 'ستصلك ملامح داخلية تقريبية عن حياة المستخدم في الحقل personaProfile.summaryLines (مثل عمر تقريبي، بلد، دور دراسي/عملي، أهداف طويلة المدى، وبعض السمات). استخدم هذه الملاحظات فقط لاختيار طريقة الكلام والأمثلة الأقرب لواقع حياته، بدون أن تذكر هذه الجمل حرفيًا للمستخدم أو تقول إن عندك "ملف شخصي" عنه أو أرقام عن شخصيته. لو كانت personaProfile = null أو لا تحوي جملًا، تجاهلها ببساطة.'
     : 'You may receive a small internal persona profile in `personaProfile.summaryLines` (approximate age, country/city, role, long-term goals, themes, traits). Use these hints only to choose tone and examples that fit the user’s life. Do NOT list them back as analytics, do NOT say you have a "profile" about them, and do NOT quote the lines word-for-word. If `personaProfile` is null or empty, just ignore it.';
 
-  const userPrompt = `${userInstruction}\n\n${timeInstruction}\n\n${emotionInstruction}\n\n${identityPrefInstruction}\n\n${personaInstruction}\n\nJSON:\n${userContent}`;
+  const hallucinationGuard = isAr
+    ? 'اعتمد فقط على الحقول الموجودة في JSON أدناه. إذا كان أي حقل مفقود أو فارغ، صرّح بوضوح أنك لا تعرفه ولا تحاول التخمين. لا تضف حقائق أو أحداث غير موجودة في البيانات.'
+    : 'Use only the fields present in the JSON below. If any field is missing or empty, clearly state you do not know it and do not guess. Do not add facts or events that are not in the data.';
+
+  const scopeInstruction = personaScope === 'global'
+    ? (isAr
+        ? 'هذا الانعكاس يجب أن يكون بنظرة شاملة عبر جميع الشخصيات والمحادثات، ركّز على الأنماط المتكررة عالميًا وليس على هذه الشخصية فقط.'
+        : 'This reflection should take a bird’s-eye view across all companions and conversations, focusing on recurring global patterns rather than this single character.')
+    : (isAr
+        ? 'هذا الانعكاس يخص هذه الشخصية الحالية فقط؛ لا تتحدث وكأنك ترى كل الشخصيات، بل تحدث بنبرة هذه الشخصية معتمداً على بياناتها والحقائق العامة.'
+        : 'This reflection is for the current character only; do not speak as if you see all companions, but keep the tone of this character while using the provided facts.');
+
+  const safetyInstruction = isAr
+    ? 'تجنب اللغة الطبية أو التشخيصية. لا تذكر اضطرابات، ولا تقدّم وعود علاجية. كن داعماً ودافئاً فقط.'
+    : 'Avoid clinical or diagnostic language. Do not name disorders or promise treatment. Stay supportive and warm only.';
+
+  const userPrompt = [
+    userInstruction,
+    timeInstruction,
+    emotionInstruction,
+    identityPrefInstruction,
+    personaInstruction,
+    scopeInstruction,
+    hallucinationGuard,
+    safetyInstruction,
+    '',
+    'JSON:',
+    userContent,
+  ].join('\n\n');
 
   try {
     const completion = await openai.chat.completions.create({
@@ -462,6 +497,7 @@ async function generateMirrorForUser({ userId, personaId, rangeDays, personaMeta
     lang,
     personaSnapshot,
     identityProfile,
+    personaScope: insights?.meta?.personaScope || 'persona',
   });
 
   const now = new Date();
