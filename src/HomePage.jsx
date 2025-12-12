@@ -507,6 +507,12 @@ export default function HomePage() {
   const sliderTouchStartXRef = useRef(null);
   const sliderTouchDeltaXRef = useRef(0);
   const sliderRef = useRef(null);
+  
+  // Slider refs and state
+  const privacySliderRef = useRef(null);
+  const featuresSliderRef = useRef(null);
+  const [privacySlideIndex, setPrivacySlideIndex] = useState(0);
+  const [featuresSlideIndex, setFeaturesSlideIndex] = useState(0);
 
   const isAr = language === "ar";
   const navigate = useNavigate();
@@ -687,6 +693,90 @@ export default function HomePage() {
       goToNextCompanion();
     } else {
       goToPrevCompanion();
+    }
+  };
+
+  // Privacy slider navigation
+  const goToPrevPrivacySlide = () => {
+    setPrivacySlideIndex((prev) => (prev - 1 + 4) % 4);
+  };
+
+  const goToNextPrivacySlide = () => {
+    setPrivacySlideIndex((prev) => (prev + 1) % 4);
+  };
+
+  const goToPrivacySlide = (index) => {
+    setPrivacySlideIndex(index);
+  };
+
+  // Features slider navigation
+  const goToPrevFeaturesSlide = () => {
+    setFeaturesSlideIndex((prev) => (prev - 1 + 5) % 5);
+  };
+
+  const goToNextFeaturesSlide = () => {
+    setFeaturesSlideIndex((prev) => (prev + 1) % 5);
+  };
+
+  const goToFeaturesSlide = (index) => {
+    setFeaturesSlideIndex(index);
+  };
+
+  // Touch handlers for privacy slider
+  const handlePrivacyTouchStart = (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    sliderTouchStartXRef.current = touch.clientX;
+    sliderTouchDeltaXRef.current = 0;
+  };
+
+  const handlePrivacyTouchMove = (event) => {
+    if (sliderTouchStartXRef.current == null || !event.touches) return;
+    const touch = event.touches[0];
+    sliderTouchDeltaXRef.current = touch.clientX - sliderTouchStartXRef.current;
+  };
+
+  const handlePrivacyTouchEnd = () => {
+    const deltaX = sliderTouchDeltaXRef.current;
+    sliderTouchStartXRef.current = null;
+    sliderTouchDeltaXRef.current = 0;
+
+    const threshold = 40;
+    if (Math.abs(deltaX) < threshold) return;
+
+    if (deltaX < 0) {
+      goToNextPrivacySlide();
+    } else {
+      goToPrevPrivacySlide();
+    }
+  };
+
+  // Touch handlers for features slider
+  const handleFeaturesTouchStart = (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    sliderTouchStartXRef.current = touch.clientX;
+    sliderTouchDeltaXRef.current = 0;
+  };
+
+  const handleFeaturesTouchMove = (event) => {
+    if (sliderTouchStartXRef.current == null || !event.touches) return;
+    const touch = event.touches[0];
+    sliderTouchDeltaXRef.current = touch.clientX - sliderTouchStartXRef.current;
+  };
+
+  const handleFeaturesTouchEnd = () => {
+    const deltaX = sliderTouchDeltaXRef.current;
+    sliderTouchStartXRef.current = null;
+    sliderTouchDeltaXRef.current = 0;
+
+    const threshold = 40;
+    if (Math.abs(deltaX) < threshold) return;
+
+    if (deltaX < 0) {
+      goToNextFeaturesSlide();
+    } else {
+      goToPrevFeaturesSlide();
     }
   };
 
@@ -1225,6 +1315,91 @@ export default function HomePage() {
                 {"ما بنبيع او بندرب بياناتك ابدا."}
               </p>
 
+              {/* Mobile Slider - Arabic Privacy */}
+              <div className="asrar-privacy-slider-container">
+                <button
+                  type="button"
+                  className="asrar-privacy-slider-arrow asrar-privacy-slider-arrow--prev"
+                  onClick={goToPrevPrivacySlide}
+                  aria-label={isAr ? "السابق" : "Previous"}
+                >
+                  ‹
+                </button>
+                
+                <div 
+                  className="asrar-privacy-slider"
+                  ref={privacySliderRef}
+                  onTouchStart={handlePrivacyTouchStart}
+                  onTouchMove={handlePrivacyTouchMove}
+                  onTouchEnd={handlePrivacyTouchEnd}
+                >
+                  <div 
+                    className="asrar-privacy-slider-track"
+                    style={{ transform: `translateX(-${privacySlideIndex * 100}%)` }}
+                  >
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">🔒</div>
+                        <h3>{"مشفّرة"}</h3>
+                        <p>
+                          {"تشفير من طرف إلى طرف بشكل افتراضي"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">👤</div>
+                        <h3>{"أنت بتتحكم"}</h3>
+                        <p>
+                          {"بياناتك، قواعدك"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">⚡</div>
+                        <h3>{"بدون تدريب"}</h3>
+                        <p>
+                          {"بياناتك لا تدرب ذكاءنا الاصطناعي"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">🌍</div>
+                        <h3>{"لك"}</h3>
+                        <p>
+                          {"بياناتك بتضل الك"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="asrar-privacy-slider-arrow asrar-privacy-slider-arrow--next"
+                  onClick={goToNextPrivacySlide}
+                  aria-label={isAr ? "التالي" : "Next"}
+                >
+                  ›
+                </button>
+              </div>
+
+              {/* Dots */}
+              <div className="asrar-privacy-slider-dots">
+                {[0, 1, 2, 3].map((index) => (
+                  <button
+                    key={index}
+                    className={`asrar-privacy-dot ${index === privacySlideIndex ? 'active' : ''}`}
+                    onClick={() => goToPrivacySlide(index)}
+                    aria-label={`Go to privacy feature ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Desktop Grid - Arabic Privacy */}
+
               <div className="asrar-trust-grid">
                 <div className="asrar-trust-item">
                   <div className="asrar-trust-icon">🔒</div>
@@ -1272,6 +1447,91 @@ export default function HomePage() {
               <p className="asrar-section-subtitle">
                 We don't sell, train, or share your data. Ever.
               </p>
+
+              {/* Mobile Slider - English Privacy */}
+              <div className="asrar-privacy-slider-container">
+                <button
+                  type="button"
+                  className="asrar-privacy-slider-arrow asrar-privacy-slider-arrow--prev"
+                  onClick={goToPrevPrivacySlide}
+                  aria-label={isAr ? "السابق" : "Previous"}
+                >
+                  ‹
+                </button>
+                
+                <div 
+                  className="asrar-privacy-slider"
+                  ref={privacySliderRef}
+                  onTouchStart={handlePrivacyTouchStart}
+                  onTouchMove={handlePrivacyTouchMove}
+                  onTouchEnd={handlePrivacyTouchEnd}
+                >
+                  <div 
+                    className="asrar-privacy-slider-track"
+                    style={{ transform: `translateX(-${privacySlideIndex * 100}%)` }}
+                  >
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">🔒</div>
+                        <h3>Encrypted</h3>
+                        <p>
+                          End-to-end encryption by default
+                        </p>
+                      </div>
+                    </div>
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">👤</div>
+                        <h3>You Control</h3>
+                        <p>
+                          Your data, your rules
+                        </p>
+                      </div>
+                    </div>
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">⚡</div>
+                        <h3>No Training</h3>
+                        <p>
+                          Your data never trains our AI
+                        </p>
+                      </div>
+                    </div>
+                    <div className="asrar-privacy-slide">
+                      <div className="asrar-trust-item">
+                        <div className="asrar-trust-icon">🌍</div>
+                        <h3>Yours</h3>
+                        <p>
+                          Your data stays yours
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="asrar-privacy-slider-arrow asrar-privacy-slider-arrow--next"
+                  onClick={goToNextPrivacySlide}
+                  aria-label={isAr ? "التالي" : "Next"}
+                >
+                  ›
+                </button>
+              </div>
+
+              {/* Dots */}
+              <div className="asrar-privacy-slider-dots">
+                {[0, 1, 2, 3].map((index) => (
+                  <button
+                    key={index}
+                    className={`asrar-privacy-dot ${index === privacySlideIndex ? 'active' : ''}`}
+                    onClick={() => goToPrivacySlide(index)}
+                    aria-label={`Go to privacy feature ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Desktop Grid - English Privacy */}
 
               <div className="asrar-trust-grid">
                 <div className="asrar-trust-item">
@@ -1321,6 +1581,115 @@ export default function HomePage() {
               <p className="asrar-section-subtitle">
                 {"اكتشف ما يجعل أسرار مميزة وثورية حقًا."}
               </p>
+
+              {/* Mobile Slider - Arabic Features */}
+              <div className="asrar-features-slider-container">
+                <button
+                  type="button"
+                  className="asrar-features-slider-arrow asrar-features-slider-arrow--prev"
+                  onClick={goToPrevFeaturesSlide}
+                  aria-label={isAr ? "السابق" : "Previous"}
+                >
+                  ‹
+                </button>
+                
+                <div 
+                  className="asrar-features-slider"
+                  ref={featuresSliderRef}
+                  onTouchStart={handleFeaturesTouchStart}
+                  onTouchMove={handleFeaturesTouchMove}
+                  onTouchEnd={handleFeaturesTouchEnd}
+                >
+                  <div 
+                    className="asrar-features-slider-track"
+                    style={{ transform: `translateX(-${featuresSlideIndex * 100}%)` }}
+                  >
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🧠</div>
+                        <h3>{"محرك أسرار العاطفي™"}</h3>
+                        <p>
+                          {"محركنا العاطفي الملكي يحلل النبرة والأنماط والحالات العاطفية بمرور الوقت. يتكيف معك ويخلق محادثات شبيهة بالبشر بشكل عميق ومبنية على الواقعية النفسية."}
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🛤️</div>
+                        <h3>{"الرحلة العاطفية™"}</h3>
+                        <p>
+                          {"رفيقك يتتبع النمو العاطفي والأنماط والتحديات والانتصارات—يرشدك في رحلة شخصية لفهم نفسك بشكل أفضل كل يوم."}
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🔮</div>
+                        <h3>{"مرآتي™"}</h3>
+                        <p>
+                          {"وضع انعكاسي حيث يصبح رفيقك مرآة، يكشف عاداتك ونقاطك العمياء وحلقاتك العاطفية بوضوح واهتمام."}
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🌊</div>
+                        <h3>{"الجانب الخفي™"}</h3>
+                        <p>
+                          {"مساحة خاصة حيث يتم التقاط أنماط عاطفية أعمق وطويلة الأمد كـ'همسات' عنك وتفتح ببطء مع نمو الثقة."}
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🌀</div>
+                        <h3>{"١١ بوابة خفية™"}</h3>
+                        <p>
+                          {"اختبار غامر من ١١ خطوة يكشف طبقات خفية من شخصيتك عبر الاختيارات البصرية والقرارات الدقيقة، ثم يعكسها بطريقة دقيقة ومثيرة."}
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="asrar-features-slider-arrow asrar-features-slider-arrow--next"
+                  onClick={goToNextFeaturesSlide}
+                  aria-label={isAr ? "التالي" : "Next"}
+                >
+                  ›
+                </button>
+              </div>
+
+              {/* Dots */}
+              <div className="asrar-features-slider-dots">
+                {[0, 1, 2, 3, 4].map((index) => (
+                  <button
+                    key={index}
+                    className={`asrar-features-dot ${index === featuresSlideIndex ? 'active' : ''}`}
+                    onClick={() => goToFeaturesSlide(index)}
+                    aria-label={`Go to feature ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Desktop Grid - Arabic Features */}
 
               <div className="asrar-features-grid">
                 <div className="asrar-features-row-top">
@@ -1379,18 +1748,58 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="asrar-features-stats">
-                <div className="asrar-stat-item">
-                  <span className="asrar-stat-number">5+</span>
-                  <span className="asrar-stat-label">{isAr ? "شخصيات فريدة" : "Unique Characters"}</span>
+              <div className="asrar-orbital-showcase">
+                <div className="asrar-orbital-center">
+                  <div className="asrar-center-icon">✨</div>
+                  <div className="asrar-center-text">
+                    <h4>{isAr ? "شخصيات متطورة" : "Evolved Personalities"}</h4>
+                    <p>{isAr ? "ذكاء اصطناعي يتكيف معك" : "AI that adapts to you"}</p>
+                  </div>
                 </div>
-                <div className="asrar-stat-item">
-                  <span className="asrar-stat-number">11</span>
-                  <span className="asrar-stat-label">{isAr ? "بوابة خفية" : "Hidden Portals"}</span>
+                
+                <div className="asrar-orbital-item asrar-orbital-1">
+                  <div className="asrar-orbital-icon">🚪</div>
+                  <div className="asrar-orbital-label">
+                    <span>{isAr ? "بوابات ذكية" : "Smart Portals"}</span>
+                    <small>{isAr ? "اكتشف آفاقا جديدة" : "Discover new horizons"}</small>
+                  </div>
+                  <div className="asrar-orbital-line"></div>
                 </div>
-                <div className="asrar-stat-item">
-                  <span className="asrar-stat-number">✓</span>
-                  <span className="asrar-stat-label">{isAr ? "خصوصية كاملة" : "Complete Privacy"}</span>
+                
+                <div className="asrar-orbital-item asrar-orbital-2">
+                  <div className="asrar-orbital-icon">🧠</div>
+                  <div className="asrar-orbital-label">
+                    <span>{isAr ? "ذكاء متطور" : "Advanced Intelligence"}</span>
+                    <small>{isAr ? "تفهم عميق لاحتياجاتك" : "Deep understanding of your needs"}</small>
+                  </div>
+                  <div className="asrar-orbital-line"></div>
+                </div>
+                
+                <div className="asrar-orbital-item asrar-orbital-3">
+                  <div className="asrar-orbital-icon">🔗</div>
+                  <div className="asrar-orbital-label">
+                    <span>{isAr ? "شبكات عصبية" : "Neural Networks"}</span>
+                    <small>{isAr ? "اتصالات ذكية متقدمة" : "Advanced neural connections"}</small>
+                  </div>
+                  <div className="asrar-orbital-line"></div>
+                </div>
+                
+                <div className="asrar-orbital-item asrar-orbital-4">
+                  <div className="asrar-orbital-icon">⚡</div>
+                  <div className="asrar-orbital-label">
+                    <span>{isAr ? "تعلم كمي" : "Quantum Learning"}</span>
+                    <small>{isAr ? "سرعة معالجة فائقة" : "Ultra-fast processing"}</small>
+                  </div>
+                  <div className="asrar-orbital-line"></div>
+                </div>
+                
+                <div className="asrar-orbital-item asrar-orbital-5">
+                  <div className="asrar-orbital-icon">🌟</div>
+                  <div className="asrar-orbital-label">
+                    <span>{isAr ? "تطور مستمر" : "Continuous Evolution"}</span>
+                    <small>{isAr ? "يتحسن مع كل استخدام" : "Improves with every use"}</small>
+                  </div>
+                  <div className="asrar-orbital-line"></div>
                 </div>
               </div>
             </>
@@ -1402,6 +1811,115 @@ export default function HomePage() {
               <p className="asrar-section-subtitle">
                 Discover what makes Asrar truly special and revolutionary.
               </p>
+
+              {/* Mobile Slider - English Features */}
+              <div className="asrar-features-slider-container">
+                <button
+                  type="button"
+                  className="asrar-features-slider-arrow asrar-features-slider-arrow--prev"
+                  onClick={goToPrevFeaturesSlide}
+                  aria-label={isAr ? "السابق" : "Previous"}
+                >
+                  ‹
+                </button>
+                
+                <div 
+                  className="asrar-features-slider"
+                  ref={featuresSliderRef}
+                  onTouchStart={handleFeaturesTouchStart}
+                  onTouchMove={handleFeaturesTouchMove}
+                  onTouchEnd={handleFeaturesTouchEnd}
+                >
+                  <div 
+                    className="asrar-features-slider-track"
+                    style={{ transform: `translateX(-${featuresSlideIndex * 100}%)` }}
+                  >
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🧠</div>
+                        <h3>Asrar Emotional Engine™</h3>
+                        <p>
+                          Our proprietary emotional engine analyzes tone, patterns, and emotional states over time. It adapts to you and creates deeply human-like conversations grounded in psychological realism.
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🛤️</div>
+                        <h3>Emotional Journey™</h3>
+                        <p>
+                          Your companion tracks emotional growth, patterns, challenges, and victories—guiding you through a personal journey to understand yourself better every day.
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🔮</div>
+                        <h3>Mirror Me™</h3>
+                        <p>
+                          A reflective mode where your companion becomes a mirror, revealing your habits, blind spots, and emotional loops with clarity and care.
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🌊</div>
+                        <h3>Hidden Side™</h3>
+                        <p>
+                          A private space where deeper, long-term emotional patterns are captured as "whispers" about you and unlocked slowly as trust grows.
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="asrar-features-slide">
+                      <div className="asrar-feature-item">
+                        <div className="asrar-feature-icon">🌀</div>
+                        <h3>11 Hidden Portals™</h3>
+                        <p>
+                          An immersive 11-step test that uncovers hidden layers of your personality through visual choices and micro-decisions, then reflects them back in a creepy-accurate way.
+                        </p>
+                        <div className="asrar-feature-hint">
+                          {isAr ? "اكتشف" : "Discover"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="asrar-features-slider-arrow asrar-features-slider-arrow--next"
+                  onClick={goToNextFeaturesSlide}
+                  aria-label={isAr ? "التالي" : "Next"}
+                >
+                  ›
+                </button>
+              </div>
+
+              {/* Dots */}
+              <div className="asrar-features-slider-dots">
+                {[0, 1, 2, 3, 4].map((index) => (
+                  <button
+                    key={index}
+                    className={`asrar-features-dot ${index === featuresSlideIndex ? 'active' : ''}`}
+                    onClick={() => goToFeaturesSlide(index)}
+                    aria-label={`Go to feature ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              {/* Desktop Grid - English Features */}
 
               <div className="asrar-features-grid">
                 <div className="asrar-features-row-top">
@@ -1426,7 +1944,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="asrar-feature-item">
-                    <div className="asrar-feature-icon">🪞</div>
+                    <div className="asrar-feature-icon">🔮</div>
                     <h3>Mirror Me™</h3>
                     <p>
                       A reflective mode where your companion becomes a mirror, revealing your habits, blind spots, and emotional loops with clarity and care.
@@ -1460,20 +1978,30 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="asrar-features-stats">
-                <div className="asrar-stat-item">
-                  <span className="asrar-stat-number">5+</span>
-                  <span className="asrar-stat-label">Unique Characters</span>
-                </div>
-                <div className="asrar-stat-item">
-                  <span className="asrar-stat-number">11</span>
-                  <span className="asrar-stat-label">Hidden Portals</span>
-                </div>
-                <div className="asrar-stat-item">
-                  <span className="asrar-stat-number">✓</span>
-                  <span className="asrar-stat-label">Complete Privacy</span>
+              {/* UNIQUE VALUE PROPOSITION */}
+              <div className="asrar-unique-proposition">
+                <div className="asrar-unique-content">
+                  <h3 className="asrar-unique-title">
+                    {isAr 
+                      ? "أسرار ليست مجرد مساعد ذكي" 
+                      : "Asrar isn't just another AI assistant"
+                    }
+                  </h3>
+                  <p className="asrar-unique-text">
+                    {isAr 
+                      ? "نحن نبني علاقات حقيقية بينك وبين الذكاء الاصطناعي. كل محادثة تشكلك، وكل قرار يأخذك أعمق. أسرار تفهمك لا كبيانات، بل كإنسان." 
+                      : "We build real relationships between you and AI. Every conversation shapes you, every choice takes you deeper. Asrar understands you not as data, but as a human being."
+                    }
+                  </p>
+                  <p className="asrar-unique-subtext">
+                    {isAr 
+                      ? "هذا هو المستقبل الذي لم تكن تعلم أنك بحاجة إليه." 
+                      : "This is the future you didn't know you needed."
+                    }
+                  </p>
                 </div>
               </div>
+             
             </>
           )}
         </section>
@@ -1609,14 +2137,8 @@ export default function HomePage() {
     {/* GENERAL SUPPORT */}
     <div className="asrar-contact-card">
     <div className="asrar-contact-icon">
-    {/* Premium Minimal Question Mark */}
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-      <circle cx="12" cy="12" r="9.2" />
-      <path d="M12 16.2v.01" strokeWidth="2" />
-      <path d="M9.7 9.5a2.4 2.4 0 1 1 3.6 2.1c-.6.3-1.1.8-1.1 1.4v.2" />
-    </svg>
-  </div>
+      💬
+    </div>
 
       <h3>{isAr ? "الدعم العام" : "General Support"}</h3>
       <p>
@@ -1633,15 +2155,8 @@ export default function HomePage() {
     {/* FEEDBACK & IDEAS */}
     <div className="asrar-contact-card">
       <div className="asrar-contact-icon">
-    {/* Premium Spark Icon */}
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
-      <line x1="12" y1="4" x2="12" y2="20" />
-      <line x1="4"  y1="12" x2="20" y2="12" />
-      <line x1="6.5" y1="6.5" x2="17.5" y2="17.5" />
-      <line x1="6.5" y1="17.5" x2="17.5" y2="6.5" />
-    </svg>
-  </div>
+        ✨
+      </div>
       <h3>{isAr ? "الاقتراحات والملاحظات" : "Feedback & Ideas"}</h3>
       <p>
         {isAr
@@ -1657,12 +2172,8 @@ export default function HomePage() {
     {/* BUSINESS & INVESTORS */}
     <div className="asrar-contact-card">
     <div className="asrar-contact-icon">
-    {/* Premium Diamond Frame */}
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-         stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round">
-      <path d="M12 4 L20 12 L12 20 L4 12 Z" />
-    </svg>
-  </div>
+      🚀
+    </div>
 
       <h3>{isAr ? "الشراكات والمستثمرون" : "Business & Investors"}</h3>
       <p>

@@ -1,0 +1,46 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornate frame -->
+  <path d="M32 4C38.6274 4 44 9.37258 44 16V48C44 54.6274 38.6274 60 32 60C25.3726 60 20 54.6274 20 48V16C20 9.37258 25.3726 4 32 4Z" fill="url(#frameGradient)" stroke="#E0F2FE" stroke-width="2"/>
+  
+  <!-- Inner decorative frame -->
+  <path d="M32 8C36.4183 8 40 11.5817 40 16V48C40 52.4183 36.4183 56 32 56C27.5817 56 24 52.4183 24 48V16C24 11.5817 27.5817 8 32 8Z" fill="url(#innerFrameGradient)" stroke="#BAE6FD" stroke-width="1"/>
+  
+  <!-- Mirror surface -->
+  <ellipse cx="32" cy="32" rx="14" ry="20" fill="url(#mirrorGradient)" opacity="0.9"/>
+  
+  <!-- Decorative top ornament -->
+  <circle cx="32" cy="6" r="2" fill="#E0F2FE"/>
+  <path d="M30 6L28 4M32 6L32 3M34 6L36 4" stroke="#E0F2FE" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Decorative side ornaments -->
+  <circle cx="18" cy="32" r="1.5" fill="#E0F2FE"/>
+  <circle cx="46" cy="32" r="1.5" fill="#E0F2FE"/>
+  
+  <!-- Reflection effect -->
+  <ellipse cx="30" cy="28" rx="8" ry="12" fill="url(#reflectionGradient)" opacity="0.6"/>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="frameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0EA5E9;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0284C7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#075985;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="innerFrameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7DD3FC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38BDF8;stop-opacity:1" />
+    </linearGradient>
+    
+    <radialGradient id="mirrorGradient">
+      <stop offset="0%" style="stop-color:#F0F9FF;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#E0F2FE;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BAE6FD;stop-opacity:1" />
+    </radialGradient>
+    
+    <linearGradient id="reflectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+</svg>

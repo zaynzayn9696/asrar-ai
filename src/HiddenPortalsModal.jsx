@@ -355,7 +355,10 @@ export default function HiddenPortalsModal({ isOpen, onClose, isAr, onComplete }
   };
 
   const isReady = readiness?.ready;
-  const progressValue = readiness?.progress ?? 0;
+  const progressValue =
+    readiness && typeof readiness.readinessPercent === "number"
+      ? Math.max(0, Math.min(100, readiness.readinessPercent)) / 100
+      : readiness?.progress ?? 0;
 
   const renderProgressBar = (value) => (
     <div className="hidden-portals-progress-bar">
@@ -399,19 +402,23 @@ export default function HiddenPortalsModal({ isOpen, onClose, isAr, onComplete }
               <li key={r}>
                 {isAr
                   ? r === "NOT_ENOUGH_MESSAGES"
-                    ? "تحدث أكثر معي."
+                    ? "تحدث أكثر معي وبإسهاب."
                     : r === "NOT_ENOUGH_DAYS"
-                    ? "تحدث عبر أيام مختلفة."
-                    : r === "NOT_ENOUGH_EVENTS"
-                    ? "شارك مشاعرك بوضوح أكثر."
-                    : "أخبرني بتفاصيلك اليومية."
+                    ? "تحدث عبر أيام مختلفة (مش ليلة واحدة فقط)."
+                    : r === "LOW_EMOTION_VARIETY"
+                    ? "شارك لحظات ثقيلة ولحظات أمل حتى لا يبقى انعكاسك أحادي."
+                    : r === "NOT_ENOUGH_FACTS"
+                    ? "احكِ عن عملك، عائلتك، صداقاتك، وأهدافك."
+                    : "شارك أكثر من تفاصيل حياتك اليومية."
                   : r === "NOT_ENOUGH_MESSAGES"
-                  ? "Talk a bit more with me."
+                  ? "Open up more with longer chats."
                   : r === "NOT_ENOUGH_DAYS"
-                  ? "Chat across more days."
-                  : r === "NOT_ENOUGH_EVENTS"
-                  ? "Share how you actually feel."
-                  : "Tell me more about you."}
+                  ? "Chat across more days (not just one night)."
+                  : r === "LOW_EMOTION_VARIETY"
+                  ? "Share both heavy and hopeful moments so it’s not one-sided."
+                  : r === "NOT_ENOUGH_FACTS"
+                  ? "Talk about work, family, friendships, and goals."
+                  : "Tell me more about the different sides of your life."}
               </li>
             ))}
           </ul>

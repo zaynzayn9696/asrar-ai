@@ -555,17 +555,10 @@
   font-size: 0.9rem;
   color: #c3e3ff;
   line-height: 1.5;
+  text-align:cetner;
 }
 
-.portal-not-ready-hints li::before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  top: 0;
-  color: #7dd3fc;
-  font-weight: bold;
-  font-size: 1.1rem;
-}
+
 
 [dir="rtl"] .portal-not-ready-hints {
   text-align: right;

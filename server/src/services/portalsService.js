@@ -101,25 +101,33 @@ function addScores(aggregate, delta) {
   }
 }
 
+/**
+ * computeReadiness
+ * Inputs: total user messages (all personas), distinct active days, emotion profile variety,
+ * and persona/identity fact density (userMemoryFact).
+ * Combines four capped signals into a 0-100 score: messages (0-30), days (0-30),
+ * emotional variety/balance (0-20), persona facts (0-20). Early caps prevent
+ * high percentages with low data. Ready only when high-engagement thresholds are met.
+ */
 async function computeReadiness({ userId }) {
   const stats = {
     totalMessages: 0,
     distinctActiveDays: 0,
-    timelineEvents: 0,
     knownFactsCount: 0,
   };
+
+  // Total messages across all conversations/personas
   try {
-    stats.totalMessages = await prisma.message.count({
-      where: { userId },
-    });
+    stats.totalMessages = await prisma.message.count({ where: { userId } });
   } catch (_) {}
 
+  // Distinct active days (recent messages, capped fetch)
   try {
     const days = await prisma.message.findMany({
       where: { userId },
       select: { createdAt: true },
       orderBy: { createdAt: 'desc' },
-      take: 400,
+      take: 800,
     });
     const distinct = new Set();
     for (const d of days) {
@@ -131,36 +139,98 @@ async function computeReadiness({ userId }) {
     stats.distinctActiveDays = distinct.size;
   } catch (_) {}
 
-  try {
-    stats.timelineEvents = await prisma.emotionalTimelineEvent.count({
-      where: { userId },
-    });
-  } catch (_) {}
-
+  // Persona / identity facts
   try {
     stats.knownFactsCount = await prisma.userMemoryFact.count({
       where: { userId },
     });
   } catch (_) {}
 
-  const reasons = [];
-  if (stats.totalMessages < THRESHOLDS.messages) reasons.push('NOT_ENOUGH_MESSAGES');
-  if (stats.distinctActiveDays < THRESHOLDS.days) reasons.push('NOT_ENOUGH_DAYS');
-  if (stats.timelineEvents < THRESHOLDS.events) reasons.push('NOT_ENOUGH_EVENTS');
-  if (stats.knownFactsCount < THRESHOLDS.facts) reasons.push('NOT_ENOUGH_FACTS');
+  // Emotion profile variety (positive + negative coverage)
+  let emotionVarietyScore = 0;
+  let hasPositive = false;
+  let hasNegative = false;
+  try {
+    const prof = await prisma.userEmotionProfile.findUnique({ where: { userId } });
+    if (prof) {
+      const categories = [
+        prof.sadnessScore || 0,
+        prof.anxietyScore || 0,
+        prof.angerScore || 0,
+        prof.lonelinessScore || 0,
+        prof.hopeScore || 0,
+        prof.gratitudeScore || 0,
+      ];
+      const threshold = 0.08;
+      const varietyCount = categories.filter((v) => v >= threshold).length;
+      const positiveSum = (prof.hopeScore || 0) + (prof.gratitudeScore || 0);
+      const negativeSum = (prof.sadnessScore || 0) + (prof.anxietyScore || 0) + (prof.angerScore || 0) + (prof.lonelinessScore || 0);
+      hasPositive = positiveSum >= 0.2;
+      hasNegative = negativeSum >= 0.2;
 
-  const progressParts = [
-    Math.min(stats.totalMessages / THRESHOLDS.messages, 1),
-    Math.min(stats.distinctActiveDays / THRESHOLDS.days, 1),
-    Math.min(stats.timelineEvents / THRESHOLDS.events, 1),
-    Math.min(stats.knownFactsCount / THRESHOLDS.facts, 1),
-  ];
-  const progress = progressParts.reduce((a, b) => a + b, 0) / progressParts.length;
+      const baseVariety = Math.min(varietyCount / 6, 1) * 12; // up to 12
+      const balanceBonus = hasPositive && hasNegative ? 6 : 0;
+      const intensityBonus = Math.min((prof.avgIntensity || 0) * 5, 2); // up to 2
+      emotionVarietyScore = Math.min(20, Math.max(0, baseVariety + balanceBonus + intensityBonus));
+    }
+  } catch (_) {}
+
+  // Scoring components (capped)
+  const messagesScore = Math.min(stats.totalMessages / 150, 1) * 30; // 0-30
+  const daysScore = Math.min(stats.distinctActiveDays / 10, 1) * 30; // 0-30
+  const personaFactsScore = Math.min(stats.knownFactsCount / 15, 1) * 20; // 0-20
+  const rawScore = messagesScore + daysScore + emotionVarietyScore + personaFactsScore;
+  const rawPercent = Math.max(0, Math.min(100, rawScore));
+
+  // Early conservative caps
+  let readinessPercent = rawPercent;
+  if (stats.totalMessages < 50 || stats.distinctActiveDays < 3) {
+    readinessPercent = Math.min(readinessPercent, 15);
+  } else if (stats.totalMessages < 120 || stats.distinctActiveDays < 7) {
+    readinessPercent = Math.min(readinessPercent, 40);
+  }
+
+  // High-bar gate for >70%
+  if (!(stats.totalMessages >= 200 && stats.distinctActiveDays >= 10 && stats.knownFactsCount >= 8 && hasPositive && hasNegative)) {
+    readinessPercent = Math.min(readinessPercent, 70);
+  }
+
+  const reasons = [];
+  if (stats.totalMessages < 50) reasons.push('NOT_ENOUGH_MESSAGES');
+  if (stats.distinctActiveDays < 3) reasons.push('NOT_ENOUGH_DAYS');
+  if (!hasPositive || !hasNegative || emotionVarietyScore < 10) reasons.push('LOW_EMOTION_VARIETY');
+  if (stats.knownFactsCount < 8) reasons.push('NOT_ENOUGH_FACTS');
+
+  const ready =
+    readinessPercent >= 70 &&
+    stats.totalMessages >= 200 &&
+    stats.distinctActiveDays >= 10 &&
+    stats.knownFactsCount >= 8 &&
+    hasPositive &&
+    hasNegative;
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(
+      `[PortalsReadiness] userId=${userId} messages=${stats.totalMessages} days=${stats.distinctActiveDays} varietyScore=${emotionVarietyScore.toFixed(
+        2,
+      )} personaFacts=${stats.knownFactsCount} rawScore=${rawPercent.toFixed(2)} readiness=${readinessPercent.toFixed(2)}`,
+    );
+  }
 
   return {
-    ready: reasons.length === 0,
-    progress: Math.max(0, Math.min(1, progress)),
+    ready,
+    progress: Math.max(0, Math.min(1, readinessPercent / 100)),
+    readinessPercent: Math.round(readinessPercent),
     reasons,
+    breakdown: {
+      totalMessages: stats.totalMessages,
+      distinctDays: stats.distinctActiveDays,
+      emotionVarietyScore: Number(emotionVarietyScore.toFixed(2)),
+      personaFactCount: stats.knownFactsCount,
+      rawScore: Number(rawPercent.toFixed(2)),
+      hasPositiveEmotion: hasPositive,
+      hasNegativeEmotion: hasNegative,
+    },
     stats,
   };
 }
