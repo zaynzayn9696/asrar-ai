@@ -368,45 +368,54 @@ export default function HiddenPortalsModal({ isOpen, onClose, isAr, onComplete }
 
   const renderNotReady = () => (
     <div className="portal-not-ready">
-      <div className="portal-not-ready-icon">🌀</div>
+      <div className="portal-not-ready-icon-wrapper">
+        <div className="portal-not-ready-icon">🌀</div>
+      </div>
       <h3 className="portal-not-ready-title">
-        {isAr ? "انعكاسك غير جاهز بعد" : "Your reflection isn’t ready yet"}
+        {isAr ? "انعكاسك غير جاهز بعد" : "Your reflection isn't ready yet"}
       </h3>
       <p className="portal-not-ready-text">
         {isAr
           ? "أحتاج محادثات حقيقية أكثر معك قبل فتح البوابات الـ11."
           : "I need a few more real conversations with you before opening the 11 portals."}
       </p>
-      <div className="portal-not-ready-progress">
-        {renderProgressBar(progressValue)}
-        <div className="portal-not-ready-progress-label">
+      <div className="portal-not-ready-progress-row">
+        <span className="portal-not-ready-progress-label">
           {isAr
             ? `جاهزية ${Math.round(progressValue * 100)}%`
             : `Readiness ${Math.round(progressValue * 100)}%`}
+        </span>
+        <div className="portal-not-ready-progress-bar">
+          <div
+            className="portal-not-ready-progress-fill"
+            style={{ width: `${Math.min(100, Math.max(0, progressValue * 100))}%` }}
+          />
         </div>
       </div>
       {Array.isArray(readiness?.reasons) && readiness.reasons.length > 0 && (
-        <ul className="portal-not-ready-hints">
-          {readiness.reasons.map((r) => (
-            <li key={r}>
-              {isAr
-                ? r === "NOT_ENOUGH_MESSAGES"
-                  ? "تحدث أكثر معي."
+        <div className="portal-not-ready-hints-container">
+          <ul className="portal-not-ready-hints">
+            {readiness.reasons.map((r) => (
+              <li key={r}>
+                {isAr
+                  ? r === "NOT_ENOUGH_MESSAGES"
+                    ? "تحدث أكثر معي."
+                    : r === "NOT_ENOUGH_DAYS"
+                    ? "تحدث عبر أيام مختلفة."
+                    : r === "NOT_ENOUGH_EVENTS"
+                    ? "شارك مشاعرك بوضوح أكثر."
+                    : "أخبرني بتفاصيلك اليومية."
+                  : r === "NOT_ENOUGH_MESSAGES"
+                  ? "Talk a bit more with me."
                   : r === "NOT_ENOUGH_DAYS"
-                  ? "تحدث عبر أيام مختلفة."
+                  ? "Chat across more days."
                   : r === "NOT_ENOUGH_EVENTS"
-                  ? "شارك مشاعرك بوضوح أكثر."
-                  : "أخبرني بتفاصيلك اليومية."
-                : r === "NOT_ENOUGH_MESSAGES"
-                ? "Talk a bit more with me."
-                : r === "NOT_ENOUGH_DAYS"
-                ? "Chat across more days."
-                : r === "NOT_ENOUGH_EVENTS"
-                ? "Share how you actually feel."
-                : "Tell me more about you."}
-            </li>
-          ))}
-        </ul>
+                  ? "Share how you actually feel."
+                  : "Tell me more about you."}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <div className="portal-not-ready-actions">
         <button
@@ -455,24 +464,35 @@ export default function HiddenPortalsModal({ isOpen, onClose, isAr, onComplete }
       >
         {/* Header */}
         <div className="hidden-portals-header">
-          <div className="hidden-portals-header-content">
-            <h2 className="hidden-portals-title">
-              {isAr ? "اختبار الـ 11 بوابة المخفية" : "11 Hidden Portals Test"}
-            </h2>
-            <div className="hidden-portals-progress">
-              <div className="hidden-portals-progress-text">
-                {isAr 
-                  ? `البوابة ${currentPortal + 1} / ${portals.length}`
-                  : `Portal ${currentPortal + 1} / ${portals.length}`}
-              </div>
-              <div className="hidden-portals-progress-bar">
-                <div 
-                  className="hidden-portals-progress-fill"
-                  style={{ width: `${((currentPortal + 1) / portals.length) * 100}%` }}
-                />
+          {!isReady && !readinessLoading && !readinessError ? (
+            <div className="hidden-portals-header-content centered">
+              <h2 className="hidden-portals-title">
+                {isAr ? "اختبار الـ 11 بوابة المخفية" : "11 Hidden Portals Test"}
+              </h2>
+              <div className="hidden-portals-subtitle">
+                {isAr ? "فحص الانعكاس" : "Reflection Check"}
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="hidden-portals-header-content">
+              <h2 className="hidden-portals-title">
+                {isAr ? "اختبار الـ 11 بوابة المخفية" : "11 Hidden Portals Test"}
+              </h2>
+              <div className="hidden-portals-progress">
+                <div className="hidden-portals-progress-text">
+                  {isAr 
+                    ? `البوابة ${currentPortal + 1} / ${portals.length}`
+                    : `Portal ${currentPortal + 1} / ${portals.length}`}
+                </div>
+                <div className="hidden-portals-progress-bar">
+                  <div 
+                    className="hidden-portals-progress-fill"
+                    style={{ width: `${((currentPortal + 1) / portals.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           <button
             type="button"
             className="hidden-portals-close-btn"

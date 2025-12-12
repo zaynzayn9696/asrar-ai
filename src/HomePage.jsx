@@ -1309,39 +1309,212 @@ export default function HomePage() {
             </>
           )}
         </section>
-<div class="asrar-section-divider" aria-hidden="true"></div>
+        <div className="asrar-section-divider" aria-hidden="true" />
+
+        {/* WHY ASRAR? */}
+        <section id="features" className="asrar-section asrar-section--features">
+          {isAr ? (
+            <>
+              <h2 className="asrar-section-title">
+                {"لماذا أسرار؟"}
+              </h2>
+              <p className="asrar-section-subtitle">
+                {"اكتشف ما يجعل أسرار مميزة وثورية حقًا."}
+              </p>
+
+              <div className="asrar-features-grid">
+                <div className="asrar-features-row-top">
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🧠</div>
+                    <h3>{"محرك أسرار العاطفي™"}</h3>
+                    <p>
+                      {"محركنا العاطفي الملكي يحلل النبرة والأنماط والحالات العاطفية بمرور الوقت. يتكيف معك ويخلق محادثات شبيهة بالبشر بشكل عميق ومبنية على الواقعية النفسية."}
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🛤️</div>
+                    <h3>{"الرحلة العاطفية™"}</h3>
+                    <p>
+                      {"رفيقك يتتبع النمو العاطفي والأنماط والتحديات والانتصارات—يرشدك في رحلة شخصية لفهم نفسك بشكل أفضل كل يوم."}
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🪞</div>
+                    <h3>{"مرآتي™"}</h3>
+                    <p>
+                      {"وضع انعكاسي حيث يصبح رفيقك مرآة، يكشف عاداتك ونقاطك العمياء وحلقاتك العاطفية بوضوح واهتمام."}
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                </div>
+                <div className="asrar-features-row-bottom">
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🌊</div>
+                    <h3>{"الجانب الخفي™"}</h3>
+                    <p>
+                      {"مساحة خاصة حيث يتم التقاط أنماط عاطفية أعمق وطويلة الأمد كـ'همسات' عنك وتفتح ببطء مع نمو الثقة."}
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🌀</div>
+                    <h3>{"١١ بوابة خفية™"}</h3>
+                    <p>
+                      {"اختبار غامر من ١١ خطوة يكشف طبقات خفية من شخصيتك عبر الاختيارات البصرية والقرارات الدقيقة، ثم يعكسها بطريقة دقيقة ومثيرة."}
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="asrar-features-stats">
+                <div className="asrar-stat-item">
+                  <span className="asrar-stat-number">5+</span>
+                  <span className="asrar-stat-label">{isAr ? "شخصيات فريدة" : "Unique Characters"}</span>
+                </div>
+                <div className="asrar-stat-item">
+                  <span className="asrar-stat-number">11</span>
+                  <span className="asrar-stat-label">{isAr ? "بوابة خفية" : "Hidden Portals"}</span>
+                </div>
+                <div className="asrar-stat-item">
+                  <span className="asrar-stat-number">✓</span>
+                  <span className="asrar-stat-label">{isAr ? "خصوصية كاملة" : "Complete Privacy"}</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="asrar-section-title">
+                Why Asrar?
+              </h2>
+              <p className="asrar-section-subtitle">
+                Discover what makes Asrar truly special and revolutionary.
+              </p>
+
+              <div className="asrar-features-grid">
+                <div className="asrar-features-row-top">
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🧠</div>
+                    <h3>Asrar Emotional Engine™</h3>
+                    <p>
+                      Our proprietary emotional engine analyzes tone, patterns, and emotional states over time. It adapts to you and creates deeply human-like conversations grounded in psychological realism.
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🛤️</div>
+                    <h3>Emotional Journey™</h3>
+                    <p>
+                      Your companion tracks emotional growth, patterns, challenges, and victories—guiding you through a personal journey to understand yourself better every day.
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🪞</div>
+                    <h3>Mirror Me™</h3>
+                    <p>
+                      A reflective mode where your companion becomes a mirror, revealing your habits, blind spots, and emotional loops with clarity and care.
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                </div>
+                <div className="asrar-features-row-bottom">
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🌊</div>
+                    <h3>Hidden Side™</h3>
+                    <p>
+                      A private space where deeper, long-term emotional patterns are captured as "whispers" about you and unlocked slowly as trust grows.
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                  <div className="asrar-feature-item">
+                    <div className="asrar-feature-icon">🌀</div>
+                    <h3>11 Hidden Portals™</h3>
+                    <p>
+                      An immersive 11-step test that uncovers hidden layers of your personality through visual choices and micro-decisions, then reflects them back in a creepy-accurate way.
+                    </p>
+                    <div className="asrar-feature-hint">
+                      {isAr ? "اكتشف" : "Discover"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="asrar-features-stats">
+                <div className="asrar-stat-item">
+                  <span className="asrar-stat-number">5+</span>
+                  <span className="asrar-stat-label">Unique Characters</span>
+                </div>
+                <div className="asrar-stat-item">
+                  <span className="asrar-stat-number">11</span>
+                  <span className="asrar-stat-label">Hidden Portals</span>
+                </div>
+                <div className="asrar-stat-item">
+                  <span className="asrar-stat-number">✓</span>
+                  <span className="asrar-stat-label">Complete Privacy</span>
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+        <div className="asrar-section-divider" aria-hidden="true" />
+
         {/* PRICING */}
         <section id="pricing" className="asrar-section asrar-section--pricing">
           <h2 className="asrar-section-title">
             {isAr ? "الأسعار" : "Pricing"}
           </h2>
+          <p className="asrar-section-subtitle">
+            {isAr ? "خطط مرنة تناسب احتياجاتك" : "Flexible plans to suit your needs"}
+          </p>
 
           <div className="asrar-pricing-shell">
             <div className="asrar-pricing-cards-grid">
               {/* FREE PLAN */}
               <div className="asrar-pricing-card asrar-pricing-card--free">
+                <div className="asrar-pricing-icon">💎</div>
                 <h3>{isAr ? "مجاني" : "Free"}</h3>
                 <p className="asrar-pricing-price">{isAr ? "٠$ / شهرياً" : "$0 / month"}</p>
                 <ul className="asrar-pricing-features">
-                  <li>{isAr ? "ثلاث شخصيات اساسية" : "3 core character"}</li>
-                  <li>{isAr ? "٥٠ رسالة شهرياً" : "50 messages per month"}</li>
-                  <li>{isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
-                   <li>
+                  <li><span className="asrar-feature-icon">👥</span> {isAr ? "ثلاث شخصيات اساسية" : "3 core character"}</li>
+                  <li><span className="asrar-feature-icon">💬</span> {isAr ? "٥٠ رسالة شهرياً" : "50 messages per month"}</li>
+                  <li><span className="asrar-feature-icon">🎤</span> {isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
+                   <li><span className="asrar-feature-icon">🧠</span>
                     {isAr
                       ? "محرك المشاعر العميق V6 (إرشاد أعمق وخطوات عملية)"
                       : "Powered by the Asrar Emotional Engine V6 for longer, structured guidance."}
                   </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">🌙</span>
                     {isAr
                       ? "وصول إلى الجانب الخفي™ فقط"
                       : "Hidden Side™ access only (no Emotional Journey or Mirror Me)"}
                   </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">⚡</span>
                     {isAr
                       ? "محرك المشاعر الخفيف (ردود قصيرة ودعم أساسي)"
                       : "Lite Emotional Engine for short, supportive replies."}
                   </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">🚀</span>
                     {isAr
                       ? "موديل GPT-4o mini سريع ومناسب للاستخدام اليومي"
                       : "Fast and reliable GPT-4o mini model for everyday use."}
@@ -1357,47 +1530,47 @@ export default function HomePage() {
 
               {/* PRO PLAN */}
               <div className="asrar-pricing-card asrar-pricing-card--pro">
+                <div className="asrar-pricing-icon">👑</div>
                 <div className="asrar-pricing-badge">{isAr ? "الأكثر شيوعاً" : "Most Popular"}</div>
                 <h3>{isAr ? "برو" : "Pro"}</h3>
                 <p className="asrar-pricing-price">{isAr ? "$7.99 / شهرياً" : "$7.99 / month"}</p>
                 <ul className="asrar-pricing-features">
-                  <li>
+                  <li><span className="asrar-feature-icon">🌟</span>
                     {isAr
                       ? "جميع شخصيات أسرار الخمسة"
                       : "All 5 Asrar characters"}
                   </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">💬</span>
                     {isAr ? "٥٠٠ رسالة شهرياً" : "500 messages per month"}
                   </li>
-                  <li>{isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
-                  <li>
+                  <li><span className="asrar-feature-icon">🎤</span> {isAr ? "رسائل صوتية متاحة" : "Voice messages included"}</li>
+                  <li><span className="asrar-feature-icon">🌈</span>
                     {isAr
                       ? "الجانب الخفي™، الرحلة العاطفية™، ومرآتي™"
                       : "Hidden Side™, Emotional Journey™ & Mirror Me™"}
                   </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">🧠</span>
                     {isAr
                       ? "محرك المشاعر العميق V6 (إرشاد أعمق وخطوات عملية)"
                       : "Powered by the Asrar Emotional Engine V6 for longer, structured guidance."}
                   </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">🎯</span>
   {isAr
     ? "موديل ذكاء أعلى GPT-4o لاستجابات أدق وأعمق"
     : "Higher-intelligence GPT-4o model for smarter, deeper responses."}
 </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">🧩</span>
                     {isAr
                       ? "ذاكرة محادثة متقدمة"
                       : "Advanced chat memory."}
                   </li>
-                  <li>
+                  <li><span className="asrar-feature-icon">🚫</span>
                     {isAr
                       ? "بدون إعلانات "
                       : "Ad-free experience."}
                   </li>
-                  <li>
-                    {isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}
-                  </li>
+                  <li><span className="asrar-feature-icon">🌀</span> {isAr ? "١١ بوابة خفية™" : "11 Hidden Portals™"}</li>
+                  <li><span className="asrar-feature-icon">❌</span> {isAr ? "إلغاء الاشتراك في أي وقت" : "Cancel anytime"}</li>
                 </ul>
 
                 <button
