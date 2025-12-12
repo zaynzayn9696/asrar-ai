@@ -6,6 +6,7 @@
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  contain: strict;
 }
 
 .chat-mood-backdrop__base,
@@ -21,6 +22,8 @@
   background:
     radial-gradient(120% 120% at 20% 0%, rgba(17, 30, 52, 0.9) 0%, rgba(4, 8, 16, 0.95) 50%),
     linear-gradient(135deg, #0b1020 0%, #04060d 100%);
+  background-size: 140% 140%, 120% 120%;
+  animation: base-pan 42s ease-in-out infinite alternate;
 }
 
 .chat-mood-backdrop__texture {
@@ -28,12 +31,13 @@
     linear-gradient(rgba(180, 220, 255, 0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(180, 220, 255, 0.02) 1px, transparent 1px);
   background-size: 70px 70px;
-  opacity: 0.25;
+  opacity: 0.22;
+  animation: texture-shift 48s linear infinite;
 }
 
 .chat-mood-backdrop__tint {
   mix-blend-mode: soft-light;
-  opacity: 0.2;
+  opacity: 0.24;
 }
 
 .chat-mood-backdrop--sad .chat-mood-backdrop__tint {
@@ -64,11 +68,11 @@
 }
 
 .chat-mood-backdrop__motion {
-  opacity: 0.32;
+  opacity: 0.4;
 }
 
 .chat-mood-backdrop__particles {
-  opacity: 0.24;
+  opacity: 0.32;
   filter: blur(0.3px);
 }
 
@@ -76,12 +80,15 @@
 .chat-mood-backdrop--sad .chat-mood-backdrop__motion {
   background: repeating-linear-gradient(
     180deg,
-    rgba(120, 170, 220, 0.04) 0px,
-    rgba(120, 170, 220, 0.04) 14px,
+    rgba(120, 170, 220, 0.07) 0px,
+    rgba(120, 170, 220, 0.07) 14px,
     transparent 18px,
     transparent 34px
   );
-  animation: rain-fall 28s linear infinite;
+  background-size: 100% 160%;
+  animation:
+    rain-fall 18s linear infinite,
+    rain-sway 26s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--sad .chat-mood-backdrop__particles {
@@ -93,13 +100,19 @@
 
 /* Anxious: lateral soft band motion */
 .chat-mood-backdrop--anxious .chat-mood-backdrop__motion {
-  background: radial-gradient(120% 80% at 20% 40%, rgba(90, 150, 160, 0.25), transparent 70%);
-  animation: wind-shift 22s ease-in-out infinite;
+  background:
+    radial-gradient(140% 80% at 15% 40%, rgba(90, 150, 160, 0.26), transparent 70%),
+    linear-gradient(115deg, rgba(120, 180, 190, 0.05), transparent 70%);
+  background-size: 140% 140%, 180% 180%;
+  animation:
+    wind-shift 22s ease-in-out infinite,
+    shimmer-slide 30s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--anxious .chat-mood-backdrop__particles {
-  background: linear-gradient(120deg, rgba(120, 180, 190, 0.04), transparent 60%);
-  animation: shimmer-slide 26s ease-in-out infinite;
+  background: linear-gradient(120deg, rgba(120, 180, 190, 0.06), transparent 60%);
+  background-size: 160% 160%;
+  animation: shimmer-slide 24s ease-in-out infinite;
 }
 
 /* Angry: distant edge glow pulse */
@@ -116,20 +129,25 @@
 
 /* Tired: low drifting mist at bottom */
 .chat-mood-backdrop--tired .chat-mood-backdrop__motion {
-  background: linear-gradient(180deg, transparent 0%, rgba(120, 136, 158, 0.16) 60%, transparent 100%);
-  animation: mist-rise 30s ease-in-out infinite;
+  background: linear-gradient(180deg, transparent 0%, rgba(120, 136, 158, 0.18) 60%, transparent 100%);
+  background-size: 100% 160%;
+  animation: mist-rise 34s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--tired .chat-mood-backdrop__particles {
-  background: radial-gradient(120% 50% at 50% 90%, rgba(160, 176, 200, 0.08), transparent 75%);
-  animation: mist-shift 36s ease-in-out infinite;
+  background:
+    radial-gradient(120% 50% at 50% 90%, rgba(160, 176, 200, 0.08), transparent 75%),
+    radial-gradient(90% 50% at 40% 85%, rgba(140, 160, 190, 0.06), transparent 75%);
+  filter: blur(2px);
+  animation: mist-shift 32s ease-in-out infinite;
 }
 
 /* Calm / Neutral: gentle breathing gradient */
 .chat-mood-backdrop--calm .chat-mood-backdrop__motion,
 .chat-mood-backdrop--neutral .chat-mood-backdrop__motion {
   background: radial-gradient(90% 80% at 50% 40%, rgba(100, 130, 170, 0.16), transparent 70%);
-  animation: breathe 32s ease-in-out infinite;
+  background-size: 140% 140%;
+  animation: breathe 28s ease-in-out infinite;
 }
 
 .chat-mood-backdrop--calm .chat-mood-backdrop__particles,
@@ -144,7 +162,8 @@
   background: radial-gradient(120% 90% at 30% 20%, rgba(120, 210, 230, 0.22), transparent 70%),
     radial-gradient(90% 70% at 70% 40%, rgba(210, 130, 200, 0.18), transparent 70%),
     radial-gradient(100% 90% at 60% 80%, rgba(150, 190, 255, 0.12), transparent 80%);
-  animation: aurora-move 38s ease-in-out infinite;
+  background-size: 220% 220%;
+  animation: aurora-flow 32s ease-in-out infinite alternate;
 }
 
 .chat-mood-backdrop--hopeful .chat-mood-backdrop__particles,
@@ -152,15 +171,55 @@
 .chat-mood-backdrop--warm .chat-mood-backdrop__particles {
   background: radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.05), transparent 40%),
     radial-gradient(circle at 70% 25%, rgba(255, 220, 240, 0.05), transparent 45%);
-  animation: aurora-pulse 36s ease-in-out infinite;
+  background-size: 160% 160%;
+  animation: aurora-pulse 28s ease-in-out infinite;
+}
+
+@keyframes base-pan {
+  0% {
+    background-position:
+      0% 0%,
+      40% 50%;
+  }
+  50% {
+    background-position:
+      50% 30%,
+      60% 60%;
+  }
+  100% {
+    background-position:
+      90% 70%,
+      80% 80%;
+  }
+}
+
+@keyframes texture-shift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(8px, 6px, 0);
+  }
+  100% {
+    transform: translate3d(-6px, -4px, 0);
+  }
 }
 
 @keyframes rain-fall {
   0% {
-    transform: translateY(-30px);
+    transform: translateY(-60px);
   }
   100% {
-    transform: translateY(60px);
+    transform: translateY(120px);
+  }
+}
+
+@keyframes rain-sway {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
   }
 }
 
@@ -175,10 +234,10 @@
 
 @keyframes wind-shift {
   0%, 100% {
-    transform: translateX(-14px);
+    transform: translateX(-18px);
   }
   50% {
-    transform: translateX(14px);
+    transform: translateX(18px);
   }
 }
 
@@ -215,10 +274,10 @@
 
 @keyframes mist-rise {
   0%, 100% {
-    transform: translateY(4px);
+    transform: translateY(8px);
   }
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-10px);
   }
 }
 
@@ -238,16 +297,16 @@
   }
   50% {
     opacity: 0.34;
-    transform: scale(1.03);
+    transform: scale(1.04);
   }
 }
 
-@keyframes aurora-move {
+@keyframes aurora-flow {
   0%, 100% {
-    transform: translate3d(-6px, 0, 0) rotate(-0.4deg);
+    background-position: 10% 30%;
   }
   50% {
-    transform: translate3d(10px, -4px, 0) rotate(0.6deg);
+    background-position: 80% 60%;
   }
 }
 
@@ -268,6 +327,21 @@
   animation: none !important;
   transform: none !important;
   transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-mood-backdrop,
+  .chat-mood-backdrop::before,
+  .chat-mood-backdrop::after,
+  .chat-mood-backdrop__base,
+  .chat-mood-backdrop__texture,
+  .chat-mood-backdrop__tint,
+  .chat-mood-backdrop__motion,
+  .chat-mood-backdrop__particles {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 .asrar-chat-messages {
