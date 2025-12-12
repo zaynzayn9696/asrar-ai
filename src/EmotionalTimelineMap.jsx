@@ -478,111 +478,122 @@ export default function EmotionalTimelineMap({
         {/* Main Content when data exists */}
         {!loading && !error && displayDays.length > 0 && (
           <div className="emotional-journey-content">
-            {/* Daily Emotions Strip */}
-            <div className="daily-emotions-strip">
-              <h3 className="daily-emotions-title">
-                {isAr ? "المشاعر اليومية" : "Daily Emotions"}
-              </h3>
-              <div className="daily-emotions-grid">
-                {displayDays.map((day, index) => {
-                  const emotionDisplay = getEmotionDisplay(day.topEmotion);
-                  const isSelected = selectedDayIndex === index;
-                  
-                  return (
-                    <div
-                      key={index}
-                      className={`daily-emotion-card ${
-                        isSelected ? "daily-emotion-card--selected" : ""
-                      }`}
-                      onClick={() => setSelectedDayIndex(isSelected ? null : index)}
-                    >
-                      <div className="daily-emotion-day">
-                        {getDayLabel(day.date, index, displayDays.length, day.dateKey)}
-                      </div>
-                      <div className="daily-emotion-visual">
-                        <div 
-                          className="daily-emotion-emoji"
-                          style={{ color: emotionDisplay.color }}
+            {/* Desktop: Two-pane layout | Mobile: Single column */}
+            <div className="emotional-journey-layout">
+              {/* Left Pane: Daily Emotions List */}
+              <div className="emotional-journey-left-pane">
+                <div className="daily-emotions-strip">
+                  <h3 className="daily-emotions-title">
+                    {isAr ? "المشاعر اليومية" : "Daily Emotions"}
+                  </h3>
+                  <div className="daily-emotions-grid">
+                    {displayDays.map((day, index) => {
+                      const emotionDisplay = getEmotionDisplay(day.topEmotion);
+                      const isSelected = selectedDayIndex === index;
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`daily-emotion-card ${
+                            isSelected ? "daily-emotion-card--selected" : ""
+                          }`}
+                          onClick={() => setSelectedDayIndex(isSelected ? null : index)}
                         >
-                          {emotionDisplay.emoji}
+                          <div className="daily-emotion-day">
+                            {getDayLabel(day.date, index, displayDays.length, day.dateKey)}
+                          </div>
+                          <div className="daily-emotion-visual">
+                            <div 
+                              className="daily-emotion-emoji"
+                              style={{ color: emotionDisplay.color }}
+                            >
+                              {emotionDisplay.emoji}
+                            </div>
+                            <div 
+                              className="daily-emotion-chip"
+                              style={{ 
+                                backgroundColor: `${emotionDisplay.color}20`,
+                                borderColor: emotionDisplay.color 
+                              }}
+                            >
+                              {emotionDisplay.label}
+                            </div>
+                          </div>
                         </div>
-                        <div 
-                          className="daily-emotion-chip"
-                          style={{ 
-                            backgroundColor: `${emotionDisplay.color}20`,
-                            borderColor: emotionDisplay.color 
-                          }}
-                        >
-                          {emotionDisplay.label}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Day Detail Section */}
-            {selectedDay && (
-              <div className="day-detail-section">
-                <div className="day-detail-header">
-                  <h4 className="day-detail-title">
-                    {getDayLabel(selectedDay.date, selectedDayIndex, displayDays.length, selectedDay.dateKey)}
-                  </h4>
-                  <button
-                    type="button"
-                    className="day-detail-close"
-                    onClick={() => setSelectedDayIndex(null)}
-                    aria-label={isAr ? "إغلاق" : "Close"}
-                  >
-                    ×
-                  </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="day-detail-content">
-                  <div className="day-detail-emotions">
-                    <h5 className="day-detail-emotions-title">
-                      {isAr ? "المشاعر الأبرز" : "Top Emotions"}
-                    </h5>
-                    <div className="day-detail-emotion-row">
-                      <span
-                        className="day-detail-emoji"
-                        style={{ color: getEmotionDisplay(selectedDay.topEmotion).color }}
-                      >
-                        {getEmotionDisplay(selectedDay.topEmotion).emoji}
-                      </span>
-                      <span
-                        className="day-detail-emotion-label"
-                        style={{
-                          backgroundColor: `${getEmotionDisplay(selectedDay.topEmotion).color}20`,
-                          borderColor: getEmotionDisplay(selectedDay.topEmotion).color,
-                        }}
-                      >
-                        {getEmotionDisplay(selectedDay.topEmotion).label}
-                      </span>
+              </div>
+
+              {/* Right Pane: Day Details or Empty State */}
+              <div className="emotional-journey-right-pane">
+                {selectedDay ? (
+                  <div className="day-detail-section">
+                    <div className="day-detail-header">
+                      <h4 className="day-detail-title">
+                        {getDayLabel(selectedDay.date, selectedDayIndex, displayDays.length, selectedDay.dateKey)}
+                      </h4>
+                    </div>
+                    <div className="day-detail-content">
+                      <div className="day-detail-emotions">
+                        <h5 className="day-detail-emotions-title">
+                          {isAr ? "المشاعر الأبرز" : "Top Emotions"}
+                        </h5>
+                        <div className="day-detail-emotion-row">
+                          <span
+                            className="day-detail-emoji"
+                            style={{ color: getEmotionDisplay(selectedDay.topEmotion).color }}
+                          >
+                            {getEmotionDisplay(selectedDay.topEmotion).emoji}
+                          </span>
+                          <span
+                            className="day-detail-emotion-label"
+                            style={{
+                              backgroundColor: `${getEmotionDisplay(selectedDay.topEmotion).color}20`,
+                              borderColor: getEmotionDisplay(selectedDay.topEmotion).color,
+                            }}
+                          >
+                            {getEmotionDisplay(selectedDay.topEmotion).label}
+                          </span>
+                        </div>
+                      </div>
+                      {selectedDay && selectedDay.topEmotion ? (
+                        <div className="day-detail-pattern">
+                          <h5 className="day-detail-pattern-title">
+                            {isAr ? "ملخص اليوم" : "Day Story"}
+                          </h5>
+                          <p className="day-detail-copy">
+                            {buildDayNarrative(selectedDay)}
+                          </p>
+                          <ul className="day-detail-pattern-list">
+                            {buildDayBullets(selectedDay).map((line, idx) => (
+                              <li key={idx}>{line}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <p className="day-detail-copy">
+                          {isAr ? "لا يوجد بيانات متاحة لهذا اليوم." : "No data available for this day."}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  {selectedDay && selectedDay.topEmotion ? (
-                    <div className="day-detail-pattern">
-                      <h5 className="day-detail-pattern-title">
-                        {isAr ? "ملخص اليوم" : "Day Story"}
-                      </h5>
-                      <p className="day-detail-copy">
-                        {buildDayNarrative(selectedDay)}
-                      </p>
-                      <ul className="day-detail-pattern-list">
-                        {buildDayBullets(selectedDay).map((line, idx) => (
-                          <li key={idx}>{line}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <p className="day-detail-copy">
-                      {isAr ? "لا يوجد بيانات متاحة لهذا اليوم." : "No data available for this day."}
+                ) : (
+                  <div className="day-detail-empty-state">
+                    <div className="day-detail-empty-icon">📅</div>
+                    <h3 className="day-detail-empty-title">
+                      {isAr ? "اختر يومًا لرؤية قصتك" : "Select a day to see your story"}
+                    </h3>
+                    <p className="day-detail-empty-text">
+                      {isAr 
+                        ? "انقر على أي يوم من قائمة المشاعر اليومية لعرض التفاصيل الكاملة."
+                        : "Click on any day from the Daily Emotions list to view full details."}
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Mirror Me Section */}
             <div className="mirror-me-section">
