@@ -157,14 +157,15 @@ function isQuickPhrase(content) {
 
 function buildInstantReply(text, opts = {}) {
   const isAr = opts.language === 'ar' || opts.language === 'mixed';
+  // No emojis by default per new policy
   const repliesEn = [
-    "Hi! I'm here with you ❤️",
+    "Hi! I'm here with you.",
     'Hey! How can I support you right now?',
     "I'm right here.",
     'Everything okay?',
   ];
   const repliesAr = [
-    'هلا فيك يا قلبي ❤️',
+    'هلا فيك يا قلبي.',
     'هلا والله، كيفك اليوم؟',
     'شو أخبارك؟ طمّني عنك شوي.',
     'أنا هون معك يا قلبي، احكي لي أكثر.',
@@ -182,17 +183,20 @@ function buildInstantReply(text, opts = {}) {
 
 /**
  * Normalize external engine preference to internal modes.
- * - 'lite'  -> CORE_FAST
- * - 'balanced'/'deep' (or undefined) -> PREMIUM_DEEP for premium users, CORE_DEEP for free.
+ * - 'lite' (or legacy 'balanced') -> CORE_FAST
+ * - 'deep' -> PREMIUM_DEEP for premium users, CORE_DEEP for free.
+ * NOTE: "balanced" is deprecated and normalized to "lite".
  */
 function decideEngineMode({ enginePreference, isPremiumUser, severityLevel, longFormIntent }) {
   const pref = String(enginePreference || '').toLowerCase();
+  // Normalize deprecated "balanced" to "lite"
+  const normalizedPref = pref === 'balanced' ? 'lite' : pref;
   const sev = String(severityLevel || 'CASUAL').toUpperCase();
   const highSeverity = sev === 'HIGH_RISK' || sev === 'SUPPORT';
-  const wantsDeep = pref === 'deep' || highSeverity || !!longFormIntent;
+  const wantsDeep = normalizedPref === 'deep' || highSeverity || !!longFormIntent;
 
   if (wantsDeep) return isPremiumUser ? ENGINE_MODES.PREMIUM_DEEP : ENGINE_MODES.CORE_DEEP;
-  if (pref === 'lite' || pref === 'balanced') return ENGINE_MODES.CORE_FAST;
+  // Default to CORE_FAST for lite or any unknown value
   return ENGINE_MODES.CORE_FAST;
 }
 
@@ -549,20 +553,54 @@ function buildSystemPrompt({ personaText, personaId, emotion, convoState, langua
   // direct questions and should not change normal reply style.
   const metaMemoryInstruction = isArabic
     ? [
-        'إذا سألَك المستخدم: "ماذا تعرف عني؟" أو "ماذا تتذكّر عني؟" أو "عدِّد ما تعرفه عني"، اتبع الخطوات التالية:',
-        '1) اقرأ قسم "هوية المستخدم وتفضيلاته (حقائق مؤكَّدة)" في كتلة الذاكرة (والكتلة بين [KNOWN_USER_FACTS_START] و [KNOWN_USER_FACTS_END]).',
-        '2) اذكر كُلّ معلومة موجودة لديك فعلياً: الاسم، العمر، العمل/الدور، الهدف أو الحلم الطويل المدى، الطقس المفضَّل، المشروب المفضَّل، الأكل المفضَّل، الهوايات/الاهتمامات.',
-        '3) إذا كانت أي معلومة غير موجودة أو قيمتها "unknown"/"غير معروف"، قل صراحة إنك لا تعرفها بعد أو أن المستخدم لم يخبرك بها.',
-        '4) لا تخترع أو تخمّن أي معلومة غير مذكورة في هذا القسم أو في كتلة known_user_facts.',
-        '5) يمكنك أن تبدو دقيقاً وواثقاً عند استخدام هذه الحقائق المحفوظة، لكن التزم فقط بما هو مذكور فيها.',
+        'إذا سألَك المستخدم: "شو بتتذكر عني؟" أو "ماذا تعرف عني؟" أو "ماذا تتذكّر عني؟" أو "عدِّد ما تعرفه عني"، اتبع الخطوات التالية بدقة:',
+        '',
+        '**تنسيق الرد الإلزامي:**',
+        '- استخدم نقاط قصيرة (bullets) فقط.',
+        '- الحد الأقصى 6-8 نقاط.',
+        '- كل نقطة = حقيقة واحدة فقط.',
+        '',
+        '**الحقائق المطلوبة (إذا موجودة):**',
+        '- الاسم',
+        '- المدينة/البلد',
+        '- العمل/المهنة',
+        '- الحلم أو الهدف',
+        '- المشروب المفضل',
+        '- الطعام المفضل',
+        '- الطقس المفضل/المكروه',
+        '- الهوايات',
+        '',
+        '**قواعد صارمة:**',
+        '1) اقرأ فقط من [KNOWN_USER_FACTS_START] إلى [KNOWN_USER_FACTS_END].',
+        '2) لكل حقيقة غير موجودة، قل: "مش متأكد" أو "ما حكيتلي".',
+        '3) لا تخترع أو تخمّن أي معلومة.',
+        '4) لا تضف معلومات من السياق أو الاستنتاج.',
+        '5) الجواب يكون عربي فقط.',
       ].join('\n')
     : [
-        'When the user asks what you know or remember about them (e.g., "what do you know about me?", "what do you remember about me?", "list what you know about my age/job/weather/drink/hobbies"), you MUST do the following:',
-        '1) Read the "USER IDENTITY & PREFERENCES (GROUND TRUTH)" section and the block between [KNOWN_USER_FACTS_START] and [KNOWN_USER_FACTS_END].',
-        '2) List every fact you actually have: name, age, job/role, long-term goal or dream, favorite weather, favorite drink, favorite food, hobbies/interests.',
-        '3) For any field that is missing or marked "unknown", explicitly say you don\'t know it yet or that the user hasn\'t told you.',
-        '4) Do NOT invent or guess any fact that is not present there.',
-        '5) It is okay to sound precise and confident when using those stored facts.',
+        'When the user asks what you know or remember about them (e.g., "what do you know about me?", "what do you remember about me?"), you MUST follow this EXACT format:',
+        '',
+        '**REQUIRED RESPONSE FORMAT:**',
+        '- Use bullet points ONLY.',
+        '- Maximum 6-8 bullets.',
+        '- One fact per bullet.',
+        '',
+        '**FACTS TO INCLUDE (if present):**',
+        '- Name',
+        '- City/Country',
+        '- Job/Profession',
+        '- Dream or goal',
+        '- Favorite drink',
+        '- Favorite food',
+        '- Weather preference',
+        '- Hobbies',
+        '',
+        '**STRICT RULES:**',
+        '1) Read ONLY from [KNOWN_USER_FACTS_START] to [KNOWN_USER_FACTS_END].',
+        '2) For any missing fact, say: "I\'m not sure" or "You haven\'t told me yet".',
+        '3) Do NOT invent or guess ANY fact.',
+        '4) Do NOT add facts from context or inference.',
+        '5) Keep response in the requested language.',
       ].join('\n');
 
   const header = isArabic
@@ -874,11 +912,15 @@ function selectModelForResponse({ engine, isPremiumUser }) {
   // For user-facing chat replies:
   // - Premium users always use the premium model.
   // - Non-premium users and internal/system flows use the core model.
-  if (isPremiumUser) {
-    return premiumModel;
-  }
+  const selectedModel = isPremiumUser ? premiumModel : coreModel;
+  
+  // AUDIT: Tier gating proof log
+  console.log('[TierGating]', {
+    isPremiumUser: !!isPremiumUser,
+    modelSelected: selectedModel,
+  });
 
-  return coreModel;
+  return selectedModel;
 }
 
 /**

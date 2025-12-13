@@ -4,6 +4,7 @@
 const prisma = require('../../prisma');
 const { detectAnchorsFromMessage, deriveEmotionalReason } = require('../../services/emotionalReasoning');
 const OpenAI = require('openai');
+const { clearCachedValue } = require('../../utils/ttlCache');
 
 const openaiClient = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -211,8 +212,8 @@ const COUNTRY_KEYWORDS = [
 ];
 
 const CITY_KEYWORDS = [
-  { value: 'Amman', tokens: ['amman', 'عمان'] },
-  { value: 'Dubai', tokens: ['dubai', 'دبي'] },
+  { value: 'Amman', tokens: ['amman', 'عمان', 'عمّان', 'بعمان', 'بعمّان'] },
+  { value: 'Dubai', tokens: ['dubai', 'دبي', 'بدبي'] },
   { value: 'Riyadh', tokens: ['riyadh', 'الرياض'] },
   { value: 'Jeddah', tokens: ['jeddah', 'جدة', 'جده'] },
   { value: 'Doha', tokens: ['doha', 'الدوحة', 'الدوحه'] },
@@ -282,6 +283,7 @@ const COPING_TOKENS = [
 
 // Persona kinds that should be stored as a single primary value per userId+kind.
 const PERSONA_SINGLETON_KINDS = new Set([
+  'identity.name',
   'profile.age',
   'profile.location.country',
   'profile.location.city',
@@ -725,83 +727,24 @@ function extractSemanticFactsFromMessage(messageText) {
     // best-effort only
   }
 
+  // DISABLED: Inferred trait detection - only store explicit user statements
+  // Social style traits like 'introvert' were being inferred from keyword presence.
+  // This caused false positives. Only store if user explicitly says "I am an introvert" etc.
+  // TODO: Re-enable with explicit self-declaration patterns like /i am (an? )?introvert/i
+  /*
   const socialIntrovertEn = ['introvert', 'introverted'];
   const socialExtrovertEn = ['extrovert', 'extroverted'];
   const socialAmbivertEn = ['ambivert'];
-  const socialIntrovertAr = ['', ''];
-  const socialExtrovertAr = ['', ''];
+  ... (disabled)
+  */
 
-  let socialStyle = null;
-
-  for (const token of socialIntrovertEn) {
-    if (lower.includes(token)) {
-      socialStyle = 'introvert';
-      break;
-    }
-  }
-
-  if (!socialStyle) {
-    for (const token of socialExtrovertEn) {
-      if (lower.includes(token)) {
-        socialStyle = 'extrovert';
-        break;
-      }
-    }
-  }
-
-  if (!socialStyle) {
-    for (const token of socialAmbivertEn) {
-      if (lower.includes(token)) {
-        socialStyle = 'ambivert';
-        break;
-      }
-    }
-  }
-
-  if (!socialStyle && hasArabic) {
-    for (const token of socialIntrovertAr) {
-      if (text.includes(token)) {
-        socialStyle = 'introvert';
-        break;
-      }
-    }
-  }
-
-  if (!socialStyle && hasArabic) {
-    for (const token of socialExtrovertAr) {
-      if (text.includes(token)) {
-        socialStyle = 'extrovert';
-        break;
-      }
-    }
-  }
-
-  if (socialStyle) {
-    pushFact('trait.social.style', socialStyle, 0.95);
-  }
-
+  // DISABLED: Inferred crowd preference - only store explicit statements
+  // This was inferring "dislikes crowds" from proximity of keywords.
+  // TODO: Re-enable with explicit patterns like "I hate crowds" or "أكره الزحمة"
+  /*
   const crowdTokensEn = ['crowd', 'crowds', 'crowded'];
-  const crowdNegEn = ['anxious', 'anxiety', 'panic', 'overwhelmed', 'hate', 'dislike'];
-
-  let dislikesCrowds = false;
-  for (const t of crowdTokensEn) {
-    if (!lower.includes(t)) continue;
-    let hasNegative = false;
-    for (const v of crowdNegEn) {
-      if (hasNear(lower, v, t, 40)) {
-        hasNegative = true;
-        break;
-      }
-    }
-    if (hasNegative) {
-      dislikesCrowds = true;
-      break;
-    }
-  }
-
-  if (dislikesCrowds) {
-    pushFact('preference.crowds', 'dislike', 0.9);
-  }
+  ... (disabled)
+  */
 
   // --- Persona: age ---
   const age = detectAgeFromText(text);
@@ -812,7 +755,8 @@ function extractSemanticFactsFromMessage(messageText) {
   // --- Persona: location (country/city) ---
   for (const entry of COUNTRY_KEYWORDS) {
     for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
+      // Use text (not lower) for Arabic matching
+      if (text.includes(tok) || lower.includes(tok.toLowerCase())) {
         pushFact('profile.location.country', entry.value, 0.95);
         break;
       }
@@ -820,17 +764,25 @@ function extractSemanticFactsFromMessage(messageText) {
   }
   for (const entry of CITY_KEYWORDS) {
     for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
+      // Use text (not lower) for Arabic matching
+      const matchText = text.includes(tok);
+      const matchLower = lower.includes(tok.toLowerCase());
+      if (matchText || matchLower) {
+        console.log('[LongTermMemory] city_match_found', { city: entry.value, tok, matchText, matchLower });
         pushFact('profile.location.city', entry.value, 0.95);
         break;
       }
     }
   }
+  // Debug: log text being checked
+  if (hasArabic) {
+    console.log('[LongTermMemory] city_check_debug', { textSample: text.substring(0, 50), hasArabic });
+  }
 
   // --- Persona: language primary & dialect ---
   for (const entry of LANGUAGE_PRIMARY_KEYWORDS) {
     for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
+      if (text.includes(tok) || lower.includes(tok.toLowerCase())) {
         pushFact('profile.language.primary', entry.value, 0.9);
         break;
       }
@@ -838,7 +790,7 @@ function extractSemanticFactsFromMessage(messageText) {
   }
   for (const entry of DIALECT_KEYWORDS) {
     for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
+      if (text.includes(tok) || lower.includes(tok.toLowerCase())) {
         pushFact('profile.language.dialect', entry.value, 0.9);
         break;
       }
@@ -848,7 +800,7 @@ function extractSemanticFactsFromMessage(messageText) {
   // --- Persona: role & domain ---
   for (const entry of ROLE_KEYWORDS) {
     for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
+      if (text.includes(tok) || lower.includes(tok.toLowerCase())) {
         pushFact('profile.role', entry.value, 0.95);
         break;
       }
@@ -856,7 +808,7 @@ function extractSemanticFactsFromMessage(messageText) {
   }
   for (const entry of DOMAIN_KEYWORDS) {
     for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
+      if (text.includes(tok) || lower.includes(tok.toLowerCase())) {
         pushFact('profile.domain', entry.value, 0.95);
         break;
       }
@@ -926,39 +878,16 @@ function extractSemanticFactsFromMessage(messageText) {
     // best-effort only
   }
 
-  // --- Persona: themes (health, academic, family, work) ---
-  for (const entry of HEALTH_KEYWORDS) {
-    for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
-        pushFact('profile.theme.health', entry.value, 0.92);
-        break;
-      }
-    }
-  }
-  for (const entry of ACADEMIC_KEYWORDS) {
-    for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
-        pushFact('profile.theme.academic', entry.value, 0.92);
-        break;
-      }
-    }
-  }
-  for (const entry of FAMILY_KEYWORDS) {
-    for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
-        pushFact('profile.theme.family', entry.value, 0.9);
-        break;
-      }
-    }
-  }
-  for (const entry of WORK_KEYWORDS) {
-    for (const tok of entry.tokens) {
-      if (lower.includes(tok.toLowerCase())) {
-        pushFact('profile.theme.work', entry.value, 0.9);
-        break;
-      }
-    }
-  }
+  // DISABLED: Inferred theme detection - only store explicit user statements
+  // These were inferring themes like "experiences stress related to work" from keyword presence.
+  // This caused false positives. Theme storage should only happen with explicit user statements.
+  // TODO: Re-enable with explicit patterns like "I'm stressed about work" or "الشغل متعبني"
+  /*
+  for (const entry of HEALTH_KEYWORDS) { ... }
+  for (const entry of ACADEMIC_KEYWORDS) { ... }
+  for (const entry of FAMILY_KEYWORDS) { ... }
+  for (const entry of WORK_KEYWORDS) { ... }
+  */
 
   // --- Persona: stable mental traits (pattern-based EN + AR) ---
   try {
@@ -1075,6 +1004,70 @@ function extractSemanticFactsFromMessage(messageText) {
     }
   }
 
+  // --- EXPLICIT: Name extraction ("My name is X") ---
+  try {
+    const nameMatch = lower.match(/\b(?:my name is|i am called|call me|i'm|i am)\s+([a-z]{2,32})\b/i);
+    if (nameMatch && nameMatch[1]) {
+      const nameCand = nameMatch[1].trim();
+      const banned = ['a', 'an', 'the', 'not', 'very', 'so', 'really', 'just', 'here', 'there', 'building', 'working', 'going', 'doing', 'feeling', 'sad', 'happy', 'tired', 'fine', 'good', 'bad', 'ok', 'okay'];
+      if (!banned.includes(nameCand.toLowerCase()) && nameCand.length >= 2) {
+        pushFact('identity.name', nameCand.charAt(0).toUpperCase() + nameCand.slice(1), 0.98);
+      }
+    }
+  } catch (_) {}
+
+  // --- EXPLICIT: Location ("I live in X") ---
+  try {
+    const liveMatch = lower.match(/\b(?:i live in|i'm from|i am from|living in|based in)\s+([a-z]{2,32})\b/i);
+    if (liveMatch && liveMatch[1]) {
+      const city = liveMatch[1].trim();
+      const cityProper = city.charAt(0).toUpperCase() + city.slice(1);
+      pushFact('profile.location.city', cityProper, 0.95);
+    }
+  } catch (_) {}
+
+  // --- EXPLICIT: Drink preference ("I love coffee", "I hate tea") ---
+  try {
+    const drinks = ['coffee', 'tea', 'water', 'juice', 'milk', 'soda', 'latte', 'espresso', 'cappuccino', 'mocha'];
+    for (const drink of drinks) {
+      if (lower.includes('love ' + drink) || lower.includes('like ' + drink) || lower.includes('enjoy ' + drink)) {
+        pushFact('preference.drink.like', drink, 0.95);
+      }
+      if (lower.includes('hate ' + drink) || lower.includes('dislike ' + drink)) {
+        pushFact('preference.drink.dislike', drink, 0.95);
+      }
+    }
+  } catch (_) {}
+
+  // --- EXPLICIT: Weather preference ("I love/hate hot/cold weather") ---
+  try {
+    const weatherTypes = ['hot', 'cold', 'rainy', 'sunny', 'snowy', 'warm', 'cool'];
+    for (const wt of weatherTypes) {
+      if (lower.includes('love ' + wt + ' weather') || lower.includes('like ' + wt + ' weather')) {
+        pushFact('preference.weather.like', wt, 0.95);
+      }
+      if (lower.includes('hate ' + wt + ' weather') || lower.includes('dislike ' + wt + ' weather')) {
+        pushFact('preference.weather.dislike', wt, 0.95);
+      }
+    }
+  } catch (_) {}
+
+  // --- EXPLICIT: Dream/Goal ("My dream is X", "My goal is X") ---
+  try {
+    const dreamMatch = raw.match(/\b(?:my dream is to|my goal is to|i dream of|i want to)\s+([^.!?]{5,80})/i);
+    if (dreamMatch && dreamMatch[1]) {
+      pushFact('goal.long_term', dreamMatch[1].trim(), 0.95);
+    }
+  } catch (_) {}
+
+  // Instrumentation: log extracted facts
+  const extractedKinds = facts.map(f => f.kind);
+  console.log('[LongTermMemory] extractSemanticFacts RESULT', {
+    extractedFactsCount: facts.length,
+    extractedKinds,
+    textSample: text.substring(0, 50),
+  });
+
   return facts;
 }
 
@@ -1090,8 +1083,29 @@ function extractSemanticFactsFromMessage(messageText) {
  * @param {string|null} [event.trend]
  * @param {Object|null} [outcome]
  */
+// AUDIT 2.4: Credential guardrail - prevent passwords/secrets from being stored
+function containsCredentials(text) {
+  if (!text) return false;
+  const str = String(text).toLowerCase();
+  const patterns = [
+    /\b(password|passwd|pwd)\s*(is|:|=)\s*\S+/i,
+    /\b(كلمة\s*(ال)?سر|باسورد)\s*(تبعتي|تبعي|:)?\s*\S+/,
+    /\b(pin|secret\s*key|api\s*key|token)\s*(is|:|=)\s*\S+/i,
+  ];
+  for (const re of patterns) {
+    if (re.test(str)) return true;
+  }
+  return false;
+}
+
 async function updateLongTerm(userId, event, outcome) {
   if (!userId || !event || !event.emotion) return;
+
+  // AUDIT 2.4: Skip storing if message contains credentials
+  if (event.messageText && containsCredentials(event.messageText)) {
+    console.log('[MemoryKernel] Skipping long-term storage: credential-like content detected');
+    return;
+  }
 
   const emo = event.emotion;
   const topics = Array.isArray(event.topics) ? event.topics.filter(Boolean) : [];
@@ -1197,9 +1211,12 @@ async function updateLongTerm(userId, event, outcome) {
       : absDelta01;
   }
 
-  // Fetch message text for anchors / reasoning.
+  // Use message text from event if provided (avoids encryption round-trip encoding issues),
+  // otherwise fetch from DB as fallback.
   let messageText = '';
-  if (event.messageId) {
+  if (event.messageText && typeof event.messageText === 'string') {
+    messageText = event.messageText;
+  } else if (event.messageId) {
     try {
       const msg = await prisma.message.findUnique({
         where: { id: event.messageId },
@@ -1357,6 +1374,14 @@ async function updateLongTerm(userId, event, outcome) {
       }
 
       const semanticFacts = extractSemanticFactsFromMessage(messageText);
+      const extractedKinds = Array.isArray(semanticFacts) ? semanticFacts.map(f => f.kind) : [];
+      console.log('[LongTermMemory] extractSemanticFactsFromMessage result', {
+        userId,
+        messageLength: messageText.length,
+        extractedFactsCount: Array.isArray(semanticFacts) ? semanticFacts.length : 0,
+        extractedKinds,
+      });
+      let upsertedFactsCount = 0;
       if (Array.isArray(semanticFacts) && semanticFacts.length) {
         for (const fact of semanticFacts) {
           if (!fact || !fact.kind || !fact.value) continue;
@@ -1396,6 +1421,7 @@ async function updateLongTerm(userId, event, outcome) {
               await prisma.userMemoryFact.create({ data });
             }
 
+            upsertedFactsCount++;
             console.log('[LongTermMemory] persona_fact_upserted', {
               userId,
               kind,
@@ -1423,6 +1449,7 @@ async function updateLongTerm(userId, event, outcome) {
               await prisma.userMemoryFact.create({ data });
             }
 
+            upsertedFactsCount++;
             // Log preference_fact_upserted only for true preference-style kinds,
             // never for persona/profile singleton facts.
             if (kind.startsWith('preference.') || kind === 'trait.social.style') {
@@ -1437,6 +1464,18 @@ async function updateLongTerm(userId, event, outcome) {
             }
           }
         }
+        // Final instrumentation log
+        console.log('[LongTermMemory] FACTS_WRITE_COMPLETE', {
+          userId,
+          extractedFactsCount: semanticFacts.length,
+          upsertedFactsCount,
+          extractedKinds,
+        });
+        // Invalidate persona snapshot cache so next request gets fresh facts
+        try {
+          clearCachedValue(`personaSnapshot:${userId}`);
+          console.log('[LongTermMemory] persona_cache_invalidated', { userId });
+        } catch (_) {}
       }
     } catch (err) {
       console.error(

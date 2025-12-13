@@ -3,6 +3,8 @@
 // Transforms raw AI replies to be warmer, culturally aware, safe, and aligned
 // with the conversation state machine. Non-blocking, heuristic, and lightweight.
 
+const { detectArabicContamination, enforceEnglishOnly } = require('../utils/languageEnforcement');
+
 /**
  * Softens directive language in English.
  * At higher trust tiers we allow slightly more direct language.
@@ -293,59 +295,67 @@ function clampEmojis(text, maxEmojis) {
  * @param {'CASUAL'|'VENTING'|'SUPPORT'|'HIGH_RISK'} severityLevel
  * @param {boolean=} shortMode
  */
-function decorateWithEmojis(text, emotion, language, severityLevel, shortMode) {
+function decorateWithEmojis(text, emotion, language, severityLevel, shortMode, options = {}) {
   const raw = String(text || '');
   if (!raw) return raw;
 
-  // In short mode, only allow up to 2 existing emojis, no new ones.
-  if (shortMode) {
-    return clampEmojis(raw, 2);
-  }
-
-  // Skip if emojis already present to avoid spam
+  // NEW POLICY: No emojis by default. Only allow existing emojis (clamped).
+  // Emojis are only added if user explicitly used emojis or asked for them.
+  const userUsedEmojis = options.userUsedEmojis === true;
+  
+  // Always clamp existing emojis to prevent spam
   try {
     const emojiRe = /[\u{1F300}-\u{1FAFF}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/u;
-    if (emojiRe.test(raw)) return clampEmojis(raw, 3);
+    if (emojiRe.test(raw)) {
+      return clampEmojis(raw, shortMode ? 2 : 3);
+    }
   } catch (_) {
     // Environments without Unicode property support: fall through
   }
 
+  // If user didn't use emojis, don't add any
+  if (!userUsedEmojis) {
+    return raw;
+  }
+
+  // Only add emojis if user used them first
   const primary = String(emotion?.primaryEmotion || '').toUpperCase();
   let suffix = '';
 
   switch (primary) {
     case 'SAD':
-      suffix = ' 😔💙';
+      suffix = ' 😔';
       break;
     case 'ANXIOUS':
     case 'STRESSED':
-      suffix = ' 😟✨';
+      suffix = ' 😟';
       break;
     case 'ANGRY':
-      suffix = ' 😡🔥';
+      suffix = ' 😡';
       break;
     case 'LONELY':
       suffix = ' 🫂';
       break;
     case 'HOPEFUL':
     case 'GRATEFUL':
-      suffix = ' ✨❤️';
+      suffix = ' ✨';
       break;
     default:
-      suffix = ' 🙂';
+      suffix = '';
   }
+
+  if (!suffix) return raw;
 
   const lines = raw.split('\n');
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
     if (!trimmed) continue;
-    // Avoid decorating disclaimer/footer lines
     if (hasAnySafetyDisclaimer(line)) continue;
     lines[i] = line + suffix;
-    return clampEmojis(lines.join('\n'), 3);
+    return clampEmojis(lines.join('\n'), 2);
   }
-  return clampEmojis(raw + suffix, 3);
+  return clampEmojis(raw + suffix, 2);
 }
 
 /**
@@ -408,6 +418,8 @@ function modulateByPrimaryEmotion(text, emotion, language) {
 function hasQuestionMark(text) {
   return /[?؟]/.test(String(text || ''));
 }
+
+// P4 Language Enforcement: Now uses shared module from ../utils/languageEnforcement.js
 
 function limitSentences(text, maxSentences) {
   const sentences = splitSentencesArAware(text);
@@ -564,6 +576,15 @@ async function orchestrateResponse({
 
     // Emojis: limit in short mode, light decoration otherwise
     out = decorateWithEmojis(out, emotion, language, severityLevel, shortMode);
+
+    // P4 Language Enforcement: If English mode, detect and strip Arabic contamination
+    if (!isAr) {
+      const detection = detectArabicContamination(out);
+      if (detection.contaminated) {
+        console.log('[LanguageEnforcement] Arabic contamination detected:', detection.tokens.join(', '));
+        out = enforceEnglishOnly(out);
+      }
+    }
 
     return out;
   } catch (e) {

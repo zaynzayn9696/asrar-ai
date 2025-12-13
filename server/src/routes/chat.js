@@ -1135,6 +1135,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         dialect,
         model: routedModel,
         isPremiumUser: isPremiumUser || isTester,
+        userId,
       });
 
       const aiTextLite =
@@ -1399,6 +1400,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
                 messageId: bgMessageId,
                 characterId: bgCharacterId,
                 emotion: bgEmotion,
+                messageText: userText, // Pass original text to avoid encryption encoding issues
                 topics: Array.isArray(bgEmotion.topics) ? bgEmotion.topics : [],
                 secondaryEmotion: bgEmotion.secondaryEmotion || null,
                 emotionVector: bgEmotion.emotionVector || null,
@@ -1755,6 +1757,7 @@ router.post('/message', async (req, res) => {
         dialect,
         model: routedModel,
         isPremiumUser: isPremiumUser || isTester,
+        userId,
       });
 
       const aiMessageLite =
@@ -2060,6 +2063,7 @@ const systemMessage = `${systemPrompt}${conciseNudge}`;
                 messageId: bgMessageId,
                 characterId: bgCharacterId,
                 emotion: bgEmotion,
+                messageText: userText, // Pass original text to avoid encryption encoding issues
                 topics: Array.isArray(bgEmotion.topics)
                   ? bgEmotion.topics
                   : [],
@@ -2235,6 +2239,13 @@ const systemMessage = `${systemPrompt}${conciseNudge}`;
     const responsePayload = {
       reply: aiMessage,
       usage: buildUsageSummary(dbUser, usage),
+      conversationId: cid,
+      emotion: emo ? {
+        primaryEmotion: emo.primaryEmotion || 'NEUTRAL',
+        intensity: typeof emo.intensity === 'number' ? emo.intensity : 0,
+        secondaryEmotion: emo.secondaryEmotion || null,
+      } : null,
+      whispersUnlocked,
     };
 
     if (wantsStream) {
