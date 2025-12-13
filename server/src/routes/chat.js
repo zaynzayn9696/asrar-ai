@@ -1533,6 +1533,11 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       assistantText: assistantReplyForTTS,
       userText,
       usage: buildUsageSummary(dbUser, usage),
+      emotion: emo ? {
+        primaryEmotion: emo.primaryEmotion || 'NEUTRAL',
+        intensity: typeof emo.intensity === 'number' ? emo.intensity : 0,
+        secondaryEmotion: emo.secondaryEmotion || null,
+      } : null,
     };
 
     if (whispersUnlocked.length) {
@@ -1897,10 +1902,8 @@ const systemMessage = `${systemPrompt}${conciseNudge}`;
       isPremiumUser: isPremiumUser || isTester,
     });
 
-
-
     const tOpenAIStart = Date.now();
-    const completion = await openai.chat.completions.create({
+    let completion = await openai.chat.completions.create({
       model: routedModel,
       messages: openAIMessages,
       temperature: verbosity.verbosityMode === 'short' ? 0.6 : 0.8,
@@ -1908,11 +1911,51 @@ const systemMessage = `${systemPrompt}${conciseNudge}`;
     });
     openAiMs = Date.now() - tOpenAIStart;
 
-    const rawReply = completion.choices?.[0]?.message?.content?.trim();
+    let rawReply = completion.choices?.[0]?.message?.content?.trim();
     if (!rawReply) {
       return res
         .status(500)
         .json({ message: 'No response from language model.' });
+    }
+
+    // BUG 1 FIX: Truncation Guard - detect and recover from truncated responses
+    const isTruncated = (text) => {
+      if (!text) return false;
+      const trimmed = text.trim();
+      // Ends with numbered list marker and nothing after
+      if (/\d+\.\s*$/.test(trimmed)) return true;
+      // Ends with bullet and nothing after
+      if (/[-•]\s*$/.test(trimmed)) return true;
+      // Ends mid-sentence (no terminal punctuation, but has content)
+      if (trimmed.length > 20 && !/[.!?؟،:\n]$/.test(trimmed)) return true;
+      return false;
+    };
+
+    if (isTruncated(rawReply)) {
+      console.log('[TruncationGuard] triggered=true, attempting recovery');
+      try {
+        // Fast recovery: request a short completion to finish the thought
+        const recoveryCompletion = await openai.chat.completions.create({
+          model: routedModel,
+          messages: [
+            ...openAIMessages,
+            { role: 'assistant', content: rawReply },
+            { role: 'user', content: 'Please complete your previous response in one short sentence.' },
+          ],
+          temperature: 0.5,
+          max_tokens: 80,
+        });
+        const recoveryText = recoveryCompletion.choices?.[0]?.message?.content?.trim();
+        if (recoveryText && recoveryText.length > 2) {
+          // Append recovery text naturally
+          rawReply = rawReply.trim() + ' ' + recoveryText;
+        }
+      } catch (recoveryErr) {
+        console.error('[TruncationGuard] recovery failed', recoveryErr?.message || recoveryErr);
+        // Fallback: just add a gentle closing
+        const isAr = languageForEngine === 'ar';
+        rawReply = rawReply.trim() + (isAr ? ' شو رأيك؟' : ' What do you think?');
+      }
     }
 
     let aiMessage = rawReply;

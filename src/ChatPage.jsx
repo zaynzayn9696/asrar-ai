@@ -478,39 +478,46 @@ export default function ChatPage() {
           const parsed = JSON.parse(raw);
           if (Array.isArray(parsed) && parsed.length) {
             const localMsgs = parsed;
-            const merged = [];
-            let localIndex = 0;
-
-            for (const m of serverMsgs) {
-              const from = m.from || "system";
-              const text = (m.text || "").trim();
-              let overlay = null;
-              for (; localIndex < localMsgs.length; localIndex++) {
-                const lm = localMsgs[localIndex];
-                if (!lm) continue;
-                const lFrom = lm.from || "system";
-                const lText = (lm.text || "").trim();
-                if (lFrom === from && lText === text) {
-                  overlay = lm;
-                  localIndex++;
-                  break;
-                }
-              }
-              if (overlay && overlay.audioBase64) {
-                merged.push({
-                  ...m,
-                  audioBase64: overlay.audioBase64,
-                  audioMimeType: overlay.audioMimeType || null,
+            
+            // BUG 2A FIX: Use Map-based lookup instead of sequential matching
+            // This ensures voice audio is found even if messages are in different order
+            const audioMap = new Map();
+            for (const lm of localMsgs) {
+              if (!lm || !lm.audioBase64) continue;
+              const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
+              if (!audioMap.has(key)) {
+                audioMap.set(key, {
+                  audioBase64: lm.audioBase64,
+                  audioMimeType: lm.audioMimeType || null,
                 });
-              } else {
-                merged.push(m);
               }
             }
 
-            for (; localIndex < localMsgs.length; localIndex++) {
-              const lm = localMsgs[localIndex];
+            const merged = serverMsgs.map((m) => {
+              const from = m.from || "system";
+              const text = (m.text || "").trim();
+              const key = `${from}::${text}`;
+              const audioData = audioMap.get(key);
+              if (audioData) {
+                return {
+                  ...m,
+                  audioBase64: audioData.audioBase64,
+                  audioMimeType: audioData.audioMimeType,
+                };
+              }
+              return m;
+            });
+
+            // Also append any local-only voice messages not on server
+            const serverKeys = new Set(
+              serverMsgs.map((m) => `${m.from || "system"}::${(m.text || "").trim()}`)
+            );
+            for (const lm of localMsgs) {
               if (!lm) continue;
-              merged.push(lm);
+              const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
+              if (!serverKeys.has(key)) {
+                merged.push(lm);
+              }
             }
 
             finalMsgs = merged;
@@ -2118,6 +2125,11 @@ useEffect(() => {
             return [...prev, userVoiceMessage, aiVoiceMessage];
           });
 
+          // BUG 2B FIX: Apply mood instantly from voice response emotion data (same as text)
+          if (data.emotion && data.emotion.primaryEmotion) {
+            const responseMood = String(data.emotion.primaryEmotion).toLowerCase();
+            applyStableMood(responseMood);
+          }
           // Refresh emotional timeline right after voice reply so mood updates live
           fetchEmotionalData();
 
@@ -2709,7 +2721,7 @@ useEffect(() => {
                   setShowLimitModal(false);
                 }}
               >
-                {isAr ? "╪Ñ╪║┘ä╪º┘é" : "Close"}
+                {isAr ? "اغلاق" : "Close"}
               </button>
               <button
                 type="button"
