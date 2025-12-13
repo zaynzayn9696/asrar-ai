@@ -162,6 +162,32 @@ function countEmojis(text) {
   }
 }
 
+// P0-C FIX: Shared truncation detection helper for all routes
+function isTruncated(text, finishReason) {
+  if (!text) return false;
+  // Rule 1: OpenAI says length limit hit
+  if (finishReason === 'length') return true;
+  const trimmed = text.trim();
+  // Rule 2: Ends with numbered list marker (1. 2. etc)
+  if (/\d+\.\s*$/.test(trimmed)) return true;
+  // Rule 3: Ends with bullet/dash
+  if (/[-•]\s*$/.test(trimmed)) return true;
+  // Rule 4: Ends with colon (incomplete list)
+  if ((/:\s*$/.test(trimmed)) && trimmed.length > 20) return true;
+  // Rule 5: No terminal punctuation on longer text
+  if (trimmed.length > 30 && !/[.!?؟]$/.test(trimmed)) return true;
+  return false;
+}
+
+// P0-C FIX: Clean dangling markers from truncated text
+function cleanTruncatedText(text) {
+  return text
+    .replace(/\n?\d+\.\s*$/, '')
+    .replace(/[-•]\s*$/, '')
+    .replace(/:\s*$/, '')
+    .trim();
+}
+
 // Usage helpers
 function startOfToday() {
   const d = new Date();
@@ -1142,13 +1168,22 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         userId,
       });
 
-      const aiTextLite =
+      let aiTextLite =
         (liteResult &&
           typeof liteResult.text === 'string' &&
           liteResult.text.trim()) ||
         (isArabicConversation
           ? 'أنا هون معك يا قلبي، احكي لي أكثر لو حابب.'
           : "I'm here with you, tell me a bit more if you want.");
+
+      // P0-C FIX: Apply truncation guard to lite engine voice route
+      if (isTruncated(aiTextLite, null)) {
+        console.log('[TruncationGuard][Voice][Lite] triggered=true');
+        aiTextLite = cleanTruncatedText(aiTextLite);
+        if (aiTextLite.length > 10 && !/[.!?؟]$/.test(aiTextLite)) {
+          aiTextLite = aiTextLite + '.';
+        }
+      }
 
       const assistantReplyForTTSLite = normalizeAssistantReplyForTTS(
         aiTextLite,
@@ -1295,8 +1330,42 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         : recentContext;
     if (Array.isArray(limitedContext) && limitedContext.length) {
       openAIMessages.push(...limitedContext);
-      aiMessage = rawReply;
     }
+    openAIMessages.push({ role: 'user', content: userText });
+
+    // Voice deep engine: generate reply via OpenAI
+    const routedModelVoice = selectModelForResponse({
+      engine: 'deep',
+      isPremiumUser: isPremiumUser || isTester,
+    });
+
+    const tOpenAIStartVoice = Date.now();
+    const completionVoice = await openai.chat.completions.create({
+      model: routedModelVoice,
+      messages: openAIMessages,
+      temperature: verbosity.verbosityMode === 'short' ? 0.6 : 0.8,
+      max_tokens: verbosity.maxTokens,
+    });
+    const openAiMs = Date.now() - tOpenAIStartVoice;
+
+    let rawReply = completionVoice.choices?.[0]?.message?.content?.trim() || '';
+    if (!rawReply) {
+      rawReply = isArabicConversation
+        ? 'أنا هون معك يا قلبي.'
+        : "I'm here with you.";
+    }
+
+    // P0-C FIX: Apply truncation guard to voice deep engine route
+    const finishReasonVoice = completionVoice.choices?.[0]?.finish_reason;
+    if (isTruncated(rawReply, finishReasonVoice)) {
+      console.log('[TruncationGuard][Voice][Deep] triggered=true finish_reason=%s', finishReasonVoice);
+      rawReply = cleanTruncatedText(rawReply);
+      if (rawReply.length > 10 && !/[.!?؟]$/.test(rawReply)) {
+        rawReply = rawReply + (languageForEngine === 'ar' ? '.' : '.');
+      }
+    }
+
+    let aiMessage = rawReply;
 
     // Voice mode: keep spoken reply compact while preserving any safety footer.
     aiMessage = trimForVoiceReply(aiMessage, severityLevel || 'CASUAL');
@@ -1769,13 +1838,22 @@ router.post('/message', async (req, res) => {
         userId,
       });
 
-      const aiMessageLite =
+      let aiMessageLite =
         (liteResult &&
           typeof liteResult.text === 'string' &&
           liteResult.text.trim()) ||
         (isArabicConversation
           ? 'أنا هون معك يا قلبي، احكي لي أكثر لو حابب.'
           : "I'm here with you, tell me a bit more if you want.");
+
+      // P0-C FIX: Apply truncation guard to lite engine text route
+      if (isTruncated(aiMessageLite, null)) {
+        console.log('[TruncationGuard][Lite] triggered=true');
+        aiMessageLite = cleanTruncatedText(aiMessageLite);
+        if (aiMessageLite.length > 10 && !/[.!?؟]$/.test(aiMessageLite)) {
+          aiMessageLite = aiMessageLite + '.';
+        }
+      }
 
       const responsePayloadLite = {
         reply: aiMessageLite,

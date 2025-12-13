@@ -258,6 +258,9 @@ export default function ChatPage() {
   const [pendingDeleteConversationId, setPendingDeleteConversationId] =
     useState(null);
 
+  // P0-A FIX: Request ID tracking to prevent race conditions when switching conversations
+  const conversationRequestIdRef = useRef(0);
+
   const character =
     CHARACTERS.find((c) => c.id === selectedCharacterId) || CHARACTERS[1];
 
@@ -547,6 +550,9 @@ export default function ChatPage() {
 
   useEffect(() => {
     const loadConversations = async () => {
+      // P0-A FIX: Track this request to prevent race conditions
+      const thisRequestId = ++conversationRequestIdRef.current;
+      
       try {
         if (!user) return;
         setConvLoading(true);
@@ -560,6 +566,13 @@ export default function ChatPage() {
           `${API_BASE}/api/chat/conversations?characterId=${selectedCharacterId}`,
           { method: 'GET', credentials: 'include', headers }
         );
+        
+        // P0-A FIX: Check if request is still current
+        if (conversationRequestIdRef.current !== thisRequestId) {
+          console.log('[ChatPage] loadConversations SKIPPED stale list response');
+          return;
+        }
+        
         let list = [];
         try { list = await listRes.json(); } catch (_) { list = []; }
         if (Array.isArray(list)) setConversations(list);
@@ -571,6 +584,13 @@ export default function ChatPage() {
             body: JSON.stringify({ characterId: selectedCharacterId })
           });
           const created = await createRes.json().catch(() => null);
+          
+          // P0-A FIX: Check if request is still current after create
+          if (conversationRequestIdRef.current !== thisRequestId) {
+            console.log('[ChatPage] loadConversations SKIPPED stale after create');
+            return;
+          }
+          
           if (createRes.ok && created && created.id) {
             cid = created.id;
             // Bug 3 fix: Deduplicate to prevent double "No messages yet" entries
@@ -587,9 +607,25 @@ export default function ChatPage() {
           const msgRes = await fetch(`${API_BASE}/api/chat/conversations/${cid}/messages`, {
             method: 'GET', credentials: 'include', headers
           });
+          
+          // P0-A FIX: Check if request is still current before processing messages
+          if (conversationRequestIdRef.current !== thisRequestId) {
+            console.log('[ChatPage] loadConversations SKIPPED stale messages response');
+            return;
+          }
+          
           if (msgRes.ok) {
             const serverMsgs = await msgRes.json().catch(() => []);
+            
+            // P0-A FIX: Final check after JSON parse
+            if (conversationRequestIdRef.current !== thisRequestId) {
+              console.log('[ChatPage] loadConversations SKIPPED stale after messages parse');
+              return;
+            }
+            
             if (Array.isArray(serverMsgs) && serverMsgs.length) {
+              // P0-B FIX: Use Map-based merge (same as mergeServerMessagesWithLocalVoiceHistory)
+              // to ensure voice audio is found even if messages are reordered
               let finalMsgs = serverMsgs;
               try {
                 if (typeof window !== "undefined" && user && user.id) {
@@ -603,46 +639,45 @@ export default function ChatPage() {
                     const parsed = JSON.parse(raw);
                     if (Array.isArray(parsed) && parsed.length) {
                       const localMsgs = parsed;
-                      const merged = [];
-                      let localIndex = 0;
-
-                      // First, walk server messages and overlay any matching
-                      // local entries that contain voice/audio for the same
-                      // (from,text) pair.
-                      for (const m of serverMsgs) {
-                        const from = m.from || "system";
-                        const text = (m.text || "").trim();
-                        let overlay = null;
-                        for (; localIndex < localMsgs.length; localIndex++) {
-                          const lm = localMsgs[localIndex];
-                          if (!lm) continue;
-                          const lFrom = lm.from || "system";
-                          const lText = (lm.text || "").trim();
-                          if (lFrom === from && lText === text) {
-                            overlay = lm;
-                            localIndex++;
-                            break;
-                          }
-                        }
-                        if (overlay && overlay.audioBase64) {
-                          merged.push({
-                            ...m,
-                            audioBase64: overlay.audioBase64,
-                            audioMimeType: overlay.audioMimeType,
+                      
+                      // P0-B FIX: Use Map-based lookup instead of sequential matching
+                      const audioMap = new Map();
+                      for (const lm of localMsgs) {
+                        if (!lm || !lm.audioBase64) continue;
+                        const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
+                        if (!audioMap.has(key)) {
+                          audioMap.set(key, {
+                            audioBase64: lm.audioBase64,
+                            audioMimeType: lm.audioMimeType || null,
                           });
-                        } else {
-                          merged.push(m);
                         }
                       }
 
-                      // Any remaining local messages (for example, pure
-                      // voice messages that never hit the backend text
-                      // route) should also be kept so they don't disappear
-                      // on refresh.
-                      for (; localIndex < localMsgs.length; localIndex++) {
-                        const lm = localMsgs[localIndex];
+                      const merged = serverMsgs.map((m) => {
+                        const from = m.from || "system";
+                        const text = (m.text || "").trim();
+                        const key = `${from}::${text}`;
+                        const audioData = audioMap.get(key);
+                        if (audioData) {
+                          return {
+                            ...m,
+                            audioBase64: audioData.audioBase64,
+                            audioMimeType: audioData.audioMimeType,
+                          };
+                        }
+                        return m;
+                      });
+
+                      // Also append any local-only voice messages not on server
+                      const serverKeys = new Set(
+                        serverMsgs.map((m) => `${m.from || "system"}::${(m.text || "").trim()}`)
+                      );
+                      for (const lm of localMsgs) {
                         if (!lm) continue;
-                        merged.push(lm);
+                        const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
+                        if (!serverKeys.has(key)) {
+                          merged.push(lm);
+                        }
                       }
 
                       finalMsgs = merged;
@@ -1000,6 +1035,9 @@ export default function ChatPage() {
   };
 
   const handleSelectConversation = async (id) => {
+    // P0-A FIX: Increment request ID to track this specific request
+    const thisRequestId = ++conversationRequestIdRef.current;
+    
     try {
       setConversationId(id);
       const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
@@ -1009,9 +1047,23 @@ export default function ChatPage() {
       const msgRes = await fetch(`${API_BASE}/api/chat/conversations/${id}/messages`, {
         method: 'GET', credentials: 'include', headers
       });
+      
+      // P0-A FIX: Check if this request is still the latest before updating state
+      if (conversationRequestIdRef.current !== thisRequestId) {
+        console.log('[ChatPage] handleSelectConversation SKIPPED stale response for convId=%s (request %d, current %d)', id, thisRequestId, conversationRequestIdRef.current);
+        return;
+      }
+      
       if (msgRes.ok) {
         const serverMsgs = await msgRes.json().catch(() => []);
         console.log('[ChatPage] handleSelectConversation convId=%s serverMsgs=%d', id, Array.isArray(serverMsgs) ? serverMsgs.length : 0);
+        
+        // P0-A FIX: Double-check request ID after JSON parsing (another async boundary)
+        if (conversationRequestIdRef.current !== thisRequestId) {
+          console.log('[ChatPage] handleSelectConversation SKIPPED stale after parse for convId=%s', id);
+          return;
+        }
+        
         if (Array.isArray(serverMsgs) && serverMsgs.length) {
           const finalMsgs = mergeServerMessagesWithLocalVoiceHistory(
             serverMsgs,
@@ -1020,7 +1072,27 @@ export default function ChatPage() {
           console.log('[ChatPage] afterMerge finalMsgs=%d', finalMsgs.length);
           setMessages(finalMsgs);
         } else {
-          setMessages([]);
+          // P0-A FIX: Only set empty if server truly returned empty for THIS conversation
+          // Show default welcome messages instead of completely blank
+          const now = new Date().toISOString();
+          setMessages([
+            {
+              id: 1,
+              from: "system",
+              text: isArabicConversation
+                ? "هذه مساحتك الخاصة. لا أحد يحكم على ما تقوله هنا."
+                : "This is your private space. Nothing you say here is judged.",
+              createdAt: now,
+            },
+            {
+              id: 2,
+              from: "ai",
+              text: isArabicConversation
+                ? `أهلاً، أنا ${characterDisplayName}. أنا هنا بالكامل لك. خذ راحتك في الكتابة، ولا يوجد شيء تافه أو كثير.`
+                : `Hi, I'm ${characterDisplayName}. I'm here just for you. Take your time and type whatever is on your mind.`,
+              createdAt: now,
+            },
+          ]);
         }
       } else {
         console.log('[ChatPage] handleSelectConversation failed status=%d', msgRes.status);
