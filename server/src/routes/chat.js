@@ -2153,21 +2153,6 @@ const systemMessage = `${systemPrompt}${conciseNudge}`;
 
     // BUG 2 FIX: Truncation Guard with finish_reason + pattern detection
     const finishReason = completion.choices?.[0]?.finish_reason;
-    const isTruncated = (text, reason) => {
-      if (!text) return false;
-      // Rule 1: OpenAI says length limit hit
-      if (reason === 'length') return true;
-      const trimmed = text.trim();
-      // Rule 2: Ends with numbered list marker (1. 2. etc)
-      if (/\d+\.\s*$/.test(trimmed)) return true;
-      // Rule 3: Ends with bullet/dash
-      if (/[-•]\s*$/.test(trimmed)) return true;
-      // Rule 4: Ends with colon (incomplete list)
-      if (/:\s*$/.test(trimmed)) return true;
-      // Rule 5: No terminal punctuation
-      if (trimmed.length > 30 && !/[.!?؟]$/.test(trimmed)) return true;
-      return false;
-    };
 
     if (isTruncated(rawReply, finishReason)) {
       console.log('[TruncationGuard] triggered=true finish_reason=%s', finishReason);
