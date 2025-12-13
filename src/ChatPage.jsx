@@ -160,9 +160,18 @@ const CHAT_HISTORY_KEY = "asrar-chat-history";
 
 const getInitialEngine = () => {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("asrar-engine-mode") || "balanced";
+    const stored = localStorage.getItem("asrar-engine-mode");
+    // Migrate legacy "balanced" to "deep" permanently
+    if (stored === "balanced") {
+      console.warn('[Asrar] Migrating deprecated engine mode "balanced" to "deep". Only "lite" and "deep" are valid.');
+      localStorage.setItem("asrar-engine-mode", "deep");
+      return "deep";
+    }
+    if (stored === "lite" || stored === "deep") return stored;
+    // Default to "deep" for new users (no stored value)
+    return "deep";
   }
-  return "balanced";
+  return "deep";
 };
 
 const buildHistoryStorageKey = (userId, characterId, convId) => {
@@ -557,7 +566,12 @@ export default function ChatPage() {
           const created = await createRes.json().catch(() => null);
           if (createRes.ok && created && created.id) {
             cid = created.id;
-            setConversations((prev) => [created, ...(Array.isArray(prev) ? prev : [])]);
+            // Bug 3 fix: Deduplicate to prevent double "No messages yet" entries
+            setConversations((prev) => {
+              const arr = Array.isArray(prev) ? prev : [];
+              const exists = arr.some((c) => c.id === created.id);
+              return exists ? arr : [created, ...arr];
+            });
           }
         }
         setConversationId(cid || null);
@@ -1550,8 +1564,33 @@ useEffect(() => {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-      // Immediately refresh emotional timeline so backdrop reacts without reload
+      
+      // Bug 5 fix: Apply mood instantly from response emotion data (no refresh needed)
+      if (data.emotion && data.emotion.primaryEmotion) {
+        const responseMood = String(data.emotion.primaryEmotion).toLowerCase();
+        applyStableMood(responseMood);
+      }
+      // Also refresh emotional timeline for full data sync
       fetchEmotionalData();
+
+      // Bug 4 fix: Update conversation title in sidebar after first user message (optimistic)
+      // Also handle conversationId from server response for new chats
+      const returnedConvId = data.conversationId || conversationId;
+      if (returnedConvId) {
+        setConversations((prev) => {
+          if (!Array.isArray(prev)) return prev;
+          return prev.map((conv) => {
+            if (conv.id === returnedConvId && !conv.firstUserMessage) {
+              return { ...conv, firstUserMessage: trimmed.slice(0, 60) };
+            }
+            return conv;
+          });
+        });
+        // If server returned a new conversationId, update our local state
+        if (data.conversationId && !conversationId) {
+          setConversationId(data.conversationId);
+        }
+      }
 
       const fullText = String(finalText || "");
       if (fullText) {
@@ -2489,16 +2528,16 @@ useEffect(() => {
                       type="button"
                       className={
                         "asrar-engine-option" +
-                        (selectedEngine === "balanced"
+                        (selectedEngine === "deep"
                           ? " asrar-engine-option--active"
                           : "")
                       }
                       onClick={() => {
-                        setSelectedEngine("balanced");
+                        setSelectedEngine("deep");
                         setIsEngineMenuOpen(false);
                       }}
                       role="menuitemradio"
-                      aria-checked={selectedEngine === "balanced"}
+                      aria-checked={selectedEngine === "deep"}
                     >
                       <span className="asrar-engine-option-icon" aria-hidden="true">
                         🧠
