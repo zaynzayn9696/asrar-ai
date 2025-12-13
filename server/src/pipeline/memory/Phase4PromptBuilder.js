@@ -501,7 +501,7 @@ async function buildPhase4MemoryBlock({
       );
       lines.push(
         '[KNOWN_USER_FACTS_START]',
-        'Known stored facts about the user (داخلي – استخدمه فقط عندما يسأل المستخدم مباشرة ماذا تعرف عنه). هذه الكتلة هي المصدر الرسمي الوحيد لهذه الحقول:',
+        'عند السؤال عما تعرفه عن المستخدم، اذكر فقط الحقول التي ليست "غير معروف". لا تقل "لست متأكداً" ولا تذكر أي حقل قيمته "unknown". إذا كانت كل الحقول غير معروفة، قل "لا أملك معلومات محفوظة عنك بعد."',
         `- name: ${nameValue}`,
         `- age: ${ageValue}`,
         `- jobTitle: ${jobTitleValue}`,
@@ -527,7 +527,7 @@ async function buildPhase4MemoryBlock({
       );
       lines.push(
         '[KNOWN_USER_FACTS_START]',
-        'Known stored facts about the user (internal – ONLY for answering direct questions like "what do you know about me?"). This block is the single source of truth for these fields:',
+        'Known stored facts about the user (internal). When asked what you know, ONLY output bullets for fields that are NOT "unknown". Do NOT say "I\'m not sure" or include any field marked "unknown". If all fields are unknown, say "I don\'t have any saved facts about you yet."',
         `- name: ${nameValue}`,
         `- age: ${ageValue}`,
         `- jobTitle: ${jobTitleValue}`,
@@ -758,7 +758,7 @@ async function buildPhase4MemoryBlock({
     ...safetyHints,
   ].join('\n');
 
-  const MAX_PHASE4_LENGTH = 900;
+  const MAX_PHASE4_LENGTH = 1800;
   if (block.length > MAX_PHASE4_LENGTH) {
     block = block.slice(0, MAX_PHASE4_LENGTH);
   }
