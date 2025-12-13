@@ -4,8 +4,28 @@
 
 const rateLimit = require('express-rate-limit');
 
+// DEV BYPASS: Completely disable rate limiting in development
+// DOUBLE-GUARD: Only active when BOTH conditions are true:
+// 1. NODE_ENV is explicitly 'development'
+// 2. ASRAR_LOCAL_DEV is explicitly 'true' (must be set manually)
+// This prevents accidental bypass if only NODE_ENV is misconfigured
+const IS_DEV_BYPASS_ENABLED =
+  process.env.NODE_ENV === 'development' &&
+  process.env.ASRAR_LOCAL_DEV === 'true';
+
+// Skip function for dev bypass - logs when bypass is active
+const devBypassSkip = (req) => {
+  if (IS_DEV_BYPASS_ENABLED) {
+    const userId = req.user?.id || req.body?.email || 'anonymous';
+    console.log(`[RateLimit] bypass=true user=${userId} route=${req.originalUrl}`);
+    return true; // Skip rate limiting
+  }
+  return false; // Apply rate limiting in production
+};
+
 // Global limiter for most API routes
 const globalLimiter = rateLimit({
+  skip: devBypassSkip,
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // 100 requests per 15 minutes per IP
   standardHeaders: true,
@@ -27,6 +47,7 @@ const globalLimiter = rateLimit({
 
 // Stricter limiter for auth (login/register)
 const authLimiter = rateLimit({
+  skip: devBypassSkip,
   windowMs: 15 * 60 * 1000,
   max: 10, // 10 attempts per 15 minutes per IP
   standardHeaders: true,
@@ -40,6 +61,7 @@ const authLimiter = rateLimit({
 
 // Chat limiter for text + voice chat endpoints
 const chatLimiter = rateLimit({
+  skip: devBypassSkip,
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 60, // 60 chat requests per 10 minutes per IP
   standardHeaders: true,

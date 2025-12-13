@@ -43,6 +43,7 @@ const allowedOrigins = [
   "https://www.asrarai.com",
   "https://asrar-ai.vercel.app",
   "https://staging.asrarai.com",
+  "http://localhost:5173",
 ];
 
 if (FRONTEND_URL && !allowedOrigins.includes(FRONTEND_URL)) {
@@ -103,6 +104,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/admin', adminRoutes);
+
+// NOTE: Dev-only memory clear endpoint REMOVED for production safety.
+// Use admin panel or direct DB access for testing if needed.
+
 app.use('/api/personas', whispersRoutes);
 app.use('/api/emotions', emotionsRoutes);
 app.use('/api/mirror', mirrorRoutes);

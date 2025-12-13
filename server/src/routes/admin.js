@@ -292,4 +292,7 @@ router.post('/run-retention', async (req, res) => {
   }
 });
 
+// NOTE: Dev-only clear-test-memory endpoint REMOVED for production safety.
+// Use direct DB access or prisma studio for local testing if needed.
+
 module.exports = router;
