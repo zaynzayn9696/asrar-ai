@@ -482,14 +482,23 @@ export default function ChatPage() {
           if (Array.isArray(parsed) && parsed.length) {
             const localMsgs = parsed;
             
-            // BUG 2A FIX: Use Map-based lookup instead of sequential matching
-            // This ensures voice audio is found even if messages are in different order
+            // Build audio map with multiple key strategies for robust matching
             const audioMap = new Map();
+            const audioByIdMap = new Map();
             for (const lm of localMsgs) {
               if (!lm || !lm.audioBase64) continue;
-              const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
+              // Strategy 1: by from::text (normalized)
+              const textNorm = (lm.text || "").trim().toLowerCase();
+              const key = `${lm.from || "system"}::${textNorm}`;
               if (!audioMap.has(key)) {
                 audioMap.set(key, {
+                  audioBase64: lm.audioBase64,
+                  audioMimeType: lm.audioMimeType || null,
+                });
+              }
+              // Strategy 2: by message id if available
+              if (lm.id && !audioByIdMap.has(lm.id)) {
+                audioByIdMap.set(lm.id, {
                   audioBase64: lm.audioBase64,
                   audioMimeType: lm.audioMimeType || null,
                 });
@@ -497,9 +506,19 @@ export default function ChatPage() {
             }
 
             const merged = serverMsgs.map((m) => {
+              // Try ID match first
+              if (m.id && audioByIdMap.has(m.id)) {
+                const audioData = audioByIdMap.get(m.id);
+                return {
+                  ...m,
+                  audioBase64: audioData.audioBase64,
+                  audioMimeType: audioData.audioMimeType,
+                };
+              }
+              // Fallback to normalized text match
               const from = m.from || "system";
-              const text = (m.text || "").trim();
-              const key = `${from}::${text}`;
+              const textNorm = (m.text || "").trim().toLowerCase();
+              const key = `${from}::${textNorm}`;
               const audioData = audioMap.get(key);
               if (audioData) {
                 return {
@@ -511,17 +530,9 @@ export default function ChatPage() {
               return m;
             });
 
-            // Also append any local-only voice messages not on server
-            const serverKeys = new Set(
-              serverMsgs.map((m) => `${m.from || "system"}::${(m.text || "").trim()}`)
-            );
-            for (const lm of localMsgs) {
-              if (!lm) continue;
-              const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
-              if (!serverKeys.has(key)) {
-                merged.push(lm);
-              }
-            }
+            // BUG 1 FIX: Do NOT append welcome/intro messages - they are UI placeholders
+            // Only the server is the source of truth for actual messages
+            // We no longer append local-only messages since they cause ordering issues
 
             finalMsgs = merged;
           }
@@ -626,67 +637,8 @@ export default function ChatPage() {
             if (Array.isArray(serverMsgs) && serverMsgs.length) {
               // P0-B FIX: Use Map-based merge (same as mergeServerMessagesWithLocalVoiceHistory)
               // to ensure voice audio is found even if messages are reordered
-              let finalMsgs = serverMsgs;
-              try {
-                if (typeof window !== "undefined" && user && user.id) {
-                  const storageKey = buildHistoryStorageKey(
-                    user.id,
-                    selectedCharacterId,
-                    cid
-                  );
-                  const raw = localStorage.getItem(storageKey);
-                  if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length) {
-                      const localMsgs = parsed;
-                      
-                      // P0-B FIX: Use Map-based lookup instead of sequential matching
-                      const audioMap = new Map();
-                      for (const lm of localMsgs) {
-                        if (!lm || !lm.audioBase64) continue;
-                        const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
-                        if (!audioMap.has(key)) {
-                          audioMap.set(key, {
-                            audioBase64: lm.audioBase64,
-                            audioMimeType: lm.audioMimeType || null,
-                          });
-                        }
-                      }
-
-                      const merged = serverMsgs.map((m) => {
-                        const from = m.from || "system";
-                        const text = (m.text || "").trim();
-                        const key = `${from}::${text}`;
-                        const audioData = audioMap.get(key);
-                        if (audioData) {
-                          return {
-                            ...m,
-                            audioBase64: audioData.audioBase64,
-                            audioMimeType: audioData.audioMimeType,
-                          };
-                        }
-                        return m;
-                      });
-
-                      // Also append any local-only voice messages not on server
-                      const serverKeys = new Set(
-                        serverMsgs.map((m) => `${m.from || "system"}::${(m.text || "").trim()}`)
-                      );
-                      for (const lm of localMsgs) {
-                        if (!lm) continue;
-                        const key = `${lm.from || "system"}::${(lm.text || "").trim()}`;
-                        if (!serverKeys.has(key)) {
-                          merged.push(lm);
-                        }
-                      }
-
-                      finalMsgs = merged;
-                    }
-                  }
-                }
-              } catch (mergeErr) {
-                console.error("[ChatPage] Failed to merge server messages with local voice history", mergeErr);
-              }
+              // Reuse the shared merge function
+              const finalMsgs = mergeServerMessagesWithLocalVoiceHistory(serverMsgs, cid);
               setMessages(finalMsgs);
             }
           }
