@@ -1055,6 +1055,27 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
     const isArabicConversation = languageForEngine === 'ar';
     const personaText = isArabicConversation ? persona.ar : persona.en;
 
+    // Resolve conversation FIRST (moved up so quick phrases can save too)
+    let cid = null;
+    if (bodyConversationId && Number.isFinite(Number(bodyConversationId))) {
+      const existing = await prisma.conversation.findFirst({
+        where: { id: Number(bodyConversationId), userId },
+      });
+      if (existing) {
+        cid = existing.id;
+      }
+    }
+    if (!cid) {
+      const conv = await prisma.conversation.create({
+        data: {
+          userId,
+          characterId,
+          title: null,
+        },
+      });
+      cid = conv.id;
+    }
+
     // Ultra-fast path: trivial greetings / acknowledgements.
     if (isQuickPhrase(userText)) {
       const instant = buildInstantReply(userText, { language: languageForEngine });
@@ -1077,6 +1098,44 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
       });
       ttsMs = Date.now() - tTtsStartQuick;
 
+      // FIX: Save messages for voice quick phrases (was missing, causing messages to disappear)
+      const shouldSaveVoiceQuick =
+        !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
+
+      if (shouldSaveVoiceQuick) {
+        try {
+          await prisma.$transaction([
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'user',
+                content: userText,
+              },
+            }),
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'assistant',
+                content: aiTextQuick,
+              },
+            }),
+            prisma.conversation.update({
+              where: { id: cid },
+              data: { updatedAt: new Date() },
+            }),
+          ]);
+        } catch (err) {
+          console.error(
+            '[Voice][QuickPhrase] Message persistence error',
+            err && err.message ? err.message : err
+          );
+        }
+      }
+
       if (!ttsResultQuick) {
         const fallback = {
           type: 'voice',
@@ -1087,6 +1146,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
           userText,
           usage: buildUsageSummary(dbUser, usage),
           instantReply: instant,
+          conversationId: cid,
         };
         return res.json(fallback);
       }
@@ -1100,30 +1160,10 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         userText,
         usage: buildUsageSummary(dbUser, usage),
         engine: 'instant-shallow',
+        conversationId: cid,
       };
 
       return res.json(quickPayload);
-    }
-
-    // Resolve conversation
-    let cid = null;
-    if (bodyConversationId && Number.isFinite(Number(bodyConversationId))) {
-      const existing = await prisma.conversation.findFirst({
-        where: { id: Number(bodyConversationId), userId },
-      });
-      if (existing) {
-        cid = existing.id;
-      }
-    }
-    if (!cid) {
-      const conv = await prisma.conversation.create({
-        data: {
-          userId,
-          characterId,
-          title: null,
-        },
-      });
-      cid = conv.id;
     }
 
     // Build recent history (exclude the just-typed user message if duplicated)
@@ -1213,6 +1253,43 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         return res.json(fallbackLite);
       }
 
+      const shouldSaveVoiceLite =
+        !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
+
+      if (shouldSaveVoiceLite) {
+        try {
+          await prisma.$transaction([
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'user',
+                content: userText,
+              },
+            }),
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'assistant',
+                content: aiTextLite,
+              },
+            }),
+            prisma.conversation.update({
+              where: { id: cid },
+              data: { updatedAt: new Date() },
+            }),
+          ]);
+        } catch (err) {
+          console.error(
+            '[Voice][Lite] Message persistence error',
+            err && err.message ? err.message : err
+          );
+        }
+      }
+
       const litePayload = {
         type: 'voice',
         audio: ttsResultLite.base64,
@@ -1223,6 +1300,7 @@ router.post('/voice', uploadAudio.single('audio'), async (req, res) => {
         usage: buildUsageSummary(dbUser, usage),
         engine: 'lite',
         model: routedModel,
+        conversationId: cid,
       };
 
       return res.json(litePayload);
@@ -1756,26 +1834,7 @@ router.post('/message', async (req, res) => {
     const personaText = isArabicConversation ? persona.ar : persona.en;
     const languageForEngine = lang === 'ar' ? 'ar' : 'en';
 
-    // Ultra-fast path: trivial greetings / acknowledgements.
-    if (isQuickPhrase(userText)) {
-      const instant = buildInstantReply(userText, { language: languageForEngine });
-      const quickText =
-        (instant && typeof instant.text === 'string' && instant.text.trim()) ||
-        (isArabicConversation
-          ? 'أنا هون معك يا قلبي.'
-          : "I'm right here with you.");
-
-      const responsePayloadQuick = {
-        reply: quickText,
-        usage: buildUsageSummary(dbUser, usage),
-        instantReply: instant,
-        engine: 'instant-shallow',
-      };
-
-      return res.json(responsePayloadQuick);
-    }
-
-    // Resolve conversation
+    // Resolve conversation FIRST (moved up so quick phrases can save too)
     let cid = null;
     if (bodyConversationId && Number.isFinite(Number(bodyConversationId))) {
       const existing = await prisma.conversation.findFirst({
@@ -1794,6 +1853,64 @@ router.post('/message', async (req, res) => {
         },
       });
       cid = conv.id;
+    }
+
+    // Ultra-fast path: trivial greetings / acknowledgements.
+    if (isQuickPhrase(userText)) {
+      const instant = buildInstantReply(userText, { language: languageForEngine });
+      const quickText =
+        (instant && typeof instant.text === 'string' && instant.text.trim()) ||
+        (isArabicConversation
+          ? 'أنا هون معك يا قلبي.'
+          : "I'm right here with you.");
+
+      // FIX: Save messages for quick phrases (was missing, causing messages to disappear)
+      const shouldSaveQuick =
+        !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
+
+      if (shouldSaveQuick) {
+        try {
+          await prisma.$transaction([
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'user',
+                content: userText,
+              },
+            }),
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'assistant',
+                content: quickText,
+              },
+            }),
+            prisma.conversation.update({
+              where: { id: cid },
+              data: { updatedAt: new Date() },
+            }),
+          ]);
+        } catch (err) {
+          console.error(
+            '[QuickPhrase] Message persistence error',
+            err && err.message ? err.message : err
+          );
+        }
+      }
+
+      const responsePayloadQuick = {
+        reply: quickText,
+        usage: buildUsageSummary(dbUser, usage),
+        instantReply: instant,
+        engine: 'instant-shallow',
+        conversationId: cid,
+      };
+
+      return res.json(responsePayloadQuick);
     }
 
     // Build recent history (exclude the just-typed user message if duplicated)
@@ -1855,11 +1972,49 @@ router.post('/message', async (req, res) => {
         }
       }
 
+      const shouldSaveLite =
+        !!saveFlag && !!dbUser.saveHistoryEnabled && Number.isFinite(Number(cid));
+
+      if (shouldSaveLite) {
+        try {
+          await prisma.$transaction([
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'user',
+                content: userText,
+              },
+            }),
+            prisma.message.create({
+              data: {
+                userId,
+                characterId,
+                conversationId: cid,
+                role: 'assistant',
+                content: aiMessageLite,
+              },
+            }),
+            prisma.conversation.update({
+              where: { id: cid },
+              data: { updatedAt: new Date() },
+            }),
+          ]);
+        } catch (err) {
+          console.error(
+            '[Lite] Message persistence error',
+            err && err.message ? err.message : err
+          );
+        }
+      }
+
       const responsePayloadLite = {
         reply: aiMessageLite,
         usage: buildUsageSummary(dbUser, usage),
         engine: 'lite',
         model: routedModel,
+        conversationId: cid,
       };
 
       return res.json(responsePayloadLite);
