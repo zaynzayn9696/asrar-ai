@@ -1011,15 +1011,19 @@ export default function ChatPage() {
       });
       if (msgRes.ok) {
         const serverMsgs = await msgRes.json().catch(() => []);
+        console.log('[ChatPage] handleSelectConversation convId=%s serverMsgs=%d', id, Array.isArray(serverMsgs) ? serverMsgs.length : 0);
         if (Array.isArray(serverMsgs) && serverMsgs.length) {
           const finalMsgs = mergeServerMessagesWithLocalVoiceHistory(
             serverMsgs,
             id
           );
+          console.log('[ChatPage] afterMerge finalMsgs=%d', finalMsgs.length);
           setMessages(finalMsgs);
         } else {
           setMessages([]);
         }
+      } else {
+        console.log('[ChatPage] handleSelectConversation failed status=%d', msgRes.status);
       }
     } catch (e) {
       console.error('[ChatPage] select conversation failed', e);

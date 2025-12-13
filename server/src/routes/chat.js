@@ -1918,44 +1918,52 @@ const systemMessage = `${systemPrompt}${conciseNudge}`;
         .json({ message: 'No response from language model.' });
     }
 
-    // BUG 1 FIX: Truncation Guard - detect and recover from truncated responses
-    const isTruncated = (text) => {
+    // BUG 2 FIX: Truncation Guard with finish_reason + pattern detection
+    const finishReason = completion.choices?.[0]?.finish_reason;
+    const isTruncated = (text, reason) => {
       if (!text) return false;
+      // Rule 1: OpenAI says length limit hit
+      if (reason === 'length') return true;
       const trimmed = text.trim();
-      // Ends with numbered list marker and nothing after
+      // Rule 2: Ends with numbered list marker (1. 2. etc)
       if (/\d+\.\s*$/.test(trimmed)) return true;
-      // Ends with bullet and nothing after
+      // Rule 3: Ends with bullet/dash
       if (/[-•]\s*$/.test(trimmed)) return true;
-      // Ends mid-sentence (no terminal punctuation, but has content)
-      if (trimmed.length > 20 && !/[.!?؟،:\n]$/.test(trimmed)) return true;
+      // Rule 4: Ends with colon (incomplete list)
+      if (/:\s*$/.test(trimmed)) return true;
+      // Rule 5: No terminal punctuation
+      if (trimmed.length > 30 && !/[.!?؟]$/.test(trimmed)) return true;
       return false;
     };
 
-    if (isTruncated(rawReply)) {
-      console.log('[TruncationGuard] triggered=true, attempting recovery');
+    if (isTruncated(rawReply, finishReason)) {
+      console.log('[TruncationGuard] triggered=true finish_reason=%s', finishReason);
+      // Clean dangling markers before recovery
+      let cleaned = rawReply.replace(/\n?\d+\.\s*$/, '').replace(/[-•]\s*$/, '').replace(/:\s*$/, '').trim();
+      let recovered = false;
       try {
-        // Fast recovery: request a short completion to finish the thought
         const recoveryCompletion = await openai.chat.completions.create({
           model: routedModel,
           messages: [
             ...openAIMessages,
-            { role: 'assistant', content: rawReply },
-            { role: 'user', content: 'Please complete your previous response in one short sentence.' },
+            { role: 'assistant', content: cleaned },
+            { role: 'user', content: 'Complete your thought in one brief sentence. No lists.' },
           ],
           temperature: 0.5,
-          max_tokens: 80,
+          max_tokens: 100,
         });
         const recoveryText = recoveryCompletion.choices?.[0]?.message?.content?.trim();
-        if (recoveryText && recoveryText.length > 2) {
-          // Append recovery text naturally
-          rawReply = rawReply.trim() + ' ' + recoveryText;
+        if (recoveryText && recoveryText.length > 3) {
+          rawReply = cleaned + ' ' + recoveryText;
+          recovered = true;
         }
       } catch (recoveryErr) {
-        console.error('[TruncationGuard] recovery failed', recoveryErr?.message || recoveryErr);
-        // Fallback: just add a gentle closing
-        const isAr = languageForEngine === 'ar';
-        rawReply = rawReply.trim() + (isAr ? ' شو رأيك؟' : ' What do you think?');
+        console.error('[TruncationGuard] recovery_error=%s', recoveryErr?.message || 'unknown');
       }
+      if (!recovered) {
+        rawReply = cleaned + (languageForEngine === 'ar' ? ' شو رأيك؟' : ' What do you think?');
+      }
+      console.log('[TruncationGuard] recovered=%s', recovered);
     }
 
     let aiMessage = rawReply;
